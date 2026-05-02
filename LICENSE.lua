@@ -52,14 +52,14 @@ pcall(function()
 end)
 
 for _, v in pairs(guiParent:GetChildren()) do
-    if v.Name == "MobileProMax" then
+    if v.Name == "MENU VIP PRO" then
         v:Destroy()
     end
 end
 
 -- [1. GIAO DIỆN CHÍNH]
 local gui = Instance.new("ScreenGui")
-gui.Name = "MobileProMax"
+gui.Name = "MENU VIP PRO"
 gui.ResetOnSpawn = false
 gui.DisplayOrder = 99999
 gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
@@ -366,7 +366,7 @@ local serverInfoLabel, serverInfoFrame = createInfoBox(page1, "🌐", "THÔNG TI
 local copyIdBtn = Instance.new("TextButton", serverInfoFrame)
 copyIdBtn.Size = UDim2.new(0, 24, 0, 24)
 copyIdBtn.Position = UDim2.new(1, -30, 1, -28) 
-copyIdBtn.Text = "📋"
+copyIdBtn.Text = "📜"
 copyIdBtn.BackgroundTransparency = 1
 copyIdBtn.TextSize = 14
 copyIdBtn.ZIndex = 11
@@ -561,7 +561,7 @@ createToggle(page2, "💡 Ánh sáng quanh người chơi", false, function(v)
         local light = player.Character.HumanoidRootPart:FindFirstChild("PlayerPointLight"); if light then light:Destroy() end 
     end
 end)
-createSlider(page2, "Phạm vi sáng", 50, 2000, 60, function(val) State.LightRange = val end)
+createSlider(page2, "Phạm vi sáng", 50, 1000, 60, function(val) State.LightRange = val end)
 createSlider(page2, "Độ sáng", 0, 5, 3, function(val) State.LightBrightness = val end)
 
 UIS.JumpRequest:Connect(function() 
@@ -641,7 +641,7 @@ task.spawn(function()
     end
 end)
 
-createToggle(page3, "⬛ Màn hình đen (Giảm lag)", false, function(v) screenOverlay.BackgroundColor3 = Color3.new(0, 0, 0); screenOverlay.Visible = v end)
+createToggle(page3, "⬛ Màn hình đen (Treo máy)", false, function(v) screenOverlay.BackgroundColor3 = Color3.new(0, 0, 0); screenOverlay.Visible = v end)
 createToggle(page3, "⬜ Màn hình trắng (Treo máy)", false, function(v) screenOverlay.BackgroundColor3 = Color3.new(1, 1, 1); screenOverlay.Visible = v end)
 createToggle(page3, "🛡️ Chống AFK", true, function(v) State.AntiAfk = v end)
 
@@ -658,7 +658,7 @@ createDualButtons(page3, "💻 LỆNH ADMIN", Theme.AccentOn, function() pcall(f
 end) end)
 
 createDualButtons(page3, "🕊️ FLY V1", Theme.Brand, function() pcall(function() loadstring("\108\111\97\100\115\116\114\105\110\103\40\103\97\109\101\58\72\116\116\112\71\101\116\40\40\39\104\116\116\112\115\58\47\47\103\105\115\116\46\103\105\116\104\117\98\117\115\101\114\99\111\110\116\101\110\116\46\99\111\109\47\109\101\111\122\111\110\101\89\84\47\98\102\48\51\55\100\102\102\57\102\48\97\55\48\48\49\55\51\48\52\100\100\100\54\55\102\100\99\100\51\55\48\47\114\97\119\47\101\49\52\101\55\52\102\52\50\53\98\48\54\48\100\102\53\50\51\51\52\51\99\102\51\48\98\55\56\55\48\55\52\101\98\51\99\53\100\50\47\97\114\99\101\117\115\37\50\53\50\48\120\37\50\53\50\48\102\108\121\37\50\53\50\48\50\37\50\53\50\48\111\98\102\108\117\99\97\116\111\114\39\41\44\116\114\117\101\41\41\40\41\10\10")() end) end, 
-"🚀 FLY V3 X", Theme.Brand, function() pcall(function() loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-Fly-V3-X-132770"))() end) end)
+"🚀 FLY V3", Theme.Brand, function() pcall(function() loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-Fly-V3-X-132770"))() end) end)
 
 createButton(page3, "📂 TP SAVE V2 GUI", Theme.Brand, function() pcall(function() loadstring(game:HttpGet(('https://raw.githubusercontent.com/0Ben1/fe/main/Tp%20Place%20GUI'),true))() end) end)
 
@@ -733,13 +733,12 @@ local function playMusic(id)
     if not soundId or soundId == "" then return end
     
     currentMusicId = soundId
-    -- [ĐÃ ĐỔI MÀU CHỮ: "Đang tải/Đang phát" màu trắng, Tên màu Brand]
     nowPlayingLabel.Text = "<font color='#FFFFFF'>⏳ Đang tải:</font> <font color='#00C8FF'>" .. soundId .. "...</font>"
     
     task.spawn(function()
         local name = getSongName(soundId)
         if currentMusicId == soundId then
-            nowPlayingLabel.Text = "<font color='#FFFFFF'>🎵 Đang phát:</font> <font color='#00C8FF'>" .. name .. "</font>"
+            nowPlayingLabel.Text = "<font color='#FFFFFF'>🎵 Đang phát:</font> <font color='#FFFF00'>" .. name .. "</font>"
         end
     end)
 
@@ -772,15 +771,15 @@ local function stopMusic()
 end
 
 -- [3] Nút Phát/Tắt
-local playControlFrame = createDualButtons(page4, "▶ PHÁT NHẠC", Theme.AccentOn, function()
+local playControlFrame = createDualButtons(page4, "▶️PHÁT NHẠC", Theme.AccentOn, function()
     playMusic(musicIdBox.Text)
-end, "⏹ TẮT NHẠC", Theme.AccentOff, function()
+end, "⏸️ TẮT NHẠC", Theme.AccentOff, function()
     stopMusic()
 end)
 playControlFrame.LayoutOrder = 3
 
 -- [4] Thanh Âm Lượng
-local volumeFrame = createSlider(page4, "Âm lượng nhạc", 0, 10, State.MusicVolume, function(val)
+local volumeFrame = createSlider(page4, "Âm lượng ♪", 0, 10, State.MusicVolume, function(val)
     State.MusicVolume = val
     if currentSound then currentSound.Volume = val end
 end)
@@ -827,7 +826,6 @@ local function renderSavedMusic()
         iconLabel.Size = UDim2.new(0.08, 0, 1, 0)
         iconLabel.BackgroundTransparency = 1; iconLabel.Text = "🎶"; iconLabel.TextColor3 = Theme.Brand; iconLabel.TextSize = 11; iconLabel.ZIndex = 10
         
-        -- [ĐÃ SỬA: Đổi TextLabel thành TextBox để có thể sửa Tên Bài Hát]
         local nameBox = Instance.new("TextBox", item)
         nameBox.Size = UDim2.new(0.52, 0, 1, 0); nameBox.Position = UDim2.new(0.08, 0, 0, 0)
         nameBox.Text = data.name
