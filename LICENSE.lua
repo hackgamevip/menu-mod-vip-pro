@@ -1,5 +1,5 @@
 -- ==========================================
--- MENU VIP PRO V42.7 (Đã Tích Hợp Hitbox V2 & Tối Ưu Mượt)
+-- MENU VIP PRO V42.7 (Tối Ưu Max Cấp: Hitbox V2 + Cache Auto Collect)
 -- ==========================================
 repeat task.wait() until game:IsLoaded()
 
@@ -611,67 +611,90 @@ createSlider(page3, "👁️ Mở rộng góc nhìn (FOV)", 70, 120, 70, functio
     workspace.CurrentCamera.FieldOfView = val
 end)
 
+
 -- ==========================================
--- TỐI ƯU HÓA: TÍNH NĂNG LẤY ĐỒ NHANH (INSTANT)
+-- THUẬT TOÁN CACHE CHỐNG LAG 100% (Lấy Đồ Nhanh & Auto Collect)
 -- ==========================================
+local cachedPrompts = {}
 local originalPrompts = {}
 local originalToolSizes = {}
 
+-- 1. Quét ngầm 1 lần duy nhất lúc bật script
 task.spawn(function()
-    while task.wait(2) do
-        pcall(function()
-            if State.Instant then
-                local count = 0
-                for _, obj in ipairs(workspace:GetDescendants()) do
-                    count = count + 1
-                    if count % 1000 == 0 then task.wait() end 
-                    
-                    if obj:IsA("ProximityPrompt") then 
-                        if not originalPrompts[obj] then
-                            originalPrompts[obj] = { HoldDuration = obj.HoldDuration, MaxActivationDistance = obj.MaxActivationDistance }
-                        end
-                        obj.HoldDuration = 0
-                        obj.MaxActivationDistance = 25 
-                    end 
-                end
-            else
-                if next(originalPrompts) then
-                    local count = 0
-                    for prompt, data in pairs(originalPrompts) do
-                        count = count + 1
-                        if count % 200 == 0 then task.wait() end
-                        
-                        if prompt and prompt.Parent then
-                            prompt.HoldDuration = data.HoldDuration
-                            prompt.MaxActivationDistance = data.MaxActivationDistance
-                        end
-                    end
-                    originalPrompts = {}
-                end
-            end
-        end)
+    local count = 0
+    for _, obj in ipairs(workspace:GetDescendants()) do
+        if obj:IsA("ProximityPrompt") then
+            table.insert(cachedPrompts, obj)
+        end
+        count = count + 1
+        if count % 1000 == 0 then task.wait() end -- Tránh bị đơ game lúc load
     end
 end)
 
--- ==========================================
--- TỐI ƯU HÓA: AUTO NHẶT ĐỒ XUNG QUANH (AUTO COLLECT)
--- ==========================================
+-- 2. Tự động ghi chép thêm nếu game có đồ vật mới rớt ra
+workspace.DescendantAdded:Connect(function(obj)
+    if obj:IsA("ProximityPrompt") then
+        table.insert(cachedPrompts, obj)
+    end
+end)
+
+-- XỬ LÝ: LẤY ĐỒ NHANH (INSTANT PROMPT)
 task.spawn(function()
-    while task.wait(0.2) do
+    while task.wait(1) do
+        if State.Instant then
+            for i = #cachedPrompts, 1, -1 do
+                local prompt = cachedPrompts[i]
+                if prompt.Parent then
+                    if not originalPrompts[prompt] then
+                        originalPrompts[prompt] = { 
+                            HoldDuration = prompt.HoldDuration, 
+                            MaxActivationDistance = prompt.MaxActivationDistance 
+                        }
+                    end
+                    prompt.HoldDuration = 0
+                    prompt.MaxActivationDistance = 25 
+                else
+                    table.remove(cachedPrompts, i) -- Dọn rác khi đồ vật biến mất
+                end
+            end
+        else
+            if next(originalPrompts) then
+                for prompt, data in pairs(originalPrompts) do
+                    if prompt and prompt.Parent then
+                        prompt.HoldDuration = data.HoldDuration
+                        prompt.MaxActivationDistance = data.MaxActivationDistance
+                    end
+                end
+                originalPrompts = {}
+            end
+        end
+    end
+end)
+
+-- XỬ LÝ: AUTO NHẶT ĐỒ XUNG QUANH
+task.spawn(function()
+    while task.wait(0.5) do
         pcall(function()
             if State.AutoCollect and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
                 local root = player.Character.HumanoidRootPart
                 local rootPos = root.Position
                 
+                -- Bấm tự động ProximityPrompt từ sổ ghi chép (Không quét map)
+                for _, prompt in ipairs(cachedPrompts) do
+                    if prompt.Parent and prompt.Parent:IsA("BasePart") then
+                        if prompt.Enabled and (prompt.Parent.Position - rootPos).Magnitude <= 50 then
+                            if fireproximityprompt then fireproximityprompt(prompt) end
+                        end
+                    end
+                end
+
+                -- Gom các Tool (Kiếm, Súng rớt dưới đất) bằng Raycast
                 local overlapParams = OverlapParams.new()
                 overlapParams.FilterDescendantsInstances = {player.Character}
                 overlapParams.FilterType = Enum.RaycastFilterType.Exclude
 
                 local partsNearby = workspace:GetPartBoundsInRadius(rootPos, 50, overlapParams)
-                
                 for _, part in ipairs(partsNearby) do
-                    if not State.AutoCollect then break end
-                    
                     if part.Name == "Handle" and part.Parent and part.Parent:IsA("Tool") then
                         if firetouchinterest then 
                             firetouchinterest(root, part, 0)
@@ -681,17 +704,12 @@ task.spawn(function()
                             part.CFrame = root.CFrame 
                         end
                     end
-                    
-                    for _, child in ipairs(part:GetDescendants()) do
-                        if child:IsA("ProximityPrompt") and child.Enabled then
-                            if fireproximityprompt then fireproximityprompt(child) end
-                        end
-                    end
                 end
             end
         end)
     end
 end)
+
 
 task.spawn(function()
     while task.wait(0.1) do
