@@ -1,5 +1,5 @@
 -- ==========================================
--- MENU VIP PRO V1.12.5 (FIXED BUG & UPGRADED)
+-- MENU VIP PRO V1.12.5 (NOCLIP FIXED & UNIVERSAL)
 -- ==========================================
 repeat task.wait() until game:IsLoaded()
 
@@ -265,6 +265,16 @@ openBtn.MouseButton1Click:Connect(function()
     frame:TweenPosition(opened and UDim2.new(0.5, -210, 0.58, -250) or UDim2.new(0.5, -210, 1.2, 0), "Out", "Back", 0.5)
 end)
 
+-- Lấy Root Universal (Cho mọi game)
+local function getUniversalRoot(char)
+    if not char then return nil end
+    return char:FindFirstChild("HumanoidRootPart") 
+        or char:FindFirstChild("Torso") 
+        or char:FindFirstChild("UpperTorso") 
+        or char.PrimaryPart 
+        or char:FindFirstChildWhichIsA("BasePart")
+end
+
 local function createToggle(parent, text, varName, callback)
     local btnFrame = Instance.new("Frame", parent)
     btnFrame.Size = UDim2.new(0.9, 0, 0, 44); btnFrame.BackgroundTransparency = 1
@@ -426,8 +436,9 @@ task.spawn(function()
         if player.Character and player.Character:FindFirstChild("Humanoid") then
             local hum = player.Character.Humanoid; hp = math.floor(hum.Health); maxHp = math.floor(hum.MaxHealth); ws = math.floor(hum.WalkSpeed); jp = math.floor(hum.JumpPower)
         end
-        if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-            local pos = player.Character.HumanoidRootPart.Position; coords = string.format("%.1f, %.1f, %.1f", pos.X, pos.Y, pos.Z)
+        if player.Character then
+            local root = getUniversalRoot(player.Character)
+            if root then local pos = root.Position; coords = string.format("%.1f, %.1f, %.1f", pos.X, pos.Y, pos.Z) end
         end
         playerInfoLabel.Text = string.format("<font color='#FF00FF'>Tên:</font> %s (@%s)\n<font color='#FF00FF'>Máu:</font> %d / %d\n<font color='#FF00FF'>Tốc độ:</font> %d\n<font color='#FF00FF'>Lực nhảy:</font> %d\n<font color='#FF00FF'>Tọa độ:</font> %s", player.DisplayName, player.Name, hp, maxHp, ws, jp, coords)
         local ping = "0"
@@ -443,14 +454,24 @@ end)
 -- [TAB 2: TÍNH NĂNG]
 -- ==========================================
 createToggle(page2, "🛡️ Chống ngã & Chống văng", "AntiStun")
-createToggle(page2, "🔒 Khóa vị trí", "LockPosition", function(v) if not v and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then player.Character.HumanoidRootPart.Anchored = false end end)
+createToggle(page2, "🔒 Khóa vị trí", "LockPosition", function(v) if not v and player.Character then local r = getUniversalRoot(player.Character); if r then r.Anchored = false end end end)
 createToggle(page2, "🚀 Nhảy trên không", "InfJump") 
 UIS.JumpRequest:Connect(function() if State.InfJump and player.Character and player.Character:FindFirstChildOfClass("Humanoid") then player.Character:FindFirstChildOfClass("Humanoid"):ChangeState(Enum.HumanoidStateType.Jumping) end end)
 createToggle(page2, "🐿️ Lấy đồ nhanh", "Instant")
 createToggle(page2, "🧲 Auto nhặt đồ xung quanh", "AutoCollect")
+
+-- Noclip Toggle (Bản Fix Hoàn Toàn Trôi)
 createToggle(page2, "🚷 Đi xuyên tường (Chống trôi)", "Noclip", function(v) 
     if not v and player.Character then 
-        pcall(function() for _, part in ipairs(player.Character:GetDescendants()) do if part:IsA("BasePart") then part.CanCollide = true end end end)
+        pcall(function() 
+            local hrp = getUniversalRoot(player.Character)
+            -- Triệt tiêu hoàn toàn quán tính để khựng lại ngay lập tức khi tắt Noclip
+            if hrp then hrp.AssemblyLinearVelocity = Vector3.new(0, hrp.AssemblyLinearVelocity.Y, 0) end
+            -- Bật lại va chạm
+            for _, part in ipairs(player.Character:GetDescendants()) do 
+                if part:IsA("BasePart") then part.CanCollide = true end 
+            end 
+        end)
     end 
 end)
 
@@ -477,7 +498,7 @@ createToggle(page2, "👀 Nhìn xuyên map", "XRay", function(v)
         end
     end)
 end)
-createToggle(page2, "🔴 ESP người chơi (Full map)", "ESP")
+createToggle(page2, "🔴 ESP người chơi (Định vị Full Map)", "ESP")
 
 -- ==========================================
 -- [TAB 3: PLAYER]
@@ -485,12 +506,7 @@ createToggle(page2, "🔴 ESP người chơi (Full map)", "ESP")
 createToggle(page3, "🕊️ Bay Trên không (Mượt)", "Fly")
 createSlider(page3, "Tốc độ bay", 10, 1000, "FlySpeed")
 
-local defaultWalkSpeed = 16
-createToggle(page3, "🏃 Chạy nhanh", "Speed", function(v) 
-    if player.Character and player.Character:FindFirstChild("Humanoid") then 
-        if v then defaultWalkSpeed = player.Character.Humanoid.WalkSpeed else player.Character.Humanoid.WalkSpeed = defaultWalkSpeed end
-    end 
-end)
+createToggle(page3, "🏃 Chạy nhanh (Qua mặt Anti-Cheat)", "Speed")
 createSlider(page3, "Tốc độ chạy", 1, 1000, "SpeedValue")
 
 local defaultJumpPower = 50
@@ -510,7 +526,7 @@ createToggle(page3, "🎯 Hitbox", "Hitbox")
 createSlider(page3, "Kích thước Hitbox", 0, 100, "HitboxSize")
 createToggle(page3, "🌪️ Xoay vòng tròn", "SpinBot")
 createSlider(page3, "Tốc độ xoay", 0, 100, "SpinSpeed")
-createToggle(page3, "💡 Ánh sáng quanh người", "PlayerLight", function(v) if not v and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then local light = player.Character.HumanoidRootPart:FindFirstChild("PlayerPointLight"); if light then light:Destroy() end end end)
+createToggle(page3, "💡 Ánh sáng quanh người", "PlayerLight", function(v) if not v and player.Character then local root = getUniversalRoot(player.Character); if root then local light = root:FindFirstChild("PlayerPointLight"); if light then light:Destroy() end end end end)
 createSlider(page3, "Phạm vi sáng", 0, 1000, "LightRange")
 createSlider(page3, "Độ sáng", 0, 5, "LightBrightness")
 
@@ -659,10 +675,13 @@ local function saveTpData() pcall(function() if writefile then local d = {}; for
 local pendingDeleteAll = false
 
 local tpControlFrame_New = createDualButtons(page6, "📍 LƯU VỊ TRÍ", Theme.Brand, function()
-    if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-        local root = player.Character.HumanoidRootPart; local cf = {root.CFrame:GetComponents()}; local mx = 0
-        for _, v in ipairs(savedTpList) do local num = string.match(v.name, "Lưu Vị Trí (%d+)"); if num then mx = math.max(mx, tonumber(num)) end end
-        table.insert(savedTpList, {name = "Lưu Vị Trí " .. (mx + 1), cframe = cf, isTemp = false}); saveTpData(); renderSavedTps()
+    if player.Character then
+        local root = getUniversalRoot(player.Character)
+        if root then
+            local cf = {root.CFrame:GetComponents()}; local mx = 0
+            for _, v in ipairs(savedTpList) do local num = string.match(v.name, "Lưu Vị Trí (%d+)"); if num then mx = math.max(mx, tonumber(num)) end end
+            table.insert(savedTpList, {name = "Lưu Vị Trí " .. (mx + 1), cframe = cf, isTemp = false}); saveTpData(); renderSavedTps()
+        end
     end
 end, "🗑️ XÓA TẤT CẢ", Theme.AccentOff, function() 
     if not pendingDeleteAll then pendingDeleteAll = true; MakeToast("⚠️ CẢNH BÁO", "Ấn lần nữa để xác nhận xóa sạch!", Theme.AccentOff); task.delay(3, function() pendingDeleteAll = false end)
@@ -682,7 +701,7 @@ function renderSavedTps()
         nameBox.FocusLost:Connect(function() if nameBox.Text ~= "" then data.name = nameBox.Text; saveTpData() else nameBox.Text = data.name end end)
         local tpBtn = Instance.new("TextButton", item); tpBtn.Size = UDim2.new(0.25, 0, 0.6, 0); tpBtn.Position = UDim2.new(0.53, 0, 0.2, 0); tpBtn.Text = "TP"; tpBtn.BackgroundColor3 = Theme.Brand; tpBtn.TextColor3 = Color3.new(1,1,1); tpBtn.Font = Enum.Font.GothamBold; tpBtn.TextSize = 11; tpBtn.ZIndex = 10; Instance.new("UICorner", tpBtn).CornerRadius = UDim.new(0, 6)
         local delBtn = Instance.new("TextButton", item); delBtn.Size = UDim2.new(0.15, 0, 0.6, 0); delBtn.Position = UDim2.new(0.81, 0, 0.2, 0); delBtn.Text = "X"; delBtn.BackgroundColor3 = Theme.AccentOff; delBtn.TextColor3 = Color3.new(1,1,1); delBtn.Font = Enum.Font.GothamBold; delBtn.TextSize = 12; delBtn.ZIndex = 10; Instance.new("UICorner", delBtn).CornerRadius = UDim.new(0, 6)
-        tpBtn.MouseButton1Click:Connect(function() clickAnimate(tpBtn); if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then player.Character.HumanoidRootPart.CFrame = CFrame.new(unpack(data.cframe)); MakeToast("Dịch chuyển", "Đến " .. data.name, Theme.Brand) end end)
+        tpBtn.MouseButton1Click:Connect(function() clickAnimate(tpBtn); if player.Character then local r = getUniversalRoot(player.Character); if r then r.CFrame = CFrame.new(unpack(data.cframe)); MakeToast("Dịch chuyển", "Đến " .. data.name, Theme.Brand) end end end)
         delBtn.MouseButton1Click:Connect(function() clickAnimate(delBtn); table.remove(savedTpList, i); saveTpData(); renderSavedTps() end)
     end
 end
@@ -707,14 +726,15 @@ local function updatePlayerList()
             
             btn.MouseButton1Click:Connect(function()
                 clickAnimate(btn); local myChar = player.Character
-                if myChar and myChar:FindFirstChild("HumanoidRootPart") then
+                if myChar then
+                    local myRoot = getUniversalRoot(myChar)
                     local targetCFrame = nil
                     if p.Character then
-                        local hrp = p.Character:FindFirstChild("HumanoidRootPart")
+                        local hrp = getUniversalRoot(p.Character)
                         targetCFrame = hrp and hrp.CFrame or p.Character:GetPivot()
                     end
-                    if targetCFrame then 
-                        myChar.HumanoidRootPart.CFrame = targetCFrame; MakeToast("Dịch Chuyển", "Đến " .. p.DisplayName, Theme.Brand)
+                    if myRoot and targetCFrame then 
+                        myRoot.CFrame = targetCFrame; MakeToast("Dịch Chuyển", "Đến " .. p.DisplayName, Theme.Brand)
                     else 
                         MakeToast("Lỗi", "Người chơi bị ẩn map", Theme.AccentOff) 
                     end
@@ -760,17 +780,20 @@ end)
 task.spawn(function()
     while task.wait(0.5) do
         pcall(function()
-            if State.AutoCollect and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-                local root = player.Character.HumanoidRootPart; local rootPos = root.Position
-                for _, prompt in ipairs(cachedPrompts) do
-                    if prompt.Parent and prompt.Parent:IsA("BasePart") and prompt.Enabled and (prompt.Parent.Position - rootPos).Magnitude <= 50 then if fireproximityprompt then fireproximityprompt(prompt) end end
-                end
-                local overlapParams = OverlapParams.new(); overlapParams.FilterDescendantsInstances = {player.Character}; overlapParams.FilterType = Enum.RaycastFilterType.Exclude
-                local partsNearby = workspace:GetPartBoundsInRadius(rootPos, 50, overlapParams)
-                for _, part in ipairs(partsNearby) do
-                    if part.Name == "Handle" and part.Parent and part.Parent:IsA("Tool") then
-                        part.CanCollide = false
-                        if firetouchinterest then firetouchinterest(root, part, 0); task.wait(0.01); firetouchinterest(root, part, 1) else part.CFrame = root.CFrame end
+            if State.AutoCollect and player.Character then
+                local root = getUniversalRoot(player.Character)
+                if root then
+                    local rootPos = root.Position
+                    for _, prompt in ipairs(cachedPrompts) do
+                        if prompt.Parent and prompt.Parent:IsA("BasePart") and prompt.Enabled and (prompt.Parent.Position - rootPos).Magnitude <= 50 then if fireproximityprompt then fireproximityprompt(prompt) end end
+                    end
+                    local overlapParams = OverlapParams.new(); overlapParams.FilterDescendantsInstances = {player.Character}; overlapParams.FilterType = Enum.RaycastFilterType.Exclude
+                    local partsNearby = workspace:GetPartBoundsInRadius(rootPos, 50, overlapParams)
+                    for _, part in ipairs(partsNearby) do
+                        if part.Name == "Handle" and part.Parent and part.Parent:IsA("Tool") then
+                            part.CanCollide = false
+                            if firetouchinterest then firetouchinterest(root, part, 0); task.wait(0.01); firetouchinterest(root, part, 1) else part.CFrame = root.CFrame end
+                        end
                     end
                 end
             end
@@ -779,20 +802,29 @@ task.spawn(function()
 end)
 
 -- ==========================================
--- [CÔ LẬP LUỒNG ESP VÀ HITBOX]
+-- [CÔ LẬP LUỒNG ESP VÀ HITBOX UNIVERSAL]
 -- ==========================================
 local function updateESP_Hitbox()
     if State.Hitbox then
         for _, p in pairs(Players:GetPlayers()) do
-            if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-                local hrp = p.Character.HumanoidRootPart
-                if not originalHitboxSizes[p] then originalHitboxSizes[p] = hrp.Size end
-                hrp.Size = Vector3.new(State.HitboxSize, State.HitboxSize, State.HitboxSize); hrp.Transparency = 0.5; hrp.CanCollide = false
+            if p ~= player and p.Character then
+                local hrp = getUniversalRoot(p.Character)
+                if hrp then
+                    if not originalHitboxSizes[p] then originalHitboxSizes[p] = hrp.Size end
+                    hrp.Size = Vector3.new(State.HitboxSize, State.HitboxSize, State.HitboxSize)
+                    hrp.Transparency = 0.5
+                    hrp.CanCollide = false
+                end
             end
         end
     else
         if next(originalHitboxSizes) then
-            for p, size in pairs(originalHitboxSizes) do if p and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then p.Character.HumanoidRootPart.Size = size; p.Character.HumanoidRootPart.Transparency = 1 end end
+            for p, size in pairs(originalHitboxSizes) do 
+                if p and p.Character then 
+                    local hrp = getUniversalRoot(p.Character)
+                    if hrp then hrp.Size = size; hrp.Transparency = 1 end 
+                end 
+            end
             originalHitboxSizes = {}
         end
     end
@@ -810,7 +842,7 @@ local function updateESP_Hitbox()
         if p ~= player then
             pcall(function()
                 local tChar = p.Character
-                local espPart = tChar and (tChar:FindFirstChild("HumanoidRootPart") or tChar:FindFirstChild("Head") or tChar.PrimaryPart)
+                local espPart = getUniversalRoot(tChar)
                 
                 if espPart then
                     if not ActiveESPs[p] then ActiveESPs[p] = {} end
@@ -834,7 +866,7 @@ local function updateESP_Hitbox()
                         ActiveESPs[p].Highlight = hl
                     end
                     
-                    local myChar = player.Character; local myRoot = myChar and myChar:FindFirstChild("HumanoidRootPart")
+                    local myChar = player.Character; local myRoot = getUniversalRoot(myChar)
                     if myRoot then
                         local dist = math.floor((myRoot.Position - espPart.Position).Magnitude)
                         ActiveESPs[p].Billboard.NameLabel.Text = p.DisplayName .. '\n<font color="#00FFFF">[' .. dist .. 'm]</font>'
@@ -863,25 +895,46 @@ end
 -- BẢO TỒN HOẠT ĐỘNG LIÊN TỤC VÀ LUỒNG ĐỘC LẬP
 -- ==========================================
 
-RunService.RenderStepped:Connect(function()
+-- Chạy Xuyên Tường bắt buộc ở Stepped (Trước tính toán Vật lý) để mượt 100%
+RunService.Stepped:Connect(function()
+    local char = player.Character
+    if char and State.Noclip then
+        for _, p in ipairs(char:GetDescendants()) do
+            if p:IsA("BasePart") then p.CanCollide = false end
+        end
+    end
+end)
+
+-- RenderStepped xử lý CFrame (Cam & Di Chuyển)
+RunService.RenderStepped:Connect(function(deltaTime)
     local char = player.Character
     if not char then return end
-    local root = char:FindFirstChild("HumanoidRootPart")
+    
+    local root = getUniversalRoot(char)
     local hum = char:FindFirstChildOfClass("Humanoid")
     
     if hum and root then
+        -- UNIVERSAL SPEED (Bypass Anti-Cheat)
+        if State.Speed and hum.MoveDirection.Magnitude > 0 then
+            local speedMultiplier = State.SpeedValue / 50 
+            root.CFrame = root.CFrame + (hum.MoveDirection * (speedMultiplier * 60 * deltaTime))
+        end
+
         -- Lướt
         if State.AutoDash and hum.MoveDirection.Magnitude > 0 then
             root.CFrame = root.CFrame + (hum.MoveDirection * (State.DashSpeed / 10))
         end
+        
         -- Xoay
         if State.SpinBot then 
             root.CFrame = root.CFrame * CFrame.Angles(0, math.rad(State.SpinSpeed), 0) 
         end
-        -- Chống trôi (Anti-Drift) cho Noclip khi không di chuyển
+        
+        -- Chống trôi (Anti-Drift) cực mạnh khi ĐANG BẬT Noclip mà không thao tác
         if State.Noclip and hum.MoveDirection.Magnitude == 0 then
-            root.Velocity = Vector3.new(0, root.Velocity.Y, 0)
+            root.AssemblyLinearVelocity = Vector3.new(0, root.AssemblyLinearVelocity.Y, 0)
         end
+        
         -- Hệ thống bay Mobile CFrame Mượt mà nhất
         if State.Fly then
             hum.PlatformStand = true
@@ -906,25 +959,26 @@ RunService.RenderStepped:Connect(function()
                 end
             end
         else
-            hum.PlatformStand = false
+            if not State.AntiStun then hum.PlatformStand = false end
         end
     end
 end)
 
+-- Heartbeat xử lý Logic Game và Tính năng
 RunService.Heartbeat:Connect(function()
     updateESP_Hitbox()
     
     local char = player.Character
     if not char then return end
-    local root = char:FindFirstChild("HumanoidRootPart")
+    local root = getUniversalRoot(char)
     local hum = char:FindFirstChildOfClass("Humanoid")
     
     if hum then
         if State.LockPosition and root then root.Anchored = true end
-        if State.Speed then hum.WalkSpeed = State.SpeedValue end
+        
         if State.Jump then hum.UseJumpPower = true; hum.JumpPower = State.JumpValue end
         
-        -- Anti-Stun & Anti-Knockback
+        -- Anti-Stun & Anti-Knockback (Chống văng siêu cường)
         if State.AntiStun then 
             hum:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
             hum:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, false)
@@ -934,7 +988,7 @@ RunService.Heartbeat:Connect(function()
             end
             
             if root and hum.MoveDirection.Magnitude == 0 and root.Velocity.Magnitude > 5 then
-                root.Velocity = Vector3.new(0, root.Velocity.Y, 0) 
+                root.AssemblyLinearVelocity = Vector3.new(0, root.AssemblyLinearVelocity.Y, 0) 
             end
         end
 
@@ -972,13 +1026,6 @@ RunService.Heartbeat:Connect(function()
                 end
             end
             originalToolSizes = {}
-        end
-    end
-    
-    -- Noclip liên tục
-    if State.Noclip then
-        for _, p in pairs(char:GetDescendants()) do
-            if p:IsA("BasePart") then p.CanCollide = false end
         end
     end
 end)
