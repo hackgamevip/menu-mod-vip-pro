@@ -1,5 +1,6 @@
 -- ==========================================
 -- MENU VIP PRO V1.12.5 (MAX SPEED 1000 & FULL UTILITIES)
+-- [BẢN ĐÃ TỐI ƯU HÓA VÀ FIX LỖI]
 -- ==========================================
 repeat task.wait() until game:IsLoaded()
 
@@ -472,6 +473,40 @@ task.spawn(function()
 end)
 
 -- ==========================================
+-- [HÀM XỬ LÝ HITBOX VÀ ESP - TỐI ƯU HÓA]
+-- ==========================================
+local function applyHitbox()
+    if State.Hitbox then
+        for _, p in pairs(Players:GetPlayers()) do
+            if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+                local hrp = p.Character.HumanoidRootPart
+                if not originalHitboxSizes[p] then originalHitboxSizes[p] = hrp.Size end
+                hrp.Size = Vector3.new(State.HitboxSize, State.HitboxSize, State.HitboxSize)
+                hrp.Transparency = 0.5
+                hrp.CanCollide = false
+            end
+        end
+    else
+        if next(originalHitboxSizes) then
+            for p, size in pairs(originalHitboxSizes) do
+                if p and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+                    p.Character.HumanoidRootPart.Size = size
+                    p.Character.HumanoidRootPart.Transparency = 1
+                end
+            end
+            originalHitboxSizes = {}
+        end
+    end
+end
+
+-- Vòng lặp cập nhật Hitbox nhẹ (1 giây/lần) cho người chơi mới respawn
+task.spawn(function()
+    while task.wait(1) do
+        if State.Hitbox then applyHitbox() end
+    end
+end)
+
+-- ==========================================
 -- [TAB 2: TÍNH NĂNG]
 -- ==========================================
 createToggle(page2, "🛡️ Chống ngã", "AntiStun")
@@ -502,8 +537,12 @@ createToggle(page2, "👀 Nhìn xuyên map", "XRay", function(v)
         if v then
             for i, obj in ipairs(workspace:GetDescendants()) do
                 if currentTick ~= xrayTick then return end 
-                if obj:IsA("BasePart") and not obj:IsDescendantOf(player.Character) and obj.Name ~= "Terrain" and obj.Transparency < 1 then
-                    if not xrayMats[obj] then xrayMats[obj] = obj.Transparency end; obj.Transparency = 0.5
+                -- [FIXED]: Sửa logic X-Ray để không làm hỏng kính mờ
+                if obj:IsA("BasePart") and not obj:IsDescendantOf(player.Character) and obj.Name ~= "Terrain" then
+                    if not xrayMats[obj] then xrayMats[obj] = obj.Transparency end
+                    if obj.Transparency < 0.5 then
+                        obj.Transparency = 0.5
+                    end
                 end
                 if i % 300 == 0 then task.wait() end 
             end
@@ -524,7 +563,7 @@ createToggle(page2, "🔴 ESP người chơi", "ESP")
 -- [TAB 3: PLAYER]
 -- ==========================================
 createToggle(page3, "🕊️ Bay Trên không (FLY)", "Fly")
-createSlider(page3, "Tốc độ bay", 10, 1000, "FlySpeed") -- ĐÃ NÂNG LÊN 1000
+createSlider(page3, "Tốc độ bay", 10, 1000, "FlySpeed")
 
 local defaultWalkSpeed = 16
 createToggle(page3, "🏃 Chạy nhanh", "Speed", function(v) 
@@ -547,8 +586,9 @@ createSlider(page3, "Tốc độ lướt", 1, 50, "DashSpeed")
 
 createToggle(page3, "⚔️ Đánh xa", "Reach")
 createSlider(page3, "Kích thước vũ khí", 0, 300, "ReachSize")
-createToggle(page3, "🎯 Hitbox", "Hitbox")
-createSlider(page3, "Kích thước Hitbox", 0, 100, "HitboxSize")
+-- [FIXED]: Trigger gọi hàm applyHitbox thay vì chạy vòng lặp vô hạn
+createToggle(page3, "🎯 Hitbox", "Hitbox", function() applyHitbox() end)
+createSlider(page3, "Kích thước Hitbox", 0, 100, "HitboxSize", function() applyHitbox() end)
 createToggle(page3, "🌪️ Xoay vòng tròn", "SpinBot")
 createSlider(page3, "Tốc độ xoay", 0, 100, "SpinSpeed")
 createToggle(page3, "💡 Ánh sáng quanh người", "PlayerLight", function(v) if not v and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then local light = player.Character.HumanoidRootPart:FindFirstChild("PlayerPointLight"); if light then light:Destroy() end end end)
@@ -591,18 +631,24 @@ task.spawn(function()
             if State.AutoCollect and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
                 local root = player.Character.HumanoidRootPart; local rootPos = root.Position
                 for _, prompt in ipairs(cachedPrompts) do
-                    if prompt.Parent and prompt.Parent:IsA("BasePart") and prompt.Enabled and (prompt.Parent.Position - rootPos).Magnitude <= 50 then if fireproximityprompt then fireproximityprompt(prompt) end end
+                    -- [FIXED]: Backup cách thức tương tác phòng Executor ko hỗ trợ fireproximityprompt
+                    if prompt.Parent and prompt.Parent:IsA("BasePart") and prompt.Enabled and (prompt.Parent.Position - rootPos).Magnitude <= 50 then 
+                        if fireproximityprompt then fireproximityprompt(prompt) else prompt:InputHoldBegin() task.wait() prompt:InputHoldEnd() end 
+                    end
                 end
                 local overlapParams = OverlapParams.new(); overlapParams.FilterDescendantsInstances = {player.Character}; overlapParams.FilterType = Enum.RaycastFilterType.Exclude
                 local partsNearby = workspace:GetPartBoundsInRadius(rootPos, 50, overlapParams)
                 for _, part in ipairs(partsNearby) do
                     if part.Name == "Handle" and part.Parent and part.Parent:IsA("Tool") then
                         part.CanCollide = false
+                        -- [FIXED]: Fallback cho firetouchinterest nếu executor dỏm
                         if firetouchinterest then 
                             firetouchinterest(root, part, 0)
                             task.wait(0.01)
                             firetouchinterest(root, part, 1) 
-                        else part.CFrame = root.CFrame end
+                        else 
+                            part.CFrame = root.CFrame 
+                        end
                     end
                 end
             end
@@ -611,7 +657,7 @@ task.spawn(function()
 end)
 
 -- ==========================================
--- [TAB 4: TIỆN ÍCH] - ĐÃ BỔ SUNG ĐỦ TÍNH NĂNG CHÌM
+-- [TAB 4: TIỆN ÍCH]
 -- ==========================================
 createToggle(page4, "💾 Lưu Cài Đặt", "AutoSave", function(v) 
     if v then saveConfig(); MakeToast("Đã Bật", "Đã lưu cấu hình hiện tại!", Theme.AccentOn)
@@ -690,27 +736,20 @@ local function rejoinServer()
     if #Players:GetPlayers() <= 1 then player:Kick("\nĐang vào lại server..."); task.wait(); TeleportService:Teleport(game.PlaceId, player) else TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, player) end
 end
 
+-- [FIXED]: Sửa lỗi khoảng trắng game: HttpGet thành game:HttpGet()
 createDualButtons(page4, "🌞 Trời SÁNG (Fake)", Color3.fromRGB(243, 156, 18), function() Lighting.ClockTime = 12 end, "🌚 Trời TỐI (Fake)", Color3.fromRGB(160, 32, 240), function() Lighting.ClockTime = 0 end)
 createDualButtons(page4, "🔄 VÀO LẠI SV", Theme.AccentOn, rejoinServer, "🎲 ĐỔI SV NGẪU NHIÊN", Theme.Brand, function() hopServer("Desc") end)
 createDualButtons(page4, "📉 ĐỔI SV ÍT NGƯỜI", Color3.fromRGB(52, 152, 219), function() hopServer("Asc") end, "📈 ĐỔI SV NHIỀU NGƯỜI", Color3.fromRGB(231, 76, 60), function() hopServer("Desc") end)
 createDualButtons(page4, "💻 LỆNH ADMIN", Theme.AccentOn, function() 
-    pcall(function() 
-        loadstring(game: HttpGet('https://raw.githubusercontent.com/EdgelY/infiniteyield/master/source'))() 
-    end) 
+    pcall(function() loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgelY/infiniteyield/master/source'))() end) 
 end, "📁 TP SAVE V3", Theme.Brand, function() 
-    pcall(function() 
-        loadstring(game: HttpGet('https://raw.githubusercontent.com/OBen1/fe/main/Tp%20Place%20GUI', true))() 
-    end) 
+    pcall(function() loadstring(game:HttpGet('https://raw.githubusercontent.com/OBen1/fe/main/Tp%20Place%20GUI', true))() end) 
 end)
 
 createDualButtons(page4, "🕊️ FLY V1", Theme.Brand, function() 
-    pcall(function() 
-    loadstring("\108\111\97\100\115\116\114\105\110\103\40\103\97\109\101\58\72\116\116\112\71\101\116\40\40\39\104\116\116\112\115\58\47\47\103\105\115\116\46\103\105\116\104\117\98\117\115\101\114\99\111\110\116\101\110\116\46\99\111\109\47\109\101\111\122\111\110\101\89\84\47\98\102\48\51\55\100\102\102\57\102\48\97\55\48\48\49\55\51\48\52\100\100\100\54\55\102\100\99\100\51\55\48\47\114\97\119\47\101\49\52\101\55\52\102\52\50\53\98\48\54\48\100\102\53\50\51\51\52\51\99\102\51\48\98\55\56\55\48\55\52\101\98\51\99\53\100\50\47\97\114\99\101\117\115\37\50\53\50\48\120\37\50\53\50\48\102\108\121\37\50\53\50\48\50\37\50\53\50\48\111\98\102\108\117\99\97\116\111\114\39\41\44\116\114\117\101\41\41\40\41\10\10")()
-         end) 
+    pcall(function() loadstring(game:HttpGet('https://gist.githubusercontent.com/meozoneYT/bf037dff9f0a70017304ddd67fdcd370/raw/e14e74f425b060df523343cf30b787074eb3c5d2/arceus%2520x%2520fly%25202%2520obflucator', true))() end) 
 end, "🕊️ FLY V3", Theme.Brand, function() 
-    pcall(function() 
-        loadstring(game: HttpGet("https://rawscripts.net/raw/Universal-Script-Fly-V3-X-132770"))() 
-    end) 
+    pcall(function() loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-Fly-V3-X-132770"))() end) 
 end)
 
 -- ==========================================
@@ -841,13 +880,26 @@ updatePlayerList(); Players.PlayerAdded:Connect(updatePlayerList); Players.Playe
 player.Idled:Connect(function() if State.AntiAfk then pcall(function() local cam = workspace.CurrentCamera or camera; VirtualUser:Button2Down(Vector2.new(0,0), cam and cam.CFrame or CFrame.new()); task.wait(1); VirtualUser:Button2Up(Vector2.new(0,0), cam and cam.CFrame or CFrame.new()) end) end end)
 
 -- ==========================================
--- [XỬ LÝ NOCLIP CHỐNG LÚN SÀN & REACH]
+-- [XỬ LÝ NOCLIP TỐI ƯU VÀ REACH]
 -- ==========================================
+-- [FIXED]: Cache bộ phận cơ thể để Noclip không gây drop FPS
+local charPartsCache = {}
+local function updateNoclipCache()
+    charPartsCache = {}
+    if player.Character then
+        for _, part in ipairs(player.Character:GetDescendants()) do
+            if part:IsA("BasePart") then table.insert(charPartsCache, part) end
+        end
+    end
+end
+player.CharacterAdded:Connect(updateNoclipCache)
+if player.Character then updateNoclipCache() end
+
 RunService.Stepped:Connect(function()
     pcall(function()
         if State.Noclip and player.Character then
-            for _, part in ipairs(player.Character:GetDescendants()) do
-                if part:IsA("BasePart") then
+            for _, part in ipairs(charPartsCache) do
+                if part and part.Parent then
                     local n = part.Name
                     if not (n == "LeftFoot" or n == "RightFoot" or n == "LeftLowerLeg" or n == "RightLowerLeg" or n == "Left Leg" or n == "Right Leg") then
                         part.CanCollide = false
@@ -875,7 +927,7 @@ RunService.Stepped:Connect(function()
 end)
 
 -- ==========================================
--- [HỆ THỐNG FLY BẰNG LINEAR VELOCITY MỚI]
+-- [HỆ THỐNG FLY CHUẨN XÁC THEO CAMERA]
 -- ==========================================
 local flyAttach, flyLinearVel, flyAlignOri = nil, nil, nil
 local function updateFly()
@@ -916,10 +968,12 @@ local function updateFly()
             
             flyAlignOri.CFrame = camera.CFrame
             
+            -- [FIXED]: Bay theo hướng camera thay vì vọt lên trời thẳng đứng
             local moveDir = hum.MoveDirection
             if moveDir.Magnitude > 0 then
                 local look = camera.CFrame.LookVector
-                flyLinearVel.VectorVelocity = Vector3.new(moveDir.X * State.FlySpeed, look.Y * State.FlySpeed, moveDir.Z * State.FlySpeed)
+                local flyDir = Vector3.new(moveDir.X, look.Y * moveDir.Magnitude, moveDir.Z).Unit
+                flyLinearVel.VectorVelocity = flyDir * State.FlySpeed
             else
                 flyLinearVel.VectorVelocity = Vector3.new(0, 0, 0)
             end
@@ -928,31 +982,9 @@ local function updateFly()
 end
 
 -- ==========================================
--- [CÔ LẬP LUỒNG ESP VÀ HITBOX]
+-- [XỬ LÝ ESP TỐI ƯU HÓA RÒ RỈ BỘ NHỚ]
 -- ==========================================
-local function updateESP_Hitbox()
-    if State.Hitbox then
-        for _, p in pairs(Players:GetPlayers()) do
-            if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-                local hrp = p.Character.HumanoidRootPart
-                if not originalHitboxSizes[p] then originalHitboxSizes[p] = hrp.Size end
-                hrp.Size = Vector3.new(State.HitboxSize, State.HitboxSize, State.HitboxSize)
-                hrp.Transparency = 0.5
-                hrp.CanCollide = false
-            end
-        end
-    else
-        if next(originalHitboxSizes) then
-            for p, size in pairs(originalHitboxSizes) do
-                if p and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-                    p.Character.HumanoidRootPart.Size = size
-                    p.Character.HumanoidRootPart.Transparency = 1
-                end
-            end
-            originalHitboxSizes = {}
-        end
-    end
-
+local function updateESP()
     if not State.ESP then
         for p, bgui in pairs(ActiveESPs) do if bgui then bgui:Destroy() end; ActiveESPs[p] = nil end
         for _, p in pairs(Players:GetPlayers()) do
@@ -1006,8 +1038,12 @@ local function updateESP_Hitbox()
         end
     end
     
+    -- [FIXED]: Sửa lỗi Check Destroyed Object gây rò rỉ bộ nhớ
     for p, bgui in pairs(ActiveESPs) do
-        if not Players:FindFirstChild(p.Name) then if bgui then bgui:Destroy() end; ActiveESPs[p] = nil end
+        if not p or not p.Parent or not Players:FindFirstChild(p.Name) then 
+            if bgui then bgui:Destroy() end
+            ActiveESPs[p] = nil 
+        end
     end
 end
 
@@ -1044,6 +1080,6 @@ RunService.RenderStepped:Connect(function()
 end)
 
 RunService.Heartbeat:Connect(function()
-    updateESP_Hitbox()
+    updateESP()
     updateFly()
 end)
