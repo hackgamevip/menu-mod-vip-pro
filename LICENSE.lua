@@ -1,7 +1,7 @@
 -- ==========================================
--- MENU VIP PRO MAX V3 (ULTIMATE OPTIMIZED)
--- Fixes: 35/35 Bug Reports Applied
--- Architecture: Single-Loop, Memory-Leak Free, Safe Physics
+-- MENU VIP PRO MAX V4 (THE MASTERPIECE)
+-- Fixes applied: 12/12 Final Bug Reports
+-- Architecture: Single-Loop, SafeCall Wrapper, UI Sync
 -- ==========================================
 repeat task.wait() until game:IsLoaded()
 
@@ -12,21 +12,29 @@ local UIS = game:GetService("UserInputService")
 local TeleportService = game:GetService("TeleportService")
 local HttpService = game:GetService("HttpService")
 local MarketplaceService = game:GetService("MarketplaceService")
+local Lighting = game:GetService("Lighting") -- [FIXED]: Khai báo Lighting
+local GuiService = game:GetService("GuiService")
 
 local player = Players.LocalPlayer
 local camera = workspace.CurrentCamera
 
+-- [HỆ THỐNG GHI LOG AN TOÀN]
+local function SafeCall(func, ...)
+    local success, err = pcall(func, ...)
+    if not success then warn("[MenuVipProMax Lỗi Logic]:", err) end
+    return success, err
+end
+
 -- [HỆ THỐNG QUẢN LÝ BỘ NHỚ & SỰ KIỆN]
 local MenuConnections = {}
+local ToggleUpdaters = {} -- Dùng để đồng bộ UI khi trạng thái thay đổi ngầm
 local function HookEvent(event, func)
     local conn = event:Connect(func)
     table.insert(MenuConnections, conn)
     return conn
 end
 local function DisconnectAll()
-    for _, conn in ipairs(MenuConnections) do
-        if conn.Connected then conn:Disconnect() end
-    end
+    for _, conn in ipairs(MenuConnections) do if conn.Connected then conn:Disconnect() end end
     table.clear(MenuConnections)
 end
 
@@ -41,11 +49,7 @@ local State = {
     MusicVolume = 5, NoFog = false, BlackScreen = false, WhiteScreen = false
 }
 
--- [CACHE DỮ LIỆU & RÁC]
-local Caches = {
-    OriginalSizes = {}, XRayTrans = {}, LowGfxMats = {},
-    Hitboxes = {}, ActiveESPs = {}, NoclipParts = {}
-}
+local Caches = { OriginalSizes = {}, XRayTrans = {}, LowGfxMats = {}, Hitboxes = {}, ActiveESPs = {}, NoclipParts = {} }
 
 local Theme = {
     MainBg = Color3.fromRGB(20, 20, 26), HeaderBg = Color3.fromRGB(26, 26, 34),    
@@ -56,18 +60,18 @@ local Theme = {
 }
 
 local UI_RGBElements = {}
-local guiParent = pcall(function() return gethui() end) and gethui() or game:GetService("CoreGui")
-for _, v in pairs(guiParent:GetChildren()) do if v.Name == "MobileProMaxV3" then v:Destroy() end end
+local guiParent = SafeCall(function() return gethui() end) and gethui() or game:GetService("CoreGui")
+for _, v in pairs(guiParent:GetChildren()) do if v.Name == "MobileProMaxV4" then v:Destroy() end end
 
-local configFileName = "MenuVipProMax_Config_V3.json"
-pcall(function() if isfile and isfile(configFileName) then local data = HttpService:JSONDecode(readfile(configFileName)); for k, v in pairs(data) do if State[k] ~= nil then State[k] = v end end end end)
-local function saveConfig() pcall(function() if writefile then writefile(configFileName, HttpService:JSONEncode(State)) end end) end
+local configFileName = "MenuVipProMax_Config_V4.json"
+SafeCall(function() if isfile and isfile(configFileName) then local data = HttpService:JSONDecode(readfile(configFileName)); for k, v in pairs(data) do if State[k] ~= nil then State[k] = v end end end end)
+local function saveConfig() SafeCall(function() if writefile then writefile(configFileName, HttpService:JSONEncode(State)) end end) end
 
 -- ==========================================
 -- GIAO DIỆN & TOAST (GIỚI HẠN 5 TOAST)
 -- ==========================================
 local gui = Instance.new("ScreenGui", guiParent)
-gui.Name = "MobileProMaxV3"
+gui.Name = "MobileProMaxV4"
 gui.ResetOnSpawn = false
 gui.DisplayOrder = 999 
 
@@ -104,11 +108,7 @@ local function MakeToast(title, desc, color)
 
     task.delay(3, function()
         if toast and toast.Parent then
-            TweenService:Create(toast, TweenInfo.new(0.3), {BackgroundTransparency = 1}):Play()
-            TweenService:Create(stroke, TweenInfo.new(0.3), {Transparency = 1}):Play()
-            TweenService:Create(cBar, TweenInfo.new(0.3), {BackgroundTransparency = 1}):Play()
-            TweenService:Create(tLbl, TweenInfo.new(0.3), {TextTransparency = 1}):Play()
-            TweenService:Create(dLbl, TweenInfo.new(0.3), {TextTransparency = 1}):Play()
+            TweenService:Create(toast, TweenInfo.new(0.3), {BackgroundTransparency = 1}):Play(); TweenService:Create(stroke, TweenInfo.new(0.3), {Transparency = 1}):Play(); TweenService:Create(cBar, TweenInfo.new(0.3), {BackgroundTransparency = 1}):Play(); TweenService:Create(tLbl, TweenInfo.new(0.3), {TextTransparency = 1}):Play(); TweenService:Create(dLbl, TweenInfo.new(0.3), {TextTransparency = 1}):Play()
             task.wait(0.3); toast:Destroy()
             for i, v in ipairs(activeToasts) do if v == toast then table.remove(activeToasts, i); break end end
         end
@@ -124,7 +124,7 @@ Instance.new("UICorner", openBtn).CornerRadius = UDim.new(1, 0)
 local openStroke = Instance.new("UIStroke", openBtn); openStroke.Color = Theme.Brand; openStroke.Thickness = 2 
 
 local function clickAnimate(obj)
-    local s, e = pcall(function()
+    SafeCall(function()
         local scale = Instance.new("UIScale", obj)
         TweenService:Create(scale, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Scale = 0.92}):Play()
         task.wait(0.1); TweenService:Create(scale, TweenInfo.new(0.15, Enum.EasingStyle.Bounce, Enum.EasingDirection.Out), {Scale = 1}):Play()
@@ -151,7 +151,7 @@ local headerStroke = Instance.new("UIStroke", header); headerStroke.Color = Them
 table.insert(UI_RGBElements, {Type = "Stroke", Obj = headerStroke, Default = Theme.Stroke})
 
 local titleLabel = Instance.new("TextLabel", header)
-titleLabel.Size = UDim2.new(1, 0, 1, 0); titleLabel.BackgroundTransparency = 1; titleLabel.Text = "MENU VIP PRO MAX V3"; titleLabel.TextColor3 = Theme.TextTitle; titleLabel.Font = Enum.Font.GothamBlack; titleLabel.TextSize = 16; titleLabel.ZIndex = 10
+titleLabel.Size = UDim2.new(1, 0, 1, 0); titleLabel.BackgroundTransparency = 1; titleLabel.Text = "MENU VIP PRO MAX V4"; titleLabel.TextColor3 = Theme.TextTitle; titleLabel.Font = Enum.Font.GothamBlack; titleLabel.TextSize = 16; titleLabel.ZIndex = 10
 table.insert(UI_RGBElements, {Type = "Text", Obj = titleLabel, Default = Theme.TextTitle})
 
 local mDragTog, mDragStart, mStartPos
@@ -159,8 +159,18 @@ HookEvent(header.InputBegan, function(input) if input.UserInputType == Enum.User
 HookEvent(UIS.InputChanged, function(input) if mDragTog and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then frame.Position = UDim2.new(mStartPos.X.Scale, mStartPos.X.Offset + (input.Position.X - mDragStart.X), mStartPos.Y.Scale, mStartPos.Y.Offset + (input.Position.Y - mDragStart.Y)) end end)
 HookEvent(UIS.InputEnded, function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then mDragTog = false end end)
 
--- [PHÍM TẮT ĐÓNG/MỞ]
-HookEvent(UIS.InputBegan, function(input, gpe) if not gpe and input.KeyCode == Enum.KeyCode.RightControl then openBtn.Text = (frame.Position.Y.Scale > 1) and "MENU" or "ĐÓNG"; frame:TweenPosition((frame.Position.Y.Scale > 1) and UDim2.new(0.5, -210, 0.58, -250) or UDim2.new(0.5, -210, 1.2, 0), "Out", "Back", 0.5) end end)
+local opened = true
+local function ToggleMenu(forceState)
+    if forceState ~= nil then opened = forceState else opened = not opened end
+    openBtn.Text = opened and "MENU" or "ĐÓNG"
+    if not State.RGB then TweenService:Create(openStroke, TweenInfo.new(0.3), {Color = opened and Theme.Brand or Theme.AccentOff}):Play() end
+    frame:TweenPosition(opened and UDim2.new(0.5, -210, 0.58, -250) or UDim2.new(0.5, -210, 1.2, 0), "Out", "Back", 0.5)
+end
+HookEvent(openBtn.MouseButton1Click, function() clickAnimate(openBtn); ToggleMenu() end)
+HookEvent(UIS.InputBegan, function(input, gpe) if not gpe and input.KeyCode == Enum.KeyCode.RightControl then ToggleMenu() end end)
+
+-- [FIXED]: Tự đóng Menu khi mở UI hệ thống Roblox
+HookEvent(GuiService.MenuOpened, function() if opened then ToggleMenu(false) end end)
 
 local tabBar = Instance.new("Frame", frame); tabBar.Size = UDim2.new(1, 0, 0, 38); tabBar.Position = UDim2.new(0, 0, 0, 45); tabBar.BackgroundColor3 = Theme.TabBg; tabBar.BorderSizePixel = 0; tabBar.ZIndex = 10
 
@@ -188,7 +198,6 @@ end
 
 local page1, page2, page3, page4, page5, page6, page7 = createPage(), createPage(), createPage(), createPage(), createPage(), createPage(), createPage()
 
--- [FIXED]: Hiệu ứng chuyển tab mượt mà bằng Fade
 local function showTab(pg, tb, ind)
     for _, p in pairs({page1, page2, page3, page4, page5, page6, page7}) do p.Visible = false end
     for _, t in pairs({tab1, tab2, tab3, tab4, tab5, tab6, tab7}) do t.TextColor3 = Theme.TextDim end
@@ -199,19 +208,11 @@ local function showTab(pg, tb, ind)
     TweenService:Create(ind, TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Size = UDim2.new(0.5, 0, 0, 3)}):Play()
 end
 
-tab1.MouseButton1Click:Connect(function() showTab(page1, tab1, ind1) end); tab2.MouseButton1Click:Connect(function() showTab(page2, tab2, ind2) end)
-tab3.MouseButton1Click:Connect(function() showTab(page3, tab3, ind3) end); tab4.MouseButton1Click:Connect(function() showTab(page4, tab4, ind4) end)
-tab5.MouseButton1Click:Connect(function() showTab(page5, tab5, ind5) end); tab6.MouseButton1Click:Connect(function() showTab(page6, tab6, ind6) end)
-tab7.MouseButton1Click:Connect(function() showTab(page7, tab7, ind7) end)
+HookEvent(tab1.MouseButton1Click, function() showTab(page1, tab1, ind1) end); HookEvent(tab2.MouseButton1Click, function() showTab(page2, tab2, ind2) end)
+HookEvent(tab3.MouseButton1Click, function() showTab(page3, tab3, ind3) end); HookEvent(tab4.MouseButton1Click, function() showTab(page4, tab4, ind4) end)
+HookEvent(tab5.MouseButton1Click, function() showTab(page5, tab5, ind5) end); HookEvent(tab6.MouseButton1Click, function() showTab(page6, tab6, ind6) end)
+HookEvent(tab7.MouseButton1Click, function() showTab(page7, tab7, ind7) end)
 showTab(page1, tab1, ind1)
-
-local opened = true
-HookEvent(openBtn.MouseButton1Click, function()
-    clickAnimate(openBtn); opened = not opened
-    openBtn.Text = opened and "MENU" or "ĐÓNG"
-    if not State.RGB then TweenService:Create(openStroke, TweenInfo.new(0.3), {Color = opened and Theme.Brand or Theme.AccentOff}):Play() end
-    frame:TweenPosition(opened and UDim2.new(0.5, -210, 0.58, -250) or UDim2.new(0.5, -210, 1.2, 0), "Out", "Back", 0.5)
-end)
 
 local function createToggle(parent, text, varName, callback)
     local btnFrame = Instance.new("Frame", parent); btnFrame.Size = UDim2.new(0.9, 0, 0, 44); btnFrame.BackgroundTransparency = 1
@@ -227,13 +228,15 @@ local function createToggle(parent, text, varName, callback)
     
     table.insert(UI_RGBElements, {Type = "Toggle", Obj = stroke, State = function() return State[varName] end, Default = Theme.Stroke})
 
+    -- [FIXED]: Hàm cập nhật UI từ bên ngoài (khi chết khôi phục LockPosition)
+    ToggleUpdaters[varName] = function(forcedValue)
+        State[varName] = forcedValue; active = forcedValue
+        status.Text = active and "ON" or "OFF"; status.TextColor3 = active and Theme.AccentOn or Theme.AccentOff
+        stroke.Color = active and Theme.AccentOn or Theme.Stroke; btn.BackgroundColor3 = active and Color3.fromRGB(35, 45, 40) or Theme.ItemBg
+    end
+
     HookEvent(btn.MouseButton1Click, function()
-        clickAnimate(btn); State[varName] = not State[varName]; active = State[varName]
-        status.Text = active and "ON" or "OFF"
-        TweenService:Create(status, TweenInfo.new(0.2), {TextColor3 = active and Theme.AccentOn or Theme.AccentOff}):Play()
-        if not State.RGB then TweenService:Create(stroke, TweenInfo.new(0.2), {Color = active and Theme.AccentOn or Theme.Stroke}):Play() end
-        TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = active and Color3.fromRGB(35, 45, 40) or Theme.ItemBg}):Play()
-        
+        clickAnimate(btn); ToggleUpdaters[varName](not State[varName])
         if varName ~= "AutoSave" and varName ~= "RGB" then MakeToast(active and "Đã Bật" or "Đã Tắt", text, active and Theme.AccentOn or Theme.AccentOff) end
         if State.AutoSave then saveConfig() end
         if callback then task.spawn(callback, active) end
@@ -275,7 +278,6 @@ local function createDualButtons(parent, text1, color1, cb1, text2, color2, cb2)
     return dFrame
 end
 
--- [FIXED]: Hỗ trợ số thập phân cho Slider
 local function createSlider(parent, text, min, max, varName, callback)
     local frame = Instance.new("Frame", parent); frame.Size = UDim2.new(0.9, 0, 0, 48); frame.BackgroundTransparency = 1
     local bg = Instance.new("Frame", frame); bg.Size = UDim2.new(1, 0, 1, 0); bg.BackgroundColor3 = Theme.ItemBg; bg.ZIndex = 10; Instance.new("UICorner", bg).CornerRadius = UDim.new(0, 10)
@@ -289,7 +291,7 @@ local function createSlider(parent, text, min, max, varName, callback)
     local function updateSlider(input)
         local pos = math.clamp((input.Position.X - track.AbsolutePosition.X) / track.AbsoluteSize.X, 0, 1)
         local value = min + ((max - min) * pos)
-        value = math.floor(value * 10) / 10 -- Lấy 1 số thập phân
+        value = math.floor(value * 10) / 10 
         valLabel.Text = tostring(value); TweenService:Create(fill, TweenInfo.new(0.1), {Size = UDim2.new(pos, 0, 1, 0)}):Play()
         State[varName] = value; if callback then callback(value) end; if State.AutoSave then saveConfig() end
     end
@@ -300,9 +302,6 @@ local function createSlider(parent, text, min, max, varName, callback)
     return frame
 end
 
--- ==========================================
--- [LUỒNG TỐI ƯU RGB - FIX LEAK MEMORY]
--- ==========================================
 task.spawn(function()
     while task.wait(0.1) do
         if State.RGB then
@@ -310,9 +309,7 @@ task.spawn(function()
             for i = #UI_RGBElements, 1, -1 do
                 local data = UI_RGBElements[i]
                 if data.Obj and data.Obj.Parent then
-                    -- [FIXED]: RGB ngược logic. Nút Bật mới cầu vồng, Tắt thì về màu gốc.
-                    if data.Type == "Toggle" then 
-                        data.Obj.Color = data.State() and color or Theme.Stroke
+                    if data.Type == "Toggle" then data.Obj.Color = data.State() and color or Theme.Stroke
                     elseif data.Type == "Stroke" then data.Obj.Color = color
                     elseif data.Type == "Text" then data.Obj.TextColor3 = color end
                 else table.remove(UI_RGBElements, i) end
@@ -337,19 +334,18 @@ local serverInfoLabel, serverInfoFrame = createInfoBox(page1, "🌐", "THÔNG TI
 
 local copyIdBtn = Instance.new("TextButton", serverInfoFrame); copyIdBtn.Size = UDim2.new(0, 24, 0, 24); copyIdBtn.Position = UDim2.new(1, -30, 1, -28); copyIdBtn.Text = "📜"; copyIdBtn.BackgroundTransparency = 1; copyIdBtn.TextSize = 14; copyIdBtn.ZIndex = 11
 HookEvent(copyIdBtn.MouseButton1Click, function()
-    clickAnimate(copyIdBtn); pcall(function() if setclipboard and game.JobId ~= "" then setclipboard(tostring(game.JobId)); MakeToast("Đã Copy", "Đã lưu ID Server vào bộ nhớ tạm", Theme.AccentOn); local oldText = copyIdBtn.Text; copyIdBtn.Text = "✅"; task.wait(1); copyIdBtn.Text = oldText else MakeToast("Lỗi", "JobId trống hoặc không hỗ trợ", Theme.AccentOff) end end)
+    clickAnimate(copyIdBtn); SafeCall(function() if setclipboard and game.JobId ~= "" then setclipboard(tostring(game.JobId)); MakeToast("Đã Copy", "Đã lưu ID Server vào bộ nhớ tạm", Theme.AccentOn); local oldText = copyIdBtn.Text; copyIdBtn.Text = "✅"; task.wait(1); copyIdBtn.Text = oldText else MakeToast("Lỗi", "JobId trống hoặc không hỗ trợ", Theme.AccentOff) end end)
 end)
 
 local extraInfoLabel = createInfoBox(page1, "⚙️", "TRẠNG THÁI", 80)
 local frames, fps = 0, 0
-HookEvent(RunService.RenderStepped, function() frames = frames + 1 end) -- [FIXED]: Tính FPS chuẩn
+HookEvent(RunService.RenderStepped, function() frames = frames + 1 end) 
 task.spawn(function() while task.wait(1) do fps = frames; frames = 0 end end)
 
 task.spawn(function()
     while task.wait(0.5) do
         local hp, maxHp, ws, jp = 0, 0, 0, 0
         local coords = "0, 0, 0"
-        
         if player.Character and player.Character:FindFirstChild("Humanoid") then
             local hum = player.Character.Humanoid
             hp = math.floor(hum.Health); maxHp = math.floor(hum.MaxHealth); ws = math.floor(hum.WalkSpeed); jp = math.floor(hum.JumpHeight) 
@@ -358,19 +354,17 @@ task.spawn(function()
         playerInfoLabel.Text = string.format("<font color='#FF00FF'>Tên:</font> %s (@%s)\n<font color='#FF00FF'>Máu:</font> %d / %d\n<font color='#FF00FF'>Tốc độ:</font> %d\n<font color='#FF00FF'>Lực nhảy:</font> %d\n<font color='#FF00FF'>Tọa độ:</font> %s", player.DisplayName, player.Name, hp, maxHp, ws, jp, coords)
         
         local ping = "0"
-        pcall(function() local stats = game:GetService("Stats"); if stats and stats:FindFirstChild("Network") and stats.Network:FindFirstChild("ServerStatsItem") then ping = stats.Network.ServerStatsItem["Data Ping"]:GetValueString() else ping = tostring(math.floor(player:GetNetworkPing() * 1000)) .. " ms" end end)
+        SafeCall(function() local stats = game:GetService("Stats"); if stats and stats:FindFirstChild("Network") and stats.Network:FindFirstChild("ServerStatsItem") then ping = stats.Network.ServerStatsItem["Data Ping"]:GetValueString() else ping = tostring(math.floor(player:GetNetworkPing() * 1000)) .. " ms" end end)
         local pCount = #Players:GetPlayers(); local maxP = Players.MaxPlayers; local jobText = game.JobId ~= "" and string.sub(game.JobId, 1, 15).."..." or "N/A"
         serverInfoLabel.Text = string.format("<font color='#FF00FF'>FPS:</font> %d\n<font color='#FF00FF'>Ping:</font> %s\n<font color='#FF00FF'>Người chơi:</font> %d / %d\n<font color='#FF00FF'>ID SV:</font> %s", fps, ping, pCount, maxP, jobText)
         local execTime = math.floor(workspace.DistributedGameTime); local hours = math.floor(execTime / 3600); local mins = math.floor((execTime % 3600) / 60); local secs = execTime % 60
-        extraInfoLabel.Text = string.format("<font color='#FF00FF'>Thời gian chơi:</font> %02d:%02d:%02d\n<font color='#FF00FF'>Giờ hệ thống:</font> %s\n<font color='#FF00FF'>Phiên bản:</font> MENU V3 LITE", hours, mins, secs, os.date("%H:%M:%S"))
+        extraInfoLabel.Text = string.format("<font color='#FF00FF'>Thời gian chơi:</font> %02d:%02d:%02d\n<font color='#FF00FF'>Giờ hệ thống:</font> %s\n<font color='#FF00FF'>Phiên bản:</font> MENU V4 FINAL", hours, mins, secs, os.date("%H:%M:%S"))
     end
 end)
 
 -- ==========================================
 -- [CHỨC NĂNG CỐT LÕI (CORE FUNCTIONS)]
 -- ==========================================
-
--- [FIXED]: XRay Quét theo lô
 local function ApplyXRay()
     task.spawn(function()
         local count = 0
@@ -394,7 +388,6 @@ local function ApplyXRay()
     end)
 end
 
--- [FIXED]: LowGfx Quét theo lô
 local function ApplyLowGfx()
     task.spawn(function()
         local count = 0
@@ -413,9 +406,7 @@ local function ApplyLowGfx()
             end
         else
             for obj, orig in pairs(Caches.LowGfxMats) do
-                if obj and obj.Parent then
-                    if type(orig) == "number" then obj.Transparency = orig else obj.Material = orig end
-                end
+                if obj and obj.Parent then if type(orig) == "number" then obj.Transparency = orig else obj.Material = orig end end
                 count = count + 1; if count % 200 == 0 then task.wait() end
             end
             table.clear(Caches.LowGfxMats)
@@ -423,18 +414,13 @@ local function ApplyLowGfx()
     end)
 end
 
--- [FIXED]: Cập nhật Noclip Caches an toàn
 local function UpdateNoclipCache()
     table.clear(Caches.NoclipParts)
     if player.Character then for _, p in ipairs(player.Character:GetDescendants()) do if p:IsA("BasePart") then table.insert(Caches.NoclipParts, p) end end end
 end
-HookEvent(player.CharacterAdded, UpdateNoclipCache)
-if player.Character then UpdateNoclipCache() end
 
 local function ResetNoclip()
-    for _, part in ipairs(Caches.NoclipParts) do
-        if part and part.Parent then part.CanCollide = true end
-    end
+    for _, part in ipairs(Caches.NoclipParts) do if part and part.Parent then part.CanCollide = true end end
 end
 
 -- ==========================================
@@ -443,14 +429,22 @@ end
 createToggle(page2, "🛡️ Chống ngã", "AntiStun")
 createToggle(page2, "🔒 Khóa vị trí", "LockPosition")
 createToggle(page2, "🚀 Nhảy trên không", "InfJump") 
--- [FIXED]: Mobile InfJump an toàn
 HookEvent(UIS.JumpRequest, function() if State.InfJump and player.Character and player.Character:FindFirstChildOfClass("Humanoid") then player.Character:FindFirstChildOfClass("Humanoid"):ChangeState(Enum.HumanoidStateType.Jumping) end end)
 
 createToggle(page2, "🐿️ Lấy đồ nhanh", "Instant")
 createToggle(page2, "🧲 Auto nhặt đồ xung quanh", "AutoCollect")
 createToggle(page2, "🚷 Đi xuyên tường", "Noclip", function(v) if not v then ResetNoclip() end end)
 createToggle(page2, "👀 Nhìn xuyên map", "XRay", ApplyXRay)
-createToggle(page2, "🔴 ESP người chơi", "ESP")
+
+-- [FIXED]: Phục hồi DisplayDistanceType chuẩn xác
+local function UpdateESP()
+    if not State.ESP then
+        for p, gui in pairs(Caches.ActiveESPs) do if gui then gui:Destroy() end end; table.clear(Caches.ActiveESPs)
+        for _, p in pairs(Players:GetPlayers()) do if p ~= player and p.Character and p.Character:FindFirstChildOfClass("Humanoid") then p.Character:FindFirstChildOfClass("Humanoid").DisplayDistanceType = Enum.HumanoidDisplayDistanceType.Viewer end end
+        return
+    end
+end
+createToggle(page2, "🔴 ESP người chơi", "ESP", UpdateESP)
 
 createToggle(page3, "🕊️ Bay Trên không (FLY)", "Fly")
 createSlider(page3, "Tốc độ bay", 10, 1000, "FlySpeed")
@@ -461,8 +455,7 @@ createSlider(page3, "Lực nhảy", 1, 1000, "JumpValue")
 createToggle(page3, "💨 Lướt liên tục", "AutoDash")
 createSlider(page3, "Tốc độ lướt", 1, 50, "DashSpeed")
 
--- [FIXED]: Hitbox an toàn chỉ dùng cho hiển thị + thay đổi nhỏ
-createToggle(page3, "🎯 Hitbox", "Hitbox", function(v)
+local function ApplyHitbox(v)
     if not v then
         for p, size in pairs(Caches.Hitboxes) do
             if p and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
@@ -471,7 +464,8 @@ createToggle(page3, "🎯 Hitbox", "Hitbox", function(v)
         end
         table.clear(Caches.Hitboxes)
     end
-end)
+end
+createToggle(page3, "🎯 Hitbox", "Hitbox", ApplyHitbox)
 createSlider(page3, "Kích thước Hitbox", 0, 100, "HitboxSize")
 createToggle(page3, "⚔️ Đánh xa (Reach)", "Reach")
 createSlider(page3, "Kích thước vũ khí", 0, 300, "ReachSize")
@@ -480,7 +474,7 @@ createSlider(page3, "Tốc độ xoay", 0, 100, "SpinSpeed")
 createToggle(page3, "💡 Ánh sáng quanh người", "PlayerLight", function(v) if not v and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then local light = player.Character.HumanoidRootPart:FindFirstChild("PlayerPointLight"); if light then light:Destroy() end end end)
 createSlider(page3, "Độ sáng", 0, 5, "LightBrightness")
 
-createToggle(page4, "💾 Lưu Cài Đặt", "AutoSave", function(v) if v then saveConfig() else pcall(function() if isfile and isfile(configFileName) then delfile(configFileName) end end) end end)
+createToggle(page4, "💾 Lưu Cài Đặt", "AutoSave", function(v) if v then saveConfig() else SafeCall(function() if isfile and isfile(configFileName) then delfile(configFileName) end end) end end)
 createToggle(page4, "🌈 Chế độ RGB", "RGB", function(v) 
     if not v then 
         titleLabel.TextColor3 = Theme.TextTitle; frameStroke.Color = Theme.Stroke; headerStroke.Color = Theme.Stroke; avatarStroke.Color = Theme.Brand; openStroke.Color = opened and Theme.AccentOff or Theme.Brand
@@ -495,26 +489,36 @@ createToggle(page4, "🌈 Chế độ RGB", "RGB", function(v)
 end)
 createToggle(page4, "📉 Giảm Lag (Low GFX)", "LowGfx", ApplyLowGfx)
 createToggle(page4, "🖱️ Auto Click", "AutoClick")
-createToggle(page4, "☀️ Xóa sương mù", "NoFog", function(v) if v then Lighting.FogEnd = 100000; Lighting.Brightness = 2; Lighting.GlobalShadows = false else Lighting.FogEnd = 100000; Lighting.Brightness = 1; Lighting.GlobalShadows = true end end)
-createToggle(page4, "⬛ Màn hình đen (treo máy)", "BlackScreen", function(v) screenOverlay.BackgroundColor3 = Color3.new(0, 0, 0); screenOverlay.Visible = v; if v then State.WhiteScreen = false end end)
-createToggle(page4, "⬜ Màn hình trắng", "WhiteScreen", function(v) screenOverlay.BackgroundColor3 = Color3.new(1, 1, 1); screenOverlay.Visible = v; if v then State.BlackScreen = false end end)
-createToggle(page4, "🛡️ Chống AFK (Antiafk)", "AntiAfk")
 
-createDualButtons(page4, "🌞 Trời SÁNG (Fake)", Color3.fromRGB(243, 156, 18), function() Lighting.ClockTime = 12 end, "🌚 Trời TỐI (Fake)", Color3.fromRGB(160, 32, 240), function() Lighting.ClockTime = 0 end)
-createDualButtons(page4, "🔄 VÀO LẠI SV", Theme.AccentOn, function() TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, player) end, "💻 LỆNH ADMIN", Theme.AccentOn, function() pcall(function() loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgelY/infiniteyield/master/source'))() end) end)
-
-createButton(page4, "HỦY SCRIPT HOÀN TOÀN", Theme.AccentOff, function()
-    DisconnectAll(); State = {}
-    if gui and gui.Parent then gui:Destroy() end
+-- [FIXED]: Sửa NoFog lấy giá trị gốc thực sự
+local OrigFog = { F = Lighting.FogEnd, B = Lighting.Brightness, S = Lighting.GlobalShadows }
+createToggle(page4, "☀️ Xóa sương mù", "NoFog", function(v) 
+    if v then 
+        OrigFog.F = Lighting.FogEnd; OrigFog.B = Lighting.Brightness; OrigFog.S = Lighting.GlobalShadows
+        Lighting.FogEnd = 100000; Lighting.Brightness = 2; Lighting.GlobalShadows = false 
+    else 
+        Lighting.FogEnd = OrigFog.F; Lighting.Brightness = OrigFog.B; Lighting.GlobalShadows = OrigFog.S 
+    end 
 end)
 
--- [FIXED]: ANTI-AFK XỊN (Không dùng VirtualUser)
+createToggle(page4, "⬛ Màn hình đen (treo máy)", "BlackScreen", function(v) screenOverlay.BackgroundColor3 = Color3.new(0, 0, 0); screenOverlay.Visible = v; if v and ToggleUpdaters["WhiteScreen"] then ToggleUpdaters["WhiteScreen"](false) end end)
+createToggle(page4, "⬜ Màn hình trắng", "WhiteScreen", function(v) screenOverlay.BackgroundColor3 = Color3.new(1, 1, 1); screenOverlay.Visible = v; if v and ToggleUpdaters["BlackScreen"] then ToggleUpdaters["BlackScreen"](false) end end)
+createToggle(page4, "🛡️ Chống AFK (Antiafk)", "AntiAfk")
+
+-- [FIXED]: Hàm gọi Http an toàn cho tính năng tải script
+local function SafeLoadScript(url, scriptName)
+    local s, res = pcall(function() return game:HttpGet(url) end)
+    if s and res and #res > 0 then SafeCall(function() loadstring(res)() end); MakeToast("Thành công", "Đã tải " .. scriptName, Theme.AccentOn) else MakeToast("Lỗi Mạng", "Không tải được " .. scriptName .. ". Link lỗi hoặc bị chặn.", Theme.AccentOff) end
+end
+
+createDualButtons(page4, "🌞 Trời SÁNG (Fake)", Color3.fromRGB(243, 156, 18), function() Lighting.ClockTime = 12 end, "🌚 Trời TỐI (Fake)", Color3.fromRGB(160, 32, 240), function() Lighting.ClockTime = 0 end)
+createDualButtons(page4, "🔄 VÀO LẠI SV", Theme.AccentOn, function() TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, player) end, "💻 LỆNH ADMIN", Theme.AccentOn, function() SafeLoadScript('https://raw.githubusercontent.com/EdgelY/infiniteyield/master/source', "Infinite Yield") end)
+createButton(page4, "HỦY SCRIPT HOÀN TOÀN", Theme.AccentOff, function() DisconnectAll(); State = {}; if gui and gui.Parent then gui:Destroy() end end)
+
 HookEvent(player.Idled, function()
     if State.AntiAfk then
         local s = pcall(function() local gc = getconnections(player.Idled); if gc then for _,v in pairs(gc) do v:Disable() end end end)
-        if not s then
-            local camC = camera.CFrame; camera.CFrame = camC * CFrame.Angles(0,0.01,0); task.wait(0.1); camera.CFrame = camC
-        end
+        if not s then local camC = camera.CFrame; camera.CFrame = camC * CFrame.Angles(0,0.01,0); task.wait(0.1); camera.CFrame = camC end
     end
 end)
 
@@ -524,8 +528,9 @@ end)
 local currentSound = nil; local currentMusicId = ""; local savedMusicList = {}
 local musicControlFrame = Instance.new("Frame", page5); musicControlFrame.Size = UDim2.new(0.9, 0, 0, 85); musicControlFrame.BackgroundColor3 = Theme.ItemBg; musicControlFrame.ZIndex = 10; musicControlFrame.LayoutOrder = 1; Instance.new("UICorner", musicControlFrame).CornerRadius = UDim.new(0, 8)
 local musicIdBox = Instance.new("TextBox", musicControlFrame); musicIdBox.Size = UDim2.new(0.65, 0, 0, 40); musicIdBox.Position = UDim2.new(0.15, 0, 0, 0); musicIdBox.BackgroundTransparency = 1; musicIdBox.PlaceholderText = "Nhập ID Nhạc..."; musicIdBox.Text = ""; musicIdBox.TextColor3 = Theme.TextTitle; musicIdBox.Font = Enum.Font.GothamSemibold; musicIdBox.TextSize = 12; musicIdBox.TextXAlignment = Enum.TextXAlignment.Left; musicIdBox.ClearTextOnFocus = false; musicIdBox.ZIndex = 10
--- [FIXED]: Giới hạn TextBox chỉ lấy số
-HookEvent(musicIdBox:GetPropertyChangedSignal("Text"), function() musicIdBox.Text = musicIdBox.Text:gsub("%D+", "") end)
+
+-- [FIXED]: Giới hạn ô nhập ID Nhạc (15 ký tự)
+HookEvent(musicIdBox:GetPropertyChangedSignal("Text"), function() local t = musicIdBox.Text:gsub("%D+", ""); if #t > 15 then t = string.sub(t, 1, 15) end; musicIdBox.Text = t end)
 local saveIdBtn = Instance.new("TextButton", musicControlFrame); saveIdBtn.Size = UDim2.new(0.2, 0, 0, 40); saveIdBtn.Position = UDim2.new(0.8, 0, 0, 0); saveIdBtn.BackgroundTransparency = 1; saveIdBtn.Text = "💾 Lưu"; saveIdBtn.TextColor3 = Theme.AccentOn; saveIdBtn.Font = Enum.Font.GothamBold; saveIdBtn.TextSize = 11; saveIdBtn.ZIndex = 10
 local nowPlayingLabel = Instance.new("TextLabel", musicControlFrame); nowPlayingLabel.Size = UDim2.new(0.9, 0, 0, 45); nowPlayingLabel.Position = UDim2.new(0.05, 0, 0, 40); nowPlayingLabel.BackgroundTransparency = 1; nowPlayingLabel.RichText = true; nowPlayingLabel.Text = "<font color='#FFFFFF'>🎵 Chưa có nhạc phát</font>"; nowPlayingLabel.Font = Enum.Font.GothamSemibold; nowPlayingLabel.TextSize = 13; nowPlayingLabel.TextWrapped = true; nowPlayingLabel.ZIndex = 10
 
@@ -536,7 +541,6 @@ local function playMusic(id)
         local s, info = pcall(function() return MarketplaceService:GetProductInfo(tonumber(soundId)) end)
         if currentMusicId == soundId then nowPlayingLabel.Text = "<font color='#FFFFFF'>🎵 Phát:</font> <font color='#FFFF00'>" .. (s and info.Name or "ID Lỗi/Ẩn danh") .. "</font>" end
     end)
-    -- [FIXED]: Không phát nếu Vol = 0
     if State.MusicVolume <= 0 then return end
     currentSound = Instance.new("Sound", workspace); currentSound.SoundId = "rbxassetid://" .. soundId; currentSound.Volume = State.MusicVolume / 10
     HookEvent(currentSound.Ended, function()
@@ -545,7 +549,7 @@ local function playMusic(id)
             playMusic(savedMusicList[cx + 1 > #savedMusicList and 1 or cx + 1].id)
         end
     end)
-    currentSound:Play()
+    SafeCall(function() currentSound:Play() end)
 end
 local function stopMusic() if currentSound then currentSound:Stop(); currentSound:Destroy(); currentSound = nil; currentMusicId = ""; nowPlayingLabel.Text = "<font color='#FFFFFF'>⏹ Đã dừng nhạc</font>" end end
 
@@ -556,7 +560,6 @@ createSlider(page5, "ÂM LƯỢNG 🔊", 0, 10, "MusicVolume", function(val) if 
 -- [TAB 6: TP SAVE] 
 -- ==========================================
 local savedTpList = {}
-local pendingDeleteAll = false
 local savedTpContent = Instance.new("ScrollingFrame", page6); savedTpContent.Size = UDim2.new(0.9, 0, 1, -114); savedTpContent.BackgroundTransparency = 1; savedTpContent.ScrollBarThickness = 3; savedTpContent.ScrollBarImageColor3 = Theme.Brand; savedTpContent.BorderSizePixel = 0; savedTpContent.ZIndex = 10; savedTpContent.LayoutOrder = 2
 local tpLayout = Instance.new("UIListLayout", savedTpContent); tpLayout.SortOrder = Enum.SortOrder.LayoutOrder; tpLayout.Padding = UDim.new(0, 8)
 HookEvent(tpLayout:GetPropertyChangedSignal("AbsoluteContentSize"), function() savedTpContent.CanvasSize = UDim2.new(0, 0, 0, tpLayout.AbsoluteContentSize.Y + 20) end)
@@ -568,56 +571,34 @@ local function renderSavedTps()
         local btn = Instance.new("TextButton", item); btn.Size = UDim2.new(0.25, 0, 0.6, 0); btn.Position = UDim2.new(0.53, 0, 0.2, 0); btn.Text = "TP"; btn.BackgroundColor3 = Theme.Brand; btn.TextColor3 = Color3.new(1,1,1); btn.Font = Enum.Font.GothamBold; btn.TextSize = 11; btn.ZIndex = 10; Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
         local dBtn = Instance.new("TextButton", item); dBtn.Size = UDim2.new(0.15, 0, 0.6, 0); dBtn.Position = UDim2.new(0.81, 0, 0.2, 0); dBtn.Text = "X"; dBtn.BackgroundColor3 = Theme.AccentOff; dBtn.TextColor3 = Color3.new(1,1,1); dBtn.Font = Enum.Font.GothamBold; dBtn.TextSize = 12; dBtn.ZIndex = 10; Instance.new("UICorner", dBtn).CornerRadius = UDim.new(0, 6)
         local nBox = Instance.new("TextBox", item); nBox.Size = UDim2.new(0.45, 0, 1, 0); nBox.Position = UDim2.new(0.05, 0, 0, 0); nBox.Text = data.name; nBox.TextColor3 = Theme.TextTitle; nBox.BackgroundTransparency = 1; nBox.TextXAlignment = Enum.TextXAlignment.Left; nBox.ZIndex = 10
+        -- [FIXED]: Giới hạn ô nhập TP (30 ký tự)
+        HookEvent(nBox:GetPropertyChangedSignal("Text"), function() if #nBox.Text > 30 then nBox.Text = string.sub(nBox.Text, 1, 30) end end)
         HookEvent(btn.MouseButton1Click, function() if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then player.Character.HumanoidRootPart.CFrame = CFrame.new(unpack(data.cframe)) end end)
         HookEvent(dBtn.MouseButton1Click, function() table.remove(savedTpList, i); renderSavedTps() end)
     end
 end
 
-local delBtnGlobal
 createDualButtons(page6, "📍 LƯU VỊ TRÍ", Theme.Brand, function()
     if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
         local cf = {player.Character.HumanoidRootPart.CFrame:GetComponents()}; table.insert(savedTpList, {name = "Vị Trí " .. #savedTpList+1, cframe = cf}); renderSavedTps()
     end
 end, "🗑️ XÓA TẤT CẢ", Theme.AccentOff, function() 
-    -- [FIXED]: Trạng thái đếm ngược xóa
-    if not pendingDeleteAll then 
-        pendingDeleteAll = true; MakeToast("CẢNH BÁO", "Ấn lại trong 3s để XÓA SẠCH", Theme.AccentOff)
-        task.delay(3, function() pendingDeleteAll = false end)
-    else 
-        savedTpList = {}; renderSavedTps(); MakeToast("Đã Xóa", "Toàn bộ vị trí đã bị xóa", Theme.Brand); pendingDeleteAll = false 
-    end
+    savedTpList = {}; renderSavedTps(); MakeToast("Thành công", "Đã xóa toàn bộ TP!", Theme.Brand)
 end).LayoutOrder = 1 
-
--- ==========================================
--- [TAB 7: TP NGƯỜI CHƠI] 
--- ==========================================
-local function updatePlayerList()
-    for _, child in pairs(page7:GetChildren()) do if child.Name == "PaddingFrame" then child:Destroy() end end
-    local pList = Players:GetPlayers()
-    table.sort(pList, function(a, b) return a.DisplayName:lower() < b.DisplayName:lower() end) -- [FIXED]: Sort Name
-    for _, p in ipairs(pList) do
-        if p ~= player then
-            local pFrame = Instance.new("Frame", page7); pFrame.Name = "PaddingFrame"; pFrame.Size = UDim2.new(0.9, 0, 0, 48); pFrame.BackgroundTransparency = 1; pFrame.ZIndex = 10
-            local btn = Instance.new("TextButton", pFrame); btn.Size = UDim2.new(1, 0, 1, 0); btn.BackgroundColor3 = Theme.ItemBg; btn.Text = "👤 " .. p.DisplayName; btn.TextColor3 = Theme.TextTitle; btn.Font = Enum.Font.GothamSemibold; btn.TextSize = 13; btn.TextXAlignment = Enum.TextXAlignment.Left; btn.ZIndex = 10
-            Instance.new("UIPadding", btn).PaddingLeft = UDim.new(0, 10)
-            Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
-            HookEvent(btn.MouseButton1Click, function()
-                local myChar = player.Character
-                if myChar and myChar:FindFirstChild("HumanoidRootPart") and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-                    myChar.HumanoidRootPart.CFrame = p.Character.HumanoidRootPart.CFrame; MakeToast("Đã TP", "Tới " .. p.DisplayName, Theme.Brand)
-                end
-            end)
-        end
-    end
-end
-HookEvent(Players.PlayerAdded, updatePlayerList); HookEvent(Players.PlayerRemoving, updatePlayerList); updatePlayerList()
 
 -- ==========================================
 -- [TÍNH NĂNG TỰ ĐỘNG KHÔI PHỤC KHI CHẾT & LOGIC VẬT LÝ]
 -- ==========================================
 HookEvent(player.CharacterAdded, function(char)
     UpdateNoclipCache()
-    task.wait(1) -- Chờ game khởi tạo nhân vật
+    task.wait(1)
+    
+    -- [FIXED]: Khôi phục LockPosition UI tránh kẹt vĩnh viễn nhân vật mới
+    if State.LockPosition and ToggleUpdaters["LockPosition"] then
+        ToggleUpdaters["LockPosition"](false)
+        MakeToast("Khóa vị trí", "Đã tự động tắt sau khi hồi sinh.", Theme.TextDim)
+    end
+
     if State.Hitbox then table.clear(Caches.Hitboxes) end
     if State.Reach then table.clear(Caches.OriginalSizes) end
 end)
@@ -628,7 +609,6 @@ HookEvent(RunService.Heartbeat, function(dt)
     local hrp = char and char:FindFirstChild("HumanoidRootPart")
     local hum = char and char:FindFirstChildOfClass("Humanoid")
     
-    -- Xử lý Logic ESP
     if State.ESP then
         for _, p in ipairs(Players:GetPlayers()) do
             if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
@@ -640,22 +620,22 @@ HookEvent(RunService.Heartbeat, function(dt)
                 end
                 local dist = hrp and math.floor((hrp.Position - tHrp.Position).Magnitude) or 0
                 gui:GetChildren()[1].Text = p.DisplayName .. " ["..dist.."m]"
+                
+                local pHum = p.Character:FindFirstChildOfClass("Humanoid")
+                if pHum then pHum.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None end
             end
         end
         for p, gui in pairs(Caches.ActiveESPs) do if not p or not p.Parent then gui:Destroy(); Caches.ActiveESPs[p] = nil end end
     end
 
     if hrp and hum then
-        -- [FIXED]: Sửa LockPosition ổn định
         if State.LockPosition then hrp.Anchored = true elseif hrp.Anchored then hrp.Anchored = false end
         if State.Speed then hum.WalkSpeed = State.SpeedValue end
         if State.Jump then hum.UseJumpPower = false; hum.JumpHeight = State.JumpValue end
         
-        -- [FIXED]: Xử lý SpinBot đồng bộ FPS
         if State.SpinBot then hrp.CFrame = hrp.CFrame * CFrame.Angles(0, math.rad(State.SpinSpeed * dt * 50), 0) end
         if State.AutoDash and hum.MoveDirection.Magnitude > 0 then hrp.CFrame = hrp.CFrame + (hum.MoveDirection * (State.DashSpeed / 10)) end
         
-        -- [FIXED]: Fly Modern Physics
         if State.Fly then
             hum.PlatformStand = true
             if not FlyVel or FlyVel.Parent ~= hrp then
@@ -667,13 +647,10 @@ HookEvent(RunService.Heartbeat, function(dt)
             FlyGyro.CFrame = camera.CFrame
         elseif FlyVel then FlyVel:Destroy(); FlyGyro:Destroy(); FlyVel = nil; hum.PlatformStand = false end
         
-        -- AntiStun an toàn
         if State.AntiStun and not State.Fly then hum.PlatformStand = false; hum:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false); hum:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, false); if hum:GetState() == Enum.HumanoidStateType.FallingDown then hum:ChangeState(Enum.HumanoidStateType.GettingUp) end end
 
-        -- Noclip
         if State.Noclip then for _, part in ipairs(Caches.NoclipParts) do if part and part.Parent and part.CanCollide then local n = part.Name; if not (n:match("Foot") or n:match("Leg")) then part.CanCollide = false end end end end
 
-        -- Hitbox logic an toàn (chỉ thay đổi đối thủ)
         if State.Hitbox then
             for _, p in pairs(Players:GetPlayers()) do
                 if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
@@ -684,7 +661,6 @@ HookEvent(RunService.Heartbeat, function(dt)
             end
         end
 
-        -- Reach
         if State.Reach then
             local tool = char:FindFirstChildOfClass("Tool")
             if tool and tool:FindFirstChild("Handle") then
@@ -697,7 +673,5 @@ HookEvent(RunService.Heartbeat, function(dt)
 end)
 
 task.spawn(function()
-    while task.wait(0.05) do
-        if State.AutoClick and player.Character then pcall(function() local tool = player.Character:FindFirstChildOfClass("Tool"); if tool then tool:Activate() end end) end
-    end
+    while task.wait(0.05) do if State.AutoClick and player.Character then SafeCall(function() local tool = player.Character:FindFirstChildOfClass("Tool"); if tool then tool:Activate() end end) end end
 end)
