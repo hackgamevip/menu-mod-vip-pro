@@ -1,5 +1,5 @@
 -- ==========================================
--- MENU VIP PRO V1.12.5 (DELTA OPTIMIZED & BUG FIXES)
+-- MENU VIP PRO V1.12.5 (DELTA OPTIMIZED & FIXED ANTI-STUN)
 -- ==========================================
 repeat task.wait() until game:IsLoaded()
 
@@ -44,7 +44,7 @@ local originalHitboxSizes = {}
 local originalToolSizes = {}
 local cachedPrompts = {}
 local xrayMats = {}
-local OriginalGFX = {} -- Dữ liệu phục hồi LowGFX
+local OriginalGFX = {} 
 
 local guiParent = player:WaitForChild("PlayerGui")
 pcall(function()
@@ -266,7 +266,6 @@ openBtn.MouseButton1Click:Connect(function()
     frame:TweenPosition(opened and UDim2.new(0.5, -210, 0.58, -250) or UDim2.new(0.5, -210, 1.2, 0), "Out", "Back", 0.5)
 end)
 
--- Lấy Root Universal (Cho mọi game)
 local function getUniversalRoot(char)
     if not char then return nil end
     return char:FindFirstChild("HumanoidRootPart") 
@@ -461,12 +460,12 @@ UIS.JumpRequest:Connect(function() if State.InfJump and player.Character and pla
 createToggle(page2, "🐿️ Lấy đồ nhanh", "Instant")
 createToggle(page2, "🧲 Auto nhặt đồ xung quanh", "AutoCollect")
 
--- FIX LỖI TRÔI NOCLIP
+-- FIX LỖI TRÔI NOCLIP (Tuyệt đối không trôi)
 createToggle(page2, "🚷 Đi xuyên tường (Chống trôi)", "Noclip", function(v) 
     if not v and player.Character then 
         pcall(function() 
             local hrp = getUniversalRoot(player.Character)
-            -- Phanh gấp cực mạnh để chống trôi
+            -- Phanh gấp cực mạnh để chống trôi khi tắt
             if hrp then 
                 hrp.AssemblyLinearVelocity = Vector3.zero 
                 hrp.AssemblyAngularVelocity = Vector3.zero
@@ -815,7 +814,7 @@ task.spawn(function()
 end)
 
 -- ==========================================
--- [FIX: HITBOX MASSLESS ĐỂ CHỐNG LỖI ĐÁNH TRƯỢT]
+-- [FIX: HITBOX VÀ ESP]
 -- ==========================================
 local function updateESP_Hitbox()
     if State.Hitbox then
@@ -827,7 +826,7 @@ local function updateESP_Hitbox()
                     hrp.Size = Vector3.new(State.HitboxSize, State.HitboxSize, State.HitboxSize)
                     hrp.Transparency = 0.5
                     hrp.CanCollide = false
-                    hrp.Massless = true -- Sửa lỗi hỏng trọng tâm nhân vật
+                    hrp.Massless = true -- Sửa lỗi hỏng trọng tâm nhân vật, không đánh trượt
                 end
             end
         end
@@ -946,6 +945,11 @@ RunService.RenderStepped:Connect(function(deltaTime)
             root.CFrame = root.CFrame * CFrame.Angles(0, math.rad(State.SpinSpeed), 0) 
         end
         
+        -- Chống trôi (Anti-Drift) cực mạnh khi ĐANG BẬT Noclip mà không thao tác
+        if State.Noclip and hum.MoveDirection.Magnitude == 0 then
+            root.AssemblyLinearVelocity = Vector3.new(0, root.AssemblyLinearVelocity.Y, 0)
+        end
+        
         -- Hệ thống bay Mobile CFrame Mượt mà nhất
         if State.Fly then
             hum.PlatformStand = true
@@ -975,6 +979,7 @@ RunService.RenderStepped:Connect(function(deltaTime)
     end
 end)
 
+-- Heartbeat xử lý Logic Game và Tính năng (Đã Fix Anti-Stun)
 RunService.Heartbeat:Connect(function()
     updateESP_Hitbox()
     
@@ -988,17 +993,23 @@ RunService.Heartbeat:Connect(function()
         
         if State.Jump then hum.UseJumpPower = true; hum.JumpPower = State.JumpValue end
         
-        -- Anti-Stun & Anti-Knockback (Chống văng siêu cường)
+        -- Anti-Stun (Đã vá lỗi đứng server)
         if State.AntiStun then 
             hum:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
             hum:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, false)
             
-            if hum:GetState() == Enum.HumanoidStateType.FallingDown or hum:GetState() == Enum.HumanoidStateType.Ragdoll then 
+            local currentState = hum:GetState()
+            if currentState == Enum.HumanoidStateType.FallingDown or currentState == Enum.HumanoidStateType.Ragdoll then 
                 hum:ChangeState(Enum.HumanoidStateType.GettingUp)
             end
             
-            if root and hum.MoveDirection.Magnitude == 0 and root.Velocity.Magnitude > 5 then
-                root.AssemblyLinearVelocity = Vector3.new(0, root.AssemblyLinearVelocity.Y, 0) 
+            -- Chỉ triệt tiêu lực khi bị văng BẤT THƯỜNG (vượt quá 75 studs/s)
+            if root then
+                local currentVel = root.AssemblyLinearVelocity
+                local horizontalVel = Vector3.new(currentVel.X, 0, currentVel.Z)
+                if horizontalVel.Magnitude > 75 then
+                    root.AssemblyLinearVelocity = Vector3.new(0, currentVel.Y, 0) 
+                end
             end
         end
 
