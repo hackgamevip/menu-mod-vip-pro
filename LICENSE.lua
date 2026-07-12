@@ -1,5 +1,5 @@
 -- ==========================================
--- MENU VIP PRO V1.12.5 (AUTO SKILL + TAB SCROLL + AVATAR FIX)
+-- MENU VIP PRO V1.12.5 (AUTO SKILL UPDATE & UI POLISH)
 -- ==========================================
 repeat task.wait() until game:IsLoaded()
 
@@ -25,7 +25,9 @@ local State = {
     ShiftLock = false, SpeedValue = 60, JumpValue = 120, LightRange = 60, LightBrightness = 3,
     MusicVolume = 5,
     -- Auto Skill States
-    AutoSkillDelay = 1, AutoSkillZ = false, AutoSkillX = false, AutoSkillC = false, AutoSkillV = false, AutoSkillE = false, AutoSkillF = false
+    AutoSkillDelay = 1, 
+    AutoSkillZ = false, AutoSkillX = false, AutoSkillC = false, AutoSkillV = false, AutoSkillE = false, AutoSkillF = false,
+    AutoSkill1 = false, AutoSkill2 = false, AutoSkill3 = false, AutoSkill4 = false, AutoSkill5 = false, AutoSkill6 = false
 }
 
 local Theme = {
@@ -129,8 +131,9 @@ local screenOverlay = Instance.new("Frame", gui)
 screenOverlay.Size = UDim2.new(2, 0, 2, 0); screenOverlay.Position = UDim2.new(-0.5, 0, -0.5, 0)
 screenOverlay.BackgroundColor3 = Color3.new(0,0,0); screenOverlay.ZIndex = 0; screenOverlay.Visible = false
 
+-- Đã hạ tọa độ Y xuống 0.2 để không đè vào thanh máu/level của game
 local openBtn = Instance.new("TextButton", gui)
-openBtn.Size = UDim2.new(0, 45, 0, 45); openBtn.Position = UDim2.new(0, 15, 0, 15)
+openBtn.Size = UDim2.new(0, 45, 0, 45); openBtn.Position = UDim2.new(0, 15, 0.2, 0)
 openBtn.Text = "🇻🇳"; openBtn.BackgroundColor3 = Theme.MainBg; openBtn.BackgroundTransparency = 0.3
 openBtn.TextColor3 = Theme.Brand; openBtn.Font = Enum.Font.GothamBold; openBtn.TextSize = 22; openBtn.ZIndex = 10
 Instance.new("UICorner", openBtn).CornerRadius = UDim.new(1, 0)
@@ -176,7 +179,6 @@ titleLabel.Size = UDim2.new(1, 0, 1, 0); titleLabel.BackgroundTransparency = 1
 titleLabel.Text = "MENU VIP PRO MAX"
 titleLabel.TextColor3 = Theme.TextTitle; titleLabel.Font = Enum.Font.GothamBlack; titleLabel.TextSize = 16; titleLabel.ZIndex = 10
 
--- ĐÃ FIX AVATAR LÚN XUỐNG DƯỚI (Size 34x34)
 local avatarImg = Instance.new("ImageLabel", header)
 avatarImg.Size = UDim2.new(0, 34, 0, 34); avatarImg.Position = UDim2.new(0, 12, 0, 5); avatarImg.BackgroundTransparency = 1; avatarImg.ZIndex = 10
 pcall(function() avatarImg.Image = Players:GetUserThumbnailAsync(player.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size420x420) end)
@@ -194,9 +196,7 @@ UIS.InputChanged:Connect(function(input)
 end)
 UIS.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then dragToggle = false end end)
 
--- ==========================================
--- [UPGRADE: SCROLLING TAB BAR ĐỂ CHỨA NHIỀU TAB]
--- ==========================================
+-- SCROLLING TAB BAR
 local tabBar = Instance.new("ScrollingFrame", frame)
 tabBar.Size = UDim2.new(1, 0, 0, 38); tabBar.Position = UDim2.new(0, 0, 0, 45)
 tabBar.BackgroundColor3 = Theme.TabBg; tabBar.BorderSizePixel = 0; tabBar.ZIndex = 10
@@ -229,7 +229,7 @@ local tab4, ind4 = createTab("TIỆN ÍCH",  70)
 local tab5, ind5 = createTab("NHẠC ID",   70) 
 local tab6, ind6 = createTab("TP SAVE",   70)
 local tab7, ind7 = createTab("TP PLAYER", 80)
-local tab8, ind8 = createTab("AUTO SKILL", 85) -- TAB MỚI
+local tab8, ind8 = createTab("AUTO SKILL", 85) 
 
 local pageContainer = Instance.new("Frame", frame)
 pageContainer.Size = UDim2.new(1, 0, 1, -95); pageContainer.Position = UDim2.new(0, 0, 0, 88); pageContainer.BackgroundTransparency = 1; pageContainer.ZIndex = 10
@@ -291,6 +291,21 @@ local function getUniversalRoot(char)
         or char:FindFirstChild("UpperTorso") 
         or char.PrimaryPart 
         or char:FindFirstChildWhichIsA("BasePart")
+end
+
+-- THÊM HÀM TẠO THANH PHÂN CÁCH ĐỂ GIAO DIỆN GỌN HƠN
+local function createDivider(parent, text)
+    local frame = Instance.new("Frame", parent)
+    frame.Size = UDim2.new(0.9, 0, 0, 20)
+    frame.BackgroundTransparency = 1
+    local label = Instance.new("TextLabel", frame)
+    label.Size = UDim2.new(1, 0, 1, 0)
+    label.BackgroundTransparency = 1
+    label.Text = "─── " .. text .. " ───"
+    label.TextColor3 = Theme.Brand
+    label.Font = Enum.Font.GothamBold
+    label.TextSize = 11
+    return frame
 end
 
 local function createToggle(parent, text, varName, callback)
@@ -477,6 +492,8 @@ createToggle(page2, "🚀 Nhảy trên không", "InfJump")
 UIS.JumpRequest:Connect(function() if State.InfJump and player.Character and player.Character:FindFirstChildOfClass("Humanoid") then player.Character:FindFirstChildOfClass("Humanoid"):ChangeState(Enum.HumanoidStateType.Jumping) end end)
 createToggle(page2, "🐿️ Lấy đồ nhanh", "Instant")
 createToggle(page2, "🧲 Auto nhặt đồ xung quanh", "AutoCollect")
+
+-- FIX LỖI TRÔI NOCLIP
 createToggle(page2, "🚷 Đi xuyên tường (Chống trôi)", "Noclip", function(v) 
     if not v and player.Character then 
         pcall(function() 
@@ -567,6 +584,7 @@ createToggle(page4, "🌈 Chế độ RGB", "RGB", function(v)
     end 
 end)
 
+-- FIX LỖI GIẢM LAG (Hoàn trả nguyên vẹn GFX cũ)
 createToggle(page4, "📉 Giảm Lag (An Toàn)", "LowGfx", function(v)
     if v then
         Lighting.GlobalShadows = false
@@ -593,7 +611,7 @@ createToggle(page4, "📉 Giảm Lag (An Toàn)", "LowGfx", function(v)
                 end
             end)
         end
-        OriginalGFX = {}
+        OriginalGFX = {} -- Xóa bộ nhớ đệm
     end
 end)
 
@@ -776,9 +794,11 @@ player.Idled:Connect(function()
 end)
 
 -- ==========================================
--- [TAB 8: AUTO SKILL (MỚI THÊM)]
+-- [TAB 8: AUTO SKILL (MỚI & PHÂN KHU VỰC ĐẸP)]
 -- ==========================================
 createSlider(page8, "Độ trễ tung chiêu (Giây)", 1, 10, "AutoSkillDelay")
+
+createDivider(page8, "KỸ NĂNG PHÍM CHỮ")
 createToggle(page8, "Tự động kích hoạt Phím [Z]", "AutoSkillZ")
 createToggle(page8, "Tự động kích hoạt Phím [X]", "AutoSkillX")
 createToggle(page8, "Tự động kích hoạt Phím [C]", "AutoSkillC")
@@ -786,9 +806,17 @@ createToggle(page8, "Tự động kích hoạt Phím [V]", "AutoSkillV")
 createToggle(page8, "Tự động kích hoạt Phím [E]", "AutoSkillE")
 createToggle(page8, "Tự động kích hoạt Phím [F]", "AutoSkillF")
 
+createDivider(page8, "KỸ NĂNG PHÍM SỐ")
+createToggle(page8, "Tự động kích hoạt Phím [1]", "AutoSkill1")
+createToggle(page8, "Tự động kích hoạt Phím [2]", "AutoSkill2")
+createToggle(page8, "Tự động kích hoạt Phím [3]", "AutoSkill3")
+createToggle(page8, "Tự động kích hoạt Phím [4]", "AutoSkill4")
+createToggle(page8, "Tự động kích hoạt Phím [5]", "AutoSkill5")
+createToggle(page8, "Tự động kích hoạt Phím [6]", "AutoSkill6")
+
 task.spawn(function()
     while task.wait(0.1) do
-        if State.AutoSkillZ or State.AutoSkillX or State.AutoSkillC or State.AutoSkillV or State.AutoSkillE or State.AutoSkillF then
+        if State.AutoSkillZ or State.AutoSkillX or State.AutoSkillC or State.AutoSkillV or State.AutoSkillE or State.AutoSkillF or State.AutoSkill1 or State.AutoSkill2 or State.AutoSkill3 or State.AutoSkill4 or State.AutoSkill5 or State.AutoSkill6 then
             local keysToPress = {}
             if State.AutoSkillZ then table.insert(keysToPress, Enum.KeyCode.Z) end
             if State.AutoSkillX then table.insert(keysToPress, Enum.KeyCode.X) end
@@ -797,15 +825,22 @@ task.spawn(function()
             if State.AutoSkillE then table.insert(keysToPress, Enum.KeyCode.E) end
             if State.AutoSkillF then table.insert(keysToPress, Enum.KeyCode.F) end
             
+            if State.AutoSkill1 then table.insert(keysToPress, Enum.KeyCode.One) end
+            if State.AutoSkill2 then table.insert(keysToPress, Enum.KeyCode.Two) end
+            if State.AutoSkill3 then table.insert(keysToPress, Enum.KeyCode.Three) end
+            if State.AutoSkill4 then table.insert(keysToPress, Enum.KeyCode.Four) end
+            if State.AutoSkill5 then table.insert(keysToPress, Enum.KeyCode.Five) end
+            if State.AutoSkill6 then table.insert(keysToPress, Enum.KeyCode.Six) end
+            
             pcall(function()
                 for _, keyEnum in ipairs(keysToPress) do
                     Vim:SendKeyEvent(true, keyEnum, false, game)
                     task.wait(0.05)
                     Vim:SendKeyEvent(false, keyEnum, false, game)
-                    task.wait(0.1) -- Độ trễ siêu nhỏ giữa các chiêu liên hoàn
+                    task.wait(0.1) 
                 end
             end)
-            task.wait(State.AutoSkillDelay) -- Thời gian hồi chiêu để đánh vòng tiếp theo
+            task.wait(State.AutoSkillDelay) 
         end
     end
 end)
