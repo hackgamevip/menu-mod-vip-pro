@@ -1,5 +1,5 @@
 -- ==========================================
--- MENU VIP PRO V1.12.5 (DELTA OPTIMIZED & FIXED ANTI-STUN)
+-- MENU VIP PRO V1.12.5 (AUTO SKILL + TAB SCROLL + AVATAR FIX)
 -- ==========================================
 repeat task.wait() until game:IsLoaded()
 
@@ -9,6 +9,7 @@ local RunService = game:GetService("RunService")
 local Lighting = game:GetService("Lighting")
 local UIS = game:GetService("UserInputService")
 local VirtualUser = game:GetService("VirtualUser")
+local Vim = game:GetService("VirtualInputManager")
 local TeleportService = game:GetService("TeleportService")
 local HttpService = game:GetService("HttpService")
 local MarketplaceService = game:GetService("MarketplaceService")
@@ -22,7 +23,9 @@ local State = {
     SpinBot = false, SpinSpeed = 50, Hitbox = false, HitboxSize = 15, AutoClick = false, RGB = false,
     Reach = false, ReachSize = 15, AutoDash = false, DashSpeed = 10, AutoSave = false, Astral = false,
     ShiftLock = false, SpeedValue = 60, JumpValue = 120, LightRange = 60, LightBrightness = 3,
-    MusicVolume = 5
+    MusicVolume = 5,
+    -- Auto Skill States
+    AutoSkillDelay = 1, AutoSkillZ = false, AutoSkillX = false, AutoSkillC = false, AutoSkillV = false, AutoSkillE = false, AutoSkillF = false
 }
 
 local Theme = {
@@ -173,6 +176,7 @@ titleLabel.Size = UDim2.new(1, 0, 1, 0); titleLabel.BackgroundTransparency = 1
 titleLabel.Text = "MENU VIP PRO MAX"
 titleLabel.TextColor3 = Theme.TextTitle; titleLabel.Font = Enum.Font.GothamBlack; titleLabel.TextSize = 16; titleLabel.ZIndex = 10
 
+-- ĐÃ FIX AVATAR LÚN XUỐNG DƯỚI (Size 34x34)
 local avatarImg = Instance.new("ImageLabel", header)
 avatarImg.Size = UDim2.new(0, 34, 0, 34); avatarImg.Position = UDim2.new(0, 12, 0, 5); avatarImg.BackgroundTransparency = 1; avatarImg.ZIndex = 10
 pcall(function() avatarImg.Image = Players:GetUserThumbnailAsync(player.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size420x420) end)
@@ -190,15 +194,27 @@ UIS.InputChanged:Connect(function(input)
 end)
 UIS.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then dragToggle = false end end)
 
-local tabBar = Instance.new("Frame", frame)
+-- ==========================================
+-- [UPGRADE: SCROLLING TAB BAR ĐỂ CHỨA NHIỀU TAB]
+-- ==========================================
+local tabBar = Instance.new("ScrollingFrame", frame)
 tabBar.Size = UDim2.new(1, 0, 0, 38); tabBar.Position = UDim2.new(0, 0, 0, 45)
 tabBar.BackgroundColor3 = Theme.TabBg; tabBar.BorderSizePixel = 0; tabBar.ZIndex = 10
+tabBar.ScrollBarThickness = 0; tabBar.ScrollingDirection = Enum.ScrollingDirection.X
+tabBar.ClipsDescendants = true
 
-local function createTab(name, x, width)
+local tabLayout = Instance.new("UIListLayout", tabBar)
+tabLayout.FillDirection = Enum.FillDirection.Horizontal
+tabLayout.SortOrder = Enum.SortOrder.LayoutOrder
+tabLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+    tabBar.CanvasSize = UDim2.new(0, tabLayout.AbsoluteContentSize.X, 0, 0)
+end)
+
+local function createTab(name, width)
     local btn = Instance.new("TextButton", tabBar)
-    btn.Size = UDim2.new(width, 0, 1, 0); btn.Position = UDim2.new(x, 0, 0, 0)
+    btn.Size = UDim2.new(0, width, 1, 0)
     btn.Text = name; btn.BackgroundTransparency = 1; btn.TextColor3 = Theme.TextDim
-    btn.BorderSizePixel = 0; btn.Font = Enum.Font.GothamBold; btn.TextSize = 8; btn.ZIndex = 10
+    btn.BorderSizePixel = 0; btn.Font = Enum.Font.GothamBold; btn.TextSize = 10; btn.ZIndex = 10
     local indicator = Instance.new("Frame", btn)
     indicator.Size = UDim2.new(0.5, 0, 0, 3); indicator.Position = UDim2.new(0.25, 0, 1, -3)
     indicator.BackgroundColor3 = Theme.Brand; indicator.BorderSizePixel = 0; indicator.Visible = false; indicator.ZIndex = 10
@@ -206,13 +222,14 @@ local function createTab(name, x, width)
     return btn, indicator
 end
 
-local tab1, ind1 = createTab("THÔNG TIN", 0.00, 0.14)
-local tab2, ind2 = createTab("TÍNH NĂNG", 0.14, 0.14)
-local tab3, ind3 = createTab("PLAYER",    0.28, 0.14)
-local tab4, ind4 = createTab("TIỆN ÍCH",  0.42, 0.14)
-local tab5, ind5 = createTab("NHẠC ID",   0.56, 0.12) 
-local tab6, ind6 = createTab("TP SAVE",   0.68, 0.15)
-local tab7, ind7 = createTab("TP PLAYER", 0.83, 0.17)
+local tab1, ind1 = createTab("THÔNG TIN", 80)
+local tab2, ind2 = createTab("TÍNH NĂNG", 80)
+local tab3, ind3 = createTab("PLAYER",    70)
+local tab4, ind4 = createTab("TIỆN ÍCH",  70)
+local tab5, ind5 = createTab("NHẠC ID",   70) 
+local tab6, ind6 = createTab("TP SAVE",   70)
+local tab7, ind7 = createTab("TP PLAYER", 80)
+local tab8, ind8 = createTab("AUTO SKILL", 85) -- TAB MỚI
 
 local pageContainer = Instance.new("Frame", frame)
 pageContainer.Size = UDim2.new(1, 0, 1, -95); pageContainer.Position = UDim2.new(0, 0, 0, 88); pageContainer.BackgroundTransparency = 1; pageContainer.ZIndex = 10
@@ -228,7 +245,7 @@ local function createPage()
     return pg
 end
 
-local page1, page2, page3, page4, page7 = createPage(), createPage(), createPage(), createPage(), createPage()
+local page1, page2, page3, page4, page7, page8 = createPage(), createPage(), createPage(), createPage(), createPage(), createPage()
 
 local page5 = Instance.new("Frame", pageContainer)
 page5.Size = UDim2.new(1, 0, 1, 0); page5.BackgroundTransparency = 1; page5.Visible = false; page5.ZIndex = 10
@@ -239,9 +256,9 @@ page6.Size = UDim2.new(1, 0, 1, 0); page6.BackgroundTransparency = 1; page6.Visi
 local l6 = Instance.new("UIListLayout", page6); l6.HorizontalAlignment = Enum.HorizontalAlignment.Center; l6.Padding = UDim.new(0, 10); l6.SortOrder = Enum.SortOrder.LayoutOrder; Instance.new("UIPadding", page6).PaddingTop = UDim.new(0, 10)
 
 local function showTab(pg, tb, ind)
-    for _, p in pairs({page1, page2, page3, page4, page5, page6, page7}) do p.Visible = false end
-    for _, t in pairs({tab1, tab2, tab3, tab4, tab5, tab6, tab7}) do t.TextColor3 = Theme.TextDim end
-    for _, i in pairs({ind1, ind2, ind3, ind4, ind5, ind6, ind7}) do i.Visible = false end
+    for _, p in pairs({page1, page2, page3, page4, page5, page6, page7, page8}) do p.Visible = false end
+    for _, t in pairs({tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8}) do t.TextColor3 = Theme.TextDim end
+    for _, i in pairs({ind1, ind2, ind3, ind4, ind5, ind6, ind7, ind8}) do i.Visible = false end
     pg.Visible = true; tb.TextColor3 = Theme.TextTitle; ind.Visible = true
     ind.Size = UDim2.new(0, 0, 0, 3)
     TweenService:Create(ind, TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Size = UDim2.new(0.5, 0, 0, 3)}):Play()
@@ -254,6 +271,7 @@ tab4.MouseButton1Click:Connect(function() showTab(page4, tab4, ind4) end)
 tab5.MouseButton1Click:Connect(function() showTab(page5, tab5, ind5) end)
 tab6.MouseButton1Click:Connect(function() showTab(page6, tab6, ind6) end)
 tab7.MouseButton1Click:Connect(function() showTab(page7, tab7, ind7) end)
+tab8.MouseButton1Click:Connect(function() showTab(page8, tab8, ind8) end)
 showTab(page1, tab1, ind1)
 
 local opened = true
@@ -459,13 +477,10 @@ createToggle(page2, "🚀 Nhảy trên không", "InfJump")
 UIS.JumpRequest:Connect(function() if State.InfJump and player.Character and player.Character:FindFirstChildOfClass("Humanoid") then player.Character:FindFirstChildOfClass("Humanoid"):ChangeState(Enum.HumanoidStateType.Jumping) end end)
 createToggle(page2, "🐿️ Lấy đồ nhanh", "Instant")
 createToggle(page2, "🧲 Auto nhặt đồ xung quanh", "AutoCollect")
-
--- FIX LỖI TRÔI NOCLIP (Tuyệt đối không trôi)
 createToggle(page2, "🚷 Đi xuyên tường (Chống trôi)", "Noclip", function(v) 
     if not v and player.Character then 
         pcall(function() 
             local hrp = getUniversalRoot(player.Character)
-            -- Phanh gấp cực mạnh để chống trôi khi tắt
             if hrp then 
                 hrp.AssemblyLinearVelocity = Vector3.zero 
                 hrp.AssemblyAngularVelocity = Vector3.zero
@@ -552,7 +567,6 @@ createToggle(page4, "🌈 Chế độ RGB", "RGB", function(v)
     end 
 end)
 
--- FIX LỖI GIẢM LAG (Hoàn trả nguyên vẹn GFX cũ)
 createToggle(page4, "📉 Giảm Lag (An Toàn)", "LowGfx", function(v)
     if v then
         Lighting.GlobalShadows = false
@@ -579,7 +593,7 @@ createToggle(page4, "📉 Giảm Lag (An Toàn)", "LowGfx", function(v)
                 end
             end)
         end
-        OriginalGFX = {} -- Xóa bộ nhớ đệm
+        OriginalGFX = {}
     end
 end)
 
@@ -762,6 +776,41 @@ player.Idled:Connect(function()
 end)
 
 -- ==========================================
+-- [TAB 8: AUTO SKILL (MỚI THÊM)]
+-- ==========================================
+createSlider(page8, "Độ trễ tung chiêu (Giây)", 1, 10, "AutoSkillDelay")
+createToggle(page8, "Tự động kích hoạt Phím [Z]", "AutoSkillZ")
+createToggle(page8, "Tự động kích hoạt Phím [X]", "AutoSkillX")
+createToggle(page8, "Tự động kích hoạt Phím [C]", "AutoSkillC")
+createToggle(page8, "Tự động kích hoạt Phím [V]", "AutoSkillV")
+createToggle(page8, "Tự động kích hoạt Phím [E]", "AutoSkillE")
+createToggle(page8, "Tự động kích hoạt Phím [F]", "AutoSkillF")
+
+task.spawn(function()
+    while task.wait(0.1) do
+        if State.AutoSkillZ or State.AutoSkillX or State.AutoSkillC or State.AutoSkillV or State.AutoSkillE or State.AutoSkillF then
+            local keysToPress = {}
+            if State.AutoSkillZ then table.insert(keysToPress, Enum.KeyCode.Z) end
+            if State.AutoSkillX then table.insert(keysToPress, Enum.KeyCode.X) end
+            if State.AutoSkillC then table.insert(keysToPress, Enum.KeyCode.C) end
+            if State.AutoSkillV then table.insert(keysToPress, Enum.KeyCode.V) end
+            if State.AutoSkillE then table.insert(keysToPress, Enum.KeyCode.E) end
+            if State.AutoSkillF then table.insert(keysToPress, Enum.KeyCode.F) end
+            
+            pcall(function()
+                for _, keyEnum in ipairs(keysToPress) do
+                    Vim:SendKeyEvent(true, keyEnum, false, game)
+                    task.wait(0.05)
+                    Vim:SendKeyEvent(false, keyEnum, false, game)
+                    task.wait(0.1) -- Độ trễ siêu nhỏ giữa các chiêu liên hoàn
+                end
+            end)
+            task.wait(State.AutoSkillDelay) -- Thời gian hồi chiêu để đánh vòng tiếp theo
+        end
+    end
+end)
+
+-- ==========================================
 -- [HỆ THỐNG AUTO COLLECT & PROXIMITY]
 -- ==========================================
 task.spawn(function()
@@ -814,7 +863,7 @@ task.spawn(function()
 end)
 
 -- ==========================================
--- [FIX: HITBOX VÀ ESP]
+-- [FIX: HITBOX MASSLESS ĐỂ CHỐNG LỖI ĐÁNH TRƯỢT]
 -- ==========================================
 local function updateESP_Hitbox()
     if State.Hitbox then
@@ -826,7 +875,7 @@ local function updateESP_Hitbox()
                     hrp.Size = Vector3.new(State.HitboxSize, State.HitboxSize, State.HitboxSize)
                     hrp.Transparency = 0.5
                     hrp.CanCollide = false
-                    hrp.Massless = true -- Sửa lỗi hỏng trọng tâm nhân vật, không đánh trượt
+                    hrp.Massless = true
                 end
             end
         end
@@ -929,28 +978,23 @@ RunService.RenderStepped:Connect(function(deltaTime)
     local hum = char:FindFirstChildOfClass("Humanoid")
     
     if hum and root then
-        -- UNIVERSAL SPEED (Bypass Anti-Cheat)
         if State.Speed and hum.MoveDirection.Magnitude > 0 then
             local speedMultiplier = State.SpeedValue / 50 
             root.CFrame = root.CFrame + (hum.MoveDirection * (speedMultiplier * 60 * deltaTime))
         end
 
-        -- Lướt
         if State.AutoDash and hum.MoveDirection.Magnitude > 0 then
             root.CFrame = root.CFrame + (hum.MoveDirection * (State.DashSpeed / 10))
         end
         
-        -- Xoay
         if State.SpinBot then 
             root.CFrame = root.CFrame * CFrame.Angles(0, math.rad(State.SpinSpeed), 0) 
         end
         
-        -- Chống trôi (Anti-Drift) cực mạnh khi ĐANG BẬT Noclip mà không thao tác
         if State.Noclip and hum.MoveDirection.Magnitude == 0 then
             root.AssemblyLinearVelocity = Vector3.new(0, root.AssemblyLinearVelocity.Y, 0)
         end
         
-        -- Hệ thống bay Mobile CFrame Mượt mà nhất
         if State.Fly then
             hum.PlatformStand = true
             root.Velocity = Vector3.zero
@@ -979,7 +1023,6 @@ RunService.RenderStepped:Connect(function(deltaTime)
     end
 end)
 
--- Heartbeat xử lý Logic Game và Tính năng (Đã Fix Anti-Stun)
 RunService.Heartbeat:Connect(function()
     updateESP_Hitbox()
     
@@ -993,7 +1036,6 @@ RunService.Heartbeat:Connect(function()
         
         if State.Jump then hum.UseJumpPower = true; hum.JumpPower = State.JumpValue end
         
-        -- Anti-Stun (Đã vá lỗi đứng server)
         if State.AntiStun then 
             hum:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
             hum:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, false)
@@ -1003,7 +1045,6 @@ RunService.Heartbeat:Connect(function()
                 hum:ChangeState(Enum.HumanoidStateType.GettingUp)
             end
             
-            -- Chỉ triệt tiêu lực khi bị văng BẤT THƯỜNG (vượt quá 75 studs/s)
             if root then
                 local currentVel = root.AssemblyLinearVelocity
                 local horizontalVel = Vector3.new(currentVel.X, 0, currentVel.Z)
@@ -1024,7 +1065,6 @@ RunService.Heartbeat:Connect(function()
         end
     end
     
-    -- Xử lý Reach (Scale Handle siêu ổn định)
     if State.Reach then
         local tool = char:FindFirstChildOfClass("Tool")
         if tool then
