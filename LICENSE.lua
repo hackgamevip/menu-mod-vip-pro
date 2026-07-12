@@ -1,5 +1,5 @@
 -- ==========================================
--- MENU VIP PRO V1.12.5 (NOCLIP FIXED & UNIVERSAL)
+-- MENU VIP PRO V1.12.5 (DELTA OPTIMIZED & BUG FIXES)
 -- ==========================================
 repeat task.wait() until game:IsLoaded()
 
@@ -44,6 +44,7 @@ local originalHitboxSizes = {}
 local originalToolSizes = {}
 local cachedPrompts = {}
 local xrayMats = {}
+local OriginalGFX = {} -- Dữ liệu phục hồi LowGFX
 
 local guiParent = player:WaitForChild("PlayerGui")
 pcall(function()
@@ -460,14 +461,16 @@ UIS.JumpRequest:Connect(function() if State.InfJump and player.Character and pla
 createToggle(page2, "🐿️ Lấy đồ nhanh", "Instant")
 createToggle(page2, "🧲 Auto nhặt đồ xung quanh", "AutoCollect")
 
--- Noclip Toggle (Bản Fix Hoàn Toàn Trôi)
+-- FIX LỖI TRÔI NOCLIP
 createToggle(page2, "🚷 Đi xuyên tường (Chống trôi)", "Noclip", function(v) 
     if not v and player.Character then 
         pcall(function() 
             local hrp = getUniversalRoot(player.Character)
-            -- Triệt tiêu hoàn toàn quán tính để khựng lại ngay lập tức khi tắt Noclip
-            if hrp then hrp.AssemblyLinearVelocity = Vector3.new(0, hrp.AssemblyLinearVelocity.Y, 0) end
-            -- Bật lại va chạm
+            -- Phanh gấp cực mạnh để chống trôi
+            if hrp then 
+                hrp.AssemblyLinearVelocity = Vector3.zero 
+                hrp.AssemblyAngularVelocity = Vector3.zero
+            end
             for _, part in ipairs(player.Character:GetDescendants()) do 
                 if part:IsA("BasePart") then part.CanCollide = true end 
             end 
@@ -550,25 +553,35 @@ createToggle(page4, "🌈 Chế độ RGB", "RGB", function(v)
     end 
 end)
 
-createToggle(page4, "📉 Giảm Lag (Xóa toàn bộ hiệu ứng)", "LowGfx", function(v)
-    pcall(function()
-        if v then Lighting.GlobalShadows = false end
+-- FIX LỖI GIẢM LAG (Hoàn trả nguyên vẹn GFX cũ)
+createToggle(page4, "📉 Giảm Lag (An Toàn)", "LowGfx", function(v)
+    if v then
+        Lighting.GlobalShadows = false
         for _, obj in ipairs(workspace:GetDescendants()) do
-            if obj:IsA("BasePart") then
-                if v then
-                    if not obj:GetAttribute("OldMat") then obj:SetAttribute("OldMat", obj.Material.Name) end
+            pcall(function()
+                if obj:IsA("BasePart") and obj.Material ~= Enum.Material.SmoothPlastic then
+                    OriginalGFX[obj] = {Material = obj.Material}
                     obj.Material = Enum.Material.SmoothPlastic
-                else
-                    local old = obj:GetAttribute("OldMat")
-                    if old then obj.Material = Enum.Material[old] end
+                elseif (obj:IsA("Decal") or obj:IsA("Texture")) and obj.Transparency < 1 then
+                    OriginalGFX[obj] = {Transparency = obj.Transparency}
+                    obj.Transparency = 1
+                elseif (obj:IsA("ParticleEmitter") or obj:IsA("Trail") or obj:IsA("Beam") or obj:IsA("Fire") or obj:IsA("Smoke") or obj:IsA("Sparkles")) and obj.Enabled then
+                    OriginalGFX[obj] = {Enabled = obj.Enabled}
+                    obj.Enabled = false
                 end
-            elseif obj:IsA("Decal") or obj:IsA("Texture") then
-                obj.Transparency = v and 1 or 0
-            elseif obj:IsA("ParticleEmitter") or obj:IsA("Trail") or obj:IsA("Beam") or obj:IsA("Fire") or obj:IsA("Smoke") or obj:IsA("Sparkles") or obj:IsA("Atmosphere") or obj:IsA("ColorCorrectionEffect") or obj:IsA("BloomEffect") or obj:IsA("SunRaysEffect") then
-                obj.Enabled = not v
-            end
+            end)
         end
-    end)
+    else
+        Lighting.GlobalShadows = true
+        for obj, props in pairs(OriginalGFX) do
+            pcall(function()
+                if obj and obj.Parent then
+                    for k, val in pairs(props) do obj[k] = val end
+                end
+            end)
+        end
+        OriginalGFX = {} -- Xóa bộ nhớ đệm
+    end
 end)
 
 createToggle(page4, "💫 Mở khóa ShiftLock Mobile", "ShiftLock", function(v) pcall(function() player.DevEnableMouseLock = v end) end)
@@ -802,7 +815,7 @@ task.spawn(function()
 end)
 
 -- ==========================================
--- [CÔ LẬP LUỒNG ESP VÀ HITBOX UNIVERSAL]
+-- [FIX: HITBOX MASSLESS ĐỂ CHỐNG LỖI ĐÁNH TRƯỢT]
 -- ==========================================
 local function updateESP_Hitbox()
     if State.Hitbox then
@@ -814,6 +827,7 @@ local function updateESP_Hitbox()
                     hrp.Size = Vector3.new(State.HitboxSize, State.HitboxSize, State.HitboxSize)
                     hrp.Transparency = 0.5
                     hrp.CanCollide = false
+                    hrp.Massless = true -- Sửa lỗi hỏng trọng tâm nhân vật
                 end
             end
         end
@@ -822,7 +836,11 @@ local function updateESP_Hitbox()
             for p, size in pairs(originalHitboxSizes) do 
                 if p and p.Character then 
                     local hrp = getUniversalRoot(p.Character)
-                    if hrp then hrp.Size = size; hrp.Transparency = 1 end 
+                    if hrp then 
+                        hrp.Size = size; 
+                        hrp.Transparency = 1 
+                        hrp.Massless = false 
+                    end 
                 end 
             end
             originalHitboxSizes = {}
@@ -895,17 +913,15 @@ end
 -- BẢO TỒN HOẠT ĐỘNG LIÊN TỤC VÀ LUỒNG ĐỘC LẬP
 -- ==========================================
 
--- Chạy Xuyên Tường bắt buộc ở Stepped (Trước tính toán Vật lý) để mượt 100%
 RunService.Stepped:Connect(function()
     local char = player.Character
     if char and State.Noclip then
         for _, p in ipairs(char:GetDescendants()) do
-            if p:IsA("BasePart") then p.CanCollide = false end
+            if p:IsA("BasePart") and p.CanCollide then p.CanCollide = false end
         end
     end
 end)
 
--- RenderStepped xử lý CFrame (Cam & Di Chuyển)
 RunService.RenderStepped:Connect(function(deltaTime)
     local char = player.Character
     if not char then return end
@@ -928,11 +944,6 @@ RunService.RenderStepped:Connect(function(deltaTime)
         -- Xoay
         if State.SpinBot then 
             root.CFrame = root.CFrame * CFrame.Angles(0, math.rad(State.SpinSpeed), 0) 
-        end
-        
-        -- Chống trôi (Anti-Drift) cực mạnh khi ĐANG BẬT Noclip mà không thao tác
-        if State.Noclip and hum.MoveDirection.Magnitude == 0 then
-            root.AssemblyLinearVelocity = Vector3.new(0, root.AssemblyLinearVelocity.Y, 0)
         end
         
         -- Hệ thống bay Mobile CFrame Mượt mà nhất
@@ -964,7 +975,6 @@ RunService.RenderStepped:Connect(function(deltaTime)
     end
 end)
 
--- Heartbeat xử lý Logic Game và Tính năng
 RunService.Heartbeat:Connect(function()
     updateESP_Hitbox()
     
