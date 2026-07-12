@@ -174,7 +174,7 @@ titleLabel.Text = "MENU VIP PRO MAX"
 titleLabel.TextColor3 = Theme.TextTitle; titleLabel.Font = Enum.Font.GothamBlack; titleLabel.TextSize = 16; titleLabel.ZIndex = 10
 
 local avatarImg = Instance.new("ImageLabel", header)
-avatarImg.Size = UDim2.new(0, 40, 0, 40); avatarImg.Position = UDim2.new(0, 10, 0, 8); avatarImg.BackgroundTransparency = 1; avatarImg.ZIndex = 10
+avatarImg.Size = UDim2.new(0, 34, 0, 34); avatarImg.Position = UDim2.new(0, 12, 0, 5); avatarImg.BackgroundTransparency = 1; avatarImg.ZIndex = 10
 pcall(function() avatarImg.Image = Players:GetUserThumbnailAsync(player.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size420x420) end)
 Instance.new("UICorner", avatarImg).CornerRadius = UDim.new(1, 0)
 local avatarStroke = Instance.new("UIStroke", avatarImg); avatarStroke.Color = Theme.Brand; avatarStroke.Thickness = 1.5; avatarStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
