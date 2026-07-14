@@ -597,7 +597,7 @@ createSlider(page3, "Kích thước Hitbox", 0, 100, "HitboxSize")
 createToggle(page3, "🌪️ Xoay vòng tròn", "SpinBot")
 createSlider(page3, "Tốc độ xoay", 0, 100, "SpinSpeed")
 createToggle(page3, "💡 Ánh sáng quanh người", "PlayerLight", function(v) if not v and player.Character then local root = getUniversalRoot(player.Character); if root then local light = root:FindFirstChild("PlayerPointLight"); if light then light:Destroy() end end end end)
-createSlider(page3, "Phạm vi sáng (Game giới hạn max 60)", 0, 60, "LightRange")
+createSlider(page3, "Phạm vi sáng", 0, 60, "LightRange")
 createSlider(page3, "Độ sáng", 0, 5, "LightBrightness")
 createCycleBtn(page3, "🎨 Đổi màu:", PlayerLightColors, "LightColorIdx")
 
