@@ -1,5 +1,5 @@
 -- ==========================================
--- MENU VIP PRO V1.12.5 (SUPER LIGHT & UI TWEAKS)
+-- MENU VIP PRO V1.12.5 (AVATAR FIX & LIGHT LIMIT EXPLAINED)
 -- ==========================================
 repeat task.wait() until game:IsLoaded()
 
@@ -23,8 +23,7 @@ local State = {
     SpinBot = false, SpinSpeed = 50, Hitbox = false, HitboxSize = 15, AutoClick = false, RGB = false,
     Reach = false, ReachSize = 15, AutoDash = false, DashSpeed = 10, AutoSave = false, Astral = false,
     ShiftLock = false, SpeedValue = 60, JumpValue = 120, LightRange = 60, LightBrightness = 3,
-    MusicVolume = 5, LightColorIdx = 1, -- Lưu trữ màu ánh sáng hiện tại
-    -- Auto Skill States
+    MusicVolume = 5, LightColorIdx = 1,
     AutoSkillDelay = 1, 
     AutoSkillZ = false, AutoSkillX = false, AutoSkillC = false, AutoSkillV = false, AutoSkillE = false, AutoSkillF = false,
     AutoSkill1 = false, AutoSkill2 = false, AutoSkill3 = false, AutoSkill4 = false, AutoSkill5 = false, AutoSkill6 = false
@@ -43,7 +42,6 @@ local Theme = {
     Brand = Color3.fromRGB(0, 200, 255)
 }
 
--- BẢNG MÀU ÁNH SÁNG NGƯỜI CHƠI
 local PlayerLightColors = {
     {Name = "Trắng", Value = Color3.fromRGB(255, 255, 255)},
     {Name = "Đỏ", Value = Color3.fromRGB(255, 0, 0)},
@@ -191,8 +189,9 @@ titleLabel.Size = UDim2.new(1, 0, 1, 0); titleLabel.BackgroundTransparency = 1
 titleLabel.Text = "MENU VIP PRO MAX"
 titleLabel.TextColor3 = Theme.TextTitle; titleLabel.Font = Enum.Font.GothamBlack; titleLabel.TextSize = 16; titleLabel.ZIndex = 10
 
+-- [ĐÃ FIX AVATAR LÚN] - Thu nhỏ size 26x26 và căn trục Y tuyệt đối
 local avatarImg = Instance.new("ImageLabel", header)
-avatarImg.Size = UDim2.new(0, 34, 0, 34); avatarImg.Position = UDim2.new(0, 12, 0, 5); avatarImg.BackgroundTransparency = 1; avatarImg.ZIndex = 10
+avatarImg.Size = UDim2.new(0, 26, 0, 26); avatarImg.Position = UDim2.new(0, 15, 0, 9.5); avatarImg.BackgroundTransparency = 1; avatarImg.ZIndex = 10
 pcall(function() avatarImg.Image = Players:GetUserThumbnailAsync(player.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size420x420) end)
 Instance.new("UICorner", avatarImg).CornerRadius = UDim.new(1, 0)
 local avatarStroke = Instance.new("UIStroke", avatarImg); avatarStroke.Color = Theme.Brand; avatarStroke.Thickness = 1.5; avatarStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
@@ -319,7 +318,6 @@ local function createDivider(parent, text)
     return frame
 end
 
--- TẠO NÚT BẤM DẠNG < CHU KỲ >
 local function createCycleBtn(parent, prefix, options, stateVar)
     local btnFrame = Instance.new("Frame", parent)
     btnFrame.Size = UDim2.new(0.9, 0, 0, 42); btnFrame.BackgroundTransparency = 1
@@ -599,8 +597,8 @@ createSlider(page3, "Kích thước Hitbox", 0, 100, "HitboxSize")
 createToggle(page3, "🌪️ Xoay vòng tròn", "SpinBot")
 createSlider(page3, "Tốc độ xoay", 0, 100, "SpinSpeed")
 createToggle(page3, "💡 Ánh sáng quanh người", "PlayerLight", function(v) if not v and player.Character then local root = getUniversalRoot(player.Character); if root then local light = root:FindFirstChild("PlayerPointLight"); if light then light:Destroy() end end end end)
-createSlider(page3, "Phạm vi sáng", 0, 1000, "LightRange")
-createSlider(page3, "Độ sáng (Siêu Sáng)", 0, 1000, "LightBrightness")
+createSlider(page3, "Phạm vi sáng (Game giới hạn max 60)", 0, 60, "LightRange")
+createSlider(page3, "Độ sáng", 0, 5, "LightBrightness")
 createCycleBtn(page3, "🎨 Đổi màu:", PlayerLightColors, "LightColorIdx")
 
 -- ==========================================
@@ -850,9 +848,8 @@ createToggle(page8, "Tự động kích hoạt Phím [4]", "AutoSkill4")
 createToggle(page8, "Tự động kích hoạt Phím [5]", "AutoSkill5")
 createToggle(page8, "Tự động kích hoạt Phím [6]", "AutoSkill6")
 
--- Vòng lặp Auto Skill ĐÃ SỬA LỖI DI CHUYỂN
 task.spawn(function()
-    while task.wait(0.5) do -- Delay an toàn 0.5s giữa các lần lặp tổng để không làm nghẽn game
+    while task.wait(0.5) do 
         local keysToPress = {}
         if State.AutoSkillZ then table.insert(keysToPress, Enum.KeyCode.Z) end
         if State.AutoSkillX then table.insert(keysToPress, Enum.KeyCode.X) end
@@ -870,15 +867,14 @@ task.spawn(function()
         
         if #keysToPress > 0 then
             for _, keyEnum in ipairs(keysToPress) do
-                -- Dùng task.spawn để Tách biệt hoàn toàn luồng bấm phím khỏi luồng di chuyển
                 task.spawn(function()
                     pcall(function()
                         Vim:SendKeyEvent(true, keyEnum, false, game)
-                        task.wait(0.02) -- Cực kì nhanh, giống như chạm thật nhẹ vào màn hình
+                        task.wait(0.02) 
                         Vim:SendKeyEvent(false, keyEnum, false, game)
                     end)
                 end)
-                task.wait(0.05) -- Tạo khoảng nghỉ mini giữa các chiêu, giúp mượt hơn
+                task.wait(0.05) 
             end
         end
     end
