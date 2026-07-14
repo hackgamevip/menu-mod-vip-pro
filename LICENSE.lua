@@ -1,5 +1,5 @@
 -- ==========================================
--- MENU VIP PRO V1.12.5 (AUTO SKILL UPDATE & UI POLISH)
+-- MENU VIP PRO V1.12.5 (SUPER LIGHT & UI TWEAKS)
 -- ==========================================
 repeat task.wait() until game:IsLoaded()
 
@@ -23,7 +23,7 @@ local State = {
     SpinBot = false, SpinSpeed = 50, Hitbox = false, HitboxSize = 15, AutoClick = false, RGB = false,
     Reach = false, ReachSize = 15, AutoDash = false, DashSpeed = 10, AutoSave = false, Astral = false,
     ShiftLock = false, SpeedValue = 60, JumpValue = 120, LightRange = 60, LightBrightness = 3,
-    MusicVolume = 5,
+    MusicVolume = 5, LightColorIdx = 1, -- Lưu trữ màu ánh sáng hiện tại
     -- Auto Skill States
     AutoSkillDelay = 1, 
     AutoSkillZ = false, AutoSkillX = false, AutoSkillC = false, AutoSkillV = false, AutoSkillE = false, AutoSkillF = false,
@@ -41,6 +41,19 @@ local Theme = {
     AccentOn = Color3.fromRGB(46, 204, 113),  
     AccentOff = Color3.fromRGB(255, 71, 87),  
     Brand = Color3.fromRGB(0, 200, 255)
+}
+
+-- BẢNG MÀU ÁNH SÁNG NGƯỜI CHƠI
+local PlayerLightColors = {
+    {Name = "Trắng", Value = Color3.fromRGB(255, 255, 255)},
+    {Name = "Đỏ", Value = Color3.fromRGB(255, 0, 0)},
+    {Name = "Cam", Value = Color3.fromRGB(255, 128, 0)},
+    {Name = "Vàng", Value = Color3.fromRGB(255, 255, 0)},
+    {Name = "Xanh lá", Value = Color3.fromRGB(0, 255, 0)},
+    {Name = "Xanh lơ", Value = Color3.fromRGB(0, 255, 255)},
+    {Name = "Xanh dương", Value = Color3.fromRGB(0, 0, 255)},
+    {Name = "Tím", Value = Color3.fromRGB(128, 0, 255)},
+    {Name = "Hồng", Value = Color3.fromRGB(255, 105, 180)}
 }
 
 local RGBElements = {}
@@ -131,7 +144,6 @@ local screenOverlay = Instance.new("Frame", gui)
 screenOverlay.Size = UDim2.new(2, 0, 2, 0); screenOverlay.Position = UDim2.new(-0.5, 0, -0.5, 0)
 screenOverlay.BackgroundColor3 = Color3.new(0,0,0); screenOverlay.ZIndex = 0; screenOverlay.Visible = false
 
--- Đã hạ tọa độ Y xuống 0.2 để không đè vào thanh máu/level của game
 local openBtn = Instance.new("TextButton", gui)
 openBtn.Size = UDim2.new(0, 45, 0, 45); openBtn.Position = UDim2.new(0, 15, 0.2, 0)
 openBtn.Text = "🇻🇳"; openBtn.BackgroundColor3 = Theme.MainBg; openBtn.BackgroundTransparency = 0.3
@@ -214,7 +226,7 @@ local function createTab(name, width)
     local btn = Instance.new("TextButton", tabBar)
     btn.Size = UDim2.new(0, width, 1, 0)
     btn.Text = name; btn.BackgroundTransparency = 1; btn.TextColor3 = Theme.TextDim
-    btn.BorderSizePixel = 0; btn.Font = Enum.Font.GothamBold; btn.TextSize = 10; btn.ZIndex = 10
+    btn.BorderSizePixel = 0; btn.Font = Enum.Font.GothamBold; btn.TextSize = 8.5; btn.ZIndex = 10
     local indicator = Instance.new("Frame", btn)
     indicator.Size = UDim2.new(0.5, 0, 0, 3); indicator.Position = UDim2.new(0.25, 0, 1, -3)
     indicator.BackgroundColor3 = Theme.Brand; indicator.BorderSizePixel = 0; indicator.Visible = false; indicator.ZIndex = 10
@@ -222,14 +234,14 @@ local function createTab(name, width)
     return btn, indicator
 end
 
-local tab1, ind1 = createTab("THÔNG TIN", 80)
-local tab2, ind2 = createTab("TÍNH NĂNG", 80)
-local tab3, ind3 = createTab("PLAYER",    70)
-local tab4, ind4 = createTab("TIỆN ÍCH",  70)
-local tab5, ind5 = createTab("NHẠC ID",   70) 
-local tab6, ind6 = createTab("TP SAVE",   70)
-local tab7, ind7 = createTab("TP PLAYER", 80)
-local tab8, ind8 = createTab("AUTO SKILL", 85) 
+local tab1, ind1 = createTab("THÔNG TIN", 75)
+local tab2, ind2 = createTab("TÍNH NĂNG", 75)
+local tab3, ind3 = createTab("PLAYER",    65)
+local tab4, ind4 = createTab("TIỆN ÍCH",  65)
+local tab5, ind5 = createTab("NHẠC ID",   60) 
+local tab6, ind6 = createTab("TP SAVE",   65)
+local tab7, ind7 = createTab("TP PLAYER", 75)
+local tab8, ind8 = createTab("AUTO SKILL", 75) 
 
 local pageContainer = Instance.new("Frame", frame)
 pageContainer.Size = UDim2.new(1, 0, 1, -95); pageContainer.Position = UDim2.new(0, 0, 0, 88); pageContainer.BackgroundTransparency = 1; pageContainer.ZIndex = 10
@@ -293,7 +305,6 @@ local function getUniversalRoot(char)
         or char:FindFirstChildWhichIsA("BasePart")
 end
 
--- THÊM HÀM TẠO THANH PHÂN CÁCH ĐỂ GIAO DIỆN GỌN HƠN
 local function createDivider(parent, text)
     local frame = Instance.new("Frame", parent)
     frame.Size = UDim2.new(0.9, 0, 0, 20)
@@ -306,6 +317,34 @@ local function createDivider(parent, text)
     label.Font = Enum.Font.GothamBold
     label.TextSize = 11
     return frame
+end
+
+-- TẠO NÚT BẤM DẠNG < CHU KỲ >
+local function createCycleBtn(parent, prefix, options, stateVar)
+    local btnFrame = Instance.new("Frame", parent)
+    btnFrame.Size = UDim2.new(0.9, 0, 0, 42); btnFrame.BackgroundTransparency = 1
+    local btn = Instance.new("TextButton", btnFrame)
+    btn.Size = UDim2.new(1, 0, 1, 0); btn.BackgroundColor3 = Theme.ItemBg; btn.Text = ""; btn.AutoButtonColor = false; btn.ZIndex = 10
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 10)
+    local stroke = Instance.new("UIStroke", btn); stroke.Color = Theme.Brand; stroke.Thickness = 1.5; stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    table.insert(RGBElements, {Type = "Button", Stroke = stroke, DefaultColor = Theme.Brand})
+    
+    local title = Instance.new("TextLabel", btn)
+    title.Size = UDim2.new(1, 0, 1, 0); title.BackgroundTransparency = 1; title.TextColor3 = Theme.Brand; title.Font = Enum.Font.GothamBold; title.TextSize = 13; title.ZIndex = 10
+    
+    local function updateText()
+        title.Text = prefix .. " < " .. options[State[stateVar]].Name .. " >"
+    end
+    updateText()
+    
+    btn.MouseButton1Click:Connect(function()
+        clickAnimate(btn)
+        State[stateVar] = State[stateVar] + 1
+        if State[stateVar] > #options then State[stateVar] = 1 end
+        updateText()
+        if State.AutoSave then saveConfig() end
+    end)
+    return btnFrame
 end
 
 local function createToggle(parent, text, varName, callback)
@@ -493,7 +532,6 @@ UIS.JumpRequest:Connect(function() if State.InfJump and player.Character and pla
 createToggle(page2, "🐿️ Lấy đồ nhanh", "Instant")
 createToggle(page2, "🧲 Auto nhặt đồ xung quanh", "AutoCollect")
 
--- FIX LỖI TRÔI NOCLIP
 createToggle(page2, "🚷 Đi xuyên tường (Chống trôi)", "Noclip", function(v) 
     if not v and player.Character then 
         pcall(function() 
@@ -562,7 +600,8 @@ createToggle(page3, "🌪️ Xoay vòng tròn", "SpinBot")
 createSlider(page3, "Tốc độ xoay", 0, 100, "SpinSpeed")
 createToggle(page3, "💡 Ánh sáng quanh người", "PlayerLight", function(v) if not v and player.Character then local root = getUniversalRoot(player.Character); if root then local light = root:FindFirstChild("PlayerPointLight"); if light then light:Destroy() end end end end)
 createSlider(page3, "Phạm vi sáng", 0, 1000, "LightRange")
-createSlider(page3, "Độ sáng", 0, 5, "LightBrightness")
+createSlider(page3, "Độ sáng (Siêu Sáng)", 0, 1000, "LightBrightness")
+createCycleBtn(page3, "🎨 Đổi màu:", PlayerLightColors, "LightColorIdx")
 
 -- ==========================================
 -- [TAB 4: TIỆN ÍCH]
@@ -584,7 +623,6 @@ createToggle(page4, "🌈 Chế độ RGB", "RGB", function(v)
     end 
 end)
 
--- FIX LỖI GIẢM LAG (Hoàn trả nguyên vẹn GFX cũ)
 createToggle(page4, "📉 Giảm Lag (An Toàn)", "LowGfx", function(v)
     if v then
         Lighting.GlobalShadows = false
@@ -611,7 +649,7 @@ createToggle(page4, "📉 Giảm Lag (An Toàn)", "LowGfx", function(v)
                 end
             end)
         end
-        OriginalGFX = {} -- Xóa bộ nhớ đệm
+        OriginalGFX = {}
     end
 end)
 
@@ -796,8 +834,6 @@ end)
 -- ==========================================
 -- [TAB 8: AUTO SKILL (MỚI & PHÂN KHU VỰC ĐẸP)]
 -- ==========================================
-createSlider(page8, "Độ trễ tung chiêu (Giây)", 1, 10, "AutoSkillDelay")
-
 createDivider(page8, "KỸ NĂNG PHÍM CHỮ")
 createToggle(page8, "Tự động kích hoạt Phím [Z]", "AutoSkillZ")
 createToggle(page8, "Tự động kích hoạt Phím [X]", "AutoSkillX")
@@ -814,33 +850,36 @@ createToggle(page8, "Tự động kích hoạt Phím [4]", "AutoSkill4")
 createToggle(page8, "Tự động kích hoạt Phím [5]", "AutoSkill5")
 createToggle(page8, "Tự động kích hoạt Phím [6]", "AutoSkill6")
 
+-- Vòng lặp Auto Skill ĐÃ SỬA LỖI DI CHUYỂN
 task.spawn(function()
-    while task.wait(0.1) do
-        if State.AutoSkillZ or State.AutoSkillX or State.AutoSkillC or State.AutoSkillV or State.AutoSkillE or State.AutoSkillF or State.AutoSkill1 or State.AutoSkill2 or State.AutoSkill3 or State.AutoSkill4 or State.AutoSkill5 or State.AutoSkill6 then
-            local keysToPress = {}
-            if State.AutoSkillZ then table.insert(keysToPress, Enum.KeyCode.Z) end
-            if State.AutoSkillX then table.insert(keysToPress, Enum.KeyCode.X) end
-            if State.AutoSkillC then table.insert(keysToPress, Enum.KeyCode.C) end
-            if State.AutoSkillV then table.insert(keysToPress, Enum.KeyCode.V) end
-            if State.AutoSkillE then table.insert(keysToPress, Enum.KeyCode.E) end
-            if State.AutoSkillF then table.insert(keysToPress, Enum.KeyCode.F) end
-            
-            if State.AutoSkill1 then table.insert(keysToPress, Enum.KeyCode.One) end
-            if State.AutoSkill2 then table.insert(keysToPress, Enum.KeyCode.Two) end
-            if State.AutoSkill3 then table.insert(keysToPress, Enum.KeyCode.Three) end
-            if State.AutoSkill4 then table.insert(keysToPress, Enum.KeyCode.Four) end
-            if State.AutoSkill5 then table.insert(keysToPress, Enum.KeyCode.Five) end
-            if State.AutoSkill6 then table.insert(keysToPress, Enum.KeyCode.Six) end
-            
-            pcall(function()
-                for _, keyEnum in ipairs(keysToPress) do
-                    Vim:SendKeyEvent(true, keyEnum, false, game)
-                    task.wait(0.05)
-                    Vim:SendKeyEvent(false, keyEnum, false, game)
-                    task.wait(0.1) 
-                end
-            end)
-            task.wait(State.AutoSkillDelay) 
+    while task.wait(0.5) do -- Delay an toàn 0.5s giữa các lần lặp tổng để không làm nghẽn game
+        local keysToPress = {}
+        if State.AutoSkillZ then table.insert(keysToPress, Enum.KeyCode.Z) end
+        if State.AutoSkillX then table.insert(keysToPress, Enum.KeyCode.X) end
+        if State.AutoSkillC then table.insert(keysToPress, Enum.KeyCode.C) end
+        if State.AutoSkillV then table.insert(keysToPress, Enum.KeyCode.V) end
+        if State.AutoSkillE then table.insert(keysToPress, Enum.KeyCode.E) end
+        if State.AutoSkillF then table.insert(keysToPress, Enum.KeyCode.F) end
+        
+        if State.AutoSkill1 then table.insert(keysToPress, Enum.KeyCode.One) end
+        if State.AutoSkill2 then table.insert(keysToPress, Enum.KeyCode.Two) end
+        if State.AutoSkill3 then table.insert(keysToPress, Enum.KeyCode.Three) end
+        if State.AutoSkill4 then table.insert(keysToPress, Enum.KeyCode.Four) end
+        if State.AutoSkill5 then table.insert(keysToPress, Enum.KeyCode.Five) end
+        if State.AutoSkill6 then table.insert(keysToPress, Enum.KeyCode.Six) end
+        
+        if #keysToPress > 0 then
+            for _, keyEnum in ipairs(keysToPress) do
+                -- Dùng task.spawn để Tách biệt hoàn toàn luồng bấm phím khỏi luồng di chuyển
+                task.spawn(function()
+                    pcall(function()
+                        Vim:SendKeyEvent(true, keyEnum, false, game)
+                        task.wait(0.02) -- Cực kì nhanh, giống như chạm thật nhẹ vào màn hình
+                        Vim:SendKeyEvent(false, keyEnum, false, game)
+                    end)
+                end)
+                task.wait(0.05) -- Tạo khoảng nghỉ mini giữa các chiêu, giúp mượt hơn
+            end
         end
     end
 end)
@@ -1094,6 +1133,7 @@ RunService.Heartbeat:Connect(function()
             if State.PlayerLight then 
                 if not light then light = Instance.new("PointLight", root); light.Name = "PlayerPointLight"; light.Shadows = false end 
                 light.Brightness = State.LightBrightness; light.Range = State.LightRange
+                light.Color = PlayerLightColors[State.LightColorIdx].Value
             else 
                 if light then light:Destroy() end 
             end
