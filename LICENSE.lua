@@ -1,5 +1,5 @@
 -- ==========================================
--- MENU VIP PRO V1.12.5 (BUG FIXES & UI MERGED)
+-- MENU VIP PRO V1.12.5 (REARRANGED TABS & OPTIMIZED)
 -- ==========================================
 repeat task.wait() until game:IsLoaded()
 
@@ -26,7 +26,7 @@ local State = {
     MusicVolume = 5, LightColorIdx = 1, NoFog = false,
     -- Cấu Hình System States
     FpsCapValue = 60, Disable3D = false, AfkModeScreen = false, RemoveTextures = false,
-    HidePlayers = false, OptimizeTerrain = false, NoShadows = false, MuteAll = false,
+    HidePlayers = false, OptimizeTerrain = false, NoShadows = false,
     -- Auto Skill States
     AutoSkillDelay = 1, 
     AutoSkillZ = false, AutoSkillX = false, AutoSkillC = false, AutoSkillV = false, AutoSkillE = false, AutoSkillF = false,
@@ -634,27 +634,6 @@ task.spawn(function()
     end
 end)
 
-createToggle(page4, "☀️ Xóa sương mù (Ép tắt 100%)", "NoFog", function(v)
-    if not v then
-        Lighting.FogEnd = 100000 
-        Lighting.FogStart = 0
-    end
-end)
-
-task.spawn(function()
-    while task.wait(0.1) do
-        if State.NoFog then
-            Lighting.FogEnd = 100000
-            Lighting.FogStart = 0
-            local atmo = Lighting:FindFirstChildOfClass("Atmosphere")
-            if atmo then
-                atmo.Density = 0
-                atmo.Offset = 0
-            end
-        end
-    end
-end)
-
 createToggle(page4, "🛡️ Chống AFK (Antiafk)", "AntiAfk")
 
 local function hopServer(sortOrder)
@@ -819,7 +798,7 @@ player.Idled:Connect(function()
 end)
 
 -- ==========================================
--- [TAB 8: AUTO SKILL (MỚI & PHÂN KHU VỰC ĐẸP)]
+-- [TAB 8: AUTO SKILL (ĐÃ FIX DI CHUYỂN)]
 -- ==========================================
 createDivider(page8, "KỸ NĂNG PHÍM CHỮ")
 createToggle(page8, "Tự động kích hoạt Phím [Z]", "AutoSkillZ")
@@ -870,7 +849,7 @@ task.spawn(function()
 end)
 
 -- ==========================================
--- [TAB 9: CẤU HÌNH (TỐI ƯU HỆ THỐNG GỘP UI)]
+-- [TAB 9: CẤU HÌNH (ĐÃ THÊM XÓA SƯƠNG MÙ VÀ BỎ ÂM THANH)]
 -- ==========================================
 createDivider(page9, "TỐI ƯU HIỆU SUẤT TỐI ĐA")
 
@@ -878,22 +857,20 @@ createSlider(page9, "Giới hạn FPS (Chống nóng máy)", 10, 120, "FpsCapVal
     pcall(function() setfpscap(val) end)
 end)
 
--- ĐÃ GỘP MÀN HÌNH TRẮNG VÀO TẮT RENDER 3D
 createToggle(page9, "Tắt Render 3D (Màn trắng + Giảm tải CPU)", "Disable3D", function(v)
     pcall(function() RunService:Set3dRenderingEnabled(not v) end)
     if v then
-        screenOverlay.BackgroundColor3 = Color3.new(1, 1, 1) -- Màu trắng
+        screenOverlay.BackgroundColor3 = Color3.new(1, 1, 1) 
         screenOverlay.Visible = true
     else
         if not State.AfkModeScreen then screenOverlay.Visible = false end
     end
 end)
 
--- ĐÃ GỘP MÀN HÌNH ĐEN VÀO CHẾ ĐỘ AFK
 createToggle(page9, "Chế độ AFK Ngủ (Màn đen + 10 FPS)", "AfkModeScreen", function(v)
     if v then
         pcall(function() setfpscap(10) end)
-        screenOverlay.BackgroundColor3 = Color3.new(0, 0, 0) -- Màu đen
+        screenOverlay.BackgroundColor3 = Color3.new(0, 0, 0) 
         screenOverlay.Visible = true
         pcall(function() RunService:Set3dRenderingEnabled(false) end)
     else
@@ -902,16 +879,36 @@ createToggle(page9, "Chế độ AFK Ngủ (Màn đen + 10 FPS)", "AfkModeScreen
             screenOverlay.Visible = false 
             pcall(function() RunService:Set3dRenderingEnabled(true) end)
         else
-            screenOverlay.BackgroundColor3 = Color3.new(1, 1, 1) -- Nếu Disable 3D vẫn đang bật thì trả về màn trắng
+            screenOverlay.BackgroundColor3 = Color3.new(1, 1, 1) 
         end
     end
 end)
 
 createDivider(page9, "CÁC CHỨC NĂNG HỦY DIỆT ĐỒ HỌA")
 
+createToggle(page9, "☀️ Xóa sương mù (Ép tắt 100%)", "NoFog", function(v)
+    if not v then
+        Lighting.FogEnd = 100000 
+        Lighting.FogStart = 0
+    end
+end)
+
+task.spawn(function()
+    while task.wait(0.1) do
+        if State.NoFog then
+            Lighting.FogEnd = 100000
+            Lighting.FogStart = 0
+            local atmo = Lighting:FindFirstChildOfClass("Atmosphere")
+            if atmo then
+                atmo.Density = 0
+                atmo.Offset = 0
+            end
+        end
+    end
+end)
+
 createToggle(page9, "👻 Ẩn tất cả người chơi khác", "HidePlayers")
 
--- ĐÃ FIX ẨN NGƯỜI CHƠI BẰNG BỘ NHỚ ĐỆM (CACHE)
 local hiddenPartsCache = {}
 task.spawn(function()
     while task.wait(0.5) do
@@ -970,41 +967,14 @@ task.spawn(function()
     end
 end)
 
-createToggle(page9, "🔇 Tắt mọi âm thanh", "MuteAll")
-
--- ĐÃ FIX TẮT ÂM THANH (Bắt mọi âm thanh từ Service và Workspace)
-local originalVolumes = {}
-task.spawn(function()
-    while task.wait(1) do
-        if State.MuteAll then
-            for _, v in ipairs(game:GetDescendants()) do
-                if v:IsA("Sound") and v.Volume > 0 then
-                    originalVolumes[v] = v.Volume
-                    v.Volume = 0
-                end
-            end
-        else
-            if next(originalVolumes) then
-                for v, vol in pairs(originalVolumes) do
-                    pcall(function() if v and v.Parent then v.Volume = vol end end)
-                end
-                originalVolumes = {}
-            end
-        end
-    end
-end)
-
--- ĐÃ CẢI TIẾN NÚT DỌN RÁC BẢN ĐỒ (An toàn & Chính xác hơn)
 createButton(page9, "🧹 Dọn rác bản đồ (Clear Debris)", Theme.AccentOff, function()
     local count = 0
     pcall(function()
         for _, obj in ipairs(workspace:GetDescendants()) do
             if not obj:IsDescendantOf(player.Character) and not obj.Parent:FindFirstChild("Humanoid") then
-                -- Xóa hiệu ứng hình ảnh lơ lửng, vết máu, part vụn vỡ
                 if obj:IsA("ParticleEmitter") or obj:IsA("Trail") or obj:IsA("Blood") or (obj:IsA("Decal") and obj.Name == "Blood") then
                     obj:Destroy()
                     count = count + 1
-                -- Xóa part rác (không neo, nhỏ, không chạm được)
                 elseif obj:IsA("BasePart") and not obj.Anchored and obj.CanCollide == false and obj.Size.Magnitude < 5 then
                     obj:Destroy()
                     count = count + 1
