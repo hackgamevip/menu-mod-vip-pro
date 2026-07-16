@@ -1,5 +1,5 @@
 -- ==========================================
--- MENU VIP PRO V1.12.5 (ULTIMATE OPTIMIZATION & ANTI-LAG)
+-- MENU VIP PRO V1.12.5 (BUG FIXES & UI MERGED)
 -- ==========================================
 repeat task.wait() until game:IsLoaded()
 
@@ -398,7 +398,7 @@ local function createButton(parent, text, color, callback)
     btn.MouseButton1Click:Connect(function()
         clickAnimate(btn); if not State.RGB then TweenService:Create(stroke, TweenInfo.new(0.15), {Color = Theme.TextTitle}):Play() end
         task.wait(0.15); if not State.RGB then TweenService:Create(stroke, TweenInfo.new(0.3), {Color = color}):Play() end
-        MakeToast("Đã thực thực", text, color); callback()
+        MakeToast("Đã thực thi", text, color); callback()
     end)
     return btnFrame
 end
@@ -655,8 +655,6 @@ task.spawn(function()
     end
 end)
 
-createToggle(page4, "⬛ Màn hình đen (treo máy)", "BlackScreen", function(v) screenOverlay.BackgroundColor3 = Color3.new(0, 0, 0); screenOverlay.Visible = v end)
-createToggle(page4, "⬜ Màn hình trắng", "WhiteScreen", function(v) screenOverlay.BackgroundColor3 = Color3.new(1, 1, 1); screenOverlay.Visible = v end)
 createToggle(page4, "🛡️ Chống AFK (Antiafk)", "AntiAfk")
 
 local function hopServer(sortOrder)
@@ -872,7 +870,7 @@ task.spawn(function()
 end)
 
 -- ==========================================
--- [TAB 9: CẤU HÌNH (TỐI ƯU HỆ THỐNG)]
+-- [TAB 9: CẤU HÌNH (TỐI ƯU HỆ THỐNG GỘP UI)]
 -- ==========================================
 createDivider(page9, "TỐI ƯU HIỆU SUẤT TỐI ĐA")
 
@@ -880,20 +878,32 @@ createSlider(page9, "Giới hạn FPS (Chống nóng máy)", 10, 120, "FpsCapVal
     pcall(function() setfpscap(val) end)
 end)
 
-createToggle(page9, "Tắt Render 3D (Giảm 90% CPU/GPU)", "Disable3D", function(v)
+-- ĐÃ GỘP MÀN HÌNH TRẮNG VÀO TẮT RENDER 3D
+createToggle(page9, "Tắt Render 3D (Màn trắng + Giảm tải CPU)", "Disable3D", function(v)
     pcall(function() RunService:Set3dRenderingEnabled(not v) end)
+    if v then
+        screenOverlay.BackgroundColor3 = Color3.new(1, 1, 1) -- Màu trắng
+        screenOverlay.Visible = true
+    else
+        if not State.AfkModeScreen then screenOverlay.Visible = false end
+    end
 end)
 
+-- ĐÃ GỘP MÀN HÌNH ĐEN VÀO CHẾ ĐỘ AFK
 createToggle(page9, "Chế độ AFK Ngủ (Màn đen + 10 FPS)", "AfkModeScreen", function(v)
     if v then
         pcall(function() setfpscap(10) end)
-        screenOverlay.BackgroundColor3 = Color3.new(0, 0, 0)
+        screenOverlay.BackgroundColor3 = Color3.new(0, 0, 0) -- Màu đen
         screenOverlay.Visible = true
         pcall(function() RunService:Set3dRenderingEnabled(false) end)
     else
         pcall(function() setfpscap(State.FpsCapValue) end)
-        screenOverlay.Visible = false
-        pcall(function() RunService:Set3dRenderingEnabled(true) end)
+        if not State.Disable3D then 
+            screenOverlay.Visible = false 
+            pcall(function() RunService:Set3dRenderingEnabled(true) end)
+        else
+            screenOverlay.BackgroundColor3 = Color3.new(1, 1, 1) -- Nếu Disable 3D vẫn đang bật thì trả về màn trắng
+        end
     end
 end)
 
@@ -901,6 +911,8 @@ createDivider(page9, "CÁC CHỨC NĂNG HỦY DIỆT ĐỒ HỌA")
 
 createToggle(page9, "👻 Ẩn tất cả người chơi khác", "HidePlayers")
 
+-- ĐÃ FIX ẨN NGƯỜI CHƠI BẰNG BỘ NHỚ ĐỆM (CACHE)
+local hiddenPartsCache = {}
 task.spawn(function()
     while task.wait(0.5) do
         if State.HidePlayers then
@@ -908,15 +920,20 @@ task.spawn(function()
                 if p ~= player and p.Character then
                     for _, v in ipairs(p.Character:GetDescendants()) do
                         if v:IsA("BasePart") or v:IsA("Decal") then
-                            v.Transparency = 1
+                            if v.Transparency < 1 then
+                                hiddenPartsCache[v] = v.Transparency
+                                v.Transparency = 1
+                            end
                         end
                     end
                 end
             end
-        end
-        if State.MuteAll then
-            for _, v in ipairs(workspace:GetDescendants()) do
-                if v:IsA("Sound") then v.Volume = 0 end
+        else
+            if next(hiddenPartsCache) then
+                for v, trans in pairs(hiddenPartsCache) do
+                    pcall(function() if v and v.Parent then v.Transparency = trans end end)
+                end
+                hiddenPartsCache = {}
             end
         end
     end
@@ -939,7 +956,6 @@ createToggle(page9, "🌊 Tối ưu Địa hình & Nước", "OptimizeTerrain", 
 end)
 
 createToggle(page9, "🌑 Tắt đổ bóng vật thể (No Shadows)", "NoShadows")
-
 task.spawn(function()
     while task.wait(2) do
         if State.NoShadows then
@@ -956,20 +972,47 @@ end)
 
 createToggle(page9, "🔇 Tắt mọi âm thanh", "MuteAll")
 
+-- ĐÃ FIX TẮT ÂM THANH (Bắt mọi âm thanh từ Service và Workspace)
+local originalVolumes = {}
+task.spawn(function()
+    while task.wait(1) do
+        if State.MuteAll then
+            for _, v in ipairs(game:GetDescendants()) do
+                if v:IsA("Sound") and v.Volume > 0 then
+                    originalVolumes[v] = v.Volume
+                    v.Volume = 0
+                end
+            end
+        else
+            if next(originalVolumes) then
+                for v, vol in pairs(originalVolumes) do
+                    pcall(function() if v and v.Parent then v.Volume = vol end end)
+                end
+                originalVolumes = {}
+            end
+        end
+    end
+end)
+
+-- ĐÃ CẢI TIẾN NÚT DỌN RÁC BẢN ĐỒ (An toàn & Chính xác hơn)
 createButton(page9, "🧹 Dọn rác bản đồ (Clear Debris)", Theme.AccentOff, function()
     local count = 0
     pcall(function()
         for _, obj in ipairs(workspace:GetDescendants()) do
-            if obj:IsA("BasePart") and not obj.Anchored and not obj:IsDescendantOf(player.Character) and not obj.Parent:FindFirstChild("Humanoid") then
-                obj:Destroy()
-                count = count + 1
-            elseif obj:IsA("ParticleEmitter") or obj:IsA("Trail") then
-                obj:Destroy()
-                count = count + 1
+            if not obj:IsDescendantOf(player.Character) and not obj.Parent:FindFirstChild("Humanoid") then
+                -- Xóa hiệu ứng hình ảnh lơ lửng, vết máu, part vụn vỡ
+                if obj:IsA("ParticleEmitter") or obj:IsA("Trail") or obj:IsA("Blood") or (obj:IsA("Decal") and obj.Name == "Blood") then
+                    obj:Destroy()
+                    count = count + 1
+                -- Xóa part rác (không neo, nhỏ, không chạm được)
+                elseif obj:IsA("BasePart") and not obj.Anchored and obj.CanCollide == false and obj.Size.Magnitude < 5 then
+                    obj:Destroy()
+                    count = count + 1
+                end
             end
         end
     end)
-    MakeToast("Dọn Rác", "Đã dọn dẹp " .. count .. " vật thể rác!", Theme.Brand)
+    MakeToast("Dọn Rác", "Đã dọn dẹp " .. count .. " hiệu ứng/rác!", Theme.Brand)
 end)
 
 -- ==========================================
