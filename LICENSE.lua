@@ -1,5 +1,5 @@
 -- ==========================================
--- MENU VIP PRO V1.12.5 (AVATAR FIX & LIGHT LIMIT EXPLAINED)
+-- MENU VIP PRO V1.12.5 (ULTIMATE OPTIMIZATION & ANTI-LAG)
 -- ==========================================
 repeat task.wait() until game:IsLoaded()
 
@@ -23,7 +23,11 @@ local State = {
     SpinBot = false, SpinSpeed = 50, Hitbox = false, HitboxSize = 15, AutoClick = false, RGB = false,
     Reach = false, ReachSize = 15, AutoDash = false, DashSpeed = 10, AutoSave = false, Astral = false,
     ShiftLock = false, SpeedValue = 60, JumpValue = 120, LightRange = 60, LightBrightness = 3,
-    MusicVolume = 5, LightColorIdx = 1,
+    MusicVolume = 5, LightColorIdx = 1, NoFog = false,
+    -- Cấu Hình System States
+    FpsCapValue = 60, Disable3D = false, AfkModeScreen = false, RemoveTextures = false,
+    HidePlayers = false, OptimizeTerrain = false, NoShadows = false, MuteAll = false,
+    -- Auto Skill States
     AutoSkillDelay = 1, 
     AutoSkillZ = false, AutoSkillX = false, AutoSkillC = false, AutoSkillV = false, AutoSkillE = false, AutoSkillF = false,
     AutoSkill1 = false, AutoSkill2 = false, AutoSkill3 = false, AutoSkill4 = false, AutoSkill5 = false, AutoSkill6 = false
@@ -189,7 +193,6 @@ titleLabel.Size = UDim2.new(1, 0, 1, 0); titleLabel.BackgroundTransparency = 1
 titleLabel.Text = "MENU VIP PRO MAX"
 titleLabel.TextColor3 = Theme.TextTitle; titleLabel.Font = Enum.Font.GothamBlack; titleLabel.TextSize = 16; titleLabel.ZIndex = 10
 
--- [ĐÃ FIX AVATAR LÚN] - Thu nhỏ size 26x26 và căn trục Y tuyệt đối
 local avatarImg = Instance.new("ImageLabel", header)
 avatarImg.Size = UDim2.new(0, 26, 0, 26); avatarImg.Position = UDim2.new(0, 15, 0, 9.5); avatarImg.BackgroundTransparency = 1; avatarImg.ZIndex = 10
 pcall(function() avatarImg.Image = Players:GetUserThumbnailAsync(player.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size420x420) end)
@@ -241,6 +244,7 @@ local tab5, ind5 = createTab("NHẠC ID",   60)
 local tab6, ind6 = createTab("TP SAVE",   65)
 local tab7, ind7 = createTab("TP PLAYER", 75)
 local tab8, ind8 = createTab("AUTO SKILL", 75) 
+local tab9, ind9 = createTab("CẤU HÌNH",  75)
 
 local pageContainer = Instance.new("Frame", frame)
 pageContainer.Size = UDim2.new(1, 0, 1, -95); pageContainer.Position = UDim2.new(0, 0, 0, 88); pageContainer.BackgroundTransparency = 1; pageContainer.ZIndex = 10
@@ -256,7 +260,7 @@ local function createPage()
     return pg
 end
 
-local page1, page2, page3, page4, page7, page8 = createPage(), createPage(), createPage(), createPage(), createPage(), createPage()
+local page1, page2, page3, page4, page7, page8, page9 = createPage(), createPage(), createPage(), createPage(), createPage(), createPage(), createPage()
 
 local page5 = Instance.new("Frame", pageContainer)
 page5.Size = UDim2.new(1, 0, 1, 0); page5.BackgroundTransparency = 1; page5.Visible = false; page5.ZIndex = 10
@@ -267,9 +271,9 @@ page6.Size = UDim2.new(1, 0, 1, 0); page6.BackgroundTransparency = 1; page6.Visi
 local l6 = Instance.new("UIListLayout", page6); l6.HorizontalAlignment = Enum.HorizontalAlignment.Center; l6.Padding = UDim.new(0, 10); l6.SortOrder = Enum.SortOrder.LayoutOrder; Instance.new("UIPadding", page6).PaddingTop = UDim.new(0, 10)
 
 local function showTab(pg, tb, ind)
-    for _, p in pairs({page1, page2, page3, page4, page5, page6, page7, page8}) do p.Visible = false end
-    for _, t in pairs({tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8}) do t.TextColor3 = Theme.TextDim end
-    for _, i in pairs({ind1, ind2, ind3, ind4, ind5, ind6, ind7, ind8}) do i.Visible = false end
+    for _, p in pairs({page1, page2, page3, page4, page5, page6, page7, page8, page9}) do p.Visible = false end
+    for _, t in pairs({tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9}) do t.TextColor3 = Theme.TextDim end
+    for _, i in pairs({ind1, ind2, ind3, ind4, ind5, ind6, ind7, ind8, ind9}) do i.Visible = false end
     pg.Visible = true; tb.TextColor3 = Theme.TextTitle; ind.Visible = true
     ind.Size = UDim2.new(0, 0, 0, 3)
     TweenService:Create(ind, TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Size = UDim2.new(0.5, 0, 0, 3)}):Play()
@@ -283,6 +287,7 @@ tab5.MouseButton1Click:Connect(function() showTab(page5, tab5, ind5) end)
 tab6.MouseButton1Click:Connect(function() showTab(page6, tab6, ind6) end)
 tab7.MouseButton1Click:Connect(function() showTab(page7, tab7, ind7) end)
 tab8.MouseButton1Click:Connect(function() showTab(page8, tab8, ind8) end)
+tab9.MouseButton1Click:Connect(function() showTab(page9, tab9, ind9) end)
 showTab(page1, tab1, ind1)
 
 local opened = true
@@ -393,7 +398,7 @@ local function createButton(parent, text, color, callback)
     btn.MouseButton1Click:Connect(function()
         clickAnimate(btn); if not State.RGB then TweenService:Create(stroke, TweenInfo.new(0.15), {Color = Theme.TextTitle}):Play() end
         task.wait(0.15); if not State.RGB then TweenService:Create(stroke, TweenInfo.new(0.3), {Color = color}):Play() end
-        MakeToast("Đã thực thi", text, color); callback()
+        MakeToast("Đã thực thực", text, color); callback()
     end)
     return btnFrame
 end
@@ -597,7 +602,7 @@ createSlider(page3, "Kích thước Hitbox", 0, 100, "HitboxSize")
 createToggle(page3, "🌪️ Xoay vòng tròn", "SpinBot")
 createSlider(page3, "Tốc độ xoay", 0, 100, "SpinSpeed")
 createToggle(page3, "💡 Ánh sáng quanh người", "PlayerLight", function(v) if not v and player.Character then local root = getUniversalRoot(player.Character); if root then local light = root:FindFirstChild("PlayerPointLight"); if light then light:Destroy() end end end end)
-createSlider(page3, "Phạm vi sáng", 0, 60, "LightRange")
+createSlider(page3, "Phạm vi sáng (Game giới hạn max 60)", 0, 60, "LightRange")
 createSlider(page3, "Độ sáng", 0, 5, "LightBrightness")
 createCycleBtn(page3, "🎨 Đổi màu:", PlayerLightColors, "LightColorIdx")
 
@@ -621,36 +626,6 @@ createToggle(page4, "🌈 Chế độ RGB", "RGB", function(v)
     end 
 end)
 
-createToggle(page4, "📉 Giảm Lag (An Toàn)", "LowGfx", function(v)
-    if v then
-        Lighting.GlobalShadows = false
-        for _, obj in ipairs(workspace:GetDescendants()) do
-            pcall(function()
-                if obj:IsA("BasePart") and obj.Material ~= Enum.Material.SmoothPlastic then
-                    OriginalGFX[obj] = {Material = obj.Material}
-                    obj.Material = Enum.Material.SmoothPlastic
-                elseif (obj:IsA("Decal") or obj:IsA("Texture")) and obj.Transparency < 1 then
-                    OriginalGFX[obj] = {Transparency = obj.Transparency}
-                    obj.Transparency = 1
-                elseif (obj:IsA("ParticleEmitter") or obj:IsA("Trail") or obj:IsA("Beam") or obj:IsA("Fire") or obj:IsA("Smoke") or obj:IsA("Sparkles")) and obj.Enabled then
-                    OriginalGFX[obj] = {Enabled = obj.Enabled}
-                    obj.Enabled = false
-                end
-            end)
-        end
-    else
-        Lighting.GlobalShadows = true
-        for obj, props in pairs(OriginalGFX) do
-            pcall(function()
-                if obj and obj.Parent then
-                    for k, val in pairs(props) do obj[k] = val end
-                end
-            end)
-        end
-        OriginalGFX = {}
-    end
-end)
-
 createToggle(page4, "💫 Mở khóa ShiftLock Mobile", "ShiftLock", function(v) pcall(function() player.DevEnableMouseLock = v end) end)
 createToggle(page4, "🖱️ Auto Click", "AutoClick")
 task.spawn(function()
@@ -659,11 +634,27 @@ task.spawn(function()
     end
 end)
 
-local origFog, origBright, origShadow
-createToggle(page4, "☀️ Xóa sương mù", "NoFog", function(v) 
-    if v then origFog = Lighting.FogEnd; origBright = Lighting.Brightness; origShadow = Lighting.GlobalShadows; Lighting.FogEnd = 100000; Lighting.Brightness = 2; Lighting.GlobalShadows = false
-    else Lighting.FogEnd = origFog or 100000; Lighting.Brightness = origBright or 1; Lighting.GlobalShadows = origShadow end
+createToggle(page4, "☀️ Xóa sương mù (Ép tắt 100%)", "NoFog", function(v)
+    if not v then
+        Lighting.FogEnd = 100000 
+        Lighting.FogStart = 0
+    end
 end)
+
+task.spawn(function()
+    while task.wait(0.1) do
+        if State.NoFog then
+            Lighting.FogEnd = 100000
+            Lighting.FogStart = 0
+            local atmo = Lighting:FindFirstChildOfClass("Atmosphere")
+            if atmo then
+                atmo.Density = 0
+                atmo.Offset = 0
+            end
+        end
+    end
+end)
+
 createToggle(page4, "⬛ Màn hình đen (treo máy)", "BlackScreen", function(v) screenOverlay.BackgroundColor3 = Color3.new(0, 0, 0); screenOverlay.Visible = v end)
 createToggle(page4, "⬜ Màn hình trắng", "WhiteScreen", function(v) screenOverlay.BackgroundColor3 = Color3.new(1, 1, 1); screenOverlay.Visible = v end)
 createToggle(page4, "🛡️ Chống AFK (Antiafk)", "AntiAfk")
@@ -878,6 +869,107 @@ task.spawn(function()
             end
         end
     end
+end)
+
+-- ==========================================
+-- [TAB 9: CẤU HÌNH (TỐI ƯU HỆ THỐNG)]
+-- ==========================================
+createDivider(page9, "TỐI ƯU HIỆU SUẤT TỐI ĐA")
+
+createSlider(page9, "Giới hạn FPS (Chống nóng máy)", 10, 120, "FpsCapValue", function(val)
+    pcall(function() setfpscap(val) end)
+end)
+
+createToggle(page9, "Tắt Render 3D (Giảm 90% CPU/GPU)", "Disable3D", function(v)
+    pcall(function() RunService:Set3dRenderingEnabled(not v) end)
+end)
+
+createToggle(page9, "Chế độ AFK Ngủ (Màn đen + 10 FPS)", "AfkModeScreen", function(v)
+    if v then
+        pcall(function() setfpscap(10) end)
+        screenOverlay.BackgroundColor3 = Color3.new(0, 0, 0)
+        screenOverlay.Visible = true
+        pcall(function() RunService:Set3dRenderingEnabled(false) end)
+    else
+        pcall(function() setfpscap(State.FpsCapValue) end)
+        screenOverlay.Visible = false
+        pcall(function() RunService:Set3dRenderingEnabled(true) end)
+    end
+end)
+
+createDivider(page9, "CÁC CHỨC NĂNG HỦY DIỆT ĐỒ HỌA")
+
+createToggle(page9, "👻 Ẩn tất cả người chơi khác", "HidePlayers")
+
+task.spawn(function()
+    while task.wait(0.5) do
+        if State.HidePlayers then
+            for _, p in pairs(Players:GetPlayers()) do
+                if p ~= player and p.Character then
+                    for _, v in ipairs(p.Character:GetDescendants()) do
+                        if v:IsA("BasePart") or v:IsA("Decal") then
+                            v.Transparency = 1
+                        end
+                    end
+                end
+            end
+        end
+        if State.MuteAll then
+            for _, v in ipairs(workspace:GetDescendants()) do
+                if v:IsA("Sound") then v.Volume = 0 end
+            end
+        end
+    end
+end)
+
+createToggle(page9, "🌊 Tối ưu Địa hình & Nước", "OptimizeTerrain", function(v)
+    pcall(function()
+        if v then
+            workspace.Terrain.WaterWaveSize = 0
+            workspace.Terrain.WaterWaveSpeed = 0
+            workspace.Terrain.WaterReflectance = 0
+            workspace.Terrain.WaterTransparency = 1
+        else
+            workspace.Terrain.WaterWaveSize = 0.15
+            workspace.Terrain.WaterWaveSpeed = 10
+            workspace.Terrain.WaterReflectance = 1
+            workspace.Terrain.WaterTransparency = 0.3
+        end
+    end)
+end)
+
+createToggle(page9, "🌑 Tắt đổ bóng vật thể (No Shadows)", "NoShadows")
+
+task.spawn(function()
+    while task.wait(2) do
+        if State.NoShadows then
+            pcall(function()
+                for _, v in ipairs(workspace:GetDescendants()) do
+                    if v:IsA("BasePart") and v.CastShadow then
+                        v.CastShadow = false
+                    end
+                end
+            end)
+        end
+    end
+end)
+
+createToggle(page9, "🔇 Tắt mọi âm thanh", "MuteAll")
+
+createButton(page9, "🧹 Dọn rác bản đồ (Clear Debris)", Theme.AccentOff, function()
+    local count = 0
+    pcall(function()
+        for _, obj in ipairs(workspace:GetDescendants()) do
+            if obj:IsA("BasePart") and not obj.Anchored and not obj:IsDescendantOf(player.Character) and not obj.Parent:FindFirstChild("Humanoid") then
+                obj:Destroy()
+                count = count + 1
+            elseif obj:IsA("ParticleEmitter") or obj:IsA("Trail") then
+                obj:Destroy()
+                count = count + 1
+            end
+        end
+    end)
+    MakeToast("Dọn Rác", "Đã dọn dẹp " .. count .. " vật thể rác!", Theme.Brand)
 end)
 
 -- ==========================================
