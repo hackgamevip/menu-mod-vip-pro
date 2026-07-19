@@ -1,5 +1,5 @@
 -- ==========================================
--- MENU VIP PRO V1.12.5 (REARRANGED TABS & OPTIMIZED)
+-- MENU VIP PRO V1.12.5 (SUPER SMOOTH FLY & SPEED + LOWGFX RESTORED)
 -- ==========================================
 repeat task.wait() until game:IsLoaded()
 
@@ -24,10 +24,8 @@ local State = {
     Reach = false, ReachSize = 15, AutoDash = false, DashSpeed = 10, AutoSave = false, Astral = false,
     ShiftLock = false, SpeedValue = 60, JumpValue = 120, LightRange = 60, LightBrightness = 3,
     MusicVolume = 5, LightColorIdx = 1, NoFog = false,
-    -- Cấu Hình System States
     FpsCapValue = 60, Disable3D = false, AfkModeScreen = false, RemoveTextures = false,
     HidePlayers = false, OptimizeTerrain = false, NoShadows = false,
-    -- Auto Skill States
     AutoSkillDelay = 1, 
     AutoSkillZ = false, AutoSkillX = false, AutoSkillC = false, AutoSkillV = false, AutoSkillE = false, AutoSkillF = false,
     AutoSkill1 = false, AutoSkill2 = false, AutoSkill3 = false, AutoSkill4 = false, AutoSkill5 = false, AutoSkill6 = false
@@ -578,7 +576,25 @@ createToggle(page2, "🔴 ESP người chơi (Định vị Full Map)", "ESP")
 -- ==========================================
 -- [TAB 3: PLAYER]
 -- ==========================================
-createToggle(page3, "🕊️ Bay Trên không (Mượt)", "Fly")
+createToggle(page3, "🕊️ Bay Trên không (Mượt)", "Fly", function(v)
+    local char = player.Character
+    if char then
+        local root = getUniversalRoot(char)
+        local hum = char:FindFirstChildOfClass("Humanoid")
+        if v then
+            if root and not root:FindFirstChild("FlyBodyVelocity") then
+                local bv = Instance.new("BodyVelocity")
+                bv.Name = "FlyBodyVelocity"
+                bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+                bv.Velocity = Vector3.zero
+                bv.Parent = root
+            end
+        else
+            if root and root:FindFirstChild("FlyBodyVelocity") then root.FlyBodyVelocity:Destroy() end
+            if hum then hum.PlatformStand = false end
+        end
+    end
+end)
 createSlider(page3, "Tốc độ bay", 10, 1000, "FlySpeed")
 
 createToggle(page3, "🏃 Chạy nhanh (Qua mặt Anti-Cheat)", "Speed")
@@ -659,7 +675,6 @@ local function rejoinServer()
     if #Players:GetPlayers() <= 1 then player:Kick("\nĐang vào lại server..."); task.wait(); TeleportService:Teleport(game.PlaceId, player) else TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, player) end
 end
 
-createDualButtons(page4, "🌞 Trời SÁNG (Fake)", Color3.fromRGB(243, 156, 18), function() Lighting.ClockTime = 12 end, "🌚 Trời TỐI (Fake)", Color3.fromRGB(160, 32, 240), function() Lighting.ClockTime = 0 end)
 createDualButtons(page4, "🔄 VÀO LẠI SV", Theme.AccentOn, rejoinServer, "🎲 ĐỔI SV NGẪU NHIÊN", Theme.Brand, function() hopServer("Desc") end)
 createDualButtons(page4, "📉 ĐỔI SV ÍT NGƯỜI", Color3.fromRGB(52, 152, 219), function() hopServer("Asc") end, "📈 ĐỔI SV NHIỀU NGƯỜI", Color3.fromRGB(231, 76, 60), function() hopServer("Desc") end)
 createDualButtons(page4, "💻 LỆNH ADMIN", Theme.AccentOn, function() pcall(function() loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgelY/infiniteyield/master/source'))() end) end, "📁 TP SAVE V3", Theme.Brand, function() pcall(function() loadstring(game:HttpGet('https://raw.githubusercontent.com/OBen1/fe/main/Tp%20Place%20GUI', true))() end) end)
@@ -798,7 +813,7 @@ player.Idled:Connect(function()
 end)
 
 -- ==========================================
--- [TAB 8: AUTO SKILL (ĐÃ FIX DI CHUYỂN)]
+-- [TAB 8: AUTO SKILL]
 -- ==========================================
 createDivider(page8, "KỸ NĂNG PHÍM CHỮ")
 createToggle(page8, "Tự động kích hoạt Phím [Z]", "AutoSkillZ")
@@ -849,7 +864,7 @@ task.spawn(function()
 end)
 
 -- ==========================================
--- [TAB 9: CẤU HÌNH (ĐÃ THÊM XÓA SƯƠNG MÙ VÀ BỎ ÂM THANH)]
+-- [TAB 9: CẤU HÌNH (TỐI ƯU HỆ THỐNG GỘP UI)]
 -- ==========================================
 createDivider(page9, "TỐI ƯU HIỆU SUẤT TỐI ĐA")
 
@@ -885,6 +900,36 @@ createToggle(page9, "Chế độ AFK Ngủ (Màn đen + 10 FPS)", "AfkModeScreen
 end)
 
 createDivider(page9, "CÁC CHỨC NĂNG HỦY DIỆT ĐỒ HỌA")
+
+createToggle(page9, "📉 Giảm Lag (Xóa toàn bộ hiệu ứng)", "LowGfx", function(v)
+    if v then
+        Lighting.GlobalShadows = false
+        for _, obj in ipairs(workspace:GetDescendants()) do
+            pcall(function()
+                if obj:IsA("BasePart") and obj.Material ~= Enum.Material.SmoothPlastic then
+                    OriginalGFX[obj] = {Material = obj.Material}
+                    obj.Material = Enum.Material.SmoothPlastic
+                elseif (obj:IsA("Decal") or obj:IsA("Texture")) and obj.Transparency < 1 then
+                    OriginalGFX[obj] = {Transparency = obj.Transparency}
+                    obj.Transparency = 1
+                elseif (obj:IsA("ParticleEmitter") or obj:IsA("Trail") or obj:IsA("Beam") or obj:IsA("Fire") or obj:IsA("Smoke") or obj:IsA("Sparkles")) and obj.Enabled then
+                    OriginalGFX[obj] = {Enabled = obj.Enabled}
+                    obj.Enabled = false
+                end
+            end)
+        end
+    else
+        Lighting.GlobalShadows = true
+        for obj, props in pairs(OriginalGFX) do
+            pcall(function()
+                if obj and obj.Parent then
+                    for k, val in pairs(props) do obj[k] = val end
+                end
+            end)
+        end
+        OriginalGFX = {} 
+    end
+end)
 
 createToggle(page9, "☀️ Xóa sương mù (Ép tắt 100%)", "NoFog", function(v)
     if not v then
@@ -966,6 +1011,8 @@ task.spawn(function()
         end
     end
 end)
+
+-- ĐÃ XÓA TÍNH NĂNG "TẮT MỌI ÂM THANH" VÀ HÀM LIÊN QUAN THEO YÊU CẦU
 
 createButton(page9, "🧹 Dọn rác bản đồ (Clear Debris)", Theme.AccentOff, function()
     local count = 0
@@ -1172,8 +1219,14 @@ RunService.RenderStepped:Connect(function(deltaTime)
         
         if State.Fly then
             hum.PlatformStand = true
-            root.Velocity = Vector3.zero
-            root.RotVelocity = Vector3.zero
+            local bv = root:FindFirstChild("FlyBodyVelocity")
+            if not bv then
+                bv = Instance.new("BodyVelocity")
+                bv.Name = "FlyBodyVelocity"
+                bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+                bv.Velocity = Vector3.zero
+                bv.Parent = root
+            end
             
             local move = hum.MoveDirection
             if move.Magnitude > 0 then
@@ -1188,11 +1241,12 @@ RunService.RenderStepped:Connect(function(deltaTime)
                 local right = move:Dot(flatRight)
                 
                 local finalDir = (camLook * forward) + (camRight * right)
-                if finalDir.Magnitude > 0 then
-                    root.CFrame = root.CFrame + (finalDir.Unit * (State.FlySpeed / 10))
-                end
+                bv.Velocity = finalDir.Unit * State.FlySpeed
+            else
+                bv.Velocity = Vector3.zero
             end
         else
+            if root:FindFirstChild("FlyBodyVelocity") then root.FlyBodyVelocity:Destroy() end
             if not State.AntiStun then hum.PlatformStand = false end
         end
     end
