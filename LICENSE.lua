@@ -1,5 +1,5 @@
 -- ==========================================
--- MENU VIP PRO V1.12.5 (SUPER SMOOTH FLY & SPEED + LOWGFX RESTORED)
+-- MENU VIP PRO V1.12.5 (SUPER FLY + FULL OPTIMIZED)
 -- ==========================================
 repeat task.wait() until game:IsLoaded()
 
@@ -576,25 +576,7 @@ createToggle(page2, "🔴 ESP người chơi (Định vị Full Map)", "ESP")
 -- ==========================================
 -- [TAB 3: PLAYER]
 -- ==========================================
-createToggle(page3, "🕊️ Bay Trên không (Mượt)", "Fly", function(v)
-    local char = player.Character
-    if char then
-        local root = getUniversalRoot(char)
-        local hum = char:FindFirstChildOfClass("Humanoid")
-        if v then
-            if root and not root:FindFirstChild("FlyBodyVelocity") then
-                local bv = Instance.new("BodyVelocity")
-                bv.Name = "FlyBodyVelocity"
-                bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
-                bv.Velocity = Vector3.zero
-                bv.Parent = root
-            end
-        else
-            if root and root:FindFirstChild("FlyBodyVelocity") then root.FlyBodyVelocity:Destroy() end
-            if hum then hum.PlatformStand = false end
-        end
-    end
-end)
+createToggle(page3, "🕊️ Bay Trên không (Mượt)", "Fly")
 createSlider(page3, "Tốc độ bay", 10, 1000, "FlySpeed")
 
 createToggle(page3, "🏃 Chạy nhanh (Qua mặt Anti-Cheat)", "Speed")
@@ -864,7 +846,7 @@ task.spawn(function()
 end)
 
 -- ==========================================
--- [TAB 9: CẤU HÌNH (TỐI ƯU HỆ THỐNG GỘP UI)]
+-- [TAB 9: CẤU HÌNH (TỐI ƯU HỆ THỐNG)]
 -- ==========================================
 createDivider(page9, "TỐI ƯU HIỆU SUẤT TỐI ĐA")
 
@@ -872,7 +854,7 @@ createSlider(page9, "Giới hạn FPS (Chống nóng máy)", 10, 120, "FpsCapVal
     pcall(function() setfpscap(val) end)
 end)
 
-createToggle(page9, "Tắt Render 3D (Màn trắng + Giảm tải CPU)", "Disable3D", function(v)
+createToggle(page9, "Tắt Render 3D (Màn trắng + Giảm CPU)", "Disable3D", function(v)
     pcall(function() RunService:Set3dRenderingEnabled(not v) end)
     if v then
         screenOverlay.BackgroundColor3 = Color3.new(1, 1, 1) 
@@ -1011,8 +993,6 @@ task.spawn(function()
         end
     end
 end)
-
--- ĐÃ XÓA TÍNH NĂNG "TẮT MỌI ÂM THANH" VÀ HÀM LIÊN QUAN THEO YÊU CẦU
 
 createButton(page9, "🧹 Dọn rác bản đồ (Clear Debris)", Theme.AccentOff, function()
     local count = 0
@@ -1200,13 +1180,15 @@ RunService.RenderStepped:Connect(function(deltaTime)
     local hum = char:FindFirstChildOfClass("Humanoid")
     
     if hum and root then
-        if State.Speed and hum.MoveDirection.Magnitude > 0 then
-            local speedMultiplier = State.SpeedValue / 50 
-            root.CFrame = root.CFrame + (hum.MoveDirection * (speedMultiplier * 60 * deltaTime))
-        end
+        if not State.Fly then 
+            if State.Speed and hum.MoveDirection.Magnitude > 0 then
+                local speedMultiplier = State.SpeedValue / 50 
+                root.CFrame = root.CFrame + (hum.MoveDirection * (speedMultiplier * 60 * deltaTime))
+            end
 
-        if State.AutoDash and hum.MoveDirection.Magnitude > 0 then
-            root.CFrame = root.CFrame + (hum.MoveDirection * (State.DashSpeed / 10))
+            if State.AutoDash and hum.MoveDirection.Magnitude > 0 then
+                root.CFrame = root.CFrame + (hum.MoveDirection * (State.DashSpeed / 10))
+            end
         end
         
         if State.SpinBot then 
@@ -1215,39 +1197,6 @@ RunService.RenderStepped:Connect(function(deltaTime)
         
         if State.Noclip and hum.MoveDirection.Magnitude == 0 then
             root.AssemblyLinearVelocity = Vector3.new(0, root.AssemblyLinearVelocity.Y, 0)
-        end
-        
-        if State.Fly then
-            hum.PlatformStand = true
-            local bv = root:FindFirstChild("FlyBodyVelocity")
-            if not bv then
-                bv = Instance.new("BodyVelocity")
-                bv.Name = "FlyBodyVelocity"
-                bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
-                bv.Velocity = Vector3.zero
-                bv.Parent = root
-            end
-            
-            local move = hum.MoveDirection
-            if move.Magnitude > 0 then
-                local cam = workspace.CurrentCamera
-                local camLook = cam.CFrame.LookVector
-                local camRight = cam.CFrame.RightVector
-                
-                local flatLook = Vector3.new(camLook.X, 0, camLook.Z).Unit
-                local flatRight = Vector3.new(camRight.X, 0, camRight.Z).Unit
-                
-                local forward = move:Dot(flatLook)
-                local right = move:Dot(flatRight)
-                
-                local finalDir = (camLook * forward) + (camRight * right)
-                bv.Velocity = finalDir.Unit * State.FlySpeed
-            else
-                bv.Velocity = Vector3.zero
-            end
-        else
-            if root:FindFirstChild("FlyBodyVelocity") then root.FlyBodyVelocity:Destroy() end
-            if not State.AntiStun then hum.PlatformStand = false end
         end
     end
 end)
@@ -1265,6 +1214,45 @@ RunService.Heartbeat:Connect(function()
         
         if State.Jump then hum.UseJumpPower = true; hum.JumpPower = State.JumpValue end
         
+        -- Fly logic
+        if State.Fly and root then
+            hum.PlatformStand = true
+            local bv = root:FindFirstChild("FlyBodyVelocity")
+            if not bv then
+                bv = Instance.new("BodyVelocity")
+                bv.Name = "FlyBodyVelocity"
+                bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+                bv.Velocity = Vector3.zero
+                bv.Parent = root
+            end
+            
+            local moveDir = hum.MoveDirection
+            if moveDir.Magnitude > 0 then
+                local cam = workspace.CurrentCamera
+                local camLook = cam.CFrame.LookVector
+                local camRight = cam.CFrame.RightVector
+                
+                local dotForward = moveDir:Dot(Vector3.new(camLook.X, 0, camLook.Z).Unit)
+                local dotRight = moveDir:Dot(Vector3.new(camRight.X, 0, camRight.Z).Unit)
+                
+                local flyDir = (camLook * dotForward) + (Vector3.new(camRight.X, 0, camRight.Z).Unit * dotRight)
+                
+                if flyDir.Magnitude > 0 then
+                    bv.Velocity = flyDir.Unit * State.FlySpeed
+                else
+                    bv.Velocity = Vector3.zero
+                end
+            else
+                bv.Velocity = Vector3.zero
+            end
+        else
+            if root and root:FindFirstChild("FlyBodyVelocity") then 
+                root.FlyBodyVelocity:Destroy() 
+            end
+            if not State.AntiStun then hum.PlatformStand = false end
+        end
+
+        -- Anti-Stun
         if State.AntiStun then 
             hum:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
             hum:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, false)
@@ -1283,6 +1271,7 @@ RunService.Heartbeat:Connect(function()
             end
         end
 
+        -- PlayerLight
         if root then
             local light = root:FindFirstChild("PlayerPointLight")
             if State.PlayerLight then 
