@@ -1,5 +1,5 @@
 -- ==========================================
--- MENU VIP PRO V1.12.5 (SUPER FLY + FULL OPTIMIZED)
+-- MENU VIP PRO V1.12.5 (100% ANTI-AFK BYPASS)
 -- ==========================================
 repeat task.wait() until game:IsLoaded()
 
@@ -24,8 +24,10 @@ local State = {
     Reach = false, ReachSize = 15, AutoDash = false, DashSpeed = 10, AutoSave = false, Astral = false,
     ShiftLock = false, SpeedValue = 60, JumpValue = 120, LightRange = 60, LightBrightness = 3,
     MusicVolume = 5, LightColorIdx = 1, NoFog = false,
+    -- Cấu Hình System States
     FpsCapValue = 60, Disable3D = false, AfkModeScreen = false, RemoveTextures = false,
     HidePlayers = false, OptimizeTerrain = false, NoShadows = false,
+    -- Auto Skill States
     AutoSkillDelay = 1, 
     AutoSkillZ = false, AutoSkillX = false, AutoSkillC = false, AutoSkillV = false, AutoSkillE = false, AutoSkillF = false,
     AutoSkill1 = false, AutoSkill2 = false, AutoSkill3 = false, AutoSkill4 = false, AutoSkill5 = false, AutoSkill6 = false
@@ -576,7 +578,33 @@ createToggle(page2, "🔴 ESP người chơi (Định vị Full Map)", "ESP")
 -- ==========================================
 -- [TAB 3: PLAYER]
 -- ==========================================
-createToggle(page3, "🕊️ Bay Trên không (Mượt)", "Fly")
+createToggle(page3, "🕊️ Bay Trên không (Mượt)", "Fly", function(v)
+    local char = player.Character
+    if char then
+        local root = getUniversalRoot(char)
+        local hum = char:FindFirstChildOfClass("Humanoid")
+        if v then
+            if root and not root:FindFirstChild("FlyBodyVelocity") then
+                local bv = Instance.new("BodyVelocity")
+                bv.Name = "FlyBodyVelocity"
+                bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+                bv.Velocity = Vector3.zero
+                bv.Parent = root
+                
+                local bg = Instance.new("BodyGyro")
+                bg.Name = "FlyBodyGyro"
+                bg.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
+                bg.P = 10000
+                bg.D = 100
+                bg.Parent = root
+            end
+        else
+            if root and root:FindFirstChild("FlyBodyVelocity") then root.FlyBodyVelocity:Destroy() end
+            if root and root:FindFirstChild("FlyBodyGyro") then root.FlyBodyGyro:Destroy() end
+            if hum then hum.PlatformStand = false end
+        end
+    end
+end)
 createSlider(page3, "Tốc độ bay", 10, 1000, "FlySpeed")
 
 createToggle(page3, "🏃 Chạy nhanh (Qua mặt Anti-Cheat)", "Speed")
@@ -632,7 +660,19 @@ task.spawn(function()
     end
 end)
 
+-- [ANTI-AFK ĐƯỢC FIX 100% HOẠT ĐỘNG CHUẨN MỰC BẰNG BUTTON2DOWN]
 createToggle(page4, "🛡️ Chống AFK (Antiafk)", "AntiAfk")
+
+player.Idled:Connect(function() 
+    if State.AntiAfk then 
+        pcall(function() 
+            VirtualUser:CaptureController()
+            VirtualUser:Button2Down(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+            task.wait(0.5)
+            VirtualUser:Button2Up(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+        end) 
+    end 
+end)
 
 local function hopServer(sortOrder)
     local api = "https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=" .. sortOrder .. "&limit=100"
@@ -789,10 +829,6 @@ local function updatePlayerList()
     end
 end
 updatePlayerList(); Players.PlayerAdded:Connect(updatePlayerList); Players.PlayerRemoving:Connect(updatePlayerList)
-
-player.Idled:Connect(function() 
-    if State.AntiAfk then pcall(function() VirtualUser:CaptureController(); VirtualUser:ClickButton2(Vector2.new()) end) end 
-end)
 
 -- ==========================================
 -- [TAB 8: AUTO SKILL]
@@ -1202,8 +1238,6 @@ RunService.RenderStepped:Connect(function(deltaTime)
 end)
 
 RunService.Heartbeat:Connect(function()
-    updateESP_Hitbox()
-    
     local char = player.Character
     if not char then return end
     local root = getUniversalRoot(char)
@@ -1214,7 +1248,7 @@ RunService.Heartbeat:Connect(function()
         
         if State.Jump then hum.UseJumpPower = true; hum.JumpPower = State.JumpValue end
         
-        -- Fly logic
+        -- Fly logic (Bypass lộn ngược)
         if State.Fly and root then
             hum.PlatformStand = true
             local bv = root:FindFirstChild("FlyBodyVelocity")
@@ -1226,9 +1260,21 @@ RunService.Heartbeat:Connect(function()
                 bv.Parent = root
             end
             
+            local bg = root:FindFirstChild("FlyBodyGyro")
+            if not bg then
+                bg = Instance.new("BodyGyro")
+                bg.Name = "FlyBodyGyro"
+                bg.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
+                bg.P = 10000
+                bg.D = 100
+                bg.Parent = root
+            end
+            
+            local cam = workspace.CurrentCamera
+            bg.CFrame = cam.CFrame
+            
             local moveDir = hum.MoveDirection
             if moveDir.Magnitude > 0 then
-                local cam = workspace.CurrentCamera
                 local camLook = cam.CFrame.LookVector
                 local camRight = cam.CFrame.RightVector
                 
@@ -1246,9 +1292,8 @@ RunService.Heartbeat:Connect(function()
                 bv.Velocity = Vector3.zero
             end
         else
-            if root and root:FindFirstChild("FlyBodyVelocity") then 
-                root.FlyBodyVelocity:Destroy() 
-            end
+            if root and root:FindFirstChild("FlyBodyVelocity") then root.FlyBodyVelocity:Destroy() end
+            if root and root:FindFirstChild("FlyBodyGyro") then root.FlyBodyGyro:Destroy() end
             if not State.AntiStun then hum.PlatformStand = false end
         end
 
