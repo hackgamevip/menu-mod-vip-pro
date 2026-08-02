@@ -1,5 +1,5 @@
 -- ==========================================
--- MENU VIP PRO V1.12.5 (100% ANTI-AFK BYPASS)
+-- MENU VIP PRO V1.12.5 (FIXED ESP & HITBOX)
 -- ==========================================
 repeat task.wait() until game:IsLoaded()
 
@@ -24,10 +24,8 @@ local State = {
     Reach = false, ReachSize = 15, AutoDash = false, DashSpeed = 10, AutoSave = false, Astral = false,
     ShiftLock = false, SpeedValue = 60, JumpValue = 120, LightRange = 60, LightBrightness = 3,
     MusicVolume = 5, LightColorIdx = 1, NoFog = false,
-    -- Cấu Hình System States
     FpsCapValue = 60, Disable3D = false, AfkModeScreen = false, RemoveTextures = false,
     HidePlayers = false, OptimizeTerrain = false, NoShadows = false,
-    -- Auto Skill States
     AutoSkillDelay = 1, 
     AutoSkillZ = false, AutoSkillX = false, AutoSkillC = false, AutoSkillV = false, AutoSkillE = false, AutoSkillF = false,
     AutoSkill1 = false, AutoSkill2 = false, AutoSkill3 = false, AutoSkill4 = false, AutoSkill5 = false, AutoSkill6 = false
@@ -660,7 +658,6 @@ task.spawn(function()
     end
 end)
 
--- [ANTI-AFK ĐƯỢC FIX 100% HOẠT ĐỘNG CHUẨN MỰC BẰNG BUTTON2DOWN]
 createToggle(page4, "🛡️ Chống AFK (Antiafk)", "AntiAfk")
 
 player.Idled:Connect(function() 
@@ -1238,6 +1235,8 @@ RunService.RenderStepped:Connect(function(deltaTime)
 end)
 
 RunService.Heartbeat:Connect(function()
+    updateESP_Hitbox() -- KHÔI PHỤC LẠI ESP & HITBOX TẠI ĐÂY!
+    
     local char = player.Character
     if not char then return end
     local root = getUniversalRoot(char)
