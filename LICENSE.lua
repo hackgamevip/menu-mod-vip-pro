@@ -533,7 +533,7 @@ UIS.JumpRequest:Connect(function() if State.InfJump and player.Character and pla
 createToggle(page2, "🐿️ Lấy đồ nhanh", "Instant")
 createToggle(page2, "🧲 Auto nhặt đồ xung quanh", "AutoCollect")
 
-createToggle(page2, "🚷 Đi xuyên tường (Chống trôi)", "Noclip", function(v) 
+createToggle(page2, "🚷 Đi xuyên tường", "Noclip", function(v) 
     if not v and player.Character then 
         pcall(function() 
             local hrp = getUniversalRoot(player.Character)
@@ -571,12 +571,12 @@ createToggle(page2, "👀 Nhìn xuyên map", "XRay", function(v)
         end
     end)
 end)
-createToggle(page2, "🔴 ESP người chơi (Định vị Full Map)", "ESP")
+createToggle(page2, "🔴 ESP người chơi", "ESP")
 
 -- ==========================================
 -- [TAB 3: PLAYER]
 -- ==========================================
-createToggle(page3, "🕊️ Bay Trên không (Mượt)", "Fly", function(v)
+createToggle(page3, "🕊️ Bay Trên không", "Fly", function(v)
     local char = player.Character
     if char then
         local root = getUniversalRoot(char)
@@ -605,7 +605,7 @@ createToggle(page3, "🕊️ Bay Trên không (Mượt)", "Fly", function(v)
 end)
 createSlider(page3, "Tốc độ bay", 10, 1000, "FlySpeed")
 
-createToggle(page3, "🏃 Chạy nhanh (Qua mặt Anti-Cheat)", "Speed")
+createToggle(page3, "🏃 Chạy nhanh", "Speed")
 createSlider(page3, "Tốc độ chạy", 1, 1000, "SpeedValue")
 
 local defaultJumpPower = 50
