@@ -1,5 +1,5 @@
 -- ==========================================
--- MENU VIP PRO V1.12.6 (AUTO TP + OPTIMIZED)
+-- MENU VIP PRO V1.12.8 (UI TP PLAYER REWORK)
 -- ==========================================
 repeat task.wait() until game:IsLoaded()
 
@@ -269,7 +269,7 @@ local function createPage()
     return pg
 end
 
-local page1, page2, page3, page4, page7, page8, page9 = createPage(), createPage(), createPage(), createPage(), createPage(), createPage(), createPage()
+local page1, page2, page3, page4, page8, page9 = createPage(), createPage(), createPage(), createPage(), createPage(), createPage()
 
 local page5 = Instance.new("Frame", pageContainer)
 page5.Size = UDim2.new(1, 0, 1, 0); page5.BackgroundTransparency = 1; page5.Visible = false; page5.ZIndex = 10
@@ -278,6 +278,12 @@ local l5 = Instance.new("UIListLayout", page5); l5.HorizontalAlignment = Enum.Ho
 local page6 = Instance.new("Frame", pageContainer)
 page6.Size = UDim2.new(1, 0, 1, 0); page6.BackgroundTransparency = 1; page6.Visible = false; page6.ZIndex = 10
 local l6 = Instance.new("UIListLayout", page6); l6.HorizontalAlignment = Enum.HorizontalAlignment.Center; l6.Padding = UDim.new(0, 10); l6.SortOrder = Enum.SortOrder.LayoutOrder; Instance.new("UIPadding", page6).PaddingTop = UDim.new(0, 10)
+
+-- Page 7 được chuyển thành Frame cố định để phần điều khiển ở trên không bị trôi, phần danh sách bên dưới có thanh cuộn riêng
+local page7 = Instance.new("Frame", pageContainer)
+page7.Size = UDim2.new(1, 0, 1, 0); page7.BackgroundTransparency = 1; page7.Visible = false; page7.ZIndex = 10
+local l7 = Instance.new("UIListLayout", page7); l7.HorizontalAlignment = Enum.HorizontalAlignment.Center; l7.Padding = UDim.new(0, 7); l7.SortOrder = Enum.SortOrder.LayoutOrder
+local pad7 = Instance.new("UIPadding", page7); pad7.PaddingTop = UDim.new(0, 6)
 
 local function showTab(pg, tb, ind)
     for _, p in pairs({page1, page2, page3, page4, page5, page6, page7, page8, page9}) do p.Visible = false end
@@ -531,7 +537,7 @@ task.spawn(function()
         local pCount = #Players:GetPlayers(); local maxP = Players.MaxPlayers; local jobText = game.JobId ~= "" and string.sub(game.JobId, 1, 15).."..." or "N/A"
         serverInfoLabel.Text = string.format("<font color='#FF00FF'>FPS:</font> %d\n<font color='#FF00FF'>Ping:</font> %s\n<font color='#FF00FF'>Người chơi:</font> %d / %d\n<font color='#FF00FF'>ID SV:</font> %s", fps, ping, pCount, maxP, jobText)
         local execTime = math.floor(workspace.DistributedGameTime); local hours = math.floor(execTime / 3600); local mins = math.floor((execTime % 3600) / 60); local secs = execTime % 60
-        extraInfoLabel.Text = string.format("<font color='#FF00FF'>Thời gian chơi:</font> %02d:%02d:%02d\n<font color='#FF00FF'>Giờ hệ thống:</font> %s\n<font color='#FF00FF'>Phiên bản:</font> MENU VIP PRO MAX V1.12.6", hours, mins, secs, os.date("%H:%M:%S"))
+        extraInfoLabel.Text = string.format("<font color='#FF00FF'>Thời gian chơi:</font> %02d:%02d:%02d\n<font color='#FF00FF'>Giờ hệ thống:</font> %s\n<font color='#FF00FF'>Phiên bản:</font> MENU VIP PRO MAX V1.12.8", hours, mins, secs, os.date("%H:%M:%S"))
     end
 end)
 
@@ -803,45 +809,195 @@ end
 renderSavedTps()
 
 -- ==========================================
--- [TAB 7: TP NGƯỜI CHƠI (TÍCH HỢP AUTO TP & HƯỚNG TP)]
+-- [TAB 7: TP NGƯỜI CHƠI (GIAO DIỆN MỚI RÕ NÉT + CUỘN ĐỘC LẬP)]
 -- ==========================================
 local targetTpPlayer = nil
 local autoTpPlayerEnabled = false
+local spectatePlayerEnabled = false
 
--- Khung hiển thị mục tiêu đang chọn
-local targetStatusBox = Instance.new("Frame", page7)
-targetStatusBox.Size = UDim2.new(0.9, 0, 0, 38)
-targetStatusBox.BackgroundColor3 = Theme.ItemBg
-targetStatusBox.ZIndex = 10
-Instance.new("UICorner", targetStatusBox).CornerRadius = UDim.new(0, 8)
-local targetStatusStroke = Instance.new("UIStroke", targetStatusBox)
-targetStatusStroke.Color = Theme.Stroke
-targetStatusStroke.Thickness = 1.5
-table.insert(RGBElements, {Type = "Info", Stroke = targetStatusStroke})
+-- 1. KHUNG ĐIỀU KHIỂN TRÊN CÙNG (PHẦN MÀU ĐỎ - NỔI BẬT, DỄ NHÌN)
+local tpControlCard = Instance.new("Frame", page7)
+tpControlCard.Size = UDim2.new(0.92, 0, 0, 126)
+tpControlCard.BackgroundColor3 = Color3.fromRGB(28, 30, 42)
+tpControlCard.LayoutOrder = 1
+tpControlCard.ZIndex = 10
+Instance.new("UICorner", tpControlCard).CornerRadius = UDim.new(0, 10)
+local tpCardStroke = Instance.new("UIStroke", tpControlCard)
+tpCardStroke.Color = Theme.Brand
+tpCardStroke.Thickness = 1.8
+table.insert(RGBElements, {Type = "Button", Stroke = tpCardStroke, DefaultColor = Theme.Brand})
 
-local targetStatusLabel = Instance.new("TextLabel", targetStatusBox)
-targetStatusLabel.Size = UDim2.new(1, -20, 1, 0)
-targetStatusLabel.Position = UDim2.new(0, 10, 0, 0)
+-- Hàng 1: Avatar mục tiêu + Tên mục tiêu rõ nét + Nút Spectate gọn bên phải
+local targetHeaderRow = Instance.new("Frame", tpControlCard)
+targetHeaderRow.Size = UDim2.new(1, -16, 0, 38)
+targetHeaderRow.Position = UDim2.new(0, 8, 0, 6)
+targetHeaderRow.BackgroundColor3 = Color3.fromRGB(18, 20, 28)
+targetHeaderRow.ZIndex = 10
+Instance.new("UICorner", targetHeaderRow).CornerRadius = UDim.new(0, 8)
+
+local selectedAvatarImg = Instance.new("ImageLabel", targetHeaderRow)
+selectedAvatarImg.Size = UDim2.new(0, 28, 0, 28)
+selectedAvatarImg.Position = UDim2.new(0, 6, 0.5, -14)
+selectedAvatarImg.BackgroundColor3 = Color3.fromRGB(40, 40, 55)
+selectedAvatarImg.Image = "rbxassetid://0"
+selectedAvatarImg.ZIndex = 10
+Instance.new("UICorner", selectedAvatarImg).CornerRadius = UDim.new(1, 0)
+local selAvaStroke = Instance.new("UIStroke", selectedAvatarImg)
+selAvaStroke.Color = Theme.Brand
+selAvaStroke.Thickness = 1.2
+
+local targetStatusLabel = Instance.new("TextLabel", targetHeaderRow)
+targetStatusLabel.Size = UDim2.new(1, -135, 1, 0)
+targetStatusLabel.Position = UDim2.new(0, 40, 0, 0)
 targetStatusLabel.BackgroundTransparency = 1
 targetStatusLabel.RichText = true
-targetStatusLabel.Text = "🎯 Mục tiêu: <font color='#FF4757'>Chưa chọn ai</font>"
-targetStatusLabel.TextColor3 = Theme.TextTitle
+targetStatusLabel.Text = "🎯 <font color='#FF6B81'>Chưa chọn mục tiêu</font>"
+targetStatusLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 targetStatusLabel.Font = Enum.Font.GothamBold
-targetStatusLabel.TextSize = 12
+targetStatusLabel.TextSize = 13
+targetStatusLabel.TextTruncate = Enum.TextTruncate.AtEnd
 targetStatusLabel.TextXAlignment = Enum.TextXAlignment.Left
 targetStatusLabel.ZIndex = 10
 
+local spectateBtn = Instance.new("TextButton", targetHeaderRow)
+spectateBtn.Size = UDim2.new(0, 86, 0, 28)
+spectateBtn.Position = UDim2.new(1, -92, 0.5, -14)
+spectateBtn.BackgroundColor3 = Color3.fromRGB(55, 35, 45)
+spectateBtn.Text = "👁️ XEM [TẮT]"
+spectateBtn.TextColor3 = Theme.AccentOff
+spectateBtn.Font = Enum.Font.GothamBold
+spectateBtn.TextSize = 10
+spectateBtn.AutoButtonColor = false
+spectateBtn.ZIndex = 10
+Instance.new("UICorner", spectateBtn).CornerRadius = UDim.new(0, 6)
+local spectateStroke = Instance.new("UIStroke", spectateBtn)
+spectateStroke.Color = Theme.AccentOff
+spectateStroke.Thickness = 1.2
+spectateStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+
+-- Hàng 2: Nút chọn Vị trí TP (Nền sáng rõ, chữ trắng lớn)
+local tpPosBtn = Instance.new("TextButton", tpControlCard)
+tpPosBtn.Size = UDim2.new(1, -16, 0, 34)
+tpPosBtn.Position = UDim2.new(0, 8, 0, 49)
+tpPosBtn.BackgroundColor3 = Color3.fromRGB(0, 105, 155)
+tpPosBtn.Text = ""
+tpPosBtn.AutoButtonColor = false
+tpPosBtn.ZIndex = 10
+Instance.new("UICorner", tpPosBtn).CornerRadius = UDim.new(0, 8)
+local tpPosStroke = Instance.new("UIStroke", tpPosBtn)
+tpPosStroke.Color = Color3.fromRGB(80, 220, 255)
+tpPosStroke.Thickness = 1.5
+tpPosStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+
+local tpPosLabel = Instance.new("TextLabel", tpPosBtn)
+tpPosLabel.Size = UDim2.new(1, 0, 1, 0)
+tpPosLabel.BackgroundTransparency = 1
+tpPosLabel.RichText = true
+tpPosLabel.TextColor3 = Color3.new(1, 1, 1)
+tpPosLabel.Font = Enum.Font.GothamBlack
+tpPosLabel.TextSize = 13
+tpPosLabel.ZIndex = 10
+
+local function updateTpPosText()
+    local item = TpPositions[State.TpPositionIdx] or TpPositions[1]
+    tpPosLabel.Text = "📍 VỊ TRÍ TP: <font color='#FFFF55'>&lt; " .. string.upper(item.Name) .. " &gt;</font>"
+end
+updateTpPosText()
+
+tpPosBtn.MouseButton1Click:Connect(function()
+    clickAnimate(tpPosBtn)
+    State.TpPositionIdx = State.TpPositionIdx + 1
+    if State.TpPositionIdx > #TpPositions then State.TpPositionIdx = 1 end
+    updateTpPosText()
+    if State.AutoSave then saveConfig() end
+end)
+
+-- Hàng 3: Thanh trượt Khoảng cách TP (Chữ trắng sáng + Thanh kéo dày dễ nhìn)
+local tpDistContainer = Instance.new("Frame", tpControlCard)
+tpDistContainer.Size = UDim2.new(1, -16, 0, 34)
+tpDistContainer.Position = UDim2.new(0, 8, 0, 87)
+tpDistContainer.BackgroundTransparency = 1
+tpDistContainer.ZIndex = 10
+
+local tpDistTitle = Instance.new("TextLabel", tpDistContainer)
+tpDistTitle.Size = UDim2.new(0.7, 0, 0, 16)
+tpDistTitle.Position = UDim2.new(0, 2, 0, 0)
+tpDistTitle.BackgroundTransparency = 1
+tpDistTitle.Text = "📏 Khoảng cách đứng (Studs):"
+tpDistTitle.TextColor3 = Color3.fromRGB(240, 245, 255)
+tpDistTitle.Font = Enum.Font.GothamBold
+tpDistTitle.TextSize = 12
+tpDistTitle.TextXAlignment = Enum.TextXAlignment.Left
+tpDistTitle.ZIndex = 10
+
+local tpDistValLabel = Instance.new("TextLabel", tpDistContainer)
+tpDistValLabel.Size = UDim2.new(0.3, -4, 0, 16)
+tpDistValLabel.Position = UDim2.new(0.7, 0, 0, 0)
+tpDistValLabel.BackgroundTransparency = 1
+tpDistValLabel.Text = tostring(State.TpDistance) .. " m"
+tpDistValLabel.TextColor3 = Color3.fromRGB(255, 235, 60)
+tpDistValLabel.Font = Enum.Font.GothamBlack
+tpDistValLabel.TextSize = 13
+tpDistValLabel.TextXAlignment = Enum.TextXAlignment.Right
+tpDistValLabel.ZIndex = 10
+
+local tpDistTrack = Instance.new("Frame", tpDistContainer)
+tpDistTrack.Size = UDim2.new(1, -4, 0, 10)
+tpDistTrack.Position = UDim2.new(0, 2, 0, 20)
+tpDistTrack.BackgroundColor3 = Color3.fromRGB(15, 16, 22)
+tpDistTrack.ZIndex = 10
+Instance.new("UICorner", tpDistTrack).CornerRadius = UDim.new(1, 0)
+local tpDistTrackStroke = Instance.new("UIStroke", tpDistTrack)
+tpDistTrackStroke.Color = Color3.fromRGB(70, 80, 100)
+tpDistTrackStroke.Thickness = 1
+
+local tpDistFill = Instance.new("Frame", tpDistTrack)
+tpDistFill.Size = UDim2.new(math.clamp((State.TpDistance - 1) / 24, 0, 1), 0, 1, 0)
+tpDistFill.BackgroundColor3 = Theme.AccentOn
+tpDistFill.ZIndex = 10
+Instance.new("UICorner", tpDistFill).CornerRadius = UDim.new(1, 0)
+
+local draggingTpDist = false
+local function updateTpDistSlider(input)
+    local pos = math.clamp((input.Position.X - tpDistTrack.AbsolutePosition.X) / tpDistTrack.AbsoluteSize.X, 0, 1)
+    local value = math.floor(1 + (24 * pos))
+    tpDistValLabel.Text = tostring(value) .. " m"
+    TweenService:Create(tpDistFill, TweenInfo.new(0.08), {Size = UDim2.new(pos, 0, 1, 0)}):Play()
+    State.TpDistance = value
+    if State.AutoSave then saveConfig() end
+end
+tpDistTrack.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        draggingTpDist = true
+        updateTpDistSlider(input)
+    end
+end)
+UIS.InputChanged:Connect(function(input)
+    if draggingTpDist and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        updateTpDistSlider(input)
+    end
+end)
+UIS.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        draggingTpDist = false
+    end
+end)
+
 local function updateTargetLabel()
     if targetTpPlayer then
-        targetStatusLabel.Text = string.format("🎯 Mục tiêu: <font color='#2ECC71'>%s (@%s)</font>", targetTpPlayer.DisplayName, targetTpPlayer.Name)
+        targetStatusLabel.Text = string.format("🎯 <font color='#2ECC71'>%s</font> <font color='#FFD700'>(@%s)</font>", targetTpPlayer.DisplayName, targetTpPlayer.Name)
+        selAvaStroke.Color = Theme.AccentOn
+        task.spawn(function()
+            pcall(function()
+                selectedAvatarImg.Image = Players:GetUserThumbnailAsync(targetTpPlayer.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size420x420)
+            end)
+        end)
     else
-        targetStatusLabel.Text = "🎯 Mục tiêu: <font color='#FF4757'>Chưa chọn ai</font>"
+        targetStatusLabel.Text = "🎯 <font color='#FF6B81'>Chưa chọn mục tiêu</font>"
+        selAvaStroke.Color = Theme.AccentOff
+        selectedAvatarImg.Image = "rbxassetid://0"
     end
 end
-
--- Nút chọn vị trí TP (Sau lưng, Trước mặt, Trên đầu, Dưới chân) & khoảng cách
-createCycleBtn(page7, "📍 Vị trí TP:", TpPositions, "TpPositionIdx")
-createSlider(page7, "Khoảng cách TP (Studs)", 1, 25, "TpDistance")
 
 -- Hàm dịch chuyển đến mục tiêu theo hướng đã chọn
 local function teleportToSelectedPlayer()
@@ -863,18 +1019,32 @@ local function teleportToSelectedPlayer()
     return false
 end
 
--- Hàng nút đôi: TP 1 LẦN & AUTO TP [BẬT/TẮT]
+-- Hàm trả lại góc nhìn về bản thân
+local function resetCameraSubject()
+    pcall(function()
+        local cam = workspace.CurrentCamera
+        if cam and player.Character then
+            local myHum = player.Character:FindFirstChildOfClass("Humanoid")
+            if myHum then
+                cam.CameraSubject = myHum
+            end
+        end
+    end)
+end
+
+-- 2. HÀNG NÚT ĐÔI: TP 1 LẦN & AUTO TP [BẬT/TẮT]
 local tpActionRow = Instance.new("Frame", page7)
-tpActionRow.Size = UDim2.new(0.9, 0, 0, 42)
+tpActionRow.Size = UDim2.new(0.92, 0, 0, 38)
 tpActionRow.BackgroundTransparency = 1
+tpActionRow.LayoutOrder = 2
 
 local tpOnceBtn = Instance.new("TextButton", tpActionRow)
-tpOnceBtn.Size = UDim2.new(0.48, 0, 1, 0)
+tpOnceBtn.Size = UDim2.new(0.485, 0, 1, 0)
 tpOnceBtn.Position = UDim2.new(0, 0, 0, 0)
-tpOnceBtn.BackgroundColor3 = Theme.ItemBg
+tpOnceBtn.BackgroundColor3 = Color3.fromRGB(25, 45, 65)
 tpOnceBtn.Text = "⚡ TP 1 LẦN"
 tpOnceBtn.TextColor3 = Theme.Brand
-tpOnceBtn.Font = Enum.Font.GothamBold
+tpOnceBtn.Font = Enum.Font.GothamBlack
 tpOnceBtn.TextSize = 12
 tpOnceBtn.AutoButtonColor = false
 tpOnceBtn.ZIndex = 10
@@ -886,13 +1056,13 @@ tpOnceStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 table.insert(RGBElements, {Type = "Button", Stroke = tpOnceStroke, DefaultColor = Theme.Brand})
 
 local autoTpBtn = Instance.new("TextButton", tpActionRow)
-autoTpBtn.Size = UDim2.new(0.48, 0, 1, 0)
-autoTpBtn.Position = UDim2.new(0.52, 0, 0, 0)
-autoTpBtn.BackgroundColor3 = Theme.ItemBg
+autoTpBtn.Size = UDim2.new(0.485, 0, 1, 0)
+autoTpBtn.Position = UDim2.new(0.515, 0, 0, 0)
+autoTpBtn.BackgroundColor3 = Color3.fromRGB(50, 30, 38)
 autoTpBtn.Text = "🔁 AUTO TP [TẮT]"
 autoTpBtn.TextColor3 = Theme.AccentOff
-autoTpBtn.Font = Enum.Font.GothamBold
-autoTpBtn.TextSize = 11
+autoTpBtn.Font = Enum.Font.GothamBlack
+autoTpBtn.TextSize = 12
 autoTpBtn.AutoButtonColor = false
 autoTpBtn.ZIndex = 10
 Instance.new("UICorner", autoTpBtn).CornerRadius = UDim.new(0, 8)
@@ -905,10 +1075,17 @@ table.insert(RGBElements, {Type = "Toggle", Stroke = autoTpStroke, State = funct
 local function updateAutoTpBtnUI()
     autoTpBtn.Text = autoTpPlayerEnabled and "🔁 AUTO TP [BẬT]" or "🔁 AUTO TP [TẮT]"
     autoTpBtn.TextColor3 = autoTpPlayerEnabled and Theme.AccentOn or Theme.AccentOff
-    autoTpBtn.BackgroundColor3 = autoTpPlayerEnabled and Color3.fromRGB(35, 45, 40) or Theme.ItemBg
+    autoTpBtn.BackgroundColor3 = autoTpPlayerEnabled and Color3.fromRGB(30, 55, 40) or Color3.fromRGB(50, 30, 38)
     if not State.RGB then
         autoTpStroke.Color = autoTpPlayerEnabled and Theme.AccentOn or Theme.AccentOff
     end
+end
+
+local function updateSpectateBtnUI()
+    spectateBtn.Text = spectatePlayerEnabled and "👁️ XEM [BẬT]" or "👁️ XEM [TẮT]"
+    spectateBtn.TextColor3 = spectatePlayerEnabled and Theme.AccentOn or Theme.AccentOff
+    spectateBtn.BackgroundColor3 = spectatePlayerEnabled and Color3.fromRGB(30, 55, 40) or Color3.fromRGB(55, 35, 45)
+    spectateStroke.Color = spectatePlayerEnabled and Theme.AccentOn or Theme.AccentOff
 end
 
 tpOnceBtn.MouseButton1Click:Connect(function()
@@ -940,33 +1117,126 @@ autoTpBtn.MouseButton1Click:Connect(function()
     end
 end)
 
-createDivider(page7, "DANH SÁCH NGƯỜI CHƠI (BẤM ĐỂ CHỌN)")
+spectateBtn.MouseButton1Click:Connect(function()
+    clickAnimate(spectateBtn)
+    if not targetTpPlayer then
+        MakeToast("⚠️ Chưa chọn ai", "Hãy bấm chọn 1 người chơi ở danh sách dưới!", Theme.AccentOff)
+        return
+    end
+    spectatePlayerEnabled = not spectatePlayerEnabled
+    updateSpectateBtnUI()
+    if spectatePlayerEnabled then
+        MakeToast("Đã Bật Spectate", "Đang xem góc nhìn của " .. targetTpPlayer.DisplayName, Theme.AccentOn)
+    else
+        resetCameraSubject()
+        MakeToast("Đã Tắt Spectate", "Đã trả góc nhìn về nhân vật của bạn", Theme.AccentOff)
+    end
+end)
+
+-- 3. TIÊU ĐỀ & DANH SÁCH NGƯỜI CHƠI CÓ THANH CUỘN LÊN XUỐNG RIÊNG (PHẦN MÀU XANH)
+local listHeaderDivider = createDivider(page7, "DANH SÁCH NGƯỜI CHƠI (VUỐT ĐỂ CUỘN)")
+listHeaderDivider.LayoutOrder = 3
+
+local playerListContainer = Instance.new("Frame", page7)
+playerListContainer.Size = UDim2.new(0.92, 0, 1, -206)
+playerListContainer.BackgroundColor3 = Color3.fromRGB(24, 25, 34)
+playerListContainer.LayoutOrder = 4
+playerListContainer.ZIndex = 10
+Instance.new("UICorner", playerListContainer).CornerRadius = UDim.new(0, 10)
+local listContainerStroke = Instance.new("UIStroke", playerListContainer)
+listContainerStroke.Color = Theme.Stroke
+listContainerStroke.Thickness = 1.5
+table.insert(RGBElements, {Type = "Info", Stroke = listContainerStroke})
+
+local playerListScroll = Instance.new("ScrollingFrame", playerListContainer)
+playerListScroll.Size = UDim2.new(1, -8, 1, -10)
+playerListScroll.Position = UDim2.new(0, 4, 0, 5)
+playerListScroll.BackgroundTransparency = 1
+playerListScroll.BorderSizePixel = 0
+playerListScroll.ScrollBarThickness = 6
+playerListScroll.ScrollBarImageColor3 = Theme.Brand
+playerListScroll.ScrollingDirection = Enum.ScrollingDirection.Y
+playerListScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+playerListScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+playerListScroll.ZIndex = 10
+
+local playerScrollLayout = Instance.new("UIListLayout", playerListScroll)
+playerScrollLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+playerScrollLayout.SortOrder = Enum.SortOrder.LayoutOrder
+playerScrollLayout.Padding = UDim.new(0, 6)
+
+local playerScrollPad = Instance.new("UIPadding", playerListScroll)
+playerScrollPad.PaddingTop = UDim.new(0, 2)
+playerScrollPad.PaddingBottom = UDim.new(0, 8)
+playerScrollPad.PaddingRight = UDim.new(0, 8)
 
 local function updatePlayerList()
     local cleanRGB = {}; for _, obj in ipairs(RGBElements) do if obj.Stroke and obj.Stroke.Parent then table.insert(cleanRGB, obj) end end; RGBElements = cleanRGB
-    for _, child in pairs(page7:GetChildren()) do if child.Name == "PaddingFrame" then child:Destroy() end end
+    for _, child in pairs(playerListScroll:GetChildren()) do
+        if child.Name == "PaddingFrame" then child:Destroy() end
+    end
     for _, p in pairs(Players:GetPlayers()) do
         if p ~= player then
             local isSelected = (targetTpPlayer == p)
-            local pFrame = Instance.new("Frame", page7); pFrame.Name = "PaddingFrame"; pFrame.Size = UDim2.new(0.9, 0, 0, 48); pFrame.BackgroundTransparency = 1; pFrame.ZIndex = 10
-            local btn = Instance.new("TextButton", pFrame); btn.Size = UDim2.new(1, 0, 1, 0)
-            btn.BackgroundColor3 = isSelected and Color3.fromRGB(35, 55, 42) or Theme.ItemBg
-            btn.Text = ""; btn.AutoButtonColor = false; btn.ZIndex = 10; Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
+            local pFrame = Instance.new("Frame", playerListScroll)
+            pFrame.Name = "PaddingFrame"
+            pFrame.Size = UDim2.new(1, -4, 0, 46)
+            pFrame.BackgroundTransparency = 1
+            pFrame.ZIndex = 10
+            
+            local btn = Instance.new("TextButton", pFrame)
+            btn.Size = UDim2.new(1, 0, 1, 0)
+            btn.BackgroundColor3 = isSelected and Color3.fromRGB(30, 60, 42) or Theme.ItemBg
+            btn.Text = ""
+            btn.AutoButtonColor = false
+            btn.ZIndex = 10
+            Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
             
             local stroke = Instance.new("UIStroke", btn)
             stroke.Color = isSelected and Theme.AccentOn or Theme.Stroke
             stroke.Thickness = 1.5
             table.insert(RGBElements, {Type = "Info", Stroke = stroke})
             
-            local nLabel = Instance.new("TextLabel", btn); nLabel.Size = UDim2.new(0.7, 0, 0.5, 0); nLabel.Position = UDim2.new(0.05, 0, 0.05, 0); nLabel.BackgroundTransparency = 1
+            local nLabel = Instance.new("TextLabel", btn)
+            nLabel.Size = UDim2.new(0.75, 0, 0.5, 0)
+            nLabel.Position = UDim2.new(0.04, 0, 0.06, 0)
+            nLabel.BackgroundTransparency = 1
             nLabel.Text = (isSelected and "✅ " or "👤 ") .. p.DisplayName
             nLabel.TextColor3 = isSelected and Theme.AccentOn or Theme.TextTitle
-            nLabel.Font = Enum.Font.GothamSemibold; nLabel.TextSize = 13; nLabel.TextXAlignment = Enum.TextXAlignment.Left; nLabel.ZIndex = 10
+            nLabel.Font = Enum.Font.GothamBold
+            nLabel.TextSize = 13
+            nLabel.TextXAlignment = Enum.TextXAlignment.Left
+            nLabel.ZIndex = 10
             
-            local subLabel = Instance.new("TextLabel", btn); subLabel.Size = UDim2.new(0.7, 0, 0.45, 0); subLabel.Position = UDim2.new(0.05, 0, 0.5, 0); subLabel.BackgroundTransparency = 1; subLabel.Text = "@" .. p.Name; subLabel.TextColor3 = Color3.fromRGB(100, 255, 100); subLabel.Font = Enum.Font.Gotham; subLabel.TextSize = 10; subLabel.TextXAlignment = Enum.TextXAlignment.Left; subLabel.ZIndex = 10
-            local targetAvatar = Instance.new("ImageLabel", btn); targetAvatar.Size = UDim2.new(0, 32, 0, 32); targetAvatar.Position = UDim2.new(1, -42, 0.5, -16); targetAvatar.BackgroundTransparency = 1; targetAvatar.ZIndex = 10; Instance.new("UICorner", targetAvatar).CornerRadius = UDim.new(1, 0)
-            local targetStroke = Instance.new("UIStroke", targetAvatar); targetStroke.Color = isSelected and Theme.AccentOn or Theme.Stroke; targetStroke.Thickness = 1.5; targetStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border; table.insert(RGBElements, {Type = "Info", Stroke = targetStroke})
-            task.spawn(function() pcall(function() targetAvatar.Image = Players:GetUserThumbnailAsync(p.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size420x420) end) end)
+            local subLabel = Instance.new("TextLabel", btn)
+            subLabel.Size = UDim2.new(0.75, 0, 0.45, 0)
+            subLabel.Position = UDim2.new(0.04, 0, 0.52, 0)
+            subLabel.BackgroundTransparency = 1
+            subLabel.Text = "@" .. p.Name
+            subLabel.TextColor3 = Color3.fromRGB(100, 255, 130)
+            subLabel.Font = Enum.Font.GothamSemibold
+            subLabel.TextSize = 11
+            subLabel.TextXAlignment = Enum.TextXAlignment.Left
+            subLabel.ZIndex = 10
+            
+            local targetAvatar = Instance.new("ImageLabel", btn)
+            targetAvatar.Size = UDim2.new(0, 32, 0, 32)
+            targetAvatar.Position = UDim2.new(1, -40, 0.5, -16)
+            targetAvatar.BackgroundTransparency = 1
+            targetAvatar.ZIndex = 10
+            Instance.new("UICorner", targetAvatar).CornerRadius = UDim.new(1, 0)
+            
+            local targetStroke = Instance.new("UIStroke", targetAvatar)
+            targetStroke.Color = isSelected and Theme.AccentOn or Theme.Stroke
+            targetStroke.Thickness = 1.5
+            targetStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+            table.insert(RGBElements, {Type = "Info", Stroke = targetStroke})
+            
+            task.spawn(function()
+                pcall(function()
+                    targetAvatar.Image = Players:GetUserThumbnailAsync(p.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size420x420)
+                end)
+            end)
             
             btn.MouseButton1Click:Connect(function()
                 clickAnimate(btn)
@@ -989,6 +1259,11 @@ Players.PlayerRemoving:Connect(function(leavingPlayer)
     if leavingPlayer == targetTpPlayer then
         targetTpPlayer = nil
         autoTpPlayerEnabled = false
+        if spectatePlayerEnabled then
+            spectatePlayerEnabled = false
+            resetCameraSubject()
+            updateSpectateBtnUI()
+        end
         updateTargetLabel()
         updateAutoTpBtnUI()
         MakeToast("Mục tiêu đã thoát", leavingPlayer.DisplayName .. " đã rời khỏi server!", Theme.AccentOff)
@@ -1361,7 +1636,6 @@ local function updateESP_Hitbox()
     end
 end
 
--- Chạy ESP & Hitbox ở chu kỳ 0.1s để không gây tụt FPS
 task.spawn(function()
     while task.wait(0.1) do
         updateESP_Hitbox()
@@ -1410,9 +1684,16 @@ RunService.RenderStepped:Connect(function(deltaTime)
 end)
 
 RunService.Heartbeat:Connect(function()
-    -- Tự động bám dính mục tiêu nếu bật Auto TP
     if autoTpPlayerEnabled and targetTpPlayer then
         teleportToSelectedPlayer()
+    end
+
+    if spectatePlayerEnabled and targetTpPlayer and targetTpPlayer.Character then
+        local cam = workspace.CurrentCamera
+        local targetHum = targetTpPlayer.Character:FindFirstChildOfClass("Humanoid") or getUniversalRoot(targetTpPlayer.Character)
+        if cam and targetHum and cam.CameraSubject ~= targetHum then
+            cam.CameraSubject = targetHum
+        end
     end
     
     local char = player.Character
@@ -1425,7 +1706,6 @@ RunService.Heartbeat:Connect(function()
         
         if State.Jump then hum.UseJumpPower = true; hum.JumpPower = State.JumpValue end
         
-        -- Fly logic (Đã fix lỗi NaN Velocity khi nhìn thẳng đứng 90 độ)
         if State.Fly and root then
             hum.PlatformStand = true
             local bv = root:FindFirstChild("FlyBodyVelocity")
@@ -1480,7 +1760,6 @@ RunService.Heartbeat:Connect(function()
             if not State.AntiStun then hum.PlatformStand = false end
         end
 
-        -- Anti-Stun
         if State.AntiStun then 
             hum:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
             hum:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, false)
@@ -1499,7 +1778,6 @@ RunService.Heartbeat:Connect(function()
             end
         end
 
-        -- PlayerLight
         if root then
             local light = root:FindFirstChild("PlayerPointLight")
             if State.PlayerLight then 
