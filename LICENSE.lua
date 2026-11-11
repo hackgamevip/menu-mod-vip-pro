@@ -1,5 +1,5 @@
 -- ==========================================
--- MENU VIP PRO V1.12.9 (COMPACT MOBILE EDITION)
+-- MENU VIP PRO V1.13.0 (HORIZONTAL TOP/BOTTOM AUTO TP)
 -- ==========================================
 repeat task.wait() until game:IsLoaded()
 
@@ -57,11 +57,28 @@ local PlayerLightColors = {
     {Name = "Hồng", Value = Color3.fromRGB(255, 105, 180)}
 }
 
+-- Cấu hình vị trí TP: Trên đầu & Dưới chân xoay nhân vật nằm ngang hướng về mục tiêu
 local TpPositions = {
-    {Name = "Sau lưng", GetOffset = function(d) return CFrame.new(0, 0, d) end},
-    {Name = "Trước mặt", GetOffset = function(d) return CFrame.new(0, 0, -d) * CFrame.Angles(0, math.pi, 0) end},
-    {Name = "Trên đầu", GetOffset = function(d) return CFrame.new(0, d, 0) end},
-    {Name = "Dưới chân", GetOffset = function(d) return CFrame.new(0, -d, 0) end}
+    {
+        Name = "Sau lưng",
+        IsHorizontal = false,
+        GetOffset = function(d) return CFrame.new(0, 0, d) end
+    },
+    {
+        Name = "Trước mặt",
+        IsHorizontal = false,
+        GetOffset = function(d) return CFrame.new(0, 0, -d) * CFrame.Angles(0, math.pi, 0) end
+    },
+    {
+        Name = "Trên đầu",
+        IsHorizontal = true,
+        GetOffset = function(d) return CFrame.new(0, d, 0) * CFrame.Angles(math.rad(-90), 0, 0) end
+    },
+    {
+        Name = "Dưới chân",
+        IsHorizontal = true,
+        GetOffset = function(d) return CFrame.new(0, -d, 0) * CFrame.Angles(math.rad(90), 0, 0) end
+    }
 }
 
 local RGBElements = {}
@@ -101,7 +118,7 @@ local function saveConfig()
 end
 
 -- ==========================================
--- GIAO DIỆN CHÍNH & THÔNG BÁO (ĐÃ THU GỌN)
+-- GIAO DIỆN CHÍNH & THÔNG BÁO (COMPACT)
 -- ==========================================
 local gui = Instance.new("ScreenGui")
 gui.Name = "MobileProMax"
@@ -182,7 +199,6 @@ UIS.InputChanged:Connect(function(input)
 end)
 UIS.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then btnDragToggle = false end end)
 
--- KHUNG CHÍNH ĐÃ THU NHỎ GỌN GÀNG (350 x 305)
 local frame = Instance.new("Frame", gui)
 frame.Size = UDim2.new(0, 350, 0, 305)
 frame.Position = UDim2.new(0.5, -175, 0.5, -152)
@@ -221,7 +237,7 @@ UIS.InputChanged:Connect(function(input)
 end)
 UIS.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then dragToggle = false end end)
 
--- SCROLLING TAB BAR GỌN HƠN
+-- SCROLLING TAB BAR
 local tabBar = Instance.new("ScrollingFrame", frame)
 tabBar.Size = UDim2.new(1, 0, 0, 28); tabBar.Position = UDim2.new(0, 0, 0, 32)
 tabBar.BackgroundColor3 = Theme.TabBg; tabBar.BorderSizePixel = 0; tabBar.ZIndex = 10
@@ -539,7 +555,7 @@ task.spawn(function()
         local pCount = #Players:GetPlayers(); local maxP = Players.MaxPlayers; local jobText = game.JobId ~= "" and string.sub(game.JobId, 1, 14).."..." or "N/A"
         serverInfoLabel.Text = string.format("<font color='#FF00FF'>FPS:</font> %d | <font color='#FF00FF'>Ping:</font> %s\n<font color='#FF00FF'>Người chơi:</font> %d / %d\n<font color='#FF00FF'>ID SV:</font> %s", fps, ping, pCount, maxP, jobText)
         local execTime = math.floor(workspace.DistributedGameTime); local hours = math.floor(execTime / 3600); local mins = math.floor((execTime % 3600) / 60); local secs = execTime % 60
-        extraInfoLabel.Text = string.format("<font color='#FF00FF'>TG Chơi:</font> %02d:%02d:%02d | <font color='#FF00FF'>Giờ:</font> %s\n<font color='#FF00FF'>Bản:</font> VIP PRO MAX V1.12.9 (Compact)", hours, mins, secs, os.date("%H:%M:%S"))
+        extraInfoLabel.Text = string.format("<font color='#FF00FF'>TG Chơi:</font> %02d:%02d:%02d | <font color='#FF00FF'>Giờ:</font> %s\n<font color='#FF00FF'>Bản:</font> VIP PRO MAX V1.13.0", hours, mins, secs, os.date("%H:%M:%S"))
     end
 end)
 
@@ -811,13 +827,43 @@ end
 renderSavedTps()
 
 -- ==========================================
--- [TAB 7: TP NGƯỜI CHƠI (GỌN GÀNG + CUỘN MƯỢT)]
+-- [TAB 7: TP NGƯỜI CHƠI (TƯ THẾ NẰM NGANG KHI TRÊN ĐẦU / DƯỚI CHÂN)]
 -- ==========================================
 local targetTpPlayer = nil
 local autoTpPlayerEnabled = false
 local spectatePlayerEnabled = false
+local wasHorizontalTp = false
 
--- 1. KHUNG ĐIỀU KHIỂN TRÊN CÙNG (ĐÃ THU GỌN CÒN 86PX)
+-- Hàm khôi phục tư thế đứng thẳng bình thường khi tắt Auto TP hoặc đổi về Sau lưng/Trước mặt
+local function restoreNormalPosture()
+    local myChar = player.Character
+    if not myChar then return end
+    local myRoot = getUniversalRoot(myChar)
+    local myHum = myChar:FindFirstChildOfClass("Humanoid")
+    if myHum and not State.Fly and not State.AntiStun then
+        myHum.PlatformStand = false
+    end
+    if myRoot then
+        myRoot.AssemblyLinearVelocity = Vector3.zero
+        myRoot.AssemblyAngularVelocity = Vector3.zero
+        local pos = myRoot.Position
+        local look = myRoot.CFrame.LookVector
+        local flatLook = Vector3.new(look.X, 0, look.Z)
+        if flatLook.Magnitude > 0.001 then
+            myRoot.CFrame = CFrame.lookAt(pos, pos + flatLook.Unit)
+        else
+            myRoot.CFrame = CFrame.new(pos)
+        end
+    end
+    if not State.Noclip then
+        for _, part in ipairs(myChar:GetDescendants()) do
+            if part:IsA("BasePart") then part.CanCollide = true end
+        end
+    end
+    wasHorizontalTp = false
+end
+
+-- 1. KHUNG ĐIỀU KHIỂN TRÊN CÙNG
 local tpControlCard = Instance.new("Frame", page7)
 tpControlCard.Size = UDim2.new(0.94, 0, 0, 86)
 tpControlCard.BackgroundColor3 = Color3.fromRGB(28, 30, 42)
@@ -902,7 +948,8 @@ tpPosLabel.ZIndex = 10
 
 local function updateTpPosText()
     local item = TpPositions[State.TpPositionIdx] or TpPositions[1]
-    tpPosLabel.Text = "📍 VỊ TRÍ TP: <font color='#FFFF55'>&lt; " .. string.upper(item.Name) .. " &gt;</font>"
+    local suffix = item.IsHorizontal and " (NẰM NGANG)" or ""
+    tpPosLabel.Text = "📍 VỊ TRÍ TP: <font color='#FFFF55'>&lt; " .. string.upper(item.Name) .. suffix .. " &gt;</font>"
 end
 updateTpPosText()
 
@@ -911,6 +958,10 @@ tpPosBtn.MouseButton1Click:Connect(function()
     State.TpPositionIdx = State.TpPositionIdx + 1
     if State.TpPositionIdx > #TpPositions then State.TpPositionIdx = 1 end
     updateTpPosText()
+    local currentMode = TpPositions[State.TpPositionIdx] or TpPositions[1]
+    if not currentMode.IsHorizontal and wasHorizontalTp then
+        restoreNormalPosture()
+    end
     if State.AutoSave then saveConfig() end
 end)
 
@@ -1013,8 +1064,27 @@ local function teleportToSelectedPlayer()
     
     if targetRoot and myRoot and (not targetHum or targetHum.Health > 0) and (not myHum or myHum.Health > 0) then
         local mode = TpPositions[State.TpPositionIdx] or TpPositions[1]
-        myRoot.CFrame = targetRoot.CFrame * mode.GetOffset(State.TpDistance)
+        
+        -- Lấy vị trí của mục tiêu và hướng quay ngang (chỉ lấy trục Y để nhân vật không bị nghiêng lệch)
+        local targetPos = targetRoot.Position
+        local _, targetYaw, _ = targetRoot.CFrame:ToEulerAnglesYXZ()
+        local baseCFrame = CFrame.new(targetPos) * CFrame.Angles(0, targetYaw, 0)
+        
+        if mode.IsHorizontal then
+            if myHum then myHum.PlatformStand = true end
+            wasHorizontalTp = true
+            for _, part in ipairs(myChar:GetDescendants()) do
+                if part:IsA("BasePart") and part.CanCollide then
+                    part.CanCollide = false
+                end
+            end
+        elseif wasHorizontalTp then
+            restoreNormalPosture()
+        end
+        
+        myRoot.CFrame = baseCFrame * mode.GetOffset(State.TpDistance)
         myRoot.AssemblyLinearVelocity = Vector3.zero
+        myRoot.AssemblyAngularVelocity = Vector3.zero
         return true
     end
     return false
@@ -1032,7 +1102,7 @@ local function resetCameraSubject()
     end)
 end
 
--- 2. HÀNG NÚT ĐÔI: TP 1 LẦN & AUTO TP (THU GỌN CÒN 28PX)
+-- 2. HÀNG NÚT ĐÔI: TP 1 LẦN & AUTO TP
 local tpActionRow = Instance.new("Frame", page7)
 tpActionRow.Size = UDim2.new(0.94, 0, 0, 28)
 tpActionRow.BackgroundTransparency = 1
@@ -1113,6 +1183,7 @@ autoTpBtn.MouseButton1Click:Connect(function()
     if autoTpPlayerEnabled then
         MakeToast("Đã Bật Auto TP", "Đang bám theo " .. targetTpPlayer.DisplayName, Theme.AccentOn)
     else
+        restoreNormalPosture()
         MakeToast("Đã Tắt Auto TP", "Đã dừng bám theo mục tiêu", Theme.AccentOff)
     end
 end)
@@ -1255,7 +1326,10 @@ end)
 Players.PlayerRemoving:Connect(function(leavingPlayer)
     if leavingPlayer == targetTpPlayer then
         targetTpPlayer = nil
-        autoTpPlayerEnabled = false
+        if autoTpPlayerEnabled then
+            autoTpPlayerEnabled = false
+            restoreNormalPosture()
+        end
         if spectatePlayerEnabled then
             spectatePlayerEnabled = false
             resetCameraSubject()
@@ -1644,7 +1718,7 @@ end)
 -- ==========================================
 RunService.Stepped:Connect(function()
     local char = player.Character
-    if char and State.Noclip then
+    if char and (State.Noclip or (autoTpPlayerEnabled and wasHorizontalTp)) then
         for _, p in ipairs(char:GetDescendants()) do
             if p:IsA("BasePart") and p.CanCollide then p.CanCollide = false end
         end
@@ -1754,7 +1828,9 @@ RunService.Heartbeat:Connect(function()
         else
             if root and root:FindFirstChild("FlyBodyVelocity") then root.FlyBodyVelocity:Destroy() end
             if root and root:FindFirstChild("FlyBodyGyro") then root.FlyBodyGyro:Destroy() end
-            if not State.AntiStun then hum.PlatformStand = false end
+            if not State.AntiStun and not (autoTpPlayerEnabled and wasHorizontalTp) then
+                hum.PlatformStand = false
+            end
         end
 
         if State.AntiStun then 
