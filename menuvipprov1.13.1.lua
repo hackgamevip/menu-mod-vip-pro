@@ -1,5 +1,5 @@
 -- ==========================================
--- MENU VIP PRO V1.13.1 (FIXED INFO LINES + DAY/NIGHT + NEW SCRIPTS)
+-- MENU VIP PRO V1.13.2 (FIXED STARTUP CRASH + DAY/NIGHT LOCK + LOADSTRING)
 -- ==========================================
 repeat task.wait() until game:IsLoaded()
 
@@ -9,12 +9,16 @@ local RunService = game:GetService("RunService")
 local Lighting = game:GetService("Lighting")
 local UIS = game:GetService("UserInputService")
 local VirtualUser = game:GetService("VirtualUser")
-local Vim = game:GetService("VirtualInputManager")
 local TeleportService = game:GetService("TeleportService")
 local HttpService = game:GetService("HttpService")
 local MarketplaceService = game:GetService("MarketplaceService")
 
+local _, Vim = pcall(function()
+    return game:GetService("VirtualInputManager")
+end)
+
 local player = Players.LocalPlayer
+repeat task.wait() until player
 
 local State = {
     Instant = false, Noclip = false, LowGfx = false, Speed = false, Jump = false,
@@ -29,7 +33,8 @@ local State = {
     AutoSkillDelay = 1, 
     AutoSkillZ = false, AutoSkillX = false, AutoSkillC = false, AutoSkillV = false, AutoSkillE = false, AutoSkillF = false,
     AutoSkill1 = false, AutoSkill2 = false, AutoSkill3 = false, AutoSkill4 = false, AutoSkill5 = false, AutoSkill6 = false,
-    TpPositionIdx = 1, TpDistance = 4
+    TpPositionIdx = 1, TpDistance = 4,
+    TimeLockMode = "None" -- "Day", "Night", "None"
 }
 
 local Theme = {
@@ -57,7 +62,6 @@ local PlayerLightColors = {
     {Name = "Hồng", Value = Color3.fromRGB(255, 105, 180)}
 }
 
--- Cấu hình vị trí TP: Trên đầu & Dưới chân xoay nhân vật nằm ngang hướng về mục tiêu
 local TpPositions = {
     {
         Name = "Sau lưng",
@@ -89,25 +93,37 @@ local cachedPrompts = {}
 local xrayMats = {}
 local OriginalGFX = {} 
 
+-- Kiểm tra quyền guiParent an toàn tuyệt đối (Tránh văng script trên mọi Executor)
 local guiParent = player:WaitForChild("PlayerGui")
 pcall(function()
     if gethui and type(gethui) == "function" then
         local hui = gethui()
-        if hui then guiParent = hui end
-    elseif game:GetService("CoreGui") then
-        guiParent = game:GetService("CoreGui")
+        if hui then
+            local _ = hui:GetChildren()
+            guiParent = hui
+        end
+    else
+        local core = game:GetService("CoreGui")
+        local _ = core:GetChildren()
+        guiParent = core
     end
 end)
 
-for _, v in pairs(guiParent:GetChildren()) do
-    if v.Name == "MenuVipProMax" then v:Destroy() end
-end
+pcall(function()
+    for _, v in pairs(guiParent:GetChildren()) do
+        if v.Name == "MenuVipProMax" then v:Destroy() end
+    end
+end)
 
-local configFileName = "MenuVipProMax"
+local configFileName = "MenuVipProMax.json"
 pcall(function()
     if isfile and isfile(configFileName) then
         local data = HttpService:JSONDecode(readfile(configFileName))
-        for k, v in pairs(data) do if State[k] ~= nil then State[k] = v end end
+        for k, v in pairs(data) do
+            if State[k] ~= nil and k ~= "Disable3D" and k ~= "AfkModeScreen" then
+                State[k] = v
+            end
+        end
     end
 end)
 if not TpPositions[State.TpPositionIdx] then State.TpPositionIdx = 1 end
@@ -125,7 +141,11 @@ gui.Name = "MenuVipProMax"
 gui.ResetOnSpawn = false
 gui.DisplayOrder = 99999
 gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-gui.Parent = guiParent
+local okParent = pcall(function() gui.Parent = guiParent end)
+if not okParent then
+    guiParent = player:WaitForChild("PlayerGui")
+    gui.Parent = guiParent
+end
 
 local notifGui = Instance.new("Frame", gui)
 notifGui.Size = UDim2.new(0, 190, 0.8, 0); notifGui.Position = UDim2.new(1, -200, 0.1, 0)
@@ -168,6 +188,28 @@ local function MakeToast(title, desc, color)
     end)
 end
 
+-- Hàm chạy script ngoài có thông báo lỗi rõ ràng
+local function runExternalScript(name, url)
+    task.spawn(function()
+        local ok, res = pcall(function() return game:HttpGet(url) end)
+        if not ok or not res or res == "" or string.find(res, "404: Not Found") then
+            MakeToast("Lỗi tải " .. name, "Không thể lấy code từ link!", Theme.AccentOff)
+            return
+        end
+        local fn, err = loadstring(res)
+        if not fn then
+            MakeToast("Lỗi cú pháp", name .. " bị lỗi code!", Theme.AccentOff)
+            warn(err)
+            return
+        end
+        local runOk, runErr = pcall(fn)
+        if not runOk then
+            MakeToast("Lỗi khi chạy", name .. " gặp lỗi thực thi!", Theme.AccentOff)
+            warn(runErr)
+        end
+    end)
+end
+
 local screenOverlay = Instance.new("Frame", gui)
 screenOverlay.Size = UDim2.new(2, 0, 2, 0); screenOverlay.Position = UDim2.new(-0.5, 0, -0.5, 0)
 screenOverlay.BackgroundColor3 = Color3.new(0,0,0); screenOverlay.ZIndex = 0; screenOverlay.Visible = false
@@ -193,7 +235,7 @@ openBtn.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then btnDragToggle = true; btnDragStart = input.Position; btnStartPos = openBtn.Position end
 end)
 UIS.InputChanged:Connect(function(input)
-    if btnDragToggle and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+    if btnDragToggle and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType.Touch) then
         openBtn.Position = UDim2.new(btnStartPos.X.Scale, btnStartPos.X.Offset + (input.Position.X - btnDragStart.X), btnStartPos.Y.Scale, btnStartPos.Y.Offset + (input.Position.Y - btnDragStart.Y))
     end
 end)
@@ -468,7 +510,7 @@ local function createSlider(parent, text, min, max, varName, callback)
     local titleLabel = Instance.new("TextLabel", bg)
     titleLabel.Size = UDim2.new(0.7, 0, 0.45, 0); titleLabel.Position = UDim2.new(0.04, 0, 0.08, 0); titleLabel.BackgroundTransparency = 1; titleLabel.Text = text; titleLabel.TextColor3 = Theme.TextDim; titleLabel.Font = Enum.Font.GothamSemibold; titleLabel.TextSize = 11; titleLabel.TextXAlignment = Enum.TextXAlignment.Left; titleLabel.ZIndex = 10
     local valLabel = Instance.new("TextLabel", bg)
-    valLabel.Size = UDim2.new(0.25, 0, 0.45, 0); valLabel.Position = UDim2.new(0.71, 0, 0.08, 0); valLabel.BackgroundTransparency = 1; valLabel.Text = tostring(State[varName]); valLabel.TextColor3 = Theme.Brand; valLabel.Font = Enum.Font.GothamBold; titleLabel.TextSize = 11; valLabel.TextXAlignment = Enum.TextXAlignment.Right; valLabel.ZIndex = 10
+    valLabel.Size = UDim2.new(0.25, 0, 0.45, 0); valLabel.Position = UDim2.new(0.71, 0, 0.08, 0); valLabel.BackgroundTransparency = 1; valLabel.Text = tostring(State[varName]); valLabel.TextColor3 = Theme.Brand; valLabel.Font = Enum.Font.GothamBold; valLabel.TextSize = 11; valLabel.TextXAlignment = Enum.TextXAlignment.Right; valLabel.ZIndex = 10
     local track = Instance.new("Frame", bg)
     track.Size = UDim2.new(0.92, 0, 0.18, 0); track.Position = UDim2.new(0.04, 0, 0.64, 0); track.BackgroundColor3 = Theme.MainBg; track.ZIndex = 10
     Instance.new("UICorner", track).CornerRadius = UDim.new(1, 0)
@@ -501,22 +543,22 @@ task.spawn(function()
 end)
 
 -- ==========================================
--- [TAB 1: THÔNG TIN - ĐÃ TÁCH XUỐNG DÒNG RIÊNG BIỆT]
+-- [TAB 1: THÔNG TIN - TÁCH DÒNG RÕ RÀNG]
 -- ==========================================
 local function createInfoBox(parent, icon, titleText, heightOffset)
     local item = Instance.new("Frame", parent)
-    item.Size = UDim2.new(0.92, 0, 0, heightOffset or 90); item.BackgroundColor3 = Theme.ItemBg; item.ZIndex = 10
+    item.Size = UDim2.new(0.92, 0, 0, heightOffset or 95); item.BackgroundColor3 = Theme.ItemBg; item.ZIndex = 10
     Instance.new("UICorner", item).CornerRadius = UDim.new(0, 8)
     local stroke = Instance.new("UIStroke", item); stroke.Color = Theme.Stroke; stroke.Thickness = 1.2; table.insert(RGBElements, {Type = "Info", Stroke = stroke})
     local title = Instance.new("TextLabel", item)
     title.Size = UDim2.new(1, -16, 0, 20); title.Position = UDim2.new(0, 8, 0, 4); title.BackgroundTransparency = 1; title.Text = icon .. " " .. titleText; title.TextColor3 = Theme.Brand; title.Font = Enum.Font.GothamBold; title.TextSize = 11; title.TextXAlignment = Enum.TextXAlignment.Left; title.ZIndex = 10
     local content = Instance.new("TextLabel", item)
-    content.Size = UDim2.new(1, -16, 1, -26); content.Position = UDim2.new(0, 8, 0, 24); content.BackgroundTransparency = 1; content.Text = "Đang tải..."; content.TextColor3 = Theme.TextTitle; content.Font = Enum.Font.Gotham; content.TextSize = 10.5; content.TextXAlignment = Enum.TextXAlignment.Left; content.TextYAlignment = Enum.TextYAlignment.Top; content.RichText = true; content.ZIndex = 10
+    content.Size = UDim2.new(1, -16, 1, -26); content.Position = UDim2.new(0, 8, 0, 24); content.BackgroundTransparency = 1; content.Text = "Đang tải..."; content.TextColor3 = Theme.TextTitle; content.Font = Enum.Font.Gotham; content.TextSize = 10.5; content.TextXAlignment = Enum.TextXAlignment.Left; content.TextYAlignment = Enum.TextYAlignment.Top; content.TextWrapped = true; content.RichText = true; content.ZIndex = 10
     return content, item
 end
 
-local playerInfoLabel = createInfoBox(page1, "👤", "THÔNG TIN NHÂN VẬT", 104)
-local serverInfoLabel, serverInfoFrame = createInfoBox(page1, "🌐", "THÔNG TIN MÁY CHỦ", 90)
+local playerInfoLabel = createInfoBox(page1, "👤", "THÔNG TIN NHÂN VẬT", 108)
+local serverInfoLabel, serverInfoFrame = createInfoBox(page1, "🌐", "THÔNG TIN MÁY CHỦ", 92)
 
 local copyIdBtn = Instance.new("TextButton", serverInfoFrame)
 copyIdBtn.Size = UDim2.new(0, 22, 0, 22); copyIdBtn.Position = UDim2.new(1, -26, 1, -24); copyIdBtn.Text = "📜"; copyIdBtn.BackgroundTransparency = 1; copyIdBtn.TextSize = 13; copyIdBtn.ZIndex = 11
@@ -536,14 +578,16 @@ joinBtn.Size = UDim2.new(0.25, 0, 0.7, 0); joinBtn.Position = UDim2.new(0.72, 0,
 Instance.new("UICorner", joinBtn).CornerRadius = UDim.new(0, 6)
 joinBtn.MouseButton1Click:Connect(function() clickAnimate(joinBtn); local targetId = idBox.Text:gsub("%s+", ""); if targetId ~= "" then MakeToast("Đang Join", "Đang chuyển máy chủ...", Theme.AccentOn); pcall(function() TeleportService:TeleportToPlaceInstance(game.PlaceId, targetId, player) end) end end)
 
-local extraInfoLabel = createInfoBox(page1, "⚙️", "TRẠNG THÁI", 78)
+local extraInfoLabel = createInfoBox(page1, "⚙️", "TRẠNG THÁI", 80)
 local fps = 0; RunService.RenderStepped:Connect(function(dt) fps = math.floor(1/dt) end)
 
 task.spawn(function()
     while task.wait(0.5) do
         local hp, maxHp, ws, jp = 0, 0, 0, 0; local coords = "0, 0, 0"
-        if player.Character and player.Character:FindFirstChild("Humanoid") then
-            local hum = player.Character.Humanoid; hp = math.floor(hum.Health); maxHp = math.floor(hum.MaxHealth); ws = math.floor(hum.WalkSpeed); jp = math.floor(hum.JumpPower)
+        if player.Character and player.Character:FindFirstChildOfClass("Humanoid") then
+            local hum = player.Character:FindFirstChildOfClass("Humanoid")
+            hp = math.floor(hum.Health); maxHp = math.floor(hum.MaxHealth); ws = math.floor(hum.WalkSpeed)
+            jp = math.floor(hum.UseJumpPower and hum.JumpPower or hum.JumpHeight)
         end
         if player.Character then
             local root = getUniversalRoot(player.Character)
@@ -553,7 +597,7 @@ task.spawn(function()
             "<font color='#FF00FF'>Tên:</font> %s (@%s)\n<font color='#FF00FF'>Máu:</font> %d / %d\n<font color='#FF00FF'>Tốc độ:</font> %d\n<font color='#FF00FF'>Lực nhảy:</font> %d\n<font color='#FF00FF'>Tọa độ:</font> %s",
             player.DisplayName, player.Name, hp, maxHp, ws, jp, coords
         )
-        local ping = "0"
+        local ping = "0 ms"
         pcall(function() local stats = game:GetService("Stats"); if stats and stats:FindFirstChild("Network") and stats.Network:FindFirstChild("ServerStatsItem") then ping = stats.Network.ServerStatsItem["Data Ping"]:GetValueString() else ping = tostring(math.floor(player:GetNetworkPing() * 1000)) .. " ms" end end)
         local pCount = #Players:GetPlayers(); local maxP = Players.MaxPlayers; local jobText = game.JobId ~= "" and string.sub(game.JobId, 1, 14).."..." or "N/A"
         serverInfoLabel.Text = string.format(
@@ -562,7 +606,7 @@ task.spawn(function()
         )
         local execTime = math.floor(workspace.DistributedGameTime); local hours = math.floor(execTime / 3600); local mins = math.floor((execTime % 3600) / 60); local secs = execTime % 60
         extraInfoLabel.Text = string.format(
-            "<font color='#FF00FF'>Thời gian chơi:</font> %02d:%02d:%02d\n<font color='#FF00FF'>Giờ hệ thống:</font> %s\n<font color='#FF00FF'>Phiên bản:</font> VIP PRO MAX V1.13.1",
+            "<font color='#FF00FF'>Thời gian chơi:</font> %02d:%02d:%02d\n<font color='#FF00FF'>Giờ hệ thống:</font> %s\n<font color='#FF00FF'>Phiên bản:</font> VIP PRO MAX V1.13.2",
             hours, mins, secs, os.date("%H:%M:%S")
         )
     end
@@ -598,9 +642,10 @@ createToggle(page2, "👀 Nhìn xuyên map (xray)", "XRay", function(v)
     xrayTick = xrayTick + 1; local currentTick = xrayTick
     task.spawn(function()
         if v then
+            local myChar = player.Character
             for i, obj in ipairs(workspace:GetDescendants()) do
                 if currentTick ~= xrayTick then return end 
-                if obj:IsA("BasePart") and not obj:IsDescendantOf(player.Character) and obj.Name ~= "Terrain" and obj.Transparency < 1 then
+                if obj:IsA("BasePart") and (not myChar or not obj:IsDescendantOf(myChar)) and obj.Name ~= "Terrain" and obj.Transparency < 1 then
                     if not xrayMats[obj] then xrayMats[obj] = obj.Transparency end; obj.Transparency = 0.5
                 end
                 if i % 300 == 0 then task.wait() end 
@@ -655,8 +700,9 @@ createSlider(page3, "Tốc độ chạy", 1, 1000, "SpeedValue")
 
 local defaultJumpPower = 50
 createToggle(page3, "🦘 Nhảy cao", "Jump", function(v) 
-    if player.Character and player.Character:FindFirstChild("Humanoid") then 
-        if v then defaultJumpPower = player.Character.Humanoid.JumpPower else player.Character.Humanoid.UseJumpPower = true; player.Character.Humanoid.JumpPower = defaultJumpPower end
+    if player.Character and player.Character:FindFirstChildOfClass("Humanoid") then 
+        local hum = player.Character:FindFirstChildOfClass("Humanoid")
+        if v then defaultJumpPower = hum.JumpPower else hum.UseJumpPower = true; hum.JumpPower = defaultJumpPower end
     end 
 end)
 createSlider(page3, "Lực nhảy", 1, 1000, "JumpValue")
@@ -676,7 +722,7 @@ createSlider(page3, "Độ sáng", 0, 5, "LightBrightness")
 createCycleBtn(page3, "🎨 Đổi màu:", PlayerLightColors, "LightColorIdx")
 
 -- ==========================================
--- [TAB 4: TIỆN ÍCH (THÊM TRỜI SÁNG/TỐI, TP SAVE V3 MỚI & TP PLAYS & FLY V3)]
+-- [TAB 4: TIỆN ÍCH (TRỜI SÁNG/TỐI KHÓA CHỐNG RESET + SCRIPT NGOÀI)]
 -- ==========================================
 createToggle(page4, "💾 Lưu Cài Đặt", "AutoSave", function(v) 
     if v then saveConfig(); MakeToast("Đã Bật", "Đã lưu cấu hình hiện tại!", Theme.AccentOn)
@@ -739,20 +785,23 @@ local function rejoinServer()
     if #Players:GetPlayers() <= 1 then player:Kick("\nĐang vào lại server..."); task.wait(); TeleportService:Teleport(game.PlaceId, player) else TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, player) end
 end
 
--- Nút Trời Sáng & Trời Tối
+-- Khóa Trời Sáng & Trời Tối chống bị game tự reset
 createDualButtons(
     page4,
     "☀️ TRỜI SÁNG",
     Color3.fromRGB(255, 200, 50),
     function()
+        State.TimeLockMode = "Day"
         pcall(function()
             Lighting.ClockTime = 12
             Lighting.Brightness = 2
+            Lighting.OutdoorAmbient = Color3.fromRGB(180, 180, 180)
         end)
     end,
     "🌙 TRỜI TỐI",
     Color3.fromRGB(130, 140, 255),
     function()
+        State.TimeLockMode = "Night"
         pcall(function()
             Lighting.ClockTime = 0
             Lighting.Brightness = 1
@@ -760,49 +809,58 @@ createDualButtons(
     end
 )
 
+task.spawn(function()
+    while task.wait(0.2) do
+        if State.TimeLockMode == "Day" then
+            pcall(function()
+                Lighting.ClockTime = 12
+                Lighting.Brightness = 2
+            end)
+        elseif State.TimeLockMode == "Night" then
+            pcall(function()
+                Lighting.ClockTime = 0
+                Lighting.Brightness = 1
+            end)
+        end
+    end
+end)
+
 createDualButtons(page4, "🔄 VÀO LẠI SV", Theme.AccentOn, rejoinServer, "🎲 ĐỔI SV NGẪU NHIÊN", Theme.Brand, function() hopServer("Desc") end)
 createDualButtons(page4, "📉 ĐỔI SV ÍT NGƯỜI", Color3.fromRGB(52, 152, 219), function() hopServer("Asc") end, "📈 ĐỔI SV NHIỀU NGƯỜI", Color3.fromRGB(231, 76, 60), function() hopServer("Desc") end)
 
--- Lệnh Admin & TP SAVE V3 (Đã cập nhật link mới)
+-- Lệnh Admin & TP SAVE
 createDualButtons(
     page4,
     "💻 LỆNH ADMIN",
     Theme.AccentOn,
     function()
-        pcall(function()
-            loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgelY/infiniteyield/master/source'))()
-        end)
+        runExternalScript("Infinite Yield", "https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source")
     end,
-    "📁 TP SAVE ",
+    "📁 TP SAVE",
     Theme.Brand,
     function()
-        pcall(function()
-            --menu save vị trí 
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/haudeptrai2k6/menu-hack-vip13/refs/heads/main/menu-save.lua"))()
-        end)
+        runExternalScript("TP Save", "https://raw.githubusercontent.com/haudeptrai2k6/menu-hack-vip13/refs/heads/main/menu-save.lua")
     end
 )
 
-createDualButtons(page4, "🕊️ FLY V1", Theme.Brand, function() pcall(function() loadstring("\108\111\97\100\115\116\114\105\110\103\40\103\97\109\101\58\72\116\116\112\71\101\116\40\40\39\104\116\116\112\115\58\47\47\103\105\115\116\46\103\105\116\104\117\98\117\115\101\114\99\111\110\116\101\110\116\46\99\111\109\47\109\101\111\122\111\110\101\89\84\47\98\102\48\51\55\100\102\102\57\102\48\97\55\48\48\49\55\51\48\52\100\100\100\54\55\102\100\99\100\51\55\48\47\114\97\119\47\101\49\52\101\55\52\102\52\50\53\98\48\54\48\100\102\53\50\51\51\52\51\99\102\51\48\98\55\56\55\48\55\52\101\98\51\99\53\100\50\47\97\114\99\101\117\115\37\50\53\50\48\120\37\50\53\50\48\102\108\121\37\50\53\50\48\50\37\50\53\50\48\111\98\102\108\117\99\97\116\111\114\39\41\44\116\114\117\101\41\41\40\41\10\10")() end) end, 
-    "🕊️ FLY V3", Theme.Brand, function() pcall(function()
-        --menu fly v3
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/haudeptrai2k6/menu-hack-vip/refs/heads/main/menu-fly.lua"))()
-    end)
-end)
+createDualButtons(
+    page4,
+    "🕊️ FLY V1",
+    Theme.Brand,
+    function()
+        pcall(function()
+            loadstring("\108\111\97\100\115\116\114\105\110\103\40\103\97\109\101\58\72\116\116\112\71\101\116\40\40\39\104\116\116\112\115\58\47\47\103\105\115\116\46\103\105\116\104\117\98\117\115\101\114\99\111\110\116\101\110\116\46\99\111\109\47\109\101\111\122\111\110\101\89\84\47\98\102\48\51\55\100\102\102\57\102\48\97\55\48\48\49\55\51\48\52\100\100\100\54\55\102\100\99\100\51\55\48\47\114\97\119\47\101\49\52\101\55\52\102\52\50\53\98\48\54\48\100\102\53\50\51\51\52\51\99\102\51\48\98\55\56\55\48\55\52\101\98\51\99\53\100\50\47\97\114\99\101\117\115\37\50\53\50\48\120\37\50\53\50\48\102\108\121\37\50\53\50\48\50\37\50\53\50\48\111\98\102\108\117\99\97\116\111\114\39\41\44\116\114\117\101\41\41\40\41\10\10")()
+        end)
+    end,
+    "🕊️ FLY V3",
+    Theme.Brand,
+    function()
+        runExternalScript("Fly V3", "https://raw.githubusercontent.com/haudeptrai2k6/menu-hack-vip/refs/heads/main/menu-fly.lua")
+    end
+)
 
--- Ô nút: TP PLAYS
 createButton(page4, "🎯 TP PLAYS (người chơi)", Theme.AccentOn, function()
-    pcall(function()
-        --menu players người chơi 
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/haudeptrai2k6/hack.lua/refs/heads/main/menu-tp-play.lua"))()
-    end)
-end)
-
--- Ô nút mới: FLY V3 (Future of Fly V3 X)
-createButton(page4, "🕊️ FLY V3", Theme.Brand, function()
-    pcall(function()
-        loadstring(game:HttpGet("https://scriptblox.com/raw/Universal-Script-Future-of-Fly-V3-X-235903"))()
-    end)
+    runExternalScript("TP Plays", "https://raw.githubusercontent.com/haudeptrai2k6/hack.lua/refs/heads/main/menu-tp-play.lua")
 end)
 
 -- ==========================================
@@ -897,7 +955,7 @@ end
 renderSavedTps()
 
 -- ==========================================
--- [TAB 7: TP NGƯỜI CHƠI (TƯ THẾ NẰM NGANG KHI TRÊN ĐẦU / DƯỚI CHÂN)]
+-- [TAB 7: TP NGƯỜI CHƠI]
 -- ==========================================
 local targetTpPlayer = nil
 local autoTpPlayerEnabled = false
@@ -1440,7 +1498,7 @@ task.spawn(function()
         if State.AutoSkill5 then table.insert(keysToPress, Enum.KeyCode.Five) end
         if State.AutoSkill6 then table.insert(keysToPress, Enum.KeyCode.Six) end
         
-        if #keysToPress > 0 then
+        if #keysToPress > 0 and Vim then
             for _, keyEnum in ipairs(keysToPress) do
                 task.spawn(function()
                     pcall(function()
@@ -1606,10 +1664,11 @@ end)
 
 createButton(page9, "🧹 Dọn rác bản đồ (Clear Debris)", Theme.AccentOff, function()
     local count = 0
+    local myChar = player.Character
     pcall(function()
         for _, obj in ipairs(workspace:GetDescendants()) do
-            if not obj:IsDescendantOf(player.Character) and not obj.Parent:FindFirstChild("Humanoid") then
-                if obj:IsA("ParticleEmitter") or obj:IsA("Trail") or obj:IsA("Blood") or (obj:IsA("Decal") and obj.Name == "Blood") then
+            if (not myChar or not obj:IsDescendantOf(myChar)) and (not obj.Parent or not obj.Parent:FindFirstChild("Humanoid")) then
+                if obj:IsA("ParticleEmitter") or obj:IsA("Trail") or (obj:IsA("Decal") and obj.Name == "Blood") then
                     obj:Destroy()
                     count = count + 1
                 elseif obj:IsA("BasePart") and not obj.Anchored and obj.CanCollide == false and obj.Size.Magnitude < 5 then
@@ -1641,3 +1700,312 @@ task.spawn(function()
                     prompt.HoldDuration = 0; prompt.MaxActivationDistance = 25 
                 else table.remove(cachedPrompts, i) end
             end
+        else
+            if next(originalPrompts) then
+                for prompt, data in pairs(originalPrompts) do if prompt and prompt.Parent then prompt.HoldDuration = data.HoldDuration; prompt.MaxActivationDistance = data.MaxActivationDistance end end
+                originalPrompts = {}
+            end
+        end
+    end
+end)
+
+task.spawn(function()
+    while task.wait(0.5) do
+        pcall(function()
+            if State.AutoCollect and player.Character then
+                local root = getUniversalRoot(player.Character)
+                if root then
+                    local rootPos = root.Position
+                    for _, prompt in ipairs(cachedPrompts) do
+                        if prompt.Parent and prompt.Parent:IsA("BasePart") and prompt.Enabled and (prompt.Parent.Position - rootPos).Magnitude <= 50 then if fireproximityprompt then fireproximityprompt(prompt) end end
+                    end
+                    local overlapParams = OverlapParams.new(); overlapParams.FilterDescendantsInstances = {player.Character}; overlapParams.FilterType = Enum.RaycastFilterType.Exclude
+                    local partsNearby = workspace:GetPartBoundsInRadius(rootPos, 50, overlapParams)
+                    for _, part in ipairs(partsNearby) do
+                        if part.Name == "Handle" and part.Parent and part.Parent:IsA("Tool") then
+                            part.CanCollide = false
+                            if firetouchinterest then firetouchinterest(root, part, 0); task.wait(0.01); firetouchinterest(root, part, 1) else part.CFrame = root.CFrame end
+                        end
+                    end
+                end
+            end
+        end)
+    end
+end)
+
+-- ==========================================
+-- [TỐI ƯU FPS: TÁCH LUỒNG ESP & HITBOX]
+-- ==========================================
+local function updateESP_Hitbox()
+    if State.Hitbox then
+        for _, p in pairs(Players:GetPlayers()) do
+            if p ~= player and p.Character then
+                local hrp = getUniversalRoot(p.Character)
+                if hrp then
+                    if not originalHitboxSizes[p] then originalHitboxSizes[p] = hrp.Size end
+                    hrp.Size = Vector3.new(State.HitboxSize, State.HitboxSize, State.HitboxSize)
+                    hrp.Transparency = 0.5
+                    hrp.CanCollide = false
+                    hrp.Massless = true
+                end
+            end
+        end
+    else
+        if next(originalHitboxSizes) then
+            for p, size in pairs(originalHitboxSizes) do 
+                if p and p.Character then 
+                    local hrp = getUniversalRoot(p.Character)
+                    if hrp then 
+                        hrp.Size = size
+                        hrp.Transparency = 1 
+                        hrp.Massless = false 
+                    end 
+                end 
+            end
+            originalHitboxSizes = {}
+        end
+    end
+
+    if not State.ESP then
+        for p, bgui in pairs(ActiveESPs) do 
+            if bgui.Billboard then bgui.Billboard:Destroy() end
+            if bgui.Highlight then bgui.Highlight:Destroy() end
+            ActiveESPs[p] = nil 
+        end
+        return
+    end
+
+    for _, p in ipairs(Players:GetPlayers()) do
+        if p ~= player then
+            pcall(function()
+                local tChar = p.Character
+                local espPart = getUniversalRoot(tChar)
+                
+                if espPart then
+                    if not ActiveESPs[p] then ActiveESPs[p] = {} end
+                    
+                    if not ActiveESPs[p].Billboard or ActiveESPs[p].Billboard.Adornee ~= espPart or not ActiveESPs[p].Billboard.Parent then
+                        if ActiveESPs[p].Billboard then ActiveESPs[p].Billboard:Destroy() end
+                        local bgui = Instance.new("BillboardGui")
+                        bgui.Name = "MobileESP_" .. p.Name; bgui.Size = UDim2.new(0, 200, 0, 50); bgui.StudsOffset = Vector3.new(0, 3.5, 0)
+                        bgui.AlwaysOnTop = true; bgui.MaxDistance = math.huge; bgui.LightInfluence = 0; bgui.Adornee = espPart; bgui.Parent = guiParent
+                        local tLabel = Instance.new("TextLabel", bgui)
+                        tLabel.Name = "NameLabel"; tLabel.Size = UDim2.new(1, 0, 1, 0); tLabel.BackgroundTransparency = 1; tLabel.TextColor3 = Color3.fromRGB(255, 60, 60)
+                        tLabel.TextStrokeTransparency = 0.2; tLabel.TextStrokeColor3 = Color3.new(0, 0, 0); tLabel.Font = Enum.Font.GothamBold; tLabel.TextSize = 12; tLabel.RichText = true
+                        ActiveESPs[p].Billboard = bgui
+                    end
+                    
+                    if not ActiveESPs[p].Highlight or ActiveESPs[p].Highlight.Adornee ~= tChar or not ActiveESPs[p].Highlight.Parent then
+                        if ActiveESPs[p].Highlight then ActiveESPs[p].Highlight:Destroy() end
+                        local hl = Instance.new("Highlight")
+                        hl.Adornee = tChar; hl.FillColor = Color3.fromRGB(255, 60, 60); hl.FillTransparency = 0.6; hl.OutlineColor = Color3.new(1, 1, 1); hl.OutlineTransparency = 0.1
+                        hl.Parent = guiParent
+                        ActiveESPs[p].Highlight = hl
+                    end
+                    
+                    local myChar = player.Character; local myRoot = getUniversalRoot(myChar)
+                    if myRoot then
+                        local dist = math.floor((myRoot.Position - espPart.Position).Magnitude)
+                        ActiveESPs[p].Billboard.NameLabel.Text = p.DisplayName .. '\n<font color="#00FFFF">[' .. dist .. 'm]</font>'
+                    else
+                        ActiveESPs[p].Billboard.NameLabel.Text = p.DisplayName
+                    end
+                else
+                    if ActiveESPs[p] then 
+                        if ActiveESPs[p].Billboard then ActiveESPs[p].Billboard:Destroy() end
+                        if ActiveESPs[p].Highlight then ActiveESPs[p].Highlight:Destroy() end
+                        ActiveESPs[p] = nil 
+                    end
+                end
+            end)
+        end
+    end
+    
+    for p, tbl in pairs(ActiveESPs) do
+        if not Players:FindFirstChild(p.Name) then 
+            if tbl.Billboard then tbl.Billboard:Destroy() end; if tbl.Highlight then tbl.Highlight:Destroy() end; ActiveESPs[p] = nil 
+        end
+    end
+end
+
+task.spawn(function()
+    while task.wait(0.1) do
+        updateESP_Hitbox()
+    end
+end)
+
+-- ==========================================
+-- VÒNG LẶP VẬT LÝ & CHUYỂN ĐỘNG
+-- ==========================================
+RunService.Stepped:Connect(function()
+    local char = player.Character
+    if char and (State.Noclip or (autoTpPlayerEnabled and wasHorizontalTp)) then
+        for _, p in ipairs(char:GetDescendants()) do
+            if p:IsA("BasePart") and p.CanCollide then p.CanCollide = false end
+        end
+    end
+end)
+
+RunService.RenderStepped:Connect(function(deltaTime)
+    local char = player.Character
+    if not char then return end
+    
+    local root = getUniversalRoot(char)
+    local hum = char:FindFirstChildOfClass("Humanoid")
+    
+    if hum and root then
+        if not State.Fly then 
+            if State.Speed and hum.MoveDirection.Magnitude > 0 then
+                local speedMultiplier = State.SpeedValue / 50 
+                root.CFrame = root.CFrame + (hum.MoveDirection * (speedMultiplier * 60 * deltaTime))
+            end
+
+            if State.AutoDash and hum.MoveDirection.Magnitude > 0 then
+                root.CFrame = root.CFrame + (hum.MoveDirection * (State.DashSpeed / 10))
+            end
+        end
+        
+        if State.SpinBot then 
+            root.CFrame = root.CFrame * CFrame.Angles(0, math.rad(State.SpinSpeed), 0) 
+        end
+        
+        if State.Noclip and hum.MoveDirection.Magnitude == 0 then
+            root.AssemblyLinearVelocity = Vector3.new(0, root.AssemblyLinearVelocity.Y, 0)
+        end
+    end
+end)
+
+RunService.Heartbeat:Connect(function()
+    if autoTpPlayerEnabled and targetTpPlayer then
+        teleportToSelectedPlayer()
+    end
+
+    if spectatePlayerEnabled and targetTpPlayer and targetTpPlayer.Character then
+        local cam = workspace.CurrentCamera
+        local targetHum = targetTpPlayer.Character:FindFirstChildOfClass("Humanoid") or getUniversalRoot(targetTpPlayer.Character)
+        if cam and targetHum and cam.CameraSubject ~= targetHum then
+            cam.CameraSubject = targetHum
+        end
+    end
+    
+    local char = player.Character
+    if not char then return end
+    local root = getUniversalRoot(char)
+    local hum = char:FindFirstChildOfClass("Humanoid")
+    
+    if hum then
+        if State.LockPosition and root then root.Anchored = true end
+        
+        if State.Jump then hum.UseJumpPower = true; hum.JumpPower = State.JumpValue end
+        
+        if State.Fly and root then
+            hum.PlatformStand = true
+            local bv = root:FindFirstChild("FlyBodyVelocity")
+            if not bv then
+                bv = Instance.new("BodyVelocity")
+                bv.Name = "FlyBodyVelocity"
+                bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+                bv.Velocity = Vector3.zero
+                bv.Parent = root
+            end
+            
+            local bg = root:FindFirstChild("FlyBodyGyro")
+            if not bg then
+                bg = Instance.new("BodyGyro")
+                bg.Name = "FlyBodyGyro"
+                bg.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
+                bg.P = 10000
+                bg.D = 100
+                bg.Parent = root
+            end
+            
+            local cam = workspace.CurrentCamera
+            bg.CFrame = cam.CFrame
+            
+            local moveDir = hum.MoveDirection
+            if moveDir.Magnitude > 0 then
+                local camLook = cam.CFrame.LookVector
+                local camRight = cam.CFrame.RightVector
+                
+                local flatLook = Vector3.new(camLook.X, 0, camLook.Z)
+                local flatRight = Vector3.new(camRight.X, 0, camRight.Z)
+                
+                local forwardUnit = flatLook.Magnitude > 0.001 and flatLook.Unit or Vector3.zero
+                local rightUnit = flatRight.Magnitude > 0.001 and flatRight.Unit or Vector3.zero
+                
+                local dotForward = moveDir:Dot(forwardUnit)
+                local dotRight = moveDir:Dot(rightUnit)
+                
+                local flyDir = (camLook * dotForward) + (rightUnit * dotRight)
+                
+                if flyDir.Magnitude > 0.001 then
+                    bv.Velocity = flyDir.Unit * State.FlySpeed
+                else
+                    bv.Velocity = Vector3.zero
+                end
+            else
+                bv.Velocity = Vector3.zero
+            end
+        else
+            if root and root:FindFirstChild("FlyBodyVelocity") then root.FlyBodyVelocity:Destroy() end
+            if root and root:FindFirstChild("FlyBodyGyro") then root.FlyBodyGyro:Destroy() end
+            if not State.AntiStun and not (autoTpPlayerEnabled and wasHorizontalTp) then
+                hum.PlatformStand = false
+            end
+        end
+
+        if State.AntiStun then 
+            hum:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
+            hum:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, false)
+            
+            local currentState = hum:GetState()
+            if currentState == Enum.HumanoidStateType.FallingDown or currentState == Enum.HumanoidStateType.Ragdoll then 
+                hum:ChangeState(Enum.HumanoidStateType.GettingUp)
+            end
+            
+            if root then
+                local currentVel = root.AssemblyLinearVelocity
+                local horizontalVel = Vector3.new(currentVel.X, 0, currentVel.Z)
+                if horizontalVel.Magnitude > 75 then
+                    root.AssemblyLinearVelocity = Vector3.new(0, currentVel.Y, 0) 
+                end
+            end
+        end
+
+        if root then
+            local light = root:FindFirstChild("PlayerPointLight")
+            if State.PlayerLight then 
+                if not light then light = Instance.new("PointLight", root); light.Name = "PlayerPointLight"; light.Shadows = false end 
+                light.Brightness = State.LightBrightness; light.Range = State.LightRange
+                light.Color = PlayerLightColors[State.LightColorIdx].Value
+            else 
+                if light then light:Destroy() end 
+            end
+        end
+    end
+    
+    if State.Reach then
+        local tool = char:FindFirstChildOfClass("Tool")
+        if tool then
+            local handle = tool:FindFirstChild("Handle")
+            if handle then
+                if not originalToolSizes[tool] then originalToolSizes[tool] = handle.Size end
+                handle.Size = Vector3.new(State.ReachSize, State.ReachSize, State.ReachSize)
+                handle.Massless = true
+                handle.CanCollide = false
+                handle.Transparency = 0.8
+            end
+        end
+    else
+        if next(originalToolSizes) then
+            for t, origSize in pairs(originalToolSizes) do
+                if t and t.Parent and t:FindFirstChild("Handle") then
+                    t.Handle.Size = origSize
+                    t.Handle.Massless = false
+                    t.Handle.Transparency = 0
+                end
+            end
+            originalToolSizes = {}
+        end
+    end
+end)
