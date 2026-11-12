@@ -1,5 +1,5 @@
 -- ==========================================
--- MENU VIP PRO V1.13.4 (FIXED AIR WALK + UNIVERSAL ESP + CLEANED TAB 2)
+-- MENU VIP PRO V1.13.5 (FIXED ESP RED BOX + LONG RANGE TP + CAMERA SPEED SYNC)
 -- ==========================================
 repeat task.wait() until game:IsLoaded()
 
@@ -345,6 +345,18 @@ local function getUniversalRoot(char)
         or char:FindFirstChildWhichIsA("BasePart")
 end
 
+-- Lấy CFrame chuẩn của nhân vật ngay cả khi ở xa > 1000m (StreamingEnabled)
+local function getCharacterCFrame(char)
+    if not char then return nil end
+    local root = getUniversalRoot(char)
+    if root then return root.CFrame end
+    if char:IsA("Model") then
+        local ok, cf = pcall(function() return char:GetPivot() end)
+        if ok and cf then return cf end
+    end
+    return nil
+end
+
 local function createDivider(parent, text)
     local dFrame = Instance.new("Frame", parent)
     dFrame.Size = UDim2.new(0.92, 0, 0, 15)
@@ -565,14 +577,14 @@ task.spawn(function()
         )
         local execTime = math.floor(workspace.DistributedGameTime); local hours = math.floor(execTime / 3600); local mins = math.floor((execTime % 3600) / 60); local secs = execTime % 60
         extraInfoLabel.Text = string.format(
-            "<font color='#FF00FF'>Thời gian chơi:</font> %02d:%02d:%02d\n<font color='#FF00FF'>Giờ hệ thống:</font> %s\n<font color='#FF00FF'>Phiên bản:</font> VIP PRO MAX V1.13.4",
+            "<font color='#FF00FF'>Thời gian chơi:</font> %02d:%02d:%02d\n<font color='#FF00FF'>Giờ hệ thống:</font> %s\n<font color='#FF00FF'>Phiên bản:</font> VIP PRO MAX V1.13.5",
             hours, mins, secs, os.date("%H:%M:%S")
         )
     end
 end)
 
 -- ==========================================
--- [TAB 2: TÍNH NĂNG (ĐÃ SỬA AIR WALK & XOÁ NHÀO LỘN/CẦU VỒNG)]
+-- [TAB 2: TÍNH NĂNG]
 -- ==========================================
 createToggle(page2, "🛡️ Chống ngã & Chống văng xa", "AntiStun")
 createToggle(page2, "🔒 Khóa vị trí", "LockPosition", function(v) if not v and player.Character then local r = getUniversalRoot(player.Character); if r then r.Anchored = false end end end)
@@ -624,7 +636,6 @@ createToggle(page2, "🔴 ESP người chơi", "ESP")
 -- === TÍNH NĂNG MỞ RỘNG (TAB 2) ===
 createDivider(page2, "TÍNH NĂNG MỞ RỘNG")
 
--- Đi bộ trên không (Air Walk - Đã khóa cố định độ cao Y không bị tự trôi lên trời)
 local airWalkPart = nil
 local airWalkConn = nil
 local airWalkY = nil
@@ -672,7 +683,6 @@ createToggle(page2, "☁️ Đi bộ trên không (Air Walk)", "AirWalk", functi
                 if airWalkY == nil then
                     airWalkY = r.Position.Y - offset
                 end
-                -- Chỉ nâng bậc sàn lên khi người chơi chủ động Nhảy lên cao hơn mặt sàn
                 if h.Jump and (r.Position.Y - offset) > airWalkY + 0.5 then
                     airWalkY = r.Position.Y - offset
                 end
@@ -686,7 +696,6 @@ createToggle(page2, "☁️ Đi bộ trên không (Air Walk)", "AirWalk", functi
     end
 end)
 
--- Gậy Click TP
 createButton(page2, "🪄 GẬY CLICK TP", Theme.Brand, function()
     local backpack = player:FindFirstChildOfClass("Backpack")
     if not backpack then return end
@@ -712,7 +721,6 @@ createButton(page2, "🪄 GẬY CLICK TP", Theme.Brand, function()
     tool.Parent = backpack
 end)
 
--- Cặp nút: Mở Khóa Zoom Cam & Tạo Phân Thân
 createDualButtons(
     page2,
     "🔭 MỞ KHÓA ZOOM CAM",
@@ -744,7 +752,7 @@ createDualButtons(
 )
 
 -- ==========================================
--- [TAB 3: PLAYER]
+-- [TAB 3: PLAYER (ĐÃ SỬA CHẠY NHANH ĐỒNG BỘ CAMERA)]
 -- ==========================================
 createToggle(page3, "🕊️ bay trên bầu trời", "Fly", function(v)
     local char = player.Character
@@ -775,8 +783,27 @@ createToggle(page3, "🕊️ bay trên bầu trời", "Fly", function(v)
 end)
 createSlider(page3, "Tốc độ bay", 10, 1000, "FlySpeed")
 
-createToggle(page3, "🏃 Chạy nhanh", "Speed")
-createSlider(page3, "Tốc độ chạy", 1, 1000, "SpeedValue")
+local defaultWalkSpeed = 16
+createToggle(page3, "🏃 Chạy nhanh", "Speed", function(v)
+    local char = player.Character
+    local hum = char and char:FindFirstChildOfClass("Humanoid")
+    if hum then
+        if v then
+            if hum.WalkSpeed ~= State.SpeedValue then
+                defaultWalkSpeed = hum.WalkSpeed
+            end
+            hum.WalkSpeed = State.SpeedValue
+        else
+            hum.WalkSpeed = defaultWalkSpeed
+        end
+    end
+end)
+createSlider(page3, "Tốc độ chạy", 1, 1000, "SpeedValue", function(val)
+    if State.Speed and player.Character then
+        local hum = player.Character:FindFirstChildOfClass("Humanoid")
+        if hum then hum.WalkSpeed = val end
+    end
+end)
 
 local defaultJumpPower = 50
 createToggle(page3, "🦘 Nhảy cao", "Jump", function(v) 
@@ -801,7 +828,7 @@ createSlider(page3, "Độ sáng", 0, 5, "LightBrightness")
 createCycleBtn(page3, "🎨 Đổi màu:", PlayerLightColors, "LightColorIdx")
 
 -- ==========================================
--- [TAB 4: TIỆN ÍCH (TRỜI SÁNG/TỐI + FLY V1, V2, V3 + TP PLAYS)]
+-- [TAB 4: TIỆN ÍCH]
 -- ==========================================
 createToggle(page4, "💾 Lưu Cài Đặt", "AutoSave", function(v) 
     if v then saveConfig(); MakeToast("Đã Bật", "Đã lưu cấu hình hiện tại!", Theme.AccentOn)
@@ -864,7 +891,6 @@ local function rejoinServer()
     if #Players:GetPlayers() <= 1 then player:Kick("\nĐang vào lại server..."); task.wait(); TeleportService:Teleport(game.PlaceId, player) else TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, player) end
 end
 
--- Nút Trời Sáng & Trời Tối
 createDualButtons(
     page4,
     "☀️ TRỜI SÁNG",
@@ -888,7 +914,6 @@ createDualButtons(
 createDualButtons(page4, "🔄 VÀO LẠI SV", Theme.AccentOn, rejoinServer, "🎲 ĐỔI SV NGẪU NHIÊN", Theme.Brand, function() hopServer("Desc") end)
 createDualButtons(page4, "📉 ĐỔI SV ÍT NGƯỜI", Color3.fromRGB(52, 152, 219), function() hopServer("Asc") end, "📈 ĐỔI SV NHIỀU NGƯỜI", Color3.fromRGB(231, 76, 60), function() hopServer("Desc") end)
 
--- Lệnh Admin & TP SAVE
 createDualButtons(
     page4,
     "💻 LỆNH ADMIN",
@@ -902,13 +927,11 @@ createDualButtons(
     Theme.Brand,
     function()
         pcall(function()
-            --menu save vị trí 
             loadstring(game:HttpGet("https://raw.githubusercontent.com/haudeptrai2k6/menu-hack-vip13/refs/heads/main/menu-save.lua"))()
         end)
     end
 )
 
--- Hàng FLY V1 & FLY V2
 createDualButtons(
     page4,
     "🕊️ FLY V1",
@@ -922,20 +945,17 @@ createDualButtons(
     Theme.Brand,
     function()
         pcall(function()
-            --menu fly v2
             loadstring(game:HttpGet("https://raw.githubusercontent.com/XNEOFF/FlyGuiV3/main/FlyGuiV3.txt"))()
         end)
     end
 )
 
--- Hàng FLY V3 & TP PLAYS (người chơi)
 createDualButtons(
     page4,
     "🕊️ FLY V3",
     Theme.Brand,
     function()
         pcall(function()
-            --menu fly v3
             loadstring(game:HttpGet("https://raw.githubusercontent.com/haudeptrai2k6/menu-hack-vip/refs/heads/main/menu-fly.lua"))()
         end)
     end,
@@ -943,7 +963,6 @@ createDualButtons(
     Theme.AccentOn,
     function()
         pcall(function()
-            --menu players người chơi 
             loadstring(game:HttpGet("https://raw.githubusercontent.com/haudeptrai2k6/hack.lua/refs/heads/main/menu-tp-play.lua"))()
         end)
     end
@@ -1041,7 +1060,7 @@ end
 renderSavedTps()
 
 -- ==========================================
--- [TAB 7: TP NGƯỜI CHƠI (TƯ THẾ NẰM NGANG KHI TRÊN ĐẦU / DƯỚI CHÂN)]
+-- [TAB 7: TP NGƯỜI CHƠI (HỖ TRỢ TP XA > 1000M XUYÊN STREAMING)]
 -- ==========================================
 local targetTpPlayer = nil
 local autoTpPlayerEnabled = false
@@ -1261,9 +1280,11 @@ local function updateTargetLabel()
     end
 end
 
-local function teleportToSelectedPlayer()
+-- Hàm TP đến người chơi hỗ trợ khoảng cách xa > 1000m (StreamingEnabled)
+local lastStreamRequest = 0
+local function teleportToSelectedPlayer(isManualClick)
     if not targetTpPlayer or not targetTpPlayer.Character then return false end
-    local targetRoot = getUniversalRoot(targetTpPlayer.Character)
+    local targetCF = getCharacterCFrame(targetTpPlayer.Character)
     local targetHum = targetTpPlayer.Character:FindFirstChildOfClass("Humanoid")
     
     local myChar = player.Character
@@ -1271,12 +1292,24 @@ local function teleportToSelectedPlayer()
     local myRoot = getUniversalRoot(myChar)
     local myHum = myChar:FindFirstChildOfClass("Humanoid")
     
-    if targetRoot and myRoot and (not targetHum or targetHum.Health > 0) and (not myHum or myHum.Health > 0) then
+    if targetCF and myRoot and (not targetHum or targetHum.Health > 0) and (not myHum or myHum.Health > 0) then
         local mode = TpPositions[State.TpPositionIdx] or TpPositions[1]
-        
-        local targetPos = targetRoot.Position
-        local _, targetYaw, _ = targetRoot.CFrame:ToEulerAnglesYXZ()
+        local targetPos = targetCF.Position
+        local dist = (myRoot.Position - targetPos).Magnitude
+
+        -- Nếu mục tiêu ở quá xa (> 250m) hoặc chưa tải xong BasePart, yêu cầu tải vùng bản đồ xung quanh họ
+        if (dist > 250 or not getUniversalRoot(targetTpPlayer.Character)) and (tick() - lastStreamRequest > 0.6) then
+            lastStreamRequest = tick()
+            task.spawn(function()
+                pcall(function()
+                    player:RequestStreamAroundAsync(targetPos, 3)
+                end)
+            end)
+        end
+
+        local _, targetYaw, _ = targetCF:ToEulerAnglesYXZ()
         local baseCFrame = CFrame.new(targetPos) * CFrame.Angles(0, targetYaw, 0)
+        local finalCFrame = baseCFrame * mode.GetOffset(State.TpDistance)
         
         if mode.IsHorizontal then
             if myHum then myHum.PlatformStand = true end
@@ -1290,9 +1323,27 @@ local function teleportToSelectedPlayer()
             restoreNormalPosture()
         end
         
-        myRoot.CFrame = baseCFrame * mode.GetOffset(State.TpDistance)
+        myRoot.CFrame = finalCFrame
         myRoot.AssemblyLinearVelocity = Vector3.zero
         myRoot.AssemblyAngularVelocity = Vector3.zero
+
+        -- Nếu bấm "TP 1 LẦN" từ khoảng cách xa (> 500m), giữ nhân vật và bồi lại tọa độ sau khi stream xong
+        if isManualClick and dist > 500 then
+            task.spawn(function()
+                for _ = 1, 6 do
+                    task.wait(0.1)
+                    if not targetTpPlayer or not targetTpPlayer.Character then break end
+                    local updatedCF = getCharacterCFrame(targetTpPlayer.Character)
+                    local curRoot = getUniversalRoot(player.Character)
+                    if updatedCF and curRoot then
+                        local _, yaw, _ = updatedCF:ToEulerAnglesYXZ()
+                        local bCF = CFrame.new(updatedCF.Position) * CFrame.Angles(0, yaw, 0)
+                        curRoot.CFrame = bCF * mode.GetOffset(State.TpDistance)
+                        curRoot.AssemblyLinearVelocity = Vector3.zero
+                    end
+                end
+            end)
+        end
         return true
     end
     return false
@@ -1371,7 +1422,7 @@ tpOnceBtn.MouseButton1Click:Connect(function()
         MakeToast("⚠️ Chưa chọn ai", "Hãy bấm chọn 1 người chơi ở danh sách dưới!", Theme.AccentOff)
         return
     end
-    if teleportToSelectedPlayer() then
+    if teleportToSelectedPlayer(true) then
         local modeName = (TpPositions[State.TpPositionIdx] or TpPositions[1]).Name
         MakeToast("Dịch Chuyển", "Đến " .. targetTpPlayer.DisplayName .. " (" .. modeName .. ")", Theme.Brand)
     else
@@ -1819,25 +1870,15 @@ task.spawn(function()
 end)
 
 -- ==========================================
--- [ESP ĐA NĂNG MỌI GAME (XUYÊN STREAMING / KHÔNG GIỚI HẠN KHOẢNG CÁCH)]
+-- [ESP GỌN ĐẸP (KHÔNG HỘP ĐỎ) + XUYÊN STREAMING]
 -- ==========================================
 local function clearSingleESP(p)
     if ActiveESPs[p] then
         if ActiveESPs[p].Billboard then ActiveESPs[p].Billboard:Destroy() end
         if ActiveESPs[p].Highlight then ActiveESPs[p].Highlight:Destroy() end
-        if ActiveESPs[p].Box then ActiveESPs[p].Box:Destroy() end
         if ActiveESPs[p].Anchor then ActiveESPs[p].Anchor:Destroy() end
         ActiveESPs[p] = nil
     end
-end
-
-local function getCharacterWorldPos(char, espPart)
-    if espPart then return espPart.Position end
-    if char and char:IsA("Model") then
-        local ok, cf = pcall(function() return char:GetPivot() end)
-        if ok and cf then return cf.Position end
-    end
-    return nil
 end
 
 local function updateESP_Hitbox()
@@ -1890,16 +1931,16 @@ local function updateESP_Hitbox()
                 end
 
                 local espPart = getUniversalRoot(tChar)
-                local targetPos = getCharacterWorldPos(tChar, espPart)
-                if not targetPos then
+                local targetCF = getCharacterCFrame(tChar)
+                if not targetCF then
                     clearSingleESP(p)
                     return
                 end
+                local targetPos = targetCF.Position
 
                 if not ActiveESPs[p] then ActiveESPs[p] = {} end
                 local data = ActiveESPs[p]
 
-                -- Tạo Part neo vô hình để hiển thị ESP cả khi game bật StreamingEnabled ở rất xa
                 if not espPart then
                     if not data.Anchor or not data.Anchor.Parent then
                         local anchor = Instance.new("Part")
@@ -1920,11 +1961,10 @@ local function updateESP_Hitbox()
                     data.Anchor = nil
                 end
 
-                -- 1. BillboardGui (Không giới hạn khoảng cách MaxDistance = math.huge)
                 if not data.Billboard or not data.Billboard.Parent then
                     local bgui = Instance.new("BillboardGui")
-                    bgui.Name = "UniversalESP_" .. p.Name
-                    bgui.Size = UDim2.new(0, 220, 0, 55)
+                    bgui.Name = "MobileESP_" .. p.Name
+                    bgui.Size = UDim2.new(0, 200, 0, 50)
                     bgui.StudsOffset = Vector3.new(0, 3.5, 0)
                     bgui.AlwaysOnTop = true
                     bgui.MaxDistance = math.huge
@@ -1935,8 +1975,8 @@ local function updateESP_Hitbox()
                     tLabel.Name = "NameLabel"
                     tLabel.Size = UDim2.new(1, 0, 1, 0)
                     tLabel.BackgroundTransparency = 1
-                    tLabel.TextColor3 = Color3.fromRGB(255, 65, 65)
-                    tLabel.TextStrokeTransparency = 0
+                    tLabel.TextColor3 = Color3.fromRGB(255, 60, 60)
+                    tLabel.TextStrokeTransparency = 0.15
                     tLabel.TextStrokeColor3 = Color3.new(0, 0, 0)
                     tLabel.Font = Enum.Font.GothamBold
                     tLabel.TextSize = 12
@@ -1945,21 +1985,6 @@ local function updateESP_Hitbox()
                 end
                 data.Billboard.Adornee = espPart
 
-                -- 2. BoxHandleAdornment xuyên tường (Không bị giới hạn 31 người như Highlight)
-                if not data.Box or not data.Box.Parent then
-                    local box = Instance.new("BoxHandleAdornment")
-                    box.Name = "ESPBox_" .. p.Name
-                    box.Size = Vector3.new(4, 5.5, 2)
-                    box.Color3 = Color3.fromRGB(255, 50, 50)
-                    box.Transparency = 0.55
-                    box.AlwaysOnTop = true
-                    box.ZIndex = 5
-                    box.Parent = guiParent
-                    data.Box = box
-                end
-                data.Box.Adornee = espPart
-
-                -- 3. Highlight viền nhân vật
                 if not data.Highlight or not data.Highlight.Parent then
                     local hl = Instance.new("Highlight")
                     hl.Name = "ESPHighlight_" .. p.Name
@@ -1973,14 +1998,11 @@ local function updateESP_Hitbox()
                 end
                 data.Highlight.Adornee = tChar
 
-                -- Cập nhật tên, máu và khoảng cách
-                local hum = tChar:FindFirstChildOfClass("Humanoid")
-                local hpText = hum and string.format(" <font color='#2ECC71'>[%d HP]</font>", math.floor(hum.Health)) or ""
                 if myPos then
                     local dist = math.floor((myPos - targetPos).Magnitude)
-                    data.Billboard.NameLabel.Text = string.format("%s%s\n<font color='#00FFFF'>[%dm]</font>", p.DisplayName, hpText, dist)
+                    data.Billboard.NameLabel.Text = p.DisplayName .. '\n<font color="#00FFFF">[' .. dist .. 'm]</font>'
                 else
-                    data.Billboard.NameLabel.Text = p.DisplayName .. hpText
+                    data.Billboard.NameLabel.Text = p.DisplayName
                 end
             end)
         end
@@ -2000,7 +2022,7 @@ task.spawn(function()
 end)
 
 -- ==========================================
--- VÒNG LẶP VẬT LÝ & CHUYỂN ĐỘNG
+-- VÒNG LẶP VẬT LÝ & CHUYỂN ĐỘNG (ĐỒNG BỘ CAMERA KHÔNG TRỄ)
 -- ==========================================
 RunService.Stepped:Connect(function()
     local char = player.Character
@@ -2011,38 +2033,9 @@ RunService.Stepped:Connect(function()
     end
 end)
 
-RunService.RenderStepped:Connect(function(deltaTime)
-    local char = player.Character
-    if not char then return end
-    
-    local root = getUniversalRoot(char)
-    local hum = char:FindFirstChildOfClass("Humanoid")
-    
-    if hum and root then
-        if not State.Fly then 
-            if State.Speed and hum.MoveDirection.Magnitude > 0 then
-                local speedMultiplier = State.SpeedValue / 50 
-                root.CFrame = root.CFrame + (hum.MoveDirection * (speedMultiplier * 60 * deltaTime))
-            end
-
-            if State.AutoDash and hum.MoveDirection.Magnitude > 0 then
-                root.CFrame = root.CFrame + (hum.MoveDirection * (State.DashSpeed / 10))
-            end
-        end
-        
-        if State.SpinBot then 
-            root.CFrame = root.CFrame * CFrame.Angles(0, math.rad(State.SpinSpeed), 0) 
-        end
-        
-        if State.Noclip and hum.MoveDirection.Magnitude == 0 then
-            root.AssemblyLinearVelocity = Vector3.new(0, root.AssemblyLinearVelocity.Y, 0)
-        end
-    end
-end)
-
-RunService.Heartbeat:Connect(function()
+RunService.Heartbeat:Connect(function(deltaTime)
     if autoTpPlayerEnabled and targetTpPlayer then
-        teleportToSelectedPlayer()
+        teleportToSelectedPlayer(false)
     end
 
     if spectatePlayerEnabled and targetTpPlayer and targetTpPlayer.Character then
@@ -2058,12 +2051,39 @@ RunService.Heartbeat:Connect(function()
     local root = getUniversalRoot(char)
     local hum = char:FindFirstChildOfClass("Humanoid")
     
-    if hum then
-        if State.LockPosition and root then root.Anchored = true end
+    if hum and root then
+        if State.LockPosition then root.Anchored = true end
         
         if State.Jump then hum.UseJumpPower = true; hum.JumpPower = State.JumpValue end
+
+        -- Chạy nhanh & Lướt xử lý trong bước vật lý Heartbeat + vận tốc để Camera luôn bám sát 100%
+        if not State.Fly and not autoTpPlayerEnabled then
+            if State.Speed then
+                hum.WalkSpeed = State.SpeedValue
+                if hum.MoveDirection.Magnitude > 0 then
+                    local curVel = root.AssemblyLinearVelocity
+                    local targetVel = hum.MoveDirection * State.SpeedValue
+                    root.AssemblyLinearVelocity = Vector3.new(targetVel.X, curVel.Y, targetVel.Z)
+                end
+            end
+
+            if State.AutoDash and hum.MoveDirection.Magnitude > 0 then
+                local dashSpeedStuds = State.DashSpeed * 8
+                local curVel = root.AssemblyLinearVelocity
+                local dashVel = hum.MoveDirection * dashSpeedStuds
+                root.AssemblyLinearVelocity = Vector3.new(dashVel.X, curVel.Y, dashVel.Z)
+            end
+        end
+
+        if State.SpinBot then 
+            root.CFrame = root.CFrame * CFrame.Angles(0, math.rad(State.SpinSpeed), 0) 
+        end
         
-        if State.Fly and root then
+        if State.Noclip and hum.MoveDirection.Magnitude == 0 then
+            root.AssemblyLinearVelocity = Vector3.new(0, root.AssemblyLinearVelocity.Y, 0)
+        end
+        
+        if State.Fly then
             hum.PlatformStand = true
             local bv = root:FindFirstChild("FlyBodyVelocity")
             if not bv then
@@ -2112,8 +2132,8 @@ RunService.Heartbeat:Connect(function()
                 bv.Velocity = Vector3.zero
             end
         else
-            if root and root:FindFirstChild("FlyBodyVelocity") then root.FlyBodyVelocity:Destroy() end
-            if root and root:FindFirstChild("FlyBodyGyro") then root.FlyBodyGyro:Destroy() end
+            if root:FindFirstChild("FlyBodyVelocity") then root.FlyBodyVelocity:Destroy() end
+            if root:FindFirstChild("FlyBodyGyro") then root.FlyBodyGyro:Destroy() end
             if not State.AntiStun and not (autoTpPlayerEnabled and wasHorizontalTp) then
                 hum.PlatformStand = false
             end
@@ -2128,7 +2148,7 @@ RunService.Heartbeat:Connect(function()
                 hum:ChangeState(Enum.HumanoidStateType.GettingUp)
             end
             
-            if root then
+            if not State.Speed and not State.AutoDash then
                 local currentVel = root.AssemblyLinearVelocity
                 local horizontalVel = Vector3.new(currentVel.X, 0, currentVel.Z)
                 if horizontalVel.Magnitude > 75 then
@@ -2137,15 +2157,13 @@ RunService.Heartbeat:Connect(function()
             end
         end
 
-        if root then
-            local light = root:FindFirstChild("PlayerPointLight")
-            if State.PlayerLight then 
-                if not light then light = Instance.new("PointLight", root); light.Name = "PlayerPointLight"; light.Shadows = false end 
-                light.Brightness = State.LightBrightness; light.Range = State.LightRange
-                light.Color = PlayerLightColors[State.LightColorIdx].Value
-            else 
-                if light then light:Destroy() end 
-            end
+        local light = root:FindFirstChild("PlayerPointLight")
+        if State.PlayerLight then 
+            if not light then light = Instance.new("PointLight", root); light.Name = "PlayerPointLight"; light.Shadows = false end 
+            light.Brightness = State.LightBrightness; light.Range = State.LightRange
+            light.Color = PlayerLightColors[State.LightColorIdx].Value
+        else 
+            if light then light:Destroy() end 
         end
     end
     
