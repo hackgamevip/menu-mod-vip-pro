@@ -1654,11 +1654,10 @@ end)
 
 
 -- ==========================================
--- [TAB 9: CẤU HÌNH (LIVE MONITOR + ANTI-FREEZE + 5 TÍNH NĂNG MỚI)]
+-- [TAB 9: CẤU HÌNH (ĐÃ FIX LỖI XUNG ĐỘT & LIVE MONITOR)]
 -- ==========================================
 local Stats = game:GetService("Stats")
 
--- Tự động khởi tạo biến State mới (nếu chưa có trong bảng State ở đầu script)
 if State.DisableParticles == nil then State.DisableParticles = false end
 if State.DisablePostEffects == nil then State.DisablePostEffects = false end
 if State.HidePetsAccessories == nil then State.HidePetsAccessories = false end
@@ -1671,7 +1670,6 @@ local HiddenPlayersCache = {}
 local HiddenPetsCache = {}
 local Tab9Toggles = {}
 
--- Hàm bọc createToggle để nút "Siêu Khoai Tây" có thể bật đồng loạt các công tắc sang ON
 local function createTab9Toggle(parent, text, varName, callback)
     local frameItem = createToggle(parent, text, varName, callback)
     local btn = frameItem:FindFirstChildOfClass("TextButton")
@@ -1752,8 +1750,10 @@ task.spawn(function()
             local pingStr = "0 ms"
             local ramMB = 0
             pcall(function()
-                if Stats:FindFirstChild("Network") and Stats.Network:FindFirstChild("ServerStatsItem") then
-                    pingStr = Stats.Network.ServerStatsItem["Data Ping"]:GetValueString():match("%d+") .. " ms"
+                if Stats and Stats:FindFirstChild("Network") and Stats.Network:FindFirstChild("ServerStatsItem") then
+                    local rawPing = Stats.Network.ServerStatsItem["Data Ping"]:GetValueString()
+                    local numPing = rawPing and rawPing:match("%d+")
+                    pingStr = (numPing or tostring(math.floor(player:GetNetworkPing() * 1000))) .. " ms"
                 else
                     pingStr = tostring(math.floor(player:GetNetworkPing() * 1000)) .. " ms"
                 end
@@ -1782,13 +1782,22 @@ local function isPlayerCharDescendant(obj)
 end
 
 local function isPetOrAccessory(obj)
-    if obj:IsA("Accessory") or obj:IsA("Hat") then return true end
+    -- Không ẩn vũ khí (Tool) đang cầm
+    if obj:FindFirstAncestorWhichIsA("Tool") then return false end
+    if obj:IsA("Accessory") or obj:IsA("Hat") or obj:FindFirstAncestorWhichIsA("Accessory") or obj:FindFirstAncestorWhichIsA("Hat") then
+        return true
+    end
+    -- Nếu nằm trong nhân vật người chơi nhưng không phải Accessory/Hat thì giữ nguyên (tránh ẩn nhầm tay chân)
+    local isChar, _ = isPlayerCharDescendant(obj)
+    if isChar then return false end
+
     local parent = obj.Parent
     while parent and parent ~= workspace and parent ~= game do
-        if parent:IsA("Accessory") or parent:IsA("Hat") then return true end
         local pName = string.lower(parent.Name)
-        if pName:find("pet") or pName:find("summon") or pName:find("minion") or pName:find("clone") or pName:find("companion") or pName:find("stand") or pName:find("aura") or pName:find("wing") then
-            return true
+        if pName ~= string.lower(player.Name .. "_clone") then
+            if pName:find("pet") or pName:find("summon") or pName:find("minion") or pName:find("companion") or pName:find("stand") or pName:find("aura") or pName:find("wing") then
+                return true
+            end
         end
         parent = parent.Parent
     end
@@ -1797,24 +1806,24 @@ end
 
 local function applyObjectOptimizations(obj)
     if not obj or not obj.Parent then return end
+    if obj.Name == "VipAirWalk" or obj.Name == "VipSpectateProxy" or string.find(obj.Name, "^ESPAnchor_") then return end
 
     if State.LowGfx then
         if obj:IsA("BasePart") and obj.Material ~= Enum.Material.SmoothPlastic then
-            if not OriginalGFX[obj] then OriginalGFX[obj] = {Material = obj.Material} end
+            if not OriginalGFX[obj] then OriginalGFX[obj] = {} end
+            if OriginalGFX[obj].Material == nil then OriginalGFX[obj].Material = obj.Material end
             obj.Material = Enum.Material.SmoothPlastic
         elseif (obj:IsA("Decal") or obj:IsA("Texture")) and obj.Transparency < 1 then
             local isChar, _ = isPlayerCharDescendant(obj)
             if not isChar then
-                if not OriginalGFX[obj] then OriginalGFX[obj] = {Transparency = obj.Transparency} end
+                if not OriginalGFX[obj] then OriginalGFX[obj] = {} end
+                if OriginalGFX[obj].Transparency == nil then OriginalGFX[obj].Transparency = obj.Transparency end
                 obj.Transparency = 1
             end
-        elseif (obj:IsA("ParticleEmitter") or obj:IsA("Trail") or obj:IsA("Beam") or obj:IsA("Fire") or obj:IsA("Smoke") or obj:IsA("Sparkles")) and obj.Enabled then
-            if not OriginalGFX[obj] then OriginalGFX[obj] = {Enabled = obj.Enabled} end
-            obj.Enabled = false
         end
     end
 
-    if State.DisableParticles then
+    if State.LowGfx or State.DisableParticles then
         if obj:IsA("Explosion") then
             obj.Visible = false
         elseif (obj:IsA("ParticleEmitter") or obj:IsA("Trail") or obj:IsA("Beam") or obj:IsA("Fire") or obj:IsA("Smoke") or obj:IsA("Sparkles")) and obj.Enabled then
@@ -1859,6 +1868,24 @@ workspace.DescendantAdded:Connect(function(obj)
     end
 end)
 
+local function restoreParticlesIfBothOff(ticketCheckFn)
+    if State.LowGfx or State.DisableParticles then return end
+    task.spawn(function()
+        local count = 0
+        for obj, enabledVal in pairs(OriginalParticles) do
+            if ticketCheckFn and not ticketCheckFn() then return end
+            pcall(function()
+                if obj and obj.Parent then obj.Enabled = enabledVal end
+            end)
+            count = count + 1
+            if count % 350 == 0 then task.wait() end
+        end
+        if not State.LowGfx and not State.DisableParticles then
+            OriginalParticles = {}
+        end
+    end)
+end
+
 local function cleanDebrisAndRAM(silent)
     local count = 0
     task.spawn(function()
@@ -1866,13 +1893,15 @@ local function cleanDebrisAndRAM(silent)
         for i, obj in ipairs(descendants) do
             if i % 400 == 0 then task.wait() end
             pcall(function()
-                if obj and obj.Parent and (not player.Character or not obj:IsDescendantOf(player.Character)) and (not obj.Parent:FindFirstChild("Humanoid")) then
-                    if obj:IsA("ParticleEmitter") or obj:IsA("Trail") or (obj:IsA("Decal") and obj.Name == "Blood") then
-                        obj:Destroy()
-                        count = count + 1
-                    elseif obj:IsA("BasePart") and not obj.Anchored and obj.CanCollide == false and obj.Size.Magnitude < 5 and not isPetOrAccessory(obj) then
-                        obj:Destroy()
-                        count = count + 1
+                if obj and obj.Parent and obj.Name ~= "VipAirWalk" and obj.Name ~= "VipSpectateProxy" and not string.find(obj.Name, "^ESPAnchor_") then
+                    if (not player.Character or not obj:IsDescendantOf(player.Character)) and (not obj.Parent:FindFirstChild("Humanoid")) then
+                        if obj:IsA("ParticleEmitter") or obj:IsA("Trail") or (obj:IsA("Decal") and obj.Name == "Blood") then
+                            obj:Destroy()
+                            count = count + 1
+                        elseif obj:IsA("BasePart") and not obj.Anchored and obj.CanCollide == false and obj.Size.Magnitude < 5 and not isPetOrAccessory(obj) then
+                            obj:Destroy()
+                            count = count + 1
+                        end
                     end
                 end
             end)
@@ -1961,6 +1990,7 @@ createTab9Toggle(page9, "📉 Giảm Lag (Xóa toàn bộ hiệu ứng)", "LowGf
             end
             if myTicket == lowGfxTicket then OriginalGFX = {} end
         end)
+        restoreParticlesIfBothOff(function() return myTicket == lowGfxTicket end)
     end
 end)
 
@@ -1978,18 +2008,7 @@ createTab9Toggle(page9, "💥 Tắt hiệu ứng chiêu thức & Hạt", "Disabl
             end
         end)
     else
-        task.spawn(function()
-            local count = 0
-            for obj, enabledVal in pairs(OriginalParticles) do
-                if myTicket ~= particleTicket then return end
-                pcall(function()
-                    if obj and obj.Parent then obj.Enabled = enabledVal end
-                end)
-                count = count + 1
-                if count % 350 == 0 then task.wait() end
-            end
-            if myTicket == particleTicket then OriginalParticles = {} end
-        end)
+        restoreParticlesIfBothOff(function() return myTicket == particleTicket end)
     end
 end)
 
