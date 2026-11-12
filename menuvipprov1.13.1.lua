@@ -468,7 +468,7 @@ local function createSlider(parent, text, min, max, varName, callback)
     local titleLabel = Instance.new("TextLabel", bg)
     titleLabel.Size = UDim2.new(0.7, 0, 0.45, 0); titleLabel.Position = UDim2.new(0.04, 0, 0.08, 0); titleLabel.BackgroundTransparency = 1; titleLabel.Text = text; titleLabel.TextColor3 = Theme.TextDim; titleLabel.Font = Enum.Font.GothamSemibold; titleLabel.TextSize = 11; titleLabel.TextXAlignment = Enum.TextXAlignment.Left; titleLabel.ZIndex = 10
     local valLabel = Instance.new("TextLabel", bg)
-    valLabel.Size = UDim2.new(0.25, 0, 0.45, 0); valLabel.Position = UDim2.new(0.71, 0, 0.08, 0); valLabel.BackgroundTransparency = 1; valLabel.Text = tostring(State[varName]); valLabel.TextColor3 = Theme.Brand; valLabel.Font = Enum.Font.GothamBold; valLabel.TextSize = 11; valLabel.TextXAlignment = Enum.TextXAlignment.Right; valLabel.ZIndex = 10
+    valLabel.Size = UDim2.new(0.25, 0, 0.45, 0); valLabel.Position = UDim2.new(0.71, 0, 0.08, 0); valLabel.BackgroundTransparency = 1; valLabel.Text = tostring(State[varName]); valLabel.TextColor3 = Theme.Brand; valLabel.Font = Enum.Font.GothamBold; titleLabel.TextSize = 11; valLabel.TextXAlignment = Enum.TextXAlignment.Right; valLabel.ZIndex = 10
     local track = Instance.new("Frame", bg)
     track.Size = UDim2.new(0.92, 0, 0.18, 0); track.Position = UDim2.new(0.04, 0, 0.64, 0); track.BackgroundColor3 = Theme.MainBg; track.ZIndex = 10
     Instance.new("UICorner", track).CornerRadius = UDim.new(1, 0)
@@ -676,7 +676,7 @@ createSlider(page3, "Độ sáng", 0, 5, "LightBrightness")
 createCycleBtn(page3, "🎨 Đổi màu:", PlayerLightColors, "LightColorIdx")
 
 -- ==========================================
--- [TAB 4: TIỆN ÍCH (THÊM TRỜI SÁNG/TỐI, TP SAVE V3 MỚI & TP PLAYS)]
+-- [TAB 4: TIỆN ÍCH (THÊM TRỜI SÁNG/TỐI, TP SAVE V3 MỚI & TP PLAYS & FLY V3)]
 -- ==========================================
 createToggle(page4, "💾 Lưu Cài Đặt", "AutoSave", function(v) 
     if v then saveConfig(); MakeToast("Đã Bật", "Đã lưu cấu hình hiện tại!", Theme.AccentOn)
@@ -778,31 +778,30 @@ createDualButtons(
     function()
         pcall(function()
             --menu save vị trí 
-loadstring(game:HttpGet("https://raw.githubusercontent.com/haudeptrai2k6/menu-hack-vip13/refs/heads/main/menu-save.lua"))()
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/haudeptrai2k6/menu-hack-vip13/refs/heads/main/menu-save.lua"))()
         end)
     end
 )
 
 createDualButtons(page4, "🕊️ FLY V1", Theme.Brand, function() pcall(function() loadstring("\108\111\97\100\115\116\114\105\110\103\40\103\97\109\101\58\72\116\116\112\71\101\116\40\40\39\104\116\116\112\115\58\47\47\103\105\115\116\46\103\105\116\104\117\98\117\115\101\114\99\111\110\116\101\110\116\46\99\111\109\47\109\101\111\122\111\110\101\89\84\47\98\102\48\51\55\100\102\102\57\102\48\97\55\48\48\49\55\51\48\52\100\100\100\54\55\102\100\99\100\51\55\48\47\114\97\119\47\101\49\52\101\55\52\102\52\50\53\98\48\54\48\100\102\53\50\51\51\52\51\99\102\51\48\98\55\56\55\48\55\52\101\98\51\99\53\100\50\47\97\114\99\101\117\115\37\50\53\50\48\120\37\50\53\50\48\102\108\121\37\50\53\50\48\50\37\50\53\50\48\111\98\102\108\117\99\97\116\111\114\39\41\44\116\114\117\101\41\41\40\41\10\10")() end) end, 
     "🕊️ FLY V3", Theme.Brand, function() pcall(function()
---menu fly v3
-loadstring(game:HttpGet("https://raw.githubusercontent.com/haudeptrai2k6/menu-hack-vip/refs/heads/main/menu-fly.lua"))()
-            end)
+        --menu fly v3
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/haudeptrai2k6/menu-hack-vip/refs/heads/main/menu-fly.lua"))()
     end)
-"📁 TP SAVE ",
-    Theme.Brand,
-    function()
-        pcall(function()
-            --menu save vị trí 
-loadstring(game:HttpGet("https://raw.githubusercontent.com/haudeptrai2k6/menu-hack-vip13/refs/heads/main/menu-save.lua"))()
-        end)
-    end
-)
--- Ô nút mới: TP PLAYS
+end)
+
+-- Ô nút: TP PLAYS
 createButton(page4, "🎯 TP PLAYS (người chơi)", Theme.AccentOn, function()
     pcall(function()
         --menu players người chơi 
-loadstring(game:HttpGet("https://raw.githubusercontent.com/haudeptrai2k6/hack.lua/refs/heads/main/menu-tp-play.lua"))()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/haudeptrai2k6/hack.lua/refs/heads/main/menu-tp-play.lua"))()
+    end)
+end)
+
+-- Ô nút mới: FLY V3 (Future of Fly V3 X)
+createButton(page4, "🕊️ FLY V3", Theme.Brand, function()
+    pcall(function()
+        loadstring(game:HttpGet("https://scriptblox.com/raw/Universal-Script-Future-of-Fly-V3-X-235903"))()
     end)
 end)
 
@@ -1642,313 +1641,3 @@ task.spawn(function()
                     prompt.HoldDuration = 0; prompt.MaxActivationDistance = 25 
                 else table.remove(cachedPrompts, i) end
             end
-        else
-            if next(originalPrompts) then
-                for prompt, data in pairs(originalPrompts) do if prompt and prompt.Parent then prompt.HoldDuration = data.HoldDuration; prompt.MaxActivationDistance = data.MaxActivationDistance end end
-                originalPrompts = {}
-            end
-        end
-    end
-end)
-
-task.spawn(function()
-    while task.wait(0.5) do
-        pcall(function()
-            if State.AutoCollect and player.Character then
-                local root = getUniversalRoot(player.Character)
-                if root then
-                    local rootPos = root.Position
-                    for _, prompt in ipairs(cachedPrompts) do
-                        if prompt.Parent and prompt.Parent:IsA("BasePart") and prompt.Enabled and (prompt.Parent.Position - rootPos).Magnitude <= 50 then if fireproximityprompt then fireproximityprompt(prompt) end end
-                    end
-                    local overlapParams = OverlapParams.new(); overlapParams.FilterDescendantsInstances = {player.Character}; overlapParams.FilterType = Enum.RaycastFilterType.Exclude
-                    local partsNearby = workspace:GetPartBoundsInRadius(rootPos, 50, overlapParams)
-                    for _, part in ipairs(partsNearby) do
-                        if part.Name == "Handle" and part.Parent and part.Parent:IsA("Tool") then
-                            part.CanCollide = false
-                            if firetouchinterest then firetouchinterest(root, part, 0); task.wait(0.01); firetouchinterest(root, part, 1) else part.CFrame = root.CFrame end
-                        end
-                    end
-                end
-            end
-        end)
-    end
-end)
-
--- ==========================================
--- [TỐI ƯU FPS: TÁCH LUỒNG ESP & HITBOX]
--- ==========================================
-local function updateESP_Hitbox()
-    if State.Hitbox then
-        for _, p in pairs(Players:GetPlayers()) do
-            if p ~= player and p.Character then
-                local hrp = getUniversalRoot(p.Character)
-                if hrp then
-                    if not originalHitboxSizes[p] then originalHitboxSizes[p] = hrp.Size end
-                    hrp.Size = Vector3.new(State.HitboxSize, State.HitboxSize, State.HitboxSize)
-                    hrp.Transparency = 0.5
-                    hrp.CanCollide = false
-                    hrp.Massless = true
-                end
-            end
-        end
-    else
-        if next(originalHitboxSizes) then
-            for p, size in pairs(originalHitboxSizes) do 
-                if p and p.Character then 
-                    local hrp = getUniversalRoot(p.Character)
-                    if hrp then 
-                        hrp.Size = size
-                        hrp.Transparency = 1 
-                        hrp.Massless = false 
-                    end 
-                end 
-            end
-            originalHitboxSizes = {}
-        end
-    end
-
-    if not State.ESP then
-        for p, bgui in pairs(ActiveESPs) do 
-            if bgui.Billboard then bgui.Billboard:Destroy() end
-            if bgui.Highlight then bgui.Highlight:Destroy() end
-            ActiveESPs[p] = nil 
-        end
-        return
-    end
-
-    for _, p in ipairs(Players:GetPlayers()) do
-        if p ~= player then
-            pcall(function()
-                local tChar = p.Character
-                local espPart = getUniversalRoot(tChar)
-                
-                if espPart then
-                    if not ActiveESPs[p] then ActiveESPs[p] = {} end
-                    
-                    if not ActiveESPs[p].Billboard or ActiveESPs[p].Billboard.Adornee ~= espPart or not ActiveESPs[p].Billboard.Parent then
-                        if ActiveESPs[p].Billboard then ActiveESPs[p].Billboard:Destroy() end
-                        local bgui = Instance.new("BillboardGui")
-                        bgui.Name = "MobileESP_" .. p.Name; bgui.Size = UDim2.new(0, 200, 0, 50); bgui.StudsOffset = Vector3.new(0, 3.5, 0)
-                        bgui.AlwaysOnTop = true; bgui.MaxDistance = math.huge; bgui.LightInfluence = 0; bgui.Adornee = espPart; bgui.Parent = guiParent
-                        local tLabel = Instance.new("TextLabel", bgui)
-                        tLabel.Name = "NameLabel"; tLabel.Size = UDim2.new(1, 0, 1, 0); tLabel.BackgroundTransparency = 1; tLabel.TextColor3 = Color3.fromRGB(255, 60, 60)
-                        tLabel.TextStrokeTransparency = 0.2; tLabel.TextStrokeColor3 = Color3.new(0, 0, 0); tLabel.Font = Enum.Font.GothamBold; tLabel.TextSize = 12; tLabel.RichText = true
-                        ActiveESPs[p].Billboard = bgui
-                    end
-                    
-                    if not ActiveESPs[p].Highlight or ActiveESPs[p].Highlight.Adornee ~= tChar or not ActiveESPs[p].Highlight.Parent then
-                        if ActiveESPs[p].Highlight then ActiveESPs[p].Highlight:Destroy() end
-                        local hl = Instance.new("Highlight")
-                        hl.Adornee = tChar; hl.FillColor = Color3.fromRGB(255, 60, 60); hl.FillTransparency = 0.6; hl.OutlineColor = Color3.new(1, 1, 1); hl.OutlineTransparency = 0.1
-                        hl.Parent = guiParent
-                        ActiveESPs[p].Highlight = hl
-                    end
-                    
-                    local myChar = player.Character; local myRoot = getUniversalRoot(myChar)
-                    if myRoot then
-                        local dist = math.floor((myRoot.Position - espPart.Position).Magnitude)
-                        ActiveESPs[p].Billboard.NameLabel.Text = p.DisplayName .. '\n<font color="#00FFFF">[' .. dist .. 'm]</font>'
-                    else
-                        ActiveESPs[p].Billboard.NameLabel.Text = p.DisplayName
-                    end
-                else
-                    if ActiveESPs[p] then 
-                        if ActiveESPs[p].Billboard then ActiveESPs[p].Billboard:Destroy() end
-                        if ActiveESPs[p].Highlight then ActiveESPs[p].Highlight:Destroy() end
-                        ActiveESPs[p] = nil 
-                    end
-                end
-            end)
-        end
-    end
-    
-    for p, tbl in pairs(ActiveESPs) do
-        if not Players:FindFirstChild(p.Name) then 
-            if tbl.Billboard then tbl.Billboard:Destroy() end; if tbl.Highlight then tbl.Highlight:Destroy() end; ActiveESPs[p] = nil 
-        end
-    end
-end
-
-task.spawn(function()
-    while task.wait(0.1) do
-        updateESP_Hitbox()
-    end
-end)
-
--- ==========================================
--- VÒNG LẶP VẬT LÝ & CHUYỂN ĐỘNG
--- ==========================================
-RunService.Stepped:Connect(function()
-    local char = player.Character
-    if char and (State.Noclip or (autoTpPlayerEnabled and wasHorizontalTp)) then
-        for _, p in ipairs(char:GetDescendants()) do
-            if p:IsA("BasePart") and p.CanCollide then p.CanCollide = false end
-        end
-    end
-end)
-
-RunService.RenderStepped:Connect(function(deltaTime)
-    local char = player.Character
-    if not char then return end
-    
-    local root = getUniversalRoot(char)
-    local hum = char:FindFirstChildOfClass("Humanoid")
-    
-    if hum and root then
-        if not State.Fly then 
-            if State.Speed and hum.MoveDirection.Magnitude > 0 then
-                local speedMultiplier = State.SpeedValue / 50 
-                root.CFrame = root.CFrame + (hum.MoveDirection * (speedMultiplier * 60 * deltaTime))
-            end
-
-            if State.AutoDash and hum.MoveDirection.Magnitude > 0 then
-                root.CFrame = root.CFrame + (hum.MoveDirection * (State.DashSpeed / 10))
-            end
-        end
-        
-        if State.SpinBot then 
-            root.CFrame = root.CFrame * CFrame.Angles(0, math.rad(State.SpinSpeed), 0) 
-        end
-        
-        if State.Noclip and hum.MoveDirection.Magnitude == 0 then
-            root.AssemblyLinearVelocity = Vector3.new(0, root.AssemblyLinearVelocity.Y, 0)
-        end
-    end
-end)
-
-RunService.Heartbeat:Connect(function()
-    if autoTpPlayerEnabled and targetTpPlayer then
-        teleportToSelectedPlayer()
-    end
-
-    if spectatePlayerEnabled and targetTpPlayer and targetTpPlayer.Character then
-        local cam = workspace.CurrentCamera
-        local targetHum = targetTpPlayer.Character:FindFirstChildOfClass("Humanoid") or getUniversalRoot(targetTpPlayer.Character)
-        if cam and targetHum and cam.CameraSubject ~= targetHum then
-            cam.CameraSubject = targetHum
-        end
-    end
-    
-    local char = player.Character
-    if not char then return end
-    local root = getUniversalRoot(char)
-    local hum = char:FindFirstChildOfClass("Humanoid")
-    
-    if hum then
-        if State.LockPosition and root then root.Anchored = true end
-        
-        if State.Jump then hum.UseJumpPower = true; hum.JumpPower = State.JumpValue end
-        
-        if State.Fly and root then
-            hum.PlatformStand = true
-            local bv = root:FindFirstChild("FlyBodyVelocity")
-            if not bv then
-                bv = Instance.new("BodyVelocity")
-                bv.Name = "FlyBodyVelocity"
-                bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
-                bv.Velocity = Vector3.zero
-                bv.Parent = root
-            end
-            
-            local bg = root:FindFirstChild("FlyBodyGyro")
-            if not bg then
-                bg = Instance.new("BodyGyro")
-                bg.Name = "FlyBodyGyro"
-                bg.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
-                bg.P = 10000
-                bg.D = 100
-                bg.Parent = root
-            end
-            
-            local cam = workspace.CurrentCamera
-            bg.CFrame = cam.CFrame
-            
-            local moveDir = hum.MoveDirection
-            if moveDir.Magnitude > 0 then
-                local camLook = cam.CFrame.LookVector
-                local camRight = cam.CFrame.RightVector
-                
-                local flatLook = Vector3.new(camLook.X, 0, camLook.Z)
-                local flatRight = Vector3.new(camRight.X, 0, camRight.Z)
-                
-                local forwardUnit = flatLook.Magnitude > 0.001 and flatLook.Unit or Vector3.zero
-                local rightUnit = flatRight.Magnitude > 0.001 and flatRight.Unit or Vector3.zero
-                
-                local dotForward = moveDir:Dot(forwardUnit)
-                local dotRight = moveDir:Dot(rightUnit)
-                
-                local flyDir = (camLook * dotForward) + (rightUnit * dotRight)
-                
-                if flyDir.Magnitude > 0.001 then
-                    bv.Velocity = flyDir.Unit * State.FlySpeed
-                else
-                    bv.Velocity = Vector3.zero
-                end
-            else
-                bv.Velocity = Vector3.zero
-            end
-        else
-            if root and root:FindFirstChild("FlyBodyVelocity") then root.FlyBodyVelocity:Destroy() end
-            if root and root:FindFirstChild("FlyBodyGyro") then root.FlyBodyGyro:Destroy() end
-            if not State.AntiStun and not (autoTpPlayerEnabled and wasHorizontalTp) then
-                hum.PlatformStand = false
-            end
-        end
-
-        if State.AntiStun then 
-            hum:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
-            hum:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, false)
-            
-            local currentState = hum:GetState()
-            if currentState == Enum.HumanoidStateType.FallingDown or currentState == Enum.HumanoidStateType.Ragdoll then 
-                hum:ChangeState(Enum.HumanoidStateType.GettingUp)
-            end
-            
-            if root then
-                local currentVel = root.AssemblyLinearVelocity
-                local horizontalVel = Vector3.new(currentVel.X, 0, currentVel.Z)
-                if horizontalVel.Magnitude > 75 then
-                    root.AssemblyLinearVelocity = Vector3.new(0, currentVel.Y, 0) 
-                end
-            end
-        end
-
-        if root then
-            local light = root:FindFirstChild("PlayerPointLight")
-            if State.PlayerLight then 
-                if not light then light = Instance.new("PointLight", root); light.Name = "PlayerPointLight"; light.Shadows = false end 
-                light.Brightness = State.LightBrightness; light.Range = State.LightRange
-                light.Color = PlayerLightColors[State.LightColorIdx].Value
-            else 
-                if light then light:Destroy() end 
-            end
-        end
-    end
-    
-    if State.Reach then
-        local tool = char:FindFirstChildOfClass("Tool")
-        if tool then
-            local handle = tool:FindFirstChild("Handle")
-            if handle then
-                if not originalToolSizes[tool] then originalToolSizes[tool] = handle.Size end
-                handle.Size = Vector3.new(State.ReachSize, State.ReachSize, State.ReachSize)
-                handle.Massless = true
-                handle.CanCollide = false
-                handle.Transparency = 0.8
-            end
-        end
-    else
-        if next(originalToolSizes) then
-            for t, origSize in pairs(originalToolSizes) do
-                if t and t.Parent and t:FindFirstChild("Handle") then
-                    t.Handle.Size = origSize
-                    t.Handle.Massless = false
-                    t.Handle.Transparency = 0
-                end
-            end
-            originalToolSizes = {}
-        end
-    end
-end) 
-
