@@ -100,10 +100,10 @@ pcall(function()
 end)
 
 for _, v in pairs(guiParent:GetChildren()) do
-    if v.Name == "MobileProMax" then v:Destroy() end
+    if v.Name == "MenuVipProMax" then v:Destroy() end
 end
 
-local configFileName = "MenuVipProMax_Config.json"
+local configFileName = "MenuVipProMax"
 pcall(function()
     if isfile and isfile(configFileName) then
         local data = HttpService:JSONDecode(readfile(configFileName))
@@ -121,7 +121,7 @@ end
 -- GIAO DIỆN CHÍNH & THÔNG BÁO (COMPACT)
 -- ==========================================
 local gui = Instance.new("ScreenGui")
-gui.Name = "MobileProMax"
+gui.Name = "MenuVipProMax"
 gui.ResetOnSpawn = false
 gui.DisplayOrder = 99999
 gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
@@ -571,7 +571,7 @@ end)
 -- ==========================================
 -- [TAB 2: TÍNH NĂNG]
 -- ==========================================
-createToggle(page2, "🛡️ Chống ngã & Chống văng", "AntiStun")
+createToggle(page2, "🛡️ Chống ngã & Chống văng xa", "AntiStun")
 createToggle(page2, "🔒 Khóa vị trí", "LockPosition", function(v) if not v and player.Character then local r = getUniversalRoot(player.Character); if r then r.Anchored = false end end end)
 createToggle(page2, "🚀 Nhảy trên không", "InfJump") 
 UIS.JumpRequest:Connect(function() if State.InfJump and player.Character and player.Character:FindFirstChildOfClass("Humanoid") then player.Character:FindFirstChildOfClass("Humanoid"):ChangeState(Enum.HumanoidStateType.Jumping) end end)
@@ -594,7 +594,7 @@ createToggle(page2, "🚷 Đi xuyên tường", "Noclip", function(v)
 end)
 
 local xrayTick = 0
-createToggle(page2, "👀 Nhìn xuyên map", "XRay", function(v) 
+createToggle(page2, "👀 Nhìn xuyên map (xray)", "XRay", function(v) 
     xrayTick = xrayTick + 1; local currentTick = xrayTick
     task.spawn(function()
         if v then
@@ -621,7 +621,7 @@ createToggle(page2, "🔴 ESP người chơi", "ESP")
 -- ==========================================
 -- [TAB 3: PLAYER]
 -- ==========================================
-createToggle(page3, "🕊️ Bay Trên không", "Fly", function(v)
+createToggle(page3, "🕊️ bay trên bầu trời", "Fly", function(v)
     local char = player.Character
     if char then
         local root = getUniversalRoot(char)
@@ -664,7 +664,7 @@ createSlider(page3, "Lực nhảy", 1, 1000, "JumpValue")
 createToggle(page3, "💨 Lướt liên tục", "AutoDash")
 createSlider(page3, "Tốc độ lướt", 1, 50, "DashSpeed")
 
-createToggle(page3, "⚔️ Đánh xa (Fix mới)", "Reach")
+createToggle(page3, "⚔️ Đánh xa", "Reach")
 createSlider(page3, "Kích thước vũ khí", 0, 300, "ReachSize")
 createToggle(page3, "🎯 Hitbox", "Hitbox")
 createSlider(page3, "Kích thước Hitbox", 0, 100, "HitboxSize")
@@ -773,21 +773,26 @@ createDualButtons(
             loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgelY/infiniteyield/master/source'))()
         end)
     end,
-    "📁 TP SAVE V3",
+    "📁 TP SAVE ",
     Theme.Brand,
     function()
         pcall(function()
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/haudeptrai2k6/menu-hack-vip13/refs/heads/main/menuvi13.lua"))()
+            --menu save vị trí 
+loadstring(game:HttpGet("https://raw.githubusercontent.com/haudeptrai2k6/menu-hack-vip13/refs/heads/main/menu-save.lua"))()
         end)
     end
 )
 
-createDualButtons(page4, "🕊️ FLY V1", Theme.Brand, function() pcall(function() loadstring("\108\111\97\100\115\116\114\105\110\103\40\103\97\109\101\58\72\116\116\112\71\101\116\40\40\39\104\116\116\112\115\58\47\47\103\105\115\116\46\103\105\116\104\117\98\117\115\101\114\99\111\110\116\101\110\116\46\99\111\109\47\109\101\111\122\111\110\101\89\84\47\98\102\48\51\55\100\102\102\57\102\48\97\55\48\48\49\55\51\48\52\100\100\100\54\55\102\100\99\100\51\55\48\47\114\97\119\47\101\49\52\101\55\52\102\52\50\53\98\48\54\48\100\102\53\50\51\51\52\51\99\102\51\48\98\55\56\55\48\55\52\101\98\51\99\53\100\50\47\97\114\99\101\117\115\37\50\53\50\48\120\37\50\53\50\48\102\108\121\37\50\53\50\48\50\37\50\53\50\48\111\98\102\108\117\99\97\116\111\114\39\41\44\116\114\117\101\41\41\40\41\10\10")() end) end, "🕊️ FLY V3", Theme.Brand, function() pcall(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/haudeptrai2k6/menu-hack-vip/refs/heads/main/menuvip.lua"))() end) end)
+createDualButtons(page4, "🕊️ FLY V1", Theme.Brand, function() pcall(function() loadstring("\108\111\97\100\115\116\114\105\110\103\40\103\97\109\101\58\72\116\116\112\71\101\116\40\40\39\104\116\116\112\115\58\47\47\103\105\115\116\46\103\105\116\104\117\98\117\115\101\114\99\111\110\116\101\110\116\46\99\111\109\47\109\101\111\122\111\110\101\89\84\47\98\102\48\51\55\100\102\102\57\102\48\97\55\48\48\49\55\51\48\52\100\100\100\54\55\102\100\99\100\51\55\48\47\114\97\119\47\101\49\52\101\55\52\102\52\50\53\98\48\54\48\100\102\53\50\51\51\52\51\99\102\51\48\98\55\56\55\48\55\52\101\98\51\99\53\100\50\47\97\114\99\101\117\115\37\50\53\50\48\120\37\50\53\50\48\102\108\121\37\50\53\50\48\50\37\50\53\50\48\111\98\102\108\117\99\97\116\111\114\39\41\44\116\114\117\101\41\41\40\41\10\10")() end) end, 
+    "🕊️ FLY V3", Theme.Brand, function() pcall(function()
+--menu fly v3
+loadstring(game:HttpGet("https://raw.githubusercontent.com/haudeptrai2k6/menu-hack-vip/refs/heads/main/menu-fly.lua"))()
 
 -- Ô nút mới: TP PLAYS
-createButton(page4, "🎯 TP PLAYS", Theme.AccentOn, function()
+createButton(page4, "🎯 TP PLAYS (người chơi)", Theme.AccentOn, function()
     pcall(function()
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/haudeptrai2k6/hack.lua/refs/heads/main/LICENSE.lua"))()
+        --menu players người chơi 
+loadstring(game:HttpGet("https://raw.githubusercontent.com/haudeptrai2k6/hack.lua/refs/heads/main/menu-tp-play.lua"))()
     end)
 end)
 
