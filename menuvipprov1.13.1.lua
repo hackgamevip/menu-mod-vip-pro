@@ -1,5 +1,5 @@
 -- ==========================================
--- MENU VIP PRO V1.13.2 (ADDED FLY V2 + FIXED LINKS & DAY/NIGHT)
+-- MENU VIP PRO V1.13.3 (ADDED 6 FUN FEATURES TO TAB 2 + FLY V2)
 -- ==========================================
 repeat task.wait() until game:IsLoaded()
 
@@ -29,7 +29,8 @@ local State = {
     AutoSkillDelay = 1, 
     AutoSkillZ = false, AutoSkillX = false, AutoSkillC = false, AutoSkillV = false, AutoSkillE = false, AutoSkillF = false,
     AutoSkill1 = false, AutoSkill2 = false, AutoSkill3 = false, AutoSkill4 = false, AutoSkill5 = false, AutoSkill6 = false,
-    TpPositionIdx = 1, TpDistance = 4
+    TpPositionIdx = 1, TpDistance = 4,
+    AirWalk = false, RainbowTrail = false
 }
 
 local Theme = {
@@ -57,7 +58,6 @@ local PlayerLightColors = {
     {Name = "Hồng", Value = Color3.fromRGB(255, 105, 180)}
 }
 
--- Cấu hình vị trí TP: Trên đầu & Dưới chân xoay nhân vật nằm ngang hướng về mục tiêu
 local TpPositions = {
     {
         Name = "Sau lưng",
@@ -564,14 +564,14 @@ task.spawn(function()
         )
         local execTime = math.floor(workspace.DistributedGameTime); local hours = math.floor(execTime / 3600); local mins = math.floor((execTime % 3600) / 60); local secs = execTime % 60
         extraInfoLabel.Text = string.format(
-            "<font color='#FF00FF'>Thời gian chơi:</font> %02d:%02d:%02d\n<font color='#FF00FF'>Giờ hệ thống:</font> %s\n<font color='#FF00FF'>Phiên bản:</font> VIP PRO MAX V1.13.2",
+            "<font color='#FF00FF'>Thời gian chơi:</font> %02d:%02d:%02d\n<font color='#FF00FF'>Giờ hệ thống:</font> %s\n<font color='#FF00FF'>Phiên bản:</font> VIP PRO MAX V1.13.3",
             hours, mins, secs, os.date("%H:%M:%S")
         )
     end
 end)
 
 -- ==========================================
--- [TAB 2: TÍNH NĂNG]
+-- [TAB 2: TÍNH NĂNG (ĐÃ THÊM 6 TÍNH NĂNG THÚ VỊ)]
 -- ==========================================
 createToggle(page2, "🛡️ Chống ngã & Chống văng xa", "AntiStun")
 createToggle(page2, "🔒 Khóa vị trí", "LockPosition", function(v) if not v and player.Character then local r = getUniversalRoot(player.Character); if r then r.Anchored = false end end end)
@@ -619,6 +619,147 @@ createToggle(page2, "👀 Nhìn xuyên map (xray)", "XRay", function(v)
     end)
 end)
 createToggle(page2, "🔴 ESP người chơi", "ESP")
+
+-- === 6 TÍNH NĂNG MỚI TRONG TAB 2 ===
+createDivider(page2, "TÍNH NĂNG MỞ RỘNG")
+
+-- 1. Đi bộ trên không (Air Walk)
+local airWalkPart = nil
+local airWalkConn = nil
+createToggle(page2, "☁️ Đi bộ trên không (Air Walk)", "AirWalk", function(v)
+    if v then
+        if airWalkPart then airWalkPart:Destroy() end
+        airWalkPart = Instance.new("Part")
+        airWalkPart.Name = "VipAirWalk"
+        airWalkPart.Size = Vector3.new(8, 0.6, 8)
+        airWalkPart.Anchored = true
+        airWalkPart.Transparency = 0.4
+        airWalkPart.Material = Enum.Material.Neon
+        airWalkPart.Color = Theme.Brand
+        airWalkPart.Parent = workspace
+        if airWalkConn then airWalkConn:Disconnect() end
+        airWalkConn = RunService.RenderStepped:Connect(function()
+            local char = player.Character
+            local root = getUniversalRoot(char)
+            if root and airWalkPart then
+                airWalkPart.CFrame = CFrame.new(root.Position.X, root.Position.Y - 3.3, root.Position.Z)
+            end
+        end)
+    else
+        if airWalkConn then airWalkConn:Disconnect(); airWalkConn = nil end
+        if airWalkPart then airWalkPart:Destroy(); airWalkPart = nil end
+    end
+end)
+
+-- 2. Hiệu ứng Đuôi Cầu Vồng (Rainbow Trail)
+local trailObj, att0, att1, trailConn
+createToggle(page2, "🌠 Hiệu ứng Đuôi Cầu Vồng", "RainbowTrail", function(v)
+    local char = player.Character
+    local root = getUniversalRoot(char)
+    if v and root then
+        if trailObj then trailObj:Destroy() end
+        if att0 then att0:Destroy() end
+        if att1 then att1:Destroy() end
+        att0 = Instance.new("Attachment", root)
+        att0.Position = Vector3.new(0, 1.5, 0)
+        att1 = Instance.new("Attachment", root)
+        att1.Position = Vector3.new(0, -1.5, 0)
+        trailObj = Instance.new("Trail", root)
+        trailObj.Attachment0 = att0
+        trailObj.Attachment1 = att1
+        trailObj.Lifetime = 0.6
+        trailObj.LightEmission = 1
+        trailObj.Transparency = NumberSequence.new(0.1, 1)
+        if trailConn then trailConn:Disconnect() end
+        trailConn = RunService.RenderStepped:Connect(function()
+            if trailObj and trailObj.Parent then
+                local c1 = Color3.fromHSV(tick() % 3 / 3, 1, 1)
+                local c2 = Color3.fromHSV((tick() + 1) % 3 / 3, 1, 1)
+                trailObj.Color = ColorSequence.new(c1, c2)
+            end
+        end)
+    else
+        if trailConn then trailConn:Disconnect(); trailConn = nil end
+        if trailObj then trailObj:Destroy(); trailObj = nil end
+        if att0 then att0:Destroy(); att0 = nil end
+        if att1 then att1:Destroy(); att1 = nil end
+    end
+end)
+
+-- 3 & 4. Cặp nút: Gậy Click TP & Lộn Nhào 360 Độ
+createDualButtons(
+    page2,
+    "🪄 GẬY CLICK TP",
+    Theme.Brand,
+    function()
+        local backpack = player:FindFirstChildOfClass("Backpack")
+        if not backpack then return end
+        if backpack:FindFirstChild("⚡ Click TP") or (player.Character and player.Character:FindFirstChild("⚡ Click TP")) then
+            MakeToast("Thông báo", "Bạn đã có Gậy Click TP trong túi!", Theme.Brand)
+            return
+        end
+        local tool = Instance.new("Tool")
+        tool.Name = "⚡ Click TP"
+        tool.RequiresHandle = false
+        tool.Activated:Connect(function()
+            local mouse = player:GetMouse()
+            if mouse and mouse.Hit and player.Character then
+                local root = getUniversalRoot(player.Character)
+                if root then
+                    root.CFrame = CFrame.new(mouse.Hit.Position + Vector3.new(0, 3.5, 0))
+                end
+            end
+        end)
+        tool.Parent = backpack
+    end,
+    "🤸 LỘN NHÀO 360°",
+    Theme.AccentOn,
+    function()
+        local char = player.Character
+        local root = getUniversalRoot(char)
+        local hum = char and char:FindFirstChildOfClass("Humanoid")
+        if root and hum then
+            hum:ChangeState(Enum.HumanoidStateType.Jumping)
+            task.spawn(function()
+                for i = 1, 18 do
+                    root.CFrame = root.CFrame * CFrame.Angles(math.rad(-20), 0, 0)
+                    task.wait(0.015)
+                end
+            end)
+        end
+    end
+)
+
+-- 5 & 6. Cặp nút: Mở Khóa Zoom Cam & Tạo Phân Thân
+createDualButtons(
+    page2,
+    "🔭 MỞ KHÓA ZOOM CAM",
+    Color3.fromRGB(255, 180, 50),
+    function()
+        pcall(function()
+            player.CameraMaxZoomDistance = 10000
+            player.CameraMinZoomDistance = 0.5
+            player.DevCameraOcclusionMode = Enum.DevCameraOcclusionMode.Invisicam
+            workspace.CurrentCamera.FieldOfView = 105
+        end)
+    end,
+    "👥 TẠO PHÂN THÂN",
+    Color3.fromRGB(180, 100, 255),
+    function()
+        local char = player.Character
+        if char then
+            char.Archivable = true
+            local clone = char:Clone()
+            clone.Name = player.Name .. "_Clone"
+            for _, v in ipairs(clone:GetDescendants()) do
+                if v:IsA("LuaSourceContainer") then v:Destroy() end
+            end
+            clone.Parent = workspace
+            local cRoot = getUniversalRoot(clone)
+            if cRoot then cRoot.Anchored = true end
+        end
+    end
+)
 
 -- ==========================================
 -- [TAB 3: PLAYER]
