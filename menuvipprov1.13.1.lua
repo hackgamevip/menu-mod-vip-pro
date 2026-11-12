@@ -787,7 +787,8 @@ createDualButtons(page4, "🕊️ FLY V1", Theme.Brand, function() pcall(functio
     "🕊️ FLY V3", Theme.Brand, function() pcall(function()
 --menu fly v3
 loadstring(game:HttpGet("https://raw.githubusercontent.com/haudeptrai2k6/menu-hack-vip/refs/heads/main/menu-fly.lua"))()
-
+            end)
+    end)
 -- Ô nút mới: TP PLAYS
 createButton(page4, "🎯 TP PLAYS (người chơi)", Theme.AccentOn, function()
     pcall(function()
