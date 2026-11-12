@@ -1,5 +1,5 @@
 -- ==========================================
--- MENU VIP PRO V1.13.1 (FIXED INFO LINES + DAY/NIGHT + NEW SCRIPTS)
+-- MENU VIP PRO V1.13.1 (FIXED SYNTAX ERROR)
 -- ==========================================
 repeat task.wait() until game:IsLoaded()
 
@@ -100,7 +100,7 @@ pcall(function()
 end)
 
 for _, v in pairs(guiParent:GetChildren()) do
-    if v.Name == "MenuVipProMax" then v:Destroy() end
+    if v.Name == "MenuVipProMax" or v.Name == "MobileProMax" then v:Destroy() end
 end
 
 local configFileName = "MenuVipProMax"
@@ -165,6 +165,20 @@ local function MakeToast(title, desc, color)
         TweenService:Create(tLabel, TweenInfo.new(0.4), {TextTransparency = 1}):Play()
         TweenService:Create(dLabel, TweenInfo.new(0.4), {TextTransparency = 1}):Play()
         task.wait(0.4); toast:Destroy()
+    end)
+end
+
+-- Hàm hỗ trợ tải script ngoài và tự sửa lỗi viết hoa chữ 'Local' ở đầu file nếu có
+local function safeLoadUrl(url)
+    task.spawn(function()
+        local ok, content = pcall(function() return game:HttpGet(url) end)
+        if ok and type(content) == "string" and #content > 0 then
+            content = content:gsub("^%s*Local%s+", "local "):gsub("\n%s*Local%s+", "\nlocal ")
+            local fn = loadstring(content)
+            if fn then pcall(fn) end
+        else
+            MakeToast("Lỗi tải Script", "Không thể kết nối tới link!", Theme.AccentOff)
+        end
     end)
 end
 
@@ -676,7 +690,7 @@ createSlider(page3, "Độ sáng", 0, 5, "LightBrightness")
 createCycleBtn(page3, "🎨 Đổi màu:", PlayerLightColors, "LightColorIdx")
 
 -- ==========================================
--- [TAB 4: TIỆN ÍCH (THÊM TRỜI SÁNG/TỐI, TP SAVE V3 MỚI & TP PLAYS)]
+-- [TAB 4: TIỆN ÍCH (ĐÃ SỬA LỖI THIẾU END)]
 -- ==========================================
 createToggle(page4, "💾 Lưu Cài Đặt", "AutoSave", function(v) 
     if v then saveConfig(); MakeToast("Đã Bật", "Đã lưu cấu hình hiện tại!", Theme.AccentOn)
@@ -763,36 +777,44 @@ createDualButtons(
 createDualButtons(page4, "🔄 VÀO LẠI SV", Theme.AccentOn, rejoinServer, "🎲 ĐỔI SV NGẪU NHIÊN", Theme.Brand, function() hopServer("Desc") end)
 createDualButtons(page4, "📉 ĐỔI SV ÍT NGƯỜI", Color3.fromRGB(52, 152, 219), function() hopServer("Asc") end, "📈 ĐỔI SV NHIỀU NGƯỜI", Color3.fromRGB(231, 76, 60), function() hopServer("Desc") end)
 
--- Lệnh Admin & TP SAVE V3 (Đã cập nhật link mới)
+-- Lệnh Admin & TP SAVE
 createDualButtons(
     page4,
     "💻 LỆNH ADMIN",
     Theme.AccentOn,
     function()
-        pcall(function()
-            loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgelY/infiniteyield/master/source'))()
-        end)
+        safeLoadUrl("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source")
     end,
     "📁 TP SAVE ",
     Theme.Brand,
     function()
-        pcall(function()
-            --menu save vị trí 
-loadstring(game:HttpGet("https://raw.githubusercontent.com/haudeptrai2k6/menu-hack-vip13/refs/heads/main/menu-save.lua"))()
-        end)
+        -- menu save vị trí
+        safeLoadUrl("https://raw.githubusercontent.com/haudeptrai2k6/menu-hack-vip13/refs/heads/main/menu-save.lua")
     end
 )
 
-createDualButtons(page4, "🕊️ FLY V1", Theme.Brand, function() pcall(function() loadstring("\108\111\97\100\115\116\114\105\110\103\40\103\97\109\101\58\72\116\116\112\71\101\116\40\40\39\104\116\116\112\115\58\47\47\103\105\115\116\46\103\105\116\104\117\98\117\115\101\114\99\111\110\116\101\110\116\46\99\111\109\47\109\101\111\122\111\110\101\89\84\47\98\102\48\51\55\100\102\102\57\102\48\97\55\48\48\49\55\51\48\52\100\100\100\54\55\102\100\99\100\51\55\48\47\114\97\119\47\101\49\52\101\55\52\102\52\50\53\98\48\54\48\100\102\53\50\51\51\52\51\99\102\51\48\98\55\56\55\48\55\52\101\98\51\99\53\100\50\47\97\114\99\101\117\115\37\50\53\50\48\120\37\50\53\50\48\102\108\121\37\50\53\50\48\50\37\50\53\50\48\111\98\102\108\117\99\97\116\111\114\39\41\44\116\114\117\101\41\41\40\41\10\10")() end) end,  "🕊️ FLY V2", Theme.Brand, function() pcall(function()
---menu fly v3
-loadstring(game:HttpGet("https://raw.githubusercontent.com/haudeptrai2k6/menu-hack-vip/refs/heads/main/menu-fly.lua"))()
+-- FLY V1 & FLY V3 (Đã đóng hàm đầy đủ)
+createDualButtons(
+    page4,
+    "🕊️ FLY V1",
+    Theme.Brand,
+    function()
+        pcall(function()
+            loadstring("\108\111\97\100\115\116\114\105\110\103\40\103\97\109\101\58\72\116\116\112\71\101\116\40\40\39\104\116\116\112\115\58\47\47\103\105\115\116\46\103\105\116\104\117\98\117\115\101\114\99\111\110\116\101\110\116\46\99\111\109\47\109\101\111\122\111\110\101\89\84\47\98\102\48\51\55\100\102\102\57\102\48\97\55\48\48\49\55\51\48\52\100\100\100\54\55\102\100\99\100\51\55\48\47\114\97\119\47\101\49\52\101\55\52\102\52\50\53\98\48\54\48\100\102\53\50\51\51\52\51\99\102\51\48\98\55\56\55\48\55\52\101\98\51\99\53\100\50\47\97\114\99\101\117\115\37\50\53\50\48\120\37\50\53\50\48\102\108\121\37\50\53\50\48\50\37\50\53\50\48\111\98\102\108\117\99\97\116\111\114\39\41\44\116\114\117\101\41\41\40\41\10\10")()
+        end)
+    end,
+    "🕊️ FLY V3",
+    Theme.Brand,
+    function()
+        -- menu fly v3
+        safeLoadUrl("https://raw.githubusercontent.com/haudeptrai2k6/menu-hack-vip/refs/heads/main/menu-fly.lua")
+    end
+)
 
--- Ô nút mới: TP PLAYS
+-- Ô nút mới: TP PLAYS (người chơi)
 createButton(page4, "🎯 TP PLAYS (người chơi)", Theme.AccentOn, function()
-    pcall(function()
-        --menu players người chơi 
-loadstring(game:HttpGet("https://raw.githubusercontent.com/haudeptrai2k6/hack.lua/refs/heads/main/menu-tp-play.lua"))()
-    end)
+    -- menu players người chơi
+    safeLoadUrl("https://raw.githubusercontent.com/haudeptrai2k6/hack.lua/refs/heads/main/menu-tp-play.lua")
 end)
 
 -- ==========================================
@@ -1939,5 +1961,4 @@ RunService.Heartbeat:Connect(function()
             originalToolSizes = {}
         end
     end
-end) 
-
+end)
