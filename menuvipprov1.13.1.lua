@@ -1,5 +1,5 @@
 -- ==========================================
--- MENU VIP PRO V1.13.2 (FIXED STARTUP CRASH + DAY/NIGHT LOCK + LOADSTRING)
+-- MENU VIP PRO V1.13.2 (ADDED FLY V2 + FIXED LINKS & DAY/NIGHT)
 -- ==========================================
 repeat task.wait() until game:IsLoaded()
 
@@ -9,16 +9,12 @@ local RunService = game:GetService("RunService")
 local Lighting = game:GetService("Lighting")
 local UIS = game:GetService("UserInputService")
 local VirtualUser = game:GetService("VirtualUser")
+local Vim = game:GetService("VirtualInputManager")
 local TeleportService = game:GetService("TeleportService")
 local HttpService = game:GetService("HttpService")
 local MarketplaceService = game:GetService("MarketplaceService")
 
-local _, Vim = pcall(function()
-    return game:GetService("VirtualInputManager")
-end)
-
 local player = Players.LocalPlayer
-repeat task.wait() until player
 
 local State = {
     Instant = false, Noclip = false, LowGfx = false, Speed = false, Jump = false,
@@ -33,8 +29,7 @@ local State = {
     AutoSkillDelay = 1, 
     AutoSkillZ = false, AutoSkillX = false, AutoSkillC = false, AutoSkillV = false, AutoSkillE = false, AutoSkillF = false,
     AutoSkill1 = false, AutoSkill2 = false, AutoSkill3 = false, AutoSkill4 = false, AutoSkill5 = false, AutoSkill6 = false,
-    TpPositionIdx = 1, TpDistance = 4,
-    TimeLockMode = "None" -- "Day", "Night", "None"
+    TpPositionIdx = 1, TpDistance = 4
 }
 
 local Theme = {
@@ -62,6 +57,7 @@ local PlayerLightColors = {
     {Name = "Hồng", Value = Color3.fromRGB(255, 105, 180)}
 }
 
+-- Cấu hình vị trí TP: Trên đầu & Dưới chân xoay nhân vật nằm ngang hướng về mục tiêu
 local TpPositions = {
     {
         Name = "Sau lưng",
@@ -93,19 +89,13 @@ local cachedPrompts = {}
 local xrayMats = {}
 local OriginalGFX = {} 
 
--- Kiểm tra quyền guiParent an toàn tuyệt đối (Tránh văng script trên mọi Executor)
 local guiParent = player:WaitForChild("PlayerGui")
 pcall(function()
     if gethui and type(gethui) == "function" then
         local hui = gethui()
-        if hui then
-            local _ = hui:GetChildren()
-            guiParent = hui
-        end
-    else
-        local core = game:GetService("CoreGui")
-        local _ = core:GetChildren()
-        guiParent = core
+        if hui then guiParent = hui end
+    elseif game:GetService("CoreGui") then
+        guiParent = game:GetService("CoreGui")
     end
 end)
 
@@ -115,15 +105,11 @@ pcall(function()
     end
 end)
 
-local configFileName = "MenuVipProMax.json"
+local configFileName = "MenuVipProMax"
 pcall(function()
     if isfile and isfile(configFileName) then
         local data = HttpService:JSONDecode(readfile(configFileName))
-        for k, v in pairs(data) do
-            if State[k] ~= nil and k ~= "Disable3D" and k ~= "AfkModeScreen" then
-                State[k] = v
-            end
-        end
+        for k, v in pairs(data) do if State[k] ~= nil then State[k] = v end end
     end
 end)
 if not TpPositions[State.TpPositionIdx] then State.TpPositionIdx = 1 end
@@ -141,11 +127,7 @@ gui.Name = "MenuVipProMax"
 gui.ResetOnSpawn = false
 gui.DisplayOrder = 99999
 gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-local okParent = pcall(function() gui.Parent = guiParent end)
-if not okParent then
-    guiParent = player:WaitForChild("PlayerGui")
-    gui.Parent = guiParent
-end
+gui.Parent = guiParent
 
 local notifGui = Instance.new("Frame", gui)
 notifGui.Size = UDim2.new(0, 190, 0.8, 0); notifGui.Position = UDim2.new(1, -200, 0.1, 0)
@@ -188,28 +170,6 @@ local function MakeToast(title, desc, color)
     end)
 end
 
--- Hàm chạy script ngoài có thông báo lỗi rõ ràng
-local function runExternalScript(name, url)
-    task.spawn(function()
-        local ok, res = pcall(function() return game:HttpGet(url) end)
-        if not ok or not res or res == "" or string.find(res, "404: Not Found") then
-            MakeToast("Lỗi tải " .. name, "Không thể lấy code từ link!", Theme.AccentOff)
-            return
-        end
-        local fn, err = loadstring(res)
-        if not fn then
-            MakeToast("Lỗi cú pháp", name .. " bị lỗi code!", Theme.AccentOff)
-            warn(err)
-            return
-        end
-        local runOk, runErr = pcall(fn)
-        if not runOk then
-            MakeToast("Lỗi khi chạy", name .. " gặp lỗi thực thi!", Theme.AccentOff)
-            warn(runErr)
-        end
-    end)
-end
-
 local screenOverlay = Instance.new("Frame", gui)
 screenOverlay.Size = UDim2.new(2, 0, 2, 0); screenOverlay.Position = UDim2.new(-0.5, 0, -0.5, 0)
 screenOverlay.BackgroundColor3 = Color3.new(0,0,0); screenOverlay.ZIndex = 0; screenOverlay.Visible = false
@@ -235,7 +195,7 @@ openBtn.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then btnDragToggle = true; btnDragStart = input.Position; btnStartPos = openBtn.Position end
 end)
 UIS.InputChanged:Connect(function(input)
-    if btnDragToggle and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType.Touch) then
+    if btnDragToggle and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
         openBtn.Position = UDim2.new(btnStartPos.X.Scale, btnStartPos.X.Offset + (input.Position.X - btnDragStart.X), btnStartPos.Y.Scale, btnStartPos.Y.Offset + (input.Position.Y - btnDragStart.Y))
     end
 end)
@@ -543,22 +503,22 @@ task.spawn(function()
 end)
 
 -- ==========================================
--- [TAB 1: THÔNG TIN - TÁCH DÒNG RÕ RÀNG]
+-- [TAB 1: THÔNG TIN - ĐÃ TÁCH XUỐNG DÒNG RIÊNG BIỆT]
 -- ==========================================
 local function createInfoBox(parent, icon, titleText, heightOffset)
     local item = Instance.new("Frame", parent)
-    item.Size = UDim2.new(0.92, 0, 0, heightOffset or 95); item.BackgroundColor3 = Theme.ItemBg; item.ZIndex = 10
+    item.Size = UDim2.new(0.92, 0, 0, heightOffset or 90); item.BackgroundColor3 = Theme.ItemBg; item.ZIndex = 10
     Instance.new("UICorner", item).CornerRadius = UDim.new(0, 8)
     local stroke = Instance.new("UIStroke", item); stroke.Color = Theme.Stroke; stroke.Thickness = 1.2; table.insert(RGBElements, {Type = "Info", Stroke = stroke})
     local title = Instance.new("TextLabel", item)
     title.Size = UDim2.new(1, -16, 0, 20); title.Position = UDim2.new(0, 8, 0, 4); title.BackgroundTransparency = 1; title.Text = icon .. " " .. titleText; title.TextColor3 = Theme.Brand; title.Font = Enum.Font.GothamBold; title.TextSize = 11; title.TextXAlignment = Enum.TextXAlignment.Left; title.ZIndex = 10
     local content = Instance.new("TextLabel", item)
-    content.Size = UDim2.new(1, -16, 1, -26); content.Position = UDim2.new(0, 8, 0, 24); content.BackgroundTransparency = 1; content.Text = "Đang tải..."; content.TextColor3 = Theme.TextTitle; content.Font = Enum.Font.Gotham; content.TextSize = 10.5; content.TextXAlignment = Enum.TextXAlignment.Left; content.TextYAlignment = Enum.TextYAlignment.Top; content.TextWrapped = true; content.RichText = true; content.ZIndex = 10
+    content.Size = UDim2.new(1, -16, 1, -26); content.Position = UDim2.new(0, 8, 0, 24); content.BackgroundTransparency = 1; content.Text = "Đang tải..."; content.TextColor3 = Theme.TextTitle; content.Font = Enum.Font.Gotham; content.TextSize = 10.5; content.TextXAlignment = Enum.TextXAlignment.Left; content.TextYAlignment = Enum.TextYAlignment.Top; content.RichText = true; content.ZIndex = 10
     return content, item
 end
 
-local playerInfoLabel = createInfoBox(page1, "👤", "THÔNG TIN NHÂN VẬT", 108)
-local serverInfoLabel, serverInfoFrame = createInfoBox(page1, "🌐", "THÔNG TIN MÁY CHỦ", 92)
+local playerInfoLabel = createInfoBox(page1, "👤", "THÔNG TIN NHÂN VẬT", 104)
+local serverInfoLabel, serverInfoFrame = createInfoBox(page1, "🌐", "THÔNG TIN MÁY CHỦ", 90)
 
 local copyIdBtn = Instance.new("TextButton", serverInfoFrame)
 copyIdBtn.Size = UDim2.new(0, 22, 0, 22); copyIdBtn.Position = UDim2.new(1, -26, 1, -24); copyIdBtn.Text = "📜"; copyIdBtn.BackgroundTransparency = 1; copyIdBtn.TextSize = 13; copyIdBtn.ZIndex = 11
@@ -578,16 +538,14 @@ joinBtn.Size = UDim2.new(0.25, 0, 0.7, 0); joinBtn.Position = UDim2.new(0.72, 0,
 Instance.new("UICorner", joinBtn).CornerRadius = UDim.new(0, 6)
 joinBtn.MouseButton1Click:Connect(function() clickAnimate(joinBtn); local targetId = idBox.Text:gsub("%s+", ""); if targetId ~= "" then MakeToast("Đang Join", "Đang chuyển máy chủ...", Theme.AccentOn); pcall(function() TeleportService:TeleportToPlaceInstance(game.PlaceId, targetId, player) end) end end)
 
-local extraInfoLabel = createInfoBox(page1, "⚙️", "TRẠNG THÁI", 80)
+local extraInfoLabel = createInfoBox(page1, "⚙️", "TRẠNG THÁI", 78)
 local fps = 0; RunService.RenderStepped:Connect(function(dt) fps = math.floor(1/dt) end)
 
 task.spawn(function()
     while task.wait(0.5) do
         local hp, maxHp, ws, jp = 0, 0, 0, 0; local coords = "0, 0, 0"
-        if player.Character and player.Character:FindFirstChildOfClass("Humanoid") then
-            local hum = player.Character:FindFirstChildOfClass("Humanoid")
-            hp = math.floor(hum.Health); maxHp = math.floor(hum.MaxHealth); ws = math.floor(hum.WalkSpeed)
-            jp = math.floor(hum.UseJumpPower and hum.JumpPower or hum.JumpHeight)
+        if player.Character and player.Character:FindFirstChild("Humanoid") then
+            local hum = player.Character.Humanoid; hp = math.floor(hum.Health); maxHp = math.floor(hum.MaxHealth); ws = math.floor(hum.WalkSpeed); jp = math.floor(hum.JumpPower)
         end
         if player.Character then
             local root = getUniversalRoot(player.Character)
@@ -597,7 +555,7 @@ task.spawn(function()
             "<font color='#FF00FF'>Tên:</font> %s (@%s)\n<font color='#FF00FF'>Máu:</font> %d / %d\n<font color='#FF00FF'>Tốc độ:</font> %d\n<font color='#FF00FF'>Lực nhảy:</font> %d\n<font color='#FF00FF'>Tọa độ:</font> %s",
             player.DisplayName, player.Name, hp, maxHp, ws, jp, coords
         )
-        local ping = "0 ms"
+        local ping = "0"
         pcall(function() local stats = game:GetService("Stats"); if stats and stats:FindFirstChild("Network") and stats.Network:FindFirstChild("ServerStatsItem") then ping = stats.Network.ServerStatsItem["Data Ping"]:GetValueString() else ping = tostring(math.floor(player:GetNetworkPing() * 1000)) .. " ms" end end)
         local pCount = #Players:GetPlayers(); local maxP = Players.MaxPlayers; local jobText = game.JobId ~= "" and string.sub(game.JobId, 1, 14).."..." or "N/A"
         serverInfoLabel.Text = string.format(
@@ -642,10 +600,9 @@ createToggle(page2, "👀 Nhìn xuyên map (xray)", "XRay", function(v)
     xrayTick = xrayTick + 1; local currentTick = xrayTick
     task.spawn(function()
         if v then
-            local myChar = player.Character
             for i, obj in ipairs(workspace:GetDescendants()) do
                 if currentTick ~= xrayTick then return end 
-                if obj:IsA("BasePart") and (not myChar or not obj:IsDescendantOf(myChar)) and obj.Name ~= "Terrain" and obj.Transparency < 1 then
+                if obj:IsA("BasePart") and (not player.Character or not obj:IsDescendantOf(player.Character)) and obj.Name ~= "Terrain" and obj.Transparency < 1 then
                     if not xrayMats[obj] then xrayMats[obj] = obj.Transparency end; obj.Transparency = 0.5
                 end
                 if i % 300 == 0 then task.wait() end 
@@ -700,9 +657,8 @@ createSlider(page3, "Tốc độ chạy", 1, 1000, "SpeedValue")
 
 local defaultJumpPower = 50
 createToggle(page3, "🦘 Nhảy cao", "Jump", function(v) 
-    if player.Character and player.Character:FindFirstChildOfClass("Humanoid") then 
-        local hum = player.Character:FindFirstChildOfClass("Humanoid")
-        if v then defaultJumpPower = hum.JumpPower else hum.UseJumpPower = true; hum.JumpPower = defaultJumpPower end
+    if player.Character and player.Character:FindFirstChild("Humanoid") then 
+        if v then defaultJumpPower = player.Character.Humanoid.JumpPower else player.Character.Humanoid.UseJumpPower = true; player.Character.Humanoid.JumpPower = defaultJumpPower end
     end 
 end)
 createSlider(page3, "Lực nhảy", 1, 1000, "JumpValue")
@@ -722,7 +678,7 @@ createSlider(page3, "Độ sáng", 0, 5, "LightBrightness")
 createCycleBtn(page3, "🎨 Đổi màu:", PlayerLightColors, "LightColorIdx")
 
 -- ==========================================
--- [TAB 4: TIỆN ÍCH (TRỜI SÁNG/TỐI KHÓA CHỐNG RESET + SCRIPT NGOÀI)]
+-- [TAB 4: TIỆN ÍCH (TRỜI SÁNG/TỐI + FLY V1, V2, V3 + TP PLAYS)]
 -- ==========================================
 createToggle(page4, "💾 Lưu Cài Đặt", "AutoSave", function(v) 
     if v then saveConfig(); MakeToast("Đã Bật", "Đã lưu cấu hình hiện tại!", Theme.AccentOn)
@@ -785,45 +741,26 @@ local function rejoinServer()
     if #Players:GetPlayers() <= 1 then player:Kick("\nĐang vào lại server..."); task.wait(); TeleportService:Teleport(game.PlaceId, player) else TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, player) end
 end
 
--- Khóa Trời Sáng & Trời Tối chống bị game tự reset
+-- Nút Trời Sáng & Trời Tối
 createDualButtons(
     page4,
     "☀️ TRỜI SÁNG",
     Color3.fromRGB(255, 200, 50),
     function()
-        State.TimeLockMode = "Day"
         pcall(function()
             Lighting.ClockTime = 12
             Lighting.Brightness = 2
-            Lighting.OutdoorAmbient = Color3.fromRGB(180, 180, 180)
         end)
     end,
     "🌙 TRỜI TỐI",
     Color3.fromRGB(130, 140, 255),
     function()
-        State.TimeLockMode = "Night"
         pcall(function()
             Lighting.ClockTime = 0
             Lighting.Brightness = 1
         end)
     end
 )
-
-task.spawn(function()
-    while task.wait(0.2) do
-        if State.TimeLockMode == "Day" then
-            pcall(function()
-                Lighting.ClockTime = 12
-                Lighting.Brightness = 2
-            end)
-        elseif State.TimeLockMode == "Night" then
-            pcall(function()
-                Lighting.ClockTime = 0
-                Lighting.Brightness = 1
-            end)
-        end
-    end
-end)
 
 createDualButtons(page4, "🔄 VÀO LẠI SV", Theme.AccentOn, rejoinServer, "🎲 ĐỔI SV NGẪU NHIÊN", Theme.Brand, function() hopServer("Desc") end)
 createDualButtons(page4, "📉 ĐỔI SV ÍT NGƯỜI", Color3.fromRGB(52, 152, 219), function() hopServer("Asc") end, "📈 ĐỔI SV NHIỀU NGƯỜI", Color3.fromRGB(231, 76, 60), function() hopServer("Desc") end)
@@ -834,15 +771,21 @@ createDualButtons(
     "💻 LỆNH ADMIN",
     Theme.AccentOn,
     function()
-        runExternalScript("Infinite Yield", "https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source")
+        pcall(function()
+            loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))()
+        end)
     end,
     "📁 TP SAVE",
     Theme.Brand,
     function()
-        runExternalScript("TP Save", "https://raw.githubusercontent.com/haudeptrai2k6/menu-hack-vip13/refs/heads/main/menu-save.lua")
+        pcall(function()
+            --menu save vị trí 
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/haudeptrai2k6/menu-hack-vip13/refs/heads/main/menu-save.lua"))()
+        end)
     end
 )
 
+-- Hàng FLY V1 & FLY V2
 createDualButtons(
     page4,
     "🕊️ FLY V1",
@@ -852,16 +795,36 @@ createDualButtons(
             loadstring("\108\111\97\100\115\116\114\105\110\103\40\103\97\109\101\58\72\116\116\112\71\101\116\40\40\39\104\116\116\112\115\58\47\47\103\105\115\116\46\103\105\116\104\117\98\117\115\101\114\99\111\110\116\101\110\116\46\99\111\109\47\109\101\111\122\111\110\101\89\84\47\98\102\48\51\55\100\102\102\57\102\48\97\55\48\48\49\55\51\48\52\100\100\100\54\55\102\100\99\100\51\55\48\47\114\97\119\47\101\49\52\101\55\52\102\52\50\53\98\48\54\48\100\102\53\50\51\51\52\51\99\102\51\48\98\55\56\55\48\55\52\101\98\51\99\53\100\50\47\97\114\99\101\117\115\37\50\53\50\48\120\37\50\53\50\48\102\108\121\37\50\53\50\48\50\37\50\53\50\48\111\98\102\108\117\99\97\116\111\114\39\41\44\116\114\117\101\41\41\40\41\10\10")()
         end)
     end,
-    "🕊️ FLY V3",
+    "🕊️ FLY V2",
     Theme.Brand,
     function()
-        runExternalScript("Fly V3", "https://raw.githubusercontent.com/haudeptrai2k6/menu-hack-vip/refs/heads/main/menu-fly.lua")
+        pcall(function()
+            --menu fly v2
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/XNEOFF/FlyGuiV3/main/FlyGuiV3.txt"))()
+        end)
     end
 )
 
-createButton(page4, "🎯 TP PLAYS (người chơi)", Theme.AccentOn, function()
-    runExternalScript("TP Plays", "https://raw.githubusercontent.com/haudeptrai2k6/hack.lua/refs/heads/main/menu-tp-play.lua")
-end)
+-- Hàng FLY V3 & TP PLAYS (người chơi)
+createDualButtons(
+    page4,
+    "🕊️ FLY V3",
+    Theme.Brand,
+    function()
+        pcall(function()
+            --menu fly v3
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/haudeptrai2k6/menu-hack-vip/refs/heads/main/menu-fly.lua"))()
+        end)
+    end,
+    "🎯 TP PLAYS (người chơi)",
+    Theme.AccentOn,
+    function()
+        pcall(function()
+            --menu players người chơi 
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/haudeptrai2k6/hack.lua/refs/heads/main/menu-tp-play.lua"))()
+        end)
+    end
+)
 
 -- ==========================================
 -- [TAB 5: NHẠC ID] & [TAB 6: TP SAVE] 
@@ -955,7 +918,7 @@ end
 renderSavedTps()
 
 -- ==========================================
--- [TAB 7: TP NGƯỜI CHƠI]
+-- [TAB 7: TP NGƯỜI CHƠI (TƯ THẾ NẰM NGANG KHI TRÊN ĐẦU / DƯỚI CHÂN)]
 -- ==========================================
 local targetTpPlayer = nil
 local autoTpPlayerEnabled = false
@@ -1498,7 +1461,7 @@ task.spawn(function()
         if State.AutoSkill5 then table.insert(keysToPress, Enum.KeyCode.Five) end
         if State.AutoSkill6 then table.insert(keysToPress, Enum.KeyCode.Six) end
         
-        if #keysToPress > 0 and Vim then
+        if #keysToPress > 0 then
             for _, keyEnum in ipairs(keysToPress) do
                 task.spawn(function()
                     pcall(function()
@@ -1664,10 +1627,9 @@ end)
 
 createButton(page9, "🧹 Dọn rác bản đồ (Clear Debris)", Theme.AccentOff, function()
     local count = 0
-    local myChar = player.Character
     pcall(function()
         for _, obj in ipairs(workspace:GetDescendants()) do
-            if (not myChar or not obj:IsDescendantOf(myChar)) and (not obj.Parent or not obj.Parent:FindFirstChild("Humanoid")) then
+            if (not player.Character or not obj:IsDescendantOf(player.Character)) and (not obj.Parent or not obj.Parent:FindFirstChild("Humanoid")) then
                 if obj:IsA("ParticleEmitter") or obj:IsA("Trail") or (obj:IsA("Decal") and obj.Name == "Blood") then
                     obj:Destroy()
                     count = count + 1
