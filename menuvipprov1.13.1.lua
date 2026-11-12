@@ -1,5 +1,5 @@
 -- ==========================================
--- MENU VIP PRO V1.13.0 (HORIZONTAL TOP/BOTTOM AUTO TP)
+-- MENU VIP PRO V1.13.1 (FIXED INFO LINES + DAY/NIGHT + NEW SCRIPTS)
 -- ==========================================
 repeat task.wait() until game:IsLoaded()
 
@@ -501,11 +501,11 @@ task.spawn(function()
 end)
 
 -- ==========================================
--- [TAB 1: THÔNG TIN - DASHBOARD]
+-- [TAB 1: THÔNG TIN - ĐÃ TÁCH XUỐNG DÒNG RIÊNG BIỆT]
 -- ==========================================
 local function createInfoBox(parent, icon, titleText, heightOffset)
     local item = Instance.new("Frame", parent)
-    item.Size = UDim2.new(0.92, 0, 0, heightOffset or 75); item.BackgroundColor3 = Theme.ItemBg; item.ZIndex = 10
+    item.Size = UDim2.new(0.92, 0, 0, heightOffset or 90); item.BackgroundColor3 = Theme.ItemBg; item.ZIndex = 10
     Instance.new("UICorner", item).CornerRadius = UDim.new(0, 8)
     local stroke = Instance.new("UIStroke", item); stroke.Color = Theme.Stroke; stroke.Thickness = 1.2; table.insert(RGBElements, {Type = "Info", Stroke = stroke})
     local title = Instance.new("TextLabel", item)
@@ -515,8 +515,8 @@ local function createInfoBox(parent, icon, titleText, heightOffset)
     return content, item
 end
 
-local playerInfoLabel = createInfoBox(page1, "👤", "THÔNG TIN NHÂN VẬT", 88)
-local serverInfoLabel, serverInfoFrame = createInfoBox(page1, "🌐", "THÔNG TIN MÁY CHỦ", 76)
+local playerInfoLabel = createInfoBox(page1, "👤", "THÔNG TIN NHÂN VẬT", 104)
+local serverInfoLabel, serverInfoFrame = createInfoBox(page1, "🌐", "THÔNG TIN MÁY CHỦ", 90)
 
 local copyIdBtn = Instance.new("TextButton", serverInfoFrame)
 copyIdBtn.Size = UDim2.new(0, 22, 0, 22); copyIdBtn.Position = UDim2.new(1, -26, 1, -24); copyIdBtn.Text = "📜"; copyIdBtn.BackgroundTransparency = 1; copyIdBtn.TextSize = 13; copyIdBtn.ZIndex = 11
@@ -536,7 +536,7 @@ joinBtn.Size = UDim2.new(0.25, 0, 0.7, 0); joinBtn.Position = UDim2.new(0.72, 0,
 Instance.new("UICorner", joinBtn).CornerRadius = UDim.new(0, 6)
 joinBtn.MouseButton1Click:Connect(function() clickAnimate(joinBtn); local targetId = idBox.Text:gsub("%s+", ""); if targetId ~= "" then MakeToast("Đang Join", "Đang chuyển máy chủ...", Theme.AccentOn); pcall(function() TeleportService:TeleportToPlaceInstance(game.PlaceId, targetId, player) end) end end)
 
-local extraInfoLabel = createInfoBox(page1, "⚙️", "TRẠNG THÁI", 68)
+local extraInfoLabel = createInfoBox(page1, "⚙️", "TRẠNG THÁI", 78)
 local fps = 0; RunService.RenderStepped:Connect(function(dt) fps = math.floor(1/dt) end)
 
 task.spawn(function()
@@ -549,13 +549,22 @@ task.spawn(function()
             local root = getUniversalRoot(player.Character)
             if root then local pos = root.Position; coords = string.format("%.1f, %.1f, %.1f", pos.X, pos.Y, pos.Z) end
         end
-        playerInfoLabel.Text = string.format("<font color='#FF00FF'>Tên:</font> %s (@%s)\n<font color='#FF00FF'>Máu:</font> %d/%d | <font color='#FF00FF'>Tốc:</font> %d | <font color='#FF00FF'>Nhảy:</font> %d\n<font color='#FF00FF'>Tọa độ:</font> %s", player.DisplayName, player.Name, hp, maxHp, ws, jp, coords)
+        playerInfoLabel.Text = string.format(
+            "<font color='#FF00FF'>Tên:</font> %s (@%s)\n<font color='#FF00FF'>Máu:</font> %d / %d\n<font color='#FF00FF'>Tốc độ:</font> %d\n<font color='#FF00FF'>Lực nhảy:</font> %d\n<font color='#FF00FF'>Tọa độ:</font> %s",
+            player.DisplayName, player.Name, hp, maxHp, ws, jp, coords
+        )
         local ping = "0"
         pcall(function() local stats = game:GetService("Stats"); if stats and stats:FindFirstChild("Network") and stats.Network:FindFirstChild("ServerStatsItem") then ping = stats.Network.ServerStatsItem["Data Ping"]:GetValueString() else ping = tostring(math.floor(player:GetNetworkPing() * 1000)) .. " ms" end end)
         local pCount = #Players:GetPlayers(); local maxP = Players.MaxPlayers; local jobText = game.JobId ~= "" and string.sub(game.JobId, 1, 14).."..." or "N/A"
-        serverInfoLabel.Text = string.format("<font color='#FF00FF'>FPS:</font> %d | <font color='#FF00FF'>Ping:</font> %s\n<font color='#FF00FF'>Người chơi:</font> %d / %d\n<font color='#FF00FF'>ID SV:</font> %s", fps, ping, pCount, maxP, jobText)
+        serverInfoLabel.Text = string.format(
+            "<font color='#FF00FF'>FPS:</font> %d\n<font color='#FF00FF'>Ping:</font> %s\n<font color='#FF00FF'>Người chơi:</font> %d / %d\n<font color='#FF00FF'>ID SV:</font> %s",
+            fps, ping, pCount, maxP, jobText
+        )
         local execTime = math.floor(workspace.DistributedGameTime); local hours = math.floor(execTime / 3600); local mins = math.floor((execTime % 3600) / 60); local secs = execTime % 60
-        extraInfoLabel.Text = string.format("<font color='#FF00FF'>TG Chơi:</font> %02d:%02d:%02d | <font color='#FF00FF'>Giờ:</font> %s\n<font color='#FF00FF'>Bản:</font> VIP PRO MAX V1.13.0", hours, mins, secs, os.date("%H:%M:%S"))
+        extraInfoLabel.Text = string.format(
+            "<font color='#FF00FF'>Thời gian chơi:</font> %02d:%02d:%02d\n<font color='#FF00FF'>Giờ hệ thống:</font> %s\n<font color='#FF00FF'>Phiên bản:</font> VIP PRO MAX V1.13.1",
+            hours, mins, secs, os.date("%H:%M:%S")
+        )
     end
 end)
 
@@ -667,7 +676,7 @@ createSlider(page3, "Độ sáng", 0, 5, "LightBrightness")
 createCycleBtn(page3, "🎨 Đổi màu:", PlayerLightColors, "LightColorIdx")
 
 -- ==========================================
--- [TAB 4: TIỆN ÍCH]
+-- [TAB 4: TIỆN ÍCH (THÊM TRỜI SÁNG/TỐI, TP SAVE V3 MỚI & TP PLAYS)]
 -- ==========================================
 createToggle(page4, "💾 Lưu Cài Đặt", "AutoSave", function(v) 
     if v then saveConfig(); MakeToast("Đã Bật", "Đã lưu cấu hình hiện tại!", Theme.AccentOn)
@@ -730,10 +739,57 @@ local function rejoinServer()
     if #Players:GetPlayers() <= 1 then player:Kick("\nĐang vào lại server..."); task.wait(); TeleportService:Teleport(game.PlaceId, player) else TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, player) end
 end
 
+-- Nút Trời Sáng & Trời Tối
+createDualButtons(
+    page4,
+    "☀️ TRỜI SÁNG",
+    Color3.fromRGB(255, 200, 50),
+    function()
+        pcall(function()
+            Lighting.ClockTime = 12
+            Lighting.Brightness = 2
+        end)
+    end,
+    "🌙 TRỜI TỐI",
+    Color3.fromRGB(130, 140, 255),
+    function()
+        pcall(function()
+            Lighting.ClockTime = 0
+            Lighting.Brightness = 1
+        end)
+    end
+)
+
 createDualButtons(page4, "🔄 VÀO LẠI SV", Theme.AccentOn, rejoinServer, "🎲 ĐỔI SV NGẪU NHIÊN", Theme.Brand, function() hopServer("Desc") end)
 createDualButtons(page4, "📉 ĐỔI SV ÍT NGƯỜI", Color3.fromRGB(52, 152, 219), function() hopServer("Asc") end, "📈 ĐỔI SV NHIỀU NGƯỜI", Color3.fromRGB(231, 76, 60), function() hopServer("Desc") end)
-createDualButtons(page4, "💻 LỆNH ADMIN", Theme.AccentOn, function() pcall(function() loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgelY/infiniteyield/master/source'))() end) end, "📁 TP SAVE V3", Theme.Brand, function() pcall(function() loadstring(game:HttpGet('https://raw.githubusercontent.com/OBen1/fe/main/Tp%20Place%20GUI', true))() end) end)
+
+-- Lệnh Admin & TP SAVE V3 (Đã cập nhật link mới)
+createDualButtons(
+    page4,
+    "💻 LỆNH ADMIN",
+    Theme.AccentOn,
+    function()
+        pcall(function()
+            loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgelY/infiniteyield/master/source'))()
+        end)
+    end,
+    "📁 TP SAVE V3",
+    Theme.Brand,
+    function()
+        pcall(function()
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/haudeptrai2k6/menu-hack-vip13/refs/heads/main/menuvi13.lua"))()
+        end)
+    end
+)
+
 createDualButtons(page4, "🕊️ FLY V1", Theme.Brand, function() pcall(function() loadstring("\108\111\97\100\115\116\114\105\110\103\40\103\97\109\101\58\72\116\116\112\71\101\116\40\40\39\104\116\116\112\115\58\47\47\103\105\115\116\46\103\105\116\104\117\98\117\115\101\114\99\111\110\116\101\110\116\46\99\111\109\47\109\101\111\122\111\110\101\89\84\47\98\102\48\51\55\100\102\102\57\102\48\97\55\48\48\49\55\51\48\52\100\100\100\54\55\102\100\99\100\51\55\48\47\114\97\119\47\101\49\52\101\55\52\102\52\50\53\98\48\54\48\100\102\53\50\51\51\52\51\99\102\51\48\98\55\56\55\48\55\52\101\98\51\99\53\100\50\47\97\114\99\101\117\115\37\50\53\50\48\120\37\50\53\50\48\102\108\121\37\50\53\50\48\50\37\50\53\50\48\111\98\102\108\117\99\97\116\111\114\39\41\44\116\114\117\101\41\41\40\41\10\10")() end) end, "🕊️ FLY V3", Theme.Brand, function() pcall(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/haudeptrai2k6/menu-hack-vip/refs/heads/main/menuvip.lua"))() end) end)
+
+-- Ô nút mới: TP PLAYS
+createButton(page4, "🎯 TP PLAYS", Theme.AccentOn, function()
+    pcall(function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/haudeptrai2k6/hack.lua/refs/heads/main/LICENSE.lua"))()
+    end)
+end)
 
 -- ==========================================
 -- [TAB 5: NHẠC ID] & [TAB 6: TP SAVE] 
@@ -834,7 +890,6 @@ local autoTpPlayerEnabled = false
 local spectatePlayerEnabled = false
 local wasHorizontalTp = false
 
--- Hàm khôi phục tư thế đứng thẳng bình thường khi tắt Auto TP hoặc đổi về Sau lưng/Trước mặt
 local function restoreNormalPosture()
     local myChar = player.Character
     if not myChar then return end
@@ -863,7 +918,6 @@ local function restoreNormalPosture()
     wasHorizontalTp = false
 end
 
--- 1. KHUNG ĐIỀU KHIỂN TRÊN CÙNG
 local tpControlCard = Instance.new("Frame", page7)
 tpControlCard.Size = UDim2.new(0.94, 0, 0, 86)
 tpControlCard.BackgroundColor3 = Color3.fromRGB(28, 30, 42)
@@ -875,7 +929,6 @@ tpCardStroke.Color = Theme.Brand
 tpCardStroke.Thickness = 1.4
 table.insert(RGBElements, {Type = "Button", Stroke = tpCardStroke, DefaultColor = Theme.Brand})
 
--- Hàng 1: Avatar mục tiêu + Tên mục tiêu + Nút Spectate
 local targetHeaderRow = Instance.new("Frame", tpControlCard)
 targetHeaderRow.Size = UDim2.new(1, -12, 0, 26)
 targetHeaderRow.Position = UDim2.new(0, 6, 0, 4)
@@ -923,7 +976,6 @@ spectateStroke.Color = Theme.AccentOff
 spectateStroke.Thickness = 1
 spectateStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 
--- Hàng 2: Nút chọn Vị trí TP
 local tpPosBtn = Instance.new("TextButton", tpControlCard)
 tpPosBtn.Size = UDim2.new(1, -12, 0, 24)
 tpPosBtn.Position = UDim2.new(0, 6, 0, 33)
@@ -965,7 +1017,6 @@ tpPosBtn.MouseButton1Click:Connect(function()
     if State.AutoSave then saveConfig() end
 end)
 
--- Hàng 3: Thanh trượt Khoảng cách TP
 local tpDistContainer = Instance.new("Frame", tpControlCard)
 tpDistContainer.Size = UDim2.new(1, -12, 0, 24)
 tpDistContainer.Position = UDim2.new(0, 6, 0, 59)
@@ -1065,7 +1116,6 @@ local function teleportToSelectedPlayer()
     if targetRoot and myRoot and (not targetHum or targetHum.Health > 0) and (not myHum or myHum.Health > 0) then
         local mode = TpPositions[State.TpPositionIdx] or TpPositions[1]
         
-        -- Lấy vị trí của mục tiêu và hướng quay ngang (chỉ lấy trục Y để nhân vật không bị nghiêng lệch)
         local targetPos = targetRoot.Position
         local _, targetYaw, _ = targetRoot.CFrame:ToEulerAnglesYXZ()
         local baseCFrame = CFrame.new(targetPos) * CFrame.Angles(0, targetYaw, 0)
@@ -1102,7 +1152,6 @@ local function resetCameraSubject()
     end)
 end
 
--- 2. HÀNG NÚT ĐÔI: TP 1 LẦN & AUTO TP
 local tpActionRow = Instance.new("Frame", page7)
 tpActionRow.Size = UDim2.new(0.94, 0, 0, 28)
 tpActionRow.BackgroundTransparency = 1
@@ -1204,7 +1253,6 @@ spectateBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- 3. DANH SÁCH NGƯỜI CHƠI CÓ THANH CUỘN LÊN XUỐNG RIÊNG
 local playerListContainer = Instance.new("Frame", page7)
 playerListContainer.Size = UDim2.new(0.94, 0, 1, -132)
 playerListContainer.BackgroundColor3 = Color3.fromRGB(24, 25, 34)
