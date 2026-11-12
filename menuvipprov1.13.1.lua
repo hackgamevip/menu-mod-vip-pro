@@ -1680,494 +1680,531 @@ task.spawn(function()
     end
 end)
 
+            
+
 -- ==========================================
--- [TAB 9: CẤU HÌNH (ĐÃ TÍCH HỢP ĐẦY ĐỦ)]
+-- [TAB 9: CẤU HÌNH (ĐÃ FIX LỖI 200 BIẾN LOCAL LÀM MẤT MENU)]
 -- ==========================================
-local OriginalParticles = {}
-local OriginalPostEffects = {}
-local OriginalShadows = {}
-local HiddenPlayersCache = {}
-local HiddenPetsCache = {}
+;(function()
+    local Stats = game:GetService("Stats")
 
--- 1. BẢNG ĐO THÔNG SỐ THỜI GIAN THỰC (LIVE MONITOR)
-local liveMonitorCard = Instance.new("Frame", page9)
-liveMonitorCard.Size = UDim2.new(0.92, 0, 0, 52)
-liveMonitorCard.BackgroundColor3 = Color3.fromRGB(25, 27, 38)
-liveMonitorCard.ZIndex = 10
-Instance.new("UICorner", liveMonitorCard).CornerRadius = UDim.new(0, 8)
-local monitorStroke = Instance.new("UIStroke", liveMonitorCard)
-monitorStroke.Color = Theme.Brand
-monitorStroke.Thickness = 1.3
-table.insert(RGBElements, {Type = "Button", Stroke = monitorStroke, DefaultColor = Theme.Brand})
+    if State.DisableParticles == nil then State.DisableParticles = false end
+    if State.DisablePostEffects == nil then State.DisablePostEffects = false end
+    if State.HidePetsAccessories == nil then State.HidePetsAccessories = false end
+    if State.AutoClearRAM == nil then State.AutoClearRAM = false end
 
-local monitorTitle = Instance.new("TextLabel", liveMonitorCard)
-monitorTitle.Size = UDim2.new(1, -16, 0, 16)
-monitorTitle.Position = UDim2.new(0, 8, 0, 4)
-monitorTitle.BackgroundTransparency = 1
-monitorTitle.Text = "📊 THÔNG SỐ HIỆU NĂNG THỜI GIAN THỰC (LIVE MONITOR)"
-monitorTitle.TextColor3 = Theme.Brand
-monitorTitle.Font = Enum.Font.GothamBlack
-monitorTitle.TextSize = 9.5
-monitorTitle.TextXAlignment = Enum.TextXAlignment.Left
-monitorTitle.ZIndex = 10
+    local Cache = {
+        Particles = {},
+        PostEffects = {},
+        Shadows = {},
+        Players = {},
+        Pets = {},
+        Toggles = {},
+        PartCount = 0,
+        Tickets = {LowGfx = 0, Particle = 0, Pet = 0, Player = 0, Shadow = 0}
+    }
 
-local monitorStatsLabel = Instance.new("TextLabel", liveMonitorCard)
-monitorStatsLabel.Size = UDim2.new(1, -16, 0, 28)
-monitorStatsLabel.Position = UDim2.new(0, 8, 0, 21)
-monitorStatsLabel.BackgroundTransparency = 1
-monitorStatsLabel.RichText = true
-monitorStatsLabel.Text = "Đang đo thông số..."
-monitorStatsLabel.TextColor3 = Theme.TextTitle
-monitorStatsLabel.Font = Enum.Font.GothamSemibold
-monitorStatsLabel.TextSize = 10.5
-monitorStatsLabel.TextXAlignment = Enum.TextXAlignment.Left
-monitorStatsLabel.TextYAlignment = Enum.TextYAlignment.Top
-monitorStatsLabel.ZIndex = 10
-
-local cachedPartCount = 0
-task.spawn(function()
-    for i, v in ipairs(workspace:GetDescendants()) do
-        if v:IsA("BasePart") then cachedPartCount = cachedPartCount + 1 end
-        if i % 500 == 0 then task.wait() end
-    end
-end)
-workspace.DescendantAdded:Connect(function(v)
-    if v:IsA("BasePart") then cachedPartCount = cachedPartCount + 1 end
-end)
-workspace.DescendantRemoving:Connect(function(v)
-    if v:IsA("BasePart") then cachedPartCount = math.max(0, cachedPartCount - 1) end
-end)
-
-task.spawn(function()
-    while task.wait(0.8) do
-        if page9.Visible then
-            local pingStr = "0 ms"
-            local ramMB = 0
-            pcall(function()
-                if Stats and Stats:FindFirstChild("Network") and Stats.Network:FindFirstChild("ServerStatsItem") then
-                    local rawPing = Stats.Network.ServerStatsItem["Data Ping"]:GetValueString()
-                    local numPing = rawPing and rawPing:match("%d+")
-                    pingStr = (numPing or tostring(math.floor(player:GetNetworkPing() * 1000))) .. " ms"
-                else
-                    pingStr = tostring(math.floor(player:GetNetworkPing() * 1000)) .. " ms"
+    local function createTab9Toggle(parent, text, varName, callback)
+        local frameItem = createToggle(parent, text, varName, callback)
+        local btn = frameItem:FindFirstChildOfClass("TextButton")
+        Cache.Toggles[varName] = function(targetState)
+            if State[varName] ~= targetState then
+                State[varName] = targetState
+                if btn then
+                    local stroke = btn:FindFirstChildOfClass("UIStroke")
+                    for _, lbl in ipairs(btn:GetChildren()) do
+                        if lbl:IsA("TextLabel") and (lbl.Text == "ON" or lbl.Text == "OFF") then
+                            lbl.Text = targetState and "ON" or "OFF"
+                            TweenService:Create(lbl, TweenInfo.new(0.2), {TextColor3 = targetState and Theme.AccentOn or Theme.AccentOff}):Play()
+                        end
+                    end
+                    if stroke and not State.RGB then
+                        TweenService:Create(stroke, TweenInfo.new(0.2), {Color = targetState and Theme.AccentOn or Theme.Stroke}):Play()
+                    end
+                    TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = targetState and Color3.fromRGB(35, 45, 40) or Theme.ItemBg}):Play()
                 end
-            end)
-            pcall(function() ramMB = math.floor(Stats:GetTotalMemoryUsageMb()) end)
-            if ramMB == 0 then
-                pcall(function() ramMB = math.floor(collectgarbage("count") / 1024) end)
-            end
-            local fpsColor = fps >= 45 and "#2ECC71" or (fps >= 25 and "#F1C40F" or "#FF4757")
-            monitorStatsLabel.Text = string.format(
-                "⚡ FPS: <font color='%s'>%d</font>   |   🌐 Ping: <font color='#00E5FF'>%s</font>\n🧠 RAM: <font color='#FF9F43'>%d MB</font>   |   🧱 Vật thể (Parts): <font color='#A29BFE'>%d</font>",
-                fpsColor, fps, pingStr, ramMB, cachedPartCount
-            )
-        end
-    end
-end)
-
--- 2. HÀM TỐI ƯU HÓA OBJECT
-local function isPlayerCharDescendant(obj)
-    for _, p in ipairs(Players:GetPlayers()) do
-        if p.Character and obj:IsDescendantOf(p.Character) then
-            return true, p
-        end
-    end
-    return false, nil
-end
-
-local function isPetOrAccessory(obj)
-    if obj:FindFirstAncestorWhichIsA("Tool") then return false end
-    if obj:IsA("Accessory") or obj:IsA("Hat") or obj:FindFirstAncestorWhichIsA("Accessory") or obj:FindFirstAncestorWhichIsA("Hat") then
-        return true
-    end
-    local isChar, _ = isPlayerCharDescendant(obj)
-    if isChar then return false end
-
-    local parent = obj.Parent
-    while parent and parent ~= workspace and parent ~= game do
-        local pName = string.lower(parent.Name)
-        if pName ~= string.lower(player.Name .. "_clone") then
-            if pName:find("pet") or pName:find("summon") or pName:find("minion") or pName:find("companion") or pName:find("stand") or pName:find("aura") or pName:find("wing") then
-                return true
+                if callback then task.spawn(callback, targetState) end
             end
         end
-        parent = parent.Parent
+        return frameItem
     end
-    return false
-end
 
-local function applyObjectOptimizations(obj)
-    if not obj or not obj.Parent then return end
-    if obj.Name == "VipAirWalk" or obj.Name == "VipSpectateProxy" or string.find(obj.Name, "^ESPAnchor_") then return end
+    -- 1. BẢNG ĐO THÔNG SỐ THỜI GIAN THỰC (LIVE MONITOR)
+    local liveMonitorCard = Instance.new("Frame", page9)
+    liveMonitorCard.Size = UDim2.new(0.92, 0, 0, 52)
+    liveMonitorCard.BackgroundColor3 = Color3.fromRGB(25, 27, 38)
+    liveMonitorCard.ZIndex = 10
+    Instance.new("UICorner", liveMonitorCard).CornerRadius = UDim.new(0, 8)
+    local monitorStroke = Instance.new("UIStroke", liveMonitorCard)
+    monitorStroke.Color = Theme.Brand
+    monitorStroke.Thickness = 1.3
+    table.insert(RGBElements, {Type = "Button", Stroke = monitorStroke, DefaultColor = Theme.Brand})
 
-    if State.LowGfx then
-        if obj:IsA("BasePart") and obj.Material ~= Enum.Material.SmoothPlastic then
-            if not OriginalGFX[obj] then OriginalGFX[obj] = {} end
-            if OriginalGFX[obj].Material == nil then OriginalGFX[obj].Material = obj.Material end
-            obj.Material = Enum.Material.SmoothPlastic
-        elseif (obj:IsA("Decal") or obj:IsA("Texture")) and obj.Transparency < 1 then
-            local isChar, _ = isPlayerCharDescendant(obj)
-            if not isChar then
+    local monitorTitle = Instance.new("TextLabel", liveMonitorCard)
+    monitorTitle.Size = UDim2.new(1, -16, 0, 16)
+    monitorTitle.Position = UDim2.new(0, 8, 0, 4)
+    monitorTitle.BackgroundTransparency = 1
+    monitorTitle.Text = "📊 THÔNG SỐ HIỆU NĂNG THỜI GIAN THỰC (LIVE MONITOR)"
+    monitorTitle.TextColor3 = Theme.Brand
+    monitorTitle.Font = Enum.Font.GothamBlack
+    monitorTitle.TextSize = 9.5
+    monitorTitle.TextXAlignment = Enum.TextXAlignment.Left
+    monitorTitle.ZIndex = 10
+
+    local monitorStatsLabel = Instance.new("TextLabel", liveMonitorCard)
+    monitorStatsLabel.Size = UDim2.new(1, -16, 0, 28)
+    monitorStatsLabel.Position = UDim2.new(0, 8, 0, 21)
+    monitorStatsLabel.BackgroundTransparency = 1
+    monitorStatsLabel.RichText = true
+    monitorStatsLabel.Text = "Đang đo thông số..."
+    monitorStatsLabel.TextColor3 = Theme.TextTitle
+    monitorStatsLabel.Font = Enum.Font.GothamSemibold
+    monitorStatsLabel.TextSize = 10.5
+    monitorStatsLabel.TextXAlignment = Enum.TextXAlignment.Left
+    monitorStatsLabel.TextYAlignment = Enum.TextYAlignment.Top
+    monitorStatsLabel.ZIndex = 10
+
+    task.spawn(function()
+        for i, v in ipairs(workspace:GetDescendants()) do
+            if v:IsA("BasePart") then Cache.PartCount = Cache.PartCount + 1 end
+            if i % 500 == 0 then task.wait() end
+        end
+    end)
+    workspace.DescendantAdded:Connect(function(v)
+        if v:IsA("BasePart") then Cache.PartCount = Cache.PartCount + 1 end
+    end)
+    workspace.DescendantRemoving:Connect(function(v)
+        if v:IsA("BasePart") then Cache.PartCount = math.max(0, Cache.PartCount - 1) end
+    end)
+
+    task.spawn(function()
+        while task.wait(0.8) do
+            if page9.Visible then
+                local pingStr = "0 ms"
+                local ramMB = 0
+                pcall(function()
+                    if Stats and Stats:FindFirstChild("Network") and Stats.Network:FindFirstChild("ServerStatsItem") then
+                        local rawPing = Stats.Network.ServerStatsItem["Data Ping"]:GetValueString()
+                        local numPing = rawPing and rawPing:match("%d+")
+                        pingStr = (numPing or tostring(math.floor(player:GetNetworkPing() * 1000))) .. " ms"
+                    else
+                        pingStr = tostring(math.floor(player:GetNetworkPing() * 1000)) .. " ms"
+                    end
+                end)
+                pcall(function() ramMB = math.floor(Stats:GetTotalMemoryUsageMb()) end)
+                if ramMB == 0 then
+                    pcall(function() ramMB = math.floor(collectgarbage("count") / 1024) end)
+                end
+                local fpsColor = fps >= 45 and "#2ECC71" or (fps >= 25 and "#F1C40F" or "#FF4757")
+                monitorStatsLabel.Text = string.format(
+                    "⚡ FPS: <font color='%s'>%d</font>   |   🌐 Ping: <font color='#00E5FF'>%s</font>\n🧠 RAM: <font color='#FF9F43'>%d MB</font>   |   🧱 Vật thể (Parts): <font color='#A29BFE'>%d</font>",
+                    fpsColor, fps, pingStr, ramMB, Cache.PartCount
+                )
+            end
+        end
+    end)
+
+    -- 2. CƠ CHẾ XỬ LÝ PHÂN LUỒNG (ANTI-FREEZE) & TỰ ĐỘNG BẮT HIỆU ỨNG MỚI
+    local function isPlayerCharDescendant(obj)
+        for _, p in ipairs(Players:GetPlayers()) do
+            if p.Character and obj:IsDescendantOf(p.Character) then
+                return true, p
+            end
+        end
+        return false, nil
+    end
+
+    local function isPetOrAccessory(obj)
+        if obj:FindFirstAncestorWhichIsA("Tool") then return false end
+        if obj:IsA("Accessory") or obj:IsA("Hat") or obj:FindFirstAncestorWhichIsA("Accessory") or obj:FindFirstAncestorWhichIsA("Hat") then
+            return true
+        end
+        local isChar, _ = isPlayerCharDescendant(obj)
+        if isChar then return false end
+
+        local parent = obj.Parent
+        while parent and parent ~= workspace and parent ~= game do
+            local pName = string.lower(parent.Name)
+            if pName ~= string.lower(player.Name .. "_clone") then
+                if pName:find("pet") or pName:find("summon") or pName:find("minion") or pName:find("companion") or pName:find("stand") or pName:find("aura") or pName:find("wing") then
+                    return true
+                end
+            end
+            parent = parent.Parent
+        end
+        return false
+    end
+
+    local function applyObjectOptimizations(obj)
+        if not obj or not obj.Parent then return end
+        if obj.Name == "VipAirWalk" or obj.Name == "VipSpectateProxy" or string.find(obj.Name, "^ESPAnchor_") then return end
+
+        if State.LowGfx then
+            if obj:IsA("BasePart") and obj.Material ~= Enum.Material.SmoothPlastic then
                 if not OriginalGFX[obj] then OriginalGFX[obj] = {} end
-                if OriginalGFX[obj].Transparency == nil then OriginalGFX[obj].Transparency = obj.Transparency end
-                obj.Transparency = 1
+                if OriginalGFX[obj].Material == nil then OriginalGFX[obj].Material = obj.Material end
+                obj.Material = Enum.Material.SmoothPlastic
+            elseif (obj:IsA("Decal") or obj:IsA("Texture")) and obj.Transparency < 1 then
+                local isChar, _ = isPlayerCharDescendant(obj)
+                if not isChar then
+                    if not OriginalGFX[obj] then OriginalGFX[obj] = {} end
+                    if OriginalGFX[obj].Transparency == nil then OriginalGFX[obj].Transparency = obj.Transparency end
+                    obj.Transparency = 1
+                end
             end
         end
-    end
 
-    if State.LowGfx or State.DisableParticles then
-        if obj:IsA("Explosion") then
-            obj.Visible = false
-        elseif (obj:IsA("ParticleEmitter") or obj:IsA("Trail") or obj:IsA("Beam") or obj:IsA("Fire") or obj:IsA("Smoke") or obj:IsA("Sparkles")) and obj.Enabled then
-            if OriginalParticles[obj] == nil then OriginalParticles[obj] = obj.Enabled end
-            obj.Enabled = false
-        end
-    end
-
-    if State.NoShadows and obj:IsA("BasePart") and obj.CastShadow then
-        if OriginalShadows[obj] == nil then OriginalShadows[obj] = obj.CastShadow end
-        obj.CastShadow = false
-    end
-
-    if State.HidePlayers and (obj:IsA("BasePart") or obj:IsA("Decal")) then
-        local isChar, ownerPlayer = isPlayerCharDescendant(obj)
-        if isChar and ownerPlayer ~= player and obj.Transparency < 1 then
-            if HiddenPlayersCache[obj] == nil then HiddenPlayersCache[obj] = obj.Transparency end
-            obj.Transparency = 1
-        end
-    end
-
-    if State.HidePetsAccessories then
-        if (obj:IsA("BasePart") or obj:IsA("Decal") or obj:IsA("MeshPart")) and isPetOrAccessory(obj) then
-            if obj.Transparency < 1 then
-                if HiddenPetsCache[obj] == nil then HiddenPetsCache[obj] = obj.Transparency end
-                obj.Transparency = 1
-            end
-        elseif (obj:IsA("ParticleEmitter") or obj:IsA("Trail") or obj:IsA("Beam")) and isPetOrAccessory(obj) then
-            if obj.Enabled then
-                if HiddenPetsCache[obj] == nil then HiddenPetsCache[obj] = obj.Enabled end
+        if State.LowGfx or State.DisableParticles then
+            if obj:IsA("Explosion") then
+                obj.Visible = false
+            elseif (obj:IsA("ParticleEmitter") or obj:IsA("Trail") or obj:IsA("Beam") or obj:IsA("Fire") or obj:IsA("Smoke") or obj:IsA("Sparkles")) and obj.Enabled then
+                if Cache.Particles[obj] == nil then Cache.Particles[obj] = obj.Enabled end
                 obj.Enabled = false
             end
         end
-    end
-end
 
-workspace.DescendantAdded:Connect(function(obj)
-    if State.LowGfx or State.DisableParticles or State.NoShadows or State.HidePlayers or State.HidePetsAccessories then
-        task.defer(function()
-            pcall(applyObjectOptimizations, obj)
-        end)
-    end
-end)
-
-local function restoreParticlesIfBothOff(ticketCheckFn)
-    if State.LowGfx or State.DisableParticles then return end
-    task.spawn(function()
-        local count = 0
-        for obj, enabledVal in pairs(OriginalParticles) do
-            if ticketCheckFn and not ticketCheckFn() then return end
-            pcall(function()
-                if obj and obj.Parent then obj.Enabled = enabledVal end
-            end)
-            count = count + 1
-            if count % 350 == 0 then task.wait() end
+        if State.NoShadows and obj:IsA("BasePart") and obj.CastShadow then
+            if Cache.Shadows[obj] == nil then Cache.Shadows[obj] = obj.CastShadow end
+            obj.CastShadow = false
         end
-        if not State.LowGfx and not State.DisableParticles then
-            OriginalParticles = {}
+
+        if State.HidePlayers and (obj:IsA("BasePart") or obj:IsA("Decal")) then
+            local isChar, ownerPlayer = isPlayerCharDescendant(obj)
+            if isChar and ownerPlayer ~= player and obj.Transparency < 1 then
+                if Cache.Players[obj] == nil then Cache.Players[obj] = obj.Transparency end
+                obj.Transparency = 1
+            end
+        end
+
+        if State.HidePetsAccessories then
+            if (obj:IsA("BasePart") or obj:IsA("Decal") or obj:IsA("MeshPart")) and isPetOrAccessory(obj) then
+                if obj.Transparency < 1 then
+                    if Cache.Pets[obj] == nil then Cache.Pets[obj] = obj.Transparency end
+                    obj.Transparency = 1
+                end
+            elseif (obj:IsA("ParticleEmitter") or obj:IsA("Trail") or obj:IsA("Beam")) and isPetOrAccessory(obj) then
+                if obj.Enabled then
+                    if Cache.Pets[obj] == nil then Cache.Pets[obj] = obj.Enabled end
+                    obj.Enabled = false
+                end
+            end
+        end
+    end
+
+    workspace.DescendantAdded:Connect(function(obj)
+        if State.LowGfx or State.DisableParticles or State.NoShadows or State.HidePlayers or State.HidePetsAccessories then
+            task.defer(function()
+                pcall(applyObjectOptimizations, obj)
+            end)
         end
     end)
-end
 
-local function cleanDebrisAndRAM(silent)
-    local count = 0
-    task.spawn(function()
-        local descendants = workspace:GetDescendants()
-        for i, obj in ipairs(descendants) do
-            if i % 400 == 0 then task.wait() end
-            pcall(function()
-                if obj and obj.Parent and obj.Name ~= "VipAirWalk" and obj.Name ~= "VipSpectateProxy" and not string.find(obj.Name, "^ESPAnchor_") then
-                    if (not player.Character or not obj:IsDescendantOf(player.Character)) and (not obj.Parent:FindFirstChild("Humanoid")) then
-                        if obj:IsA("ParticleEmitter") or obj:IsA("Trail") or (obj:IsA("Decal") and obj.Name == "Blood") then
-                            obj:Destroy()
-                            count = count + 1
-                        elseif obj:IsA("BasePart") and not obj.Anchored and obj.CanCollide == false and obj.Size.Magnitude < 5 and not isPetOrAccessory(obj) then
-                            obj:Destroy()
-                            count = count + 1
+    local function restoreParticlesIfBothOff(ticketCheckFn)
+        if State.LowGfx or State.DisableParticles then return end
+        task.spawn(function()
+            local count = 0
+            for obj, enabledVal in pairs(Cache.Particles) do
+                if ticketCheckFn and not ticketCheckFn() then return end
+                pcall(function()
+                    if obj and obj.Parent then obj.Enabled = enabledVal end
+                end)
+                count = count + 1
+                if count % 350 == 0 then task.wait() end
+            end
+            if not State.LowGfx and not State.DisableParticles then
+                Cache.Particles = {}
+            end
+        end)
+    end
+
+    local function cleanDebrisAndRAM(silent)
+        local count = 0
+        task.spawn(function()
+            local descendants = workspace:GetDescendants()
+            for i, obj in ipairs(descendants) do
+                if i % 400 == 0 then task.wait() end
+                pcall(function()
+                    if obj and obj.Parent and obj.Name ~= "VipAirWalk" and obj.Name ~= "VipSpectateProxy" and not string.find(obj.Name, "^ESPAnchor_") then
+                        if (not player.Character or not obj:IsDescendantOf(player.Character)) and (not obj.Parent:FindFirstChild("Humanoid")) then
+                            if obj:IsA("ParticleEmitter") or obj:IsA("Trail") or (obj:IsA("Decal") and obj.Name == "Blood") then
+                                obj:Destroy()
+                                count = count + 1
+                            elseif obj:IsA("BasePart") and not obj.Anchored and obj.CanCollide == false and obj.Size.Magnitude < 5 and not isPetOrAccessory(obj) then
+                                obj:Destroy()
+                                count = count + 1
+                            end
                         end
                     end
+                end)
+            end
+            pcall(function() collectgarbage("collect") end)
+            if not silent then
+                MakeToast("Dọn Rác & RAM", "Đã dọn " .. count .. " rác & giải phóng bộ nhớ đệm!", Theme.Brand)
+            end
+        end)
+    end
+
+    -- 3. CÁC NÚT ĐIỀU KHIỂN TRONG TAB CẤU HÌNH
+    createDivider(page9, "TỐI ƯU HIỆU SUẤT TỐI ĐA")
+
+    createButton(page9, "🥔 SIÊU KHOAI TÂY (1-Click Ultra Boost)", Color3.fromRGB(255, 195, 18), function()
+        pcall(function() settings().Rendering.QualityLevel = Enum.QualityLevel.Level01 end)
+        local boostKeys = {"LowGfx", "DisableParticles", "DisablePostEffects", "NoFog", "NoShadows", "OptimizeTerrain", "HidePetsAccessories"}
+        for _, key in ipairs(boostKeys) do
+            if Cache.Toggles[key] then Cache.Toggles[key](true) end
+        end
+        if State.AutoSave then saveConfig() end
+        cleanDebrisAndRAM(true)
+        MakeToast("🥔 Siêu Khoai Tây", "Đã bật toàn bộ cấu hình giảm lag mạnh nhất!", Theme.AccentOn)
+    end)
+
+    createSlider(page9, "Giới hạn FPS (Chống nóng máy)", 10, 120, "FpsCapValue", function(val)
+        pcall(function() setfpscap(val) end)
+    end)
+
+    createTab9Toggle(page9, "Tắt Render 3D (Màn trắng + Giảm CPU)", "Disable3D", function(v)
+        pcall(function() RunService:Set3dRenderingEnabled(not v) end)
+        if v then
+            screenOverlay.BackgroundColor3 = Color3.new(1, 1, 1) 
+            screenOverlay.Visible = true
+        else
+            if not State.AfkModeScreen then screenOverlay.Visible = false end
+        end
+    end)
+
+    createTab9Toggle(page9, "Chế độ AFK Ngủ (Màn đen + 10 FPS)", "AfkModeScreen", function(v)
+        if v then
+            pcall(function() setfpscap(10) end)
+            screenOverlay.BackgroundColor3 = Color3.new(0, 0, 0) 
+            screenOverlay.Visible = true
+            pcall(function() RunService:Set3dRenderingEnabled(false) end)
+        else
+            pcall(function() setfpscap(State.FpsCapValue) end)
+            if not State.Disable3D then 
+                screenOverlay.Visible = false 
+                pcall(function() RunService:Set3dRenderingEnabled(true) end)
+            else
+                screenOverlay.BackgroundColor3 = Color3.new(1, 1, 1) 
+            end
+        end
+    end)
+
+    createDivider(page9, "CÁC CHỨC NĂNG HỦY DIỆT ĐỒ HỌA")
+
+    createTab9Toggle(page9, "📉 Giảm Lag (Xóa toàn bộ hiệu ứng)", "LowGfx", function(v)
+        Cache.Tickets.LowGfx = Cache.Tickets.LowGfx + 1
+        local myTicket = Cache.Tickets.LowGfx
+        if v then
+            Lighting.GlobalShadows = false
+            task.spawn(function()
+                local list = workspace:GetDescendants()
+                for i, obj in ipairs(list) do
+                    if myTicket ~= Cache.Tickets.LowGfx then return end
+                    pcall(applyObjectOptimizations, obj)
+                    if i % 350 == 0 then task.wait() end
                 end
             end)
-        end
-        pcall(function() collectgarbage("collect") end)
-        if not silent then
-            MakeToast("Dọn Rác & RAM", "Đã dọn " .. count .. " rác & giải phóng bộ nhớ đệm!", Theme.Brand)
-        end
-    end)
-end
-
--- 3. CÁC NÚT ĐIỀU KHIỂN TRONG TAB CẤU HÌNH
-createDivider(page9, "TỐI ƯU HIỆU SUẤT TỐI ĐA")
-
-createButton(page9, "🥔 SIÊU KHOAI TÂY (1-Click Ultra Boost)", Color3.fromRGB(255, 195, 18), function()
-    pcall(function() settings().Rendering.QualityLevel = Enum.QualityLevel.Level01 end)
-    local boostKeys = {"LowGfx", "DisableParticles", "DisablePostEffects", "NoFog", "NoShadows", "OptimizeTerrain", "HidePetsAccessories"}
-    for _, key in ipairs(boostKeys) do
-        if Tab9Toggles[key] then Tab9Toggles[key](true) end
-    end
-    if State.AutoSave then saveConfig() end
-    cleanDebrisAndRAM(true)
-    MakeToast("🥔 Siêu Khoai Tây", "Đã bật toàn bộ cấu hình giảm lag mạnh nhất!", Theme.AccentOn)
-end)
-
-createSlider(page9, "Giới hạn FPS (Chống nóng máy)", 10, 120, "FpsCapValue", function(val)
-    pcall(function() setfpscap(val) end)
-end)
-
-createTab9Toggle(page9, "Tắt Render 3D (Màn trắng + Giảm CPU)", "Disable3D", function(v)
-    pcall(function() RunService:Set3dRenderingEnabled(not v) end)
-    if v then
-        screenOverlay.BackgroundColor3 = Color3.new(1, 1, 1) 
-        screenOverlay.Visible = true
-    else
-        if not State.AfkModeScreen then screenOverlay.Visible = false end
-    end
-end)
-
-createTab9Toggle(page9, "Chế độ AFK Ngủ (Màn đen + 10 FPS)", "AfkModeScreen", function(v)
-    if v then
-        pcall(function() setfpscap(10) end)
-        screenOverlay.BackgroundColor3 = Color3.new(0, 0, 0) 
-        screenOverlay.Visible = true
-        pcall(function() RunService:Set3dRenderingEnabled(false) end)
-    else
-        pcall(function() setfpscap(State.FpsCapValue) end)
-        if not State.Disable3D then 
-            screenOverlay.Visible = false 
-            pcall(function() RunService:Set3dRenderingEnabled(true) end)
         else
-            screenOverlay.BackgroundColor3 = Color3.new(1, 1, 1) 
-        end
-    end
-end)
-
-createDivider(page9, "CÁC CHỨC NĂNG HỦY DIỆT ĐỒ HỌA")
-
-local lowGfxTicket = 0
-createTab9Toggle(page9, "📉 Giảm Lag (Xóa toàn bộ hiệu ứng)", "LowGfx", function(v)
-    lowGfxTicket = lowGfxTicket + 1
-    local myTicket = lowGfxTicket
-    if v then
-        Lighting.GlobalShadows = false
-        task.spawn(function()
-            local list = workspace:GetDescendants()
-            for i, obj in ipairs(list) do
-                if myTicket ~= lowGfxTicket then return end
-                pcall(applyObjectOptimizations, obj)
-                if i % 350 == 0 then task.wait() end
-            end
-        end)
-    else
-        Lighting.GlobalShadows = true
-        task.spawn(function()
-            local count = 0
-            for obj, props in pairs(OriginalGFX) do
-                if myTicket ~= lowGfxTicket then return end
-                pcall(function()
-                    if obj and obj.Parent then
-                        for k, val in pairs(props) do obj[k] = val end
-                    end
-                end)
-                count = count + 1
-                if count % 350 == 0 then task.wait() end
-            end
-            if myTicket == lowGfxTicket then OriginalGFX = {} end
-        end)
-        restoreParticlesIfBothOff(function() return myTicket == lowGfxTicket end)
-    end
-end)
-
-local particleTicket = 0
-createTab9Toggle(page9, "💥 Tắt hiệu ứng chiêu thức & Hạt", "DisableParticles", function(v)
-    particleTicket = particleTicket + 1
-    local myTicket = particleTicket
-    if v then
-        task.spawn(function()
-            local list = workspace:GetDescendants()
-            for i, obj in ipairs(list) do
-                if myTicket ~= particleTicket then return end
-                pcall(applyObjectOptimizations, obj)
-                if i % 350 == 0 then task.wait() end
-            end
-        end)
-    else
-        restoreParticlesIfBothOff(function() return myTicket == particleTicket end)
-    end
-end)
-
-local function handlePostEffect(eff, disable)
-    if eff:IsA("PostEffect") or eff:IsA("BloomEffect") or eff:IsA("BlurEffect") or eff:IsA("ColorCorrectionEffect") or eff:IsA("DepthOfFieldEffect") or eff:IsA("SunRaysEffect") then
-        if disable then
-            if OriginalPostEffects[eff] == nil then OriginalPostEffects[eff] = eff.Enabled end
-            eff.Enabled = false
-        else
-            if OriginalPostEffects[eff] ~= nil then
-                eff.Enabled = OriginalPostEffects[eff]
-            end
-        end
-    end
-end
-
-Lighting.DescendantAdded:Connect(function(eff)
-    if State.DisablePostEffects then task.defer(function() pcall(handlePostEffect, eff, true) end) end
-end)
-
-createTab9Toggle(page9, "✨ Xóa hiệu ứng hậu kỳ (Post-Effects)", "DisablePostEffects", function(v)
-    pcall(function()
-        for _, eff in ipairs(Lighting:GetDescendants()) do handlePostEffect(eff, v) end
-        if workspace.CurrentCamera then
-            for _, eff in ipairs(workspace.CurrentCamera:GetDescendants()) do handlePostEffect(eff, v) end
-        end
-        if not v then OriginalPostEffects = {} end
-    end)
-end)
-
-createTab9Toggle(page9, "☀️ Xóa sương mù (Ép tắt 100%)", "NoFog", function(v)
-    if not v then
-        Lighting.FogEnd = 100000 
-        Lighting.FogStart = 0
-    end
-end)
-
-task.spawn(function()
-    while task.wait(0.25) do
-        if State.NoFog then
-            Lighting.FogEnd = 100000
-            Lighting.FogStart = 0
-            local atmo = Lighting:FindFirstChildOfClass("Atmosphere")
-            if atmo then
-                atmo.Density = 0
-                atmo.Offset = 0
-            end
-        end
-    end
-end)
-
-local hidePetTicket = 0
-createTab9Toggle(page9, "🐾 Ẩn Pet, Quái phụ & Phụ kiện", "HidePetsAccessories", function(v)
-    hidePetTicket = hidePetTicket + 1
-    local myTicket = hidePetTicket
-    if v then
-        task.spawn(function()
-            local list = workspace:GetDescendants()
-            for i, obj in ipairs(list) do
-                if myTicket ~= hidePetTicket then return end
-                pcall(applyObjectOptimizations, obj)
-                if i % 350 == 0 then task.wait() end
-            end
-        end)
-    else
-        task.spawn(function()
-            local count = 0
-            for obj, origVal in pairs(HiddenPetsCache) do
-                if myTicket ~= hidePetTicket then return end
-                pcall(function()
-                    if obj and obj.Parent then
-                        if typeof(origVal) == "boolean" then obj.Enabled = origVal else obj.Transparency = origVal end
-                    end
-                end)
-                count = count + 1
-                if count % 350 == 0 then task.wait() end
-            end
-            if myTicket == hidePetTicket then HiddenPetsCache = {} end
-        end)
-    end
-end)
-
-local hidePlayerTicket = 0
-createTab9Toggle(page9, "👻 Ẩn tất cả người chơi khác", "HidePlayers", function(v)
-    hidePlayerTicket = hidePlayerTicket + 1
-    local myTicket = hidePlayerTicket
-    if v then
-        task.spawn(function()
-            for _, p in ipairs(Players:GetPlayers()) do
-                if myTicket ~= hidePlayerTicket then return end
-                if p ~= player and p.Character then
-                    for _, obj in ipairs(p.Character:GetDescendants()) do
-                        pcall(applyObjectOptimizations, obj)
-                    end
+            Lighting.GlobalShadows = true
+            task.spawn(function()
+                local count = 0
+                for obj, props in pairs(OriginalGFX) do
+                    if myTicket ~= Cache.Tickets.LowGfx then return end
+                    pcall(function()
+                        if obj and obj.Parent then
+                            for k, val in pairs(props) do obj[k] = val end
+                        end
+                    end)
+                    count = count + 1
+                    if count % 350 == 0 then task.wait() end
                 end
-                task.wait()
-            end
-        end)
-    else
-        task.spawn(function()
-            local count = 0
-            for obj, trans in pairs(HiddenPlayersCache) do
-                if myTicket ~= hidePlayerTicket then return end
-                pcall(function() if obj and obj.Parent then obj.Transparency = trans end end)
-                count = count + 1
-                if count % 350 == 0 then task.wait() end
-            end
-            if myTicket == hidePlayerTicket then HiddenPlayersCache = {} end
-        end)
-    end
-end)
-
-createTab9Toggle(page9, "🌊 Tối ưu Địa hình & Nước", "OptimizeTerrain", function(v)
-    pcall(function()
-        if v then
-            workspace.Terrain.WaterWaveSize = 0
-            workspace.Terrain.WaterWaveSpeed = 0
-            workspace.Terrain.WaterReflectance = 0
-            workspace.Terrain.WaterTransparency = 1
-        else
-            workspace.Terrain.WaterWaveSize = 0.15
-            workspace.Terrain.WaterWaveSpeed = 10
-            workspace.Terrain.WaterReflectance = 1
-            workspace.Terrain.WaterTransparency = 0.3
+                if myTicket == Cache.Tickets.LowGfx then OriginalGFX = {} end
+            end)
+            restoreParticlesIfBothOff(function() return myTicket == Cache.Tickets.LowGfx end)
         end
     end)
-end)
 
-local shadowTicket = 0
-createTab9Toggle(page9, "🌑 Tắt đổ bóng vật thể (No Shadows)", "NoShadows", function(v)
-    shadowTicket = shadowTicket + 1
-    local myTicket = shadowTicket
-    if v then
-        task.spawn(function()
-            local list = workspace:GetDescendants()
-            for i, obj in ipairs(list) do
-                if myTicket ~= shadowTicket then return end
-                pcall(applyObjectOptimizations, obj)
-                if i % 350 == 0 then task.wait() end
-            end
-        end)
-    else
-        task.spawn(function()
-            local count = 0
-            for obj, origShadow in pairs(OriginalShadows) do
-                if myTicket ~= shadowTicket then return end
-                pcall(function() if obj and obj.Parent then obj.CastShadow = origShadow end end)
-                count = count + 1
-                if count % 350 == 0 then task.wait() end
-            end
-            if myTicket == shadowTicket then OriginalShadows = {} end
-        end)
-    end
-end)
+    createTab9Toggle(page9, "💥 Tắt hiệu ứng chiêu thức & Hạt", "DisableParticles", function(v)
+        Cache.Tickets.Particle = Cache.Tickets.Particle + 1
+        local myTicket = Cache.Tickets.Particle
+        if v then
+            task.spawn(function()
+                local list = workspace:GetDescendants()
+                for i, obj in ipairs(list) do
+                    if myTicket ~= Cache.Tickets.Particle then return end
+                    pcall(applyObjectOptimizations, obj)
+                    if i % 350 == 0 then task.wait() end
+                end
+            end)
+        else
+            restoreParticlesIfBothOff(function() return myTicket == Cache.Tickets.Particle end)
+        end
+    end)
 
-createTab9Toggle(page9, "🔄 Tự động dọn rác & Giải phóng RAM (30s)", "AutoClearRAM")
-task.spawn(function()
-    while task.wait(30) do
-        if State.AutoClearRAM then
-            cleanDebrisAndRAM(true)
+    local function handlePostEffect(eff, disable)
+        if eff:IsA("PostEffect") or eff:IsA("BloomEffect") or eff:IsA("BlurEffect") or eff:IsA("ColorCorrectionEffect") or eff:IsA("DepthOfFieldEffect") or eff:IsA("SunRaysEffect") then
+            if disable then
+                if Cache.PostEffects[eff] == nil then Cache.PostEffects[eff] = eff.Enabled end
+                eff.Enabled = false
+            else
+                if Cache.PostEffects[eff] ~= nil then
+                    eff.Enabled = Cache.PostEffects[eff]
+                end
+            end
         end
     end
-end)
 
-createButton(page9, "🧹 Dọn rác bản đồ & Giải phóng RAM ngay", Theme.AccentOff, function()
-    cleanDebrisAndRAM(false)
-end)
+    Lighting.DescendantAdded:Connect(function(eff)
+        if State.DisablePostEffects then task.defer(function() pcall(handlePostEffect, eff, true) end) end
+    end)
+
+    createTab9Toggle(page9, "✨ Xóa hiệu ứng hậu kỳ (Post-Effects)", "DisablePostEffects", function(v)
+        pcall(function()
+            for _, eff in ipairs(Lighting:GetDescendants()) do handlePostEffect(eff, v) end
+            if workspace.CurrentCamera then
+                for _, eff in ipairs(workspace.CurrentCamera:GetDescendants()) do handlePostEffect(eff, v) end
+            end
+            if not v then Cache.PostEffects = {} end
+        end)
+    end)
+
+    createTab9Toggle(page9, "☀️ Xóa sương mù (Ép tắt 100%)", "NoFog", function(v)
+        if not v then
+            Lighting.FogEnd = 100000 
+            Lighting.FogStart = 0
+        end
+    end)
+
+    task.spawn(function()
+        while task.wait(0.25) do
+            if State.NoFog then
+                Lighting.FogEnd = 100000
+                Lighting.FogStart = 0
+                local atmo = Lighting:FindFirstChildOfClass("Atmosphere")
+                if atmo then
+                    atmo.Density = 0
+                    atmo.Offset = 0
+                end
+            end
+        end
+    end)
+
+    createTab9Toggle(page9, "🐾 Ẩn Pet, Quái phụ & Phụ kiện", "HidePetsAccessories", function(v)
+        Cache.Tickets.Pet = Cache.Tickets.Pet + 1
+        local myTicket = Cache.Tickets.Pet
+        if v then
+            task.spawn(function()
+                local list = workspace:GetDescendants()
+                for i, obj in ipairs(list) do
+                    if myTicket ~= Cache.Tickets.Pet then return end
+                    pcall(applyObjectOptimizations, obj)
+                    if i % 350 == 0 then task.wait() end
+                end
+            end)
+        else
+            task.spawn(function()
+                local count = 0
+                for obj, origVal in pairs(Cache.Pets) do
+                    if myTicket ~= Cache.Tickets.Pet then return end
+                    pcall(function()
+                        if obj and obj.Parent then
+                            if typeof(origVal) == "boolean" then obj.Enabled = origVal else obj.Transparency = origVal end
+                        end
+                    end)
+                    count = count + 1
+                    if count % 350 == 0 then task.wait() end
+                end
+                if myTicket == Cache.Tickets.Pet then Cache.Pets = {} end
+            end)
+        end
+    end)
+
+    createTab9Toggle(page9, "👻 Ẩn tất cả người chơi khác", "HidePlayers", function(v)
+        Cache.Tickets.Player = Cache.Tickets.Player + 1
+        local myTicket = Cache.Tickets.Player
+        if v then
+            task.spawn(function()
+                for _, p in ipairs(Players:GetPlayers()) do
+                    if myTicket ~= Cache.Tickets.Player then return end
+                    if p ~= player and p.Character then
+                        for _, obj in ipairs(p.Character:GetDescendants()) do
+                            pcall(applyObjectOptimizations, obj)
+                        end
+                    end
+                    task.wait()
+                end
+            end)
+        else
+            task.spawn(function()
+                local count = 0
+                for obj, trans in pairs(Cache.Players) do
+                    if myTicket ~= Cache.Tickets.Player then return end
+                    pcall(function() if obj and obj.Parent then obj.Transparency = trans end end)
+                    count = count + 1
+                    if count % 350 == 0 then task.wait() end
+                end
+                if myTicket == Cache.Tickets.Player then Cache.Players = {} end
+            end)
+        end
+    end)
+
+    createTab9Toggle(page9, "🌊 Tối ưu Địa hình & Nước", "OptimizeTerrain", function(v)
+        pcall(function()
+            if v then
+                workspace.Terrain.WaterWaveSize = 0
+                workspace.Terrain.WaterWaveSpeed = 0
+                workspace.Terrain.WaterReflectance = 0
+                workspace.Terrain.WaterTransparency = 1
+            else
+                workspace.Terrain.WaterWaveSize = 0.15
+                workspace.Terrain.WaterWaveSpeed = 10
+                workspace.Terrain.WaterReflectance = 1
+                workspace.Terrain.WaterTransparency = 0.3
+            end
+        end)
+    end)
+
+    createTab9Toggle(page9, "🌑 Tắt đổ bóng vật thể (No Shadows)", "NoShadows", function(v)
+        Cache.Tickets.Shadow = Cache.Tickets.Shadow + 1
+        local myTicket = Cache.Tickets.Shadow
+        if v then
+            task.spawn(function()
+                local list = workspace:GetDescendants()
+                for i, obj in ipairs(list) do
+                    if myTicket ~= Cache.Tickets.Shadow then return end
+                    pcall(applyObjectOptimizations, obj)
+                    if i % 350 == 0 then task.wait() end
+                end
+            end)
+        else
+            task.spawn(function()
+                local count = 0
+                for obj, origShadow in pairs(Cache.Shadows) do
+                    if myTicket ~= Cache.Tickets.Shadow then return end
+                    pcall(function() if obj and obj.Parent then obj.CastShadow = origShadow end end)
+                    count = count + 1
+                    if count % 350 == 0 then task.wait() end
+                end
+                if myTicket == Cache.Tickets.Shadow then Cache.Shadows = {} end
+            end)
+        end
+    end)
+
+    createTab9Toggle(page9, "🔄 Tự động dọn rác & Giải phóng RAM (30s)", "AutoClearRAM")
+    task.spawn(function()
+        while task.wait(30) do
+            if State.AutoClearRAM then
+                cleanDebrisAndRAM(true)
+            end
+        end
+    end)
+
+    createButton(page9, "🧹 Dọn rác bản đồ & Giải phóng RAM ngay", Theme.AccentOff, function()
+        cleanDebrisAndRAM(false)
+    end)
+end)()
+
+
 
 -- ==========================================
 -- [HỆ THỐNG AUTO COLLECT & PROXIMITY]
