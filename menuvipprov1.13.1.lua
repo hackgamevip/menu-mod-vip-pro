@@ -1,5 +1,5 @@
 -- ==========================================
--- MENU VIP PRO V1.13.6 (CLEANED TP LABEL + LONG RANGE SPECTATE FIX)
+-- MENU VIP PRO V1.13.7 (FIXED COMPLETE SCRIPT)
 -- ==========================================
 repeat task.wait() until game:IsLoaded()
 
@@ -13,6 +13,7 @@ local Vim = game:GetService("VirtualInputManager")
 local TeleportService = game:GetService("TeleportService")
 local HttpService = game:GetService("HttpService")
 local MarketplaceService = game:GetService("MarketplaceService")
+local Stats = game:GetService("Stats")
 
 local player = Players.LocalPlayer
 
@@ -26,6 +27,7 @@ local State = {
     MusicVolume = 5, LightColorIdx = 1, NoFog = false,
     FpsCapValue = 60, Disable3D = false, AfkModeScreen = false, RemoveTextures = false,
     HidePlayers = false, OptimizeTerrain = false, NoShadows = false,
+    DisableParticles = false, DisablePostEffects = false, HidePetsAccessories = false, AutoClearRAM = false,
     AutoSkillDelay = 1, 
     AutoSkillZ = false, AutoSkillX = false, AutoSkillC = false, AutoSkillV = false, AutoSkillE = false, AutoSkillF = false,
     AutoSkill1 = false, AutoSkill2 = false, AutoSkill3 = false, AutoSkill4 = false, AutoSkill5 = false, AutoSkill6 = false,
@@ -88,6 +90,7 @@ local originalToolSizes = {}
 local cachedPrompts = {}
 local xrayMats = {}
 local OriginalGFX = {} 
+local Tab9Toggles = {}
 
 local guiParent = player:WaitForChild("PlayerGui")
 pcall(function()
@@ -433,6 +436,31 @@ local function createToggle(parent, text, varName, callback)
     return btnFrame
 end
 
+local function createTab9Toggle(parent, text, varName, callback)
+    local frameItem = createToggle(parent, text, varName, callback)
+    local btn = frameItem:FindFirstChildOfClass("TextButton")
+    Tab9Toggles[varName] = function(targetState)
+        if State[varName] ~= targetState then
+            State[varName] = targetState
+            if btn then
+                local stroke = btn:FindFirstChildOfClass("UIStroke")
+                for _, lbl in ipairs(btn:GetChildren()) do
+                    if lbl:IsA("TextLabel") and (lbl.Text == "ON" or lbl.Text == "OFF") then
+                        lbl.Text = targetState and "ON" or "OFF"
+                        TweenService:Create(lbl, TweenInfo.new(0.2), {TextColor3 = targetState and Theme.AccentOn or Theme.AccentOff}):Play()
+                    end
+                end
+                if stroke and not State.RGB then
+                    TweenService:Create(stroke, TweenInfo.new(0.2), {Color = targetState and Theme.AccentOn or Theme.Stroke}):Play()
+                end
+                TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = targetState and Color3.fromRGB(35, 45, 40) or Theme.ItemBg}):Play()
+            end
+            if callback then task.spawn(callback, targetState) end
+        end
+    end
+    return frameItem
+end
+
 local function createButton(parent, text, color, callback)
     local btnFrame = Instance.new("Frame", parent)
     btnFrame.Size = UDim2.new(0.92, 0, 0, 32); btnFrame.BackgroundTransparency = 1
@@ -515,7 +543,7 @@ task.spawn(function()
 end)
 
 -- ==========================================
--- [TAB 1: THÔNG TIN - ĐÃ TÁCH XUỐNG DÒNG RIÊNG BIỆT]
+-- [TAB 1: THÔNG TIN]
 -- ==========================================
 local function createInfoBox(parent, icon, titleText, heightOffset)
     local item = Instance.new("Frame", parent)
@@ -576,7 +604,7 @@ task.spawn(function()
         )
         local execTime = math.floor(workspace.DistributedGameTime); local hours = math.floor(execTime / 3600); local mins = math.floor((execTime % 3600) / 60); local secs = execTime % 60
         extraInfoLabel.Text = string.format(
-            "<font color='#FF00FF'>Thời gian chơi:</font> %02d:%02d:%02d\n<font color='#FF00FF'>Giờ hệ thống:</font> %s\n<font color='#FF00FF'>Phiên bản:</font> VIP PRO MAX V1.13.6",
+            "<font color='#FF00FF'>Thời gian chơi:</font> %02d:%02d:%02d\n<font color='#FF00FF'>Giờ hệ thống:</font> %s\n<font color='#FF00FF'>Phiên bản:</font> VIP PRO MAX V1.13.7",
             hours, mins, secs, os.date("%H:%M:%S")
         )
     end
@@ -1058,7 +1086,7 @@ end
 renderSavedTps()
 
 -- ==========================================
--- [TAB 7: TP NGƯỜI CHƠI (ĐÃ XÓA CHỮ NẰM NGANG & DẤU <>, SỬA XEM XA > 1000M)]
+-- [TAB 7: TP NGƯỜI CHƠI]
 -- ==========================================
 local targetTpPlayer = nil
 local autoTpPlayerEnabled = false
@@ -1652,48 +1680,14 @@ task.spawn(function()
     end
 end)
 
-
 -- ==========================================
--- [TAB 9: CẤU HÌNH (ĐÃ FIX LỖI XUNG ĐỘT & LIVE MONITOR)]
+-- [TAB 9: CẤU HÌNH (ĐÃ TÍCH HỢP ĐẦY ĐỦ)]
 -- ==========================================
-local Stats = game:GetService("Stats")
-
-if State.DisableParticles == nil then State.DisableParticles = false end
-if State.DisablePostEffects == nil then State.DisablePostEffects = false end
-if State.HidePetsAccessories == nil then State.HidePetsAccessories = false end
-if State.AutoClearRAM == nil then State.AutoClearRAM = false end
-
 local OriginalParticles = {}
 local OriginalPostEffects = {}
 local OriginalShadows = {}
 local HiddenPlayersCache = {}
 local HiddenPetsCache = {}
-local Tab9Toggles = {}
-
-local function createTab9Toggle(parent, text, varName, callback)
-    local frameItem = createToggle(parent, text, varName, callback)
-    local btn = frameItem:FindFirstChildOfClass("TextButton")
-    Tab9Toggles[varName] = function(targetState)
-        if State[varName] ~= targetState then
-            State[varName] = targetState
-            if btn then
-                local stroke = btn:FindFirstChildOfClass("UIStroke")
-                for _, lbl in ipairs(btn:GetChildren()) do
-                    if lbl:IsA("TextLabel") and (lbl.Text == "ON" or lbl.Text == "OFF") then
-                        lbl.Text = targetState and "ON" or "OFF"
-                        TweenService:Create(lbl, TweenInfo.new(0.2), {TextColor3 = targetState and Theme.AccentOn or Theme.AccentOff}):Play()
-                    end
-                end
-                if stroke and not State.RGB then
-                    TweenService:Create(stroke, TweenInfo.new(0.2), {Color = targetState and Theme.AccentOn or Theme.Stroke}):Play()
-                end
-                TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = targetState and Color3.fromRGB(35, 45, 40) or Theme.ItemBg}):Play()
-            end
-            if callback then task.spawn(callback, targetState) end
-        end
-    end
-    return frameItem
-end
 
 -- 1. BẢNG ĐO THÔNG SỐ THỜI GIAN THỰC (LIVE MONITOR)
 local liveMonitorCard = Instance.new("Frame", page9)
@@ -1771,7 +1765,7 @@ task.spawn(function()
     end
 end)
 
--- 2. CƠ CHẾ XỬ LÝ PHÂN LUỒNG (ANTI-FREEZE) & TỰ ĐỘNG BẮT HIỆU ỨNG MỚI
+-- 2. HÀM TỐI ƯU HÓA OBJECT
 local function isPlayerCharDescendant(obj)
     for _, p in ipairs(Players:GetPlayers()) do
         if p.Character and obj:IsDescendantOf(p.Character) then
@@ -1782,12 +1776,10 @@ local function isPlayerCharDescendant(obj)
 end
 
 local function isPetOrAccessory(obj)
-    -- Không ẩn vũ khí (Tool) đang cầm
     if obj:FindFirstAncestorWhichIsA("Tool") then return false end
     if obj:IsA("Accessory") or obj:IsA("Hat") or obj:FindFirstAncestorWhichIsA("Accessory") or obj:FindFirstAncestorWhichIsA("Hat") then
         return true
     end
-    -- Nếu nằm trong nhân vật người chơi nhưng không phải Accessory/Hat thì giữ nguyên (tránh ẩn nhầm tay chân)
     local isChar, _ = isPlayerCharDescendant(obj)
     if isChar then return false end
 
@@ -2177,7 +2169,6 @@ createButton(page9, "🧹 Dọn rác bản đồ & Giải phóng RAM ngay", Them
     cleanDebrisAndRAM(false)
 end)
 
-
 -- ==========================================
 -- [HỆ THỐNG AUTO COLLECT & PROXIMITY]
 -- ==========================================
@@ -2399,7 +2390,6 @@ RunService.Heartbeat:Connect(function(deltaTime)
         teleportToSelectedPlayer(false)
     end
 
-    -- Xem người chơi (Spectate) hỗ trợ khoảng cách xa > 1000m xuyên StreamingEnabled
     if spectatePlayerEnabled and targetTpPlayer and targetTpPlayer.Character then
         local cam = workspace.CurrentCamera
         local tChar = targetTpPlayer.Character
@@ -2408,14 +2398,12 @@ RunService.Heartbeat:Connect(function(deltaTime)
         local targetCF = getCharacterCFrame(tChar)
 
         if cam and targetCF then
-            -- Nếu mục tiêu ở gần và đã tải xong BasePart + Humanoid
             if targetRoot and targetHum then
                 pcall(function() player.ReplicationFocus = targetRoot end)
                 if cam.CameraSubject ~= targetHum then
                     cam.CameraSubject = targetHum
                 end
             else
-                -- Nếu mục tiêu ở quá xa (> 1000m) chưa tải BasePart, tạo Part neo Camera và yêu cầu tải bản đồ quanh mục tiêu
                 if not spectateProxyPart or not spectateProxyPart.Parent then
                     spectateProxyPart = Instance.new("Part")
                     spectateProxyPart.Name = "VipSpectateProxy"
