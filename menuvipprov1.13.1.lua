@@ -1,5 +1,5 @@
 -- ==========================================
--- MENU VIP PRO V1.13.3 (ADDED 6 FUN FEATURES TO TAB 2 + FLY V2)
+-- MENU VIP PRO V1.13.4 (FIXED AIR WALK + UNIVERSAL ESP + CLEANED TAB 2)
 -- ==========================================
 repeat task.wait() until game:IsLoaded()
 
@@ -30,7 +30,7 @@ local State = {
     AutoSkillZ = false, AutoSkillX = false, AutoSkillC = false, AutoSkillV = false, AutoSkillE = false, AutoSkillF = false,
     AutoSkill1 = false, AutoSkill2 = false, AutoSkill3 = false, AutoSkill4 = false, AutoSkill5 = false, AutoSkill6 = false,
     TpPositionIdx = 1, TpDistance = 4,
-    AirWalk = false, RainbowTrail = false
+    AirWalk = false
 }
 
 local Theme = {
@@ -340,6 +340,7 @@ local function getUniversalRoot(char)
     return char:FindFirstChild("HumanoidRootPart") 
         or char:FindFirstChild("Torso") 
         or char:FindFirstChild("UpperTorso") 
+        or char:FindFirstChild("Head")
         or char.PrimaryPart 
         or char:FindFirstChildWhichIsA("BasePart")
 end
@@ -564,14 +565,14 @@ task.spawn(function()
         )
         local execTime = math.floor(workspace.DistributedGameTime); local hours = math.floor(execTime / 3600); local mins = math.floor((execTime % 3600) / 60); local secs = execTime % 60
         extraInfoLabel.Text = string.format(
-            "<font color='#FF00FF'>Thời gian chơi:</font> %02d:%02d:%02d\n<font color='#FF00FF'>Giờ hệ thống:</font> %s\n<font color='#FF00FF'>Phiên bản:</font> VIP PRO MAX V1.13.3",
+            "<font color='#FF00FF'>Thời gian chơi:</font> %02d:%02d:%02d\n<font color='#FF00FF'>Giờ hệ thống:</font> %s\n<font color='#FF00FF'>Phiên bản:</font> VIP PRO MAX V1.13.4",
             hours, mins, secs, os.date("%H:%M:%S")
         )
     end
 end)
 
 -- ==========================================
--- [TAB 2: TÍNH NĂNG (ĐÃ THÊM 6 TÍNH NĂNG THÚ VỊ)]
+-- [TAB 2: TÍNH NĂNG (ĐÃ SỬA AIR WALK & XOÁ NHÀO LỘN/CẦU VỒNG)]
 -- ==========================================
 createToggle(page2, "🛡️ Chống ngã & Chống văng xa", "AntiStun")
 createToggle(page2, "🔒 Khóa vị trí", "LockPosition", function(v) if not v and player.Character then local r = getUniversalRoot(player.Character); if r then r.Anchored = false end end end)
@@ -620,117 +621,98 @@ createToggle(page2, "👀 Nhìn xuyên map (xray)", "XRay", function(v)
 end)
 createToggle(page2, "🔴 ESP người chơi", "ESP")
 
--- === 6 TÍNH NĂNG MỚI TRONG TAB 2 ===
+-- === TÍNH NĂNG MỞ RỘNG (TAB 2) ===
 createDivider(page2, "TÍNH NĂNG MỞ RỘNG")
 
--- 1. Đi bộ trên không (Air Walk)
+-- Đi bộ trên không (Air Walk - Đã khóa cố định độ cao Y không bị tự trôi lên trời)
 local airWalkPart = nil
 local airWalkConn = nil
+local airWalkY = nil
+
+local function getFootOffset(char)
+    local root = getUniversalRoot(char)
+    local hum = char and char:FindFirstChildOfClass("Humanoid")
+    if root and hum then
+        if hum.RigType == Enum.HumanoidRigType.R15 then
+            return hum.HipHeight + (root.Size.Y * 0.5) + 0.35
+        else
+            return 3.0 + (root.Size.Y * 0.5) + 0.35
+        end
+    end
+    return 3.6
+end
+
 createToggle(page2, "☁️ Đi bộ trên không (Air Walk)", "AirWalk", function(v)
     if v then
         if airWalkPart then airWalkPart:Destroy() end
         airWalkPart = Instance.new("Part")
         airWalkPart.Name = "VipAirWalk"
-        airWalkPart.Size = Vector3.new(8, 0.6, 8)
+        airWalkPart.Size = Vector3.new(12, 0.5, 12)
         airWalkPart.Anchored = true
-        airWalkPart.Transparency = 0.4
+        airWalkPart.CanCollide = true
+        airWalkPart.Transparency = 0.45
         airWalkPart.Material = Enum.Material.Neon
         airWalkPart.Color = Theme.Brand
         airWalkPart.Parent = workspace
+
+        local char = player.Character
+        local root = getUniversalRoot(char)
+        if root then
+            airWalkY = root.Position.Y - getFootOffset(char)
+            airWalkPart.CFrame = CFrame.new(root.Position.X, airWalkY, root.Position.Z)
+        end
+
         if airWalkConn then airWalkConn:Disconnect() end
-        airWalkConn = RunService.RenderStepped:Connect(function()
-            local char = player.Character
-            local root = getUniversalRoot(char)
-            if root and airWalkPart then
-                airWalkPart.CFrame = CFrame.new(root.Position.X, root.Position.Y - 3.3, root.Position.Z)
+        airWalkConn = RunService.Heartbeat:Connect(function()
+            local c = player.Character
+            local r = getUniversalRoot(c)
+            local h = c and c:FindFirstChildOfClass("Humanoid")
+            if r and h and airWalkPart then
+                local offset = getFootOffset(c)
+                if airWalkY == nil then
+                    airWalkY = r.Position.Y - offset
+                end
+                -- Chỉ nâng bậc sàn lên khi người chơi chủ động Nhảy lên cao hơn mặt sàn
+                if h.Jump and (r.Position.Y - offset) > airWalkY + 0.5 then
+                    airWalkY = r.Position.Y - offset
+                end
+                airWalkPart.CFrame = CFrame.new(r.Position.X, airWalkY, r.Position.Z)
             end
         end)
     else
         if airWalkConn then airWalkConn:Disconnect(); airWalkConn = nil end
         if airWalkPart then airWalkPart:Destroy(); airWalkPart = nil end
+        airWalkY = nil
     end
 end)
 
--- 2. Hiệu ứng Đuôi Cầu Vồng (Rainbow Trail)
-local trailObj, att0, att1, trailConn
-createToggle(page2, "🌠 Hiệu ứng Đuôi Cầu Vồng", "RainbowTrail", function(v)
-    local char = player.Character
-    local root = getUniversalRoot(char)
-    if v and root then
-        if trailObj then trailObj:Destroy() end
-        if att0 then att0:Destroy() end
-        if att1 then att1:Destroy() end
-        att0 = Instance.new("Attachment", root)
-        att0.Position = Vector3.new(0, 1.5, 0)
-        att1 = Instance.new("Attachment", root)
-        att1.Position = Vector3.new(0, -1.5, 0)
-        trailObj = Instance.new("Trail", root)
-        trailObj.Attachment0 = att0
-        trailObj.Attachment1 = att1
-        trailObj.Lifetime = 0.6
-        trailObj.LightEmission = 1
-        trailObj.Transparency = NumberSequence.new(0.1, 1)
-        if trailConn then trailConn:Disconnect() end
-        trailConn = RunService.RenderStepped:Connect(function()
-            if trailObj and trailObj.Parent then
-                local c1 = Color3.fromHSV(tick() % 3 / 3, 1, 1)
-                local c2 = Color3.fromHSV((tick() + 1) % 3 / 3, 1, 1)
-                trailObj.Color = ColorSequence.new(c1, c2)
-            end
-        end)
-    else
-        if trailConn then trailConn:Disconnect(); trailConn = nil end
-        if trailObj then trailObj:Destroy(); trailObj = nil end
-        if att0 then att0:Destroy(); att0 = nil end
-        if att1 then att1:Destroy(); att1 = nil end
+-- Gậy Click TP
+createButton(page2, "🪄 GẬY CLICK TP", Theme.Brand, function()
+    local backpack = player:FindFirstChildOfClass("Backpack")
+    if not backpack then return end
+    if backpack:FindFirstChild("⚡ Click TP") or (player.Character and player.Character:FindFirstChild("⚡ Click TP")) then
+        MakeToast("Thông báo", "Bạn đã có Gậy Click TP trong túi!", Theme.Brand)
+        return
     end
+    local tool = Instance.new("Tool")
+    tool.Name = "⚡ Click TP"
+    tool.RequiresHandle = false
+    tool.Activated:Connect(function()
+        local mouse = player:GetMouse()
+        if mouse and mouse.Hit and player.Character then
+            local root = getUniversalRoot(player.Character)
+            if root then
+                root.CFrame = CFrame.new(mouse.Hit.Position + Vector3.new(0, 3.5, 0))
+                if State.AirWalk then
+                    airWalkY = root.Position.Y - getFootOffset(player.Character)
+                end
+            end
+        end
+    end)
+    tool.Parent = backpack
 end)
 
--- 3 & 4. Cặp nút: Gậy Click TP & Lộn Nhào 360 Độ
-createDualButtons(
-    page2,
-    "🪄 GẬY CLICK TP",
-    Theme.Brand,
-    function()
-        local backpack = player:FindFirstChildOfClass("Backpack")
-        if not backpack then return end
-        if backpack:FindFirstChild("⚡ Click TP") or (player.Character and player.Character:FindFirstChild("⚡ Click TP")) then
-            MakeToast("Thông báo", "Bạn đã có Gậy Click TP trong túi!", Theme.Brand)
-            return
-        end
-        local tool = Instance.new("Tool")
-        tool.Name = "⚡ Click TP"
-        tool.RequiresHandle = false
-        tool.Activated:Connect(function()
-            local mouse = player:GetMouse()
-            if mouse and mouse.Hit and player.Character then
-                local root = getUniversalRoot(player.Character)
-                if root then
-                    root.CFrame = CFrame.new(mouse.Hit.Position + Vector3.new(0, 3.5, 0))
-                end
-            end
-        end)
-        tool.Parent = backpack
-    end,
-    "🤸 LỘN NHÀO 360°",
-    Theme.AccentOn,
-    function()
-        local char = player.Character
-        local root = getUniversalRoot(char)
-        local hum = char and char:FindFirstChildOfClass("Humanoid")
-        if root and hum then
-            hum:ChangeState(Enum.HumanoidStateType.Jumping)
-            task.spawn(function()
-                for i = 1, 18 do
-                    root.CFrame = root.CFrame * CFrame.Angles(math.rad(-20), 0, 0)
-                    task.wait(0.015)
-                end
-            end)
-        end
-    end
-)
-
--- 5 & 6. Cặp nút: Mở Khóa Zoom Cam & Tạo Phân Thân
+-- Cặp nút: Mở Khóa Zoom Cam & Tạo Phân Thân
 createDualButtons(
     page2,
     "🔭 MỞ KHÓA ZOOM CAM",
@@ -1837,8 +1819,27 @@ task.spawn(function()
 end)
 
 -- ==========================================
--- [TỐI ƯU FPS: TÁCH LUỒNG ESP & HITBOX]
+-- [ESP ĐA NĂNG MỌI GAME (XUYÊN STREAMING / KHÔNG GIỚI HẠN KHOẢNG CÁCH)]
 -- ==========================================
+local function clearSingleESP(p)
+    if ActiveESPs[p] then
+        if ActiveESPs[p].Billboard then ActiveESPs[p].Billboard:Destroy() end
+        if ActiveESPs[p].Highlight then ActiveESPs[p].Highlight:Destroy() end
+        if ActiveESPs[p].Box then ActiveESPs[p].Box:Destroy() end
+        if ActiveESPs[p].Anchor then ActiveESPs[p].Anchor:Destroy() end
+        ActiveESPs[p] = nil
+    end
+end
+
+local function getCharacterWorldPos(char, espPart)
+    if espPart then return espPart.Position end
+    if char and char:IsA("Model") then
+        local ok, cf = pcall(function() return char:GetPivot() end)
+        if ok and cf then return cf.Position end
+    end
+    return nil
+end
+
 local function updateESP_Hitbox()
     if State.Hitbox then
         for _, p in pairs(Players:GetPlayers()) do
@@ -1870,63 +1871,124 @@ local function updateESP_Hitbox()
     end
 
     if not State.ESP then
-        for p, bgui in pairs(ActiveESPs) do 
-            if bgui.Billboard then bgui.Billboard:Destroy() end
-            if bgui.Highlight then bgui.Highlight:Destroy() end
-            ActiveESPs[p] = nil 
+        for p, _ in pairs(ActiveESPs) do
+            clearSingleESP(p)
         end
         return
     end
+
+    local myRoot = getUniversalRoot(player.Character)
+    local myPos = myRoot and myRoot.Position or (workspace.CurrentCamera and workspace.CurrentCamera.CFrame.Position)
 
     for _, p in ipairs(Players:GetPlayers()) do
         if p ~= player then
             pcall(function()
                 local tChar = p.Character
+                if not tChar then
+                    clearSingleESP(p)
+                    return
+                end
+
                 local espPart = getUniversalRoot(tChar)
-                
-                if espPart then
-                    if not ActiveESPs[p] then ActiveESPs[p] = {} end
-                    
-                    if not ActiveESPs[p].Billboard or ActiveESPs[p].Billboard.Adornee ~= espPart or not ActiveESPs[p].Billboard.Parent then
-                        if ActiveESPs[p].Billboard then ActiveESPs[p].Billboard:Destroy() end
-                        local bgui = Instance.new("BillboardGui")
-                        bgui.Name = "MobileESP_" .. p.Name; bgui.Size = UDim2.new(0, 200, 0, 50); bgui.StudsOffset = Vector3.new(0, 3.5, 0)
-                        bgui.AlwaysOnTop = true; bgui.MaxDistance = math.huge; bgui.LightInfluence = 0; bgui.Adornee = espPart; bgui.Parent = guiParent
-                        local tLabel = Instance.new("TextLabel", bgui)
-                        tLabel.Name = "NameLabel"; tLabel.Size = UDim2.new(1, 0, 1, 0); tLabel.BackgroundTransparency = 1; tLabel.TextColor3 = Color3.fromRGB(255, 60, 60)
-                        tLabel.TextStrokeTransparency = 0.2; tLabel.TextStrokeColor3 = Color3.new(0, 0, 0); tLabel.Font = Enum.Font.GothamBold; tLabel.TextSize = 12; tLabel.RichText = true
-                        ActiveESPs[p].Billboard = bgui
+                local targetPos = getCharacterWorldPos(tChar, espPart)
+                if not targetPos then
+                    clearSingleESP(p)
+                    return
+                end
+
+                if not ActiveESPs[p] then ActiveESPs[p] = {} end
+                local data = ActiveESPs[p]
+
+                -- Tạo Part neo vô hình để hiển thị ESP cả khi game bật StreamingEnabled ở rất xa
+                if not espPart then
+                    if not data.Anchor or not data.Anchor.Parent then
+                        local anchor = Instance.new("Part")
+                        anchor.Name = "ESPAnchor_" .. p.Name
+                        anchor.Size = Vector3.new(1, 1, 1)
+                        anchor.Transparency = 1
+                        anchor.Anchored = true
+                        anchor.CanCollide = false
+                        anchor.CanQuery = false
+                        anchor.CanTouch = false
+                        anchor.Parent = workspace
+                        data.Anchor = anchor
                     end
-                    
-                    if not ActiveESPs[p].Highlight or ActiveESPs[p].Highlight.Adornee ~= tChar or not ActiveESPs[p].Highlight.Parent then
-                        if ActiveESPs[p].Highlight then ActiveESPs[p].Highlight:Destroy() end
-                        local hl = Instance.new("Highlight")
-                        hl.Adornee = tChar; hl.FillColor = Color3.fromRGB(255, 60, 60); hl.FillTransparency = 0.6; hl.OutlineColor = Color3.new(1, 1, 1); hl.OutlineTransparency = 0.1
-                        hl.Parent = guiParent
-                        ActiveESPs[p].Highlight = hl
-                    end
-                    
-                    local myChar = player.Character; local myRoot = getUniversalRoot(myChar)
-                    if myRoot then
-                        local dist = math.floor((myRoot.Position - espPart.Position).Magnitude)
-                        ActiveESPs[p].Billboard.NameLabel.Text = p.DisplayName .. '\n<font color="#00FFFF">[' .. dist .. 'm]</font>'
-                    else
-                        ActiveESPs[p].Billboard.NameLabel.Text = p.DisplayName
-                    end
+                    data.Anchor.Position = targetPos
+                    espPart = data.Anchor
+                elseif data.Anchor then
+                    data.Anchor:Destroy()
+                    data.Anchor = nil
+                end
+
+                -- 1. BillboardGui (Không giới hạn khoảng cách MaxDistance = math.huge)
+                if not data.Billboard or not data.Billboard.Parent then
+                    local bgui = Instance.new("BillboardGui")
+                    bgui.Name = "UniversalESP_" .. p.Name
+                    bgui.Size = UDim2.new(0, 220, 0, 55)
+                    bgui.StudsOffset = Vector3.new(0, 3.5, 0)
+                    bgui.AlwaysOnTop = true
+                    bgui.MaxDistance = math.huge
+                    bgui.LightInfluence = 0
+                    bgui.Parent = guiParent
+
+                    local tLabel = Instance.new("TextLabel", bgui)
+                    tLabel.Name = "NameLabel"
+                    tLabel.Size = UDim2.new(1, 0, 1, 0)
+                    tLabel.BackgroundTransparency = 1
+                    tLabel.TextColor3 = Color3.fromRGB(255, 65, 65)
+                    tLabel.TextStrokeTransparency = 0
+                    tLabel.TextStrokeColor3 = Color3.new(0, 0, 0)
+                    tLabel.Font = Enum.Font.GothamBold
+                    tLabel.TextSize = 12
+                    tLabel.RichText = true
+                    data.Billboard = bgui
+                end
+                data.Billboard.Adornee = espPart
+
+                -- 2. BoxHandleAdornment xuyên tường (Không bị giới hạn 31 người như Highlight)
+                if not data.Box or not data.Box.Parent then
+                    local box = Instance.new("BoxHandleAdornment")
+                    box.Name = "ESPBox_" .. p.Name
+                    box.Size = Vector3.new(4, 5.5, 2)
+                    box.Color3 = Color3.fromRGB(255, 50, 50)
+                    box.Transparency = 0.55
+                    box.AlwaysOnTop = true
+                    box.ZIndex = 5
+                    box.Parent = guiParent
+                    data.Box = box
+                end
+                data.Box.Adornee = espPart
+
+                -- 3. Highlight viền nhân vật
+                if not data.Highlight or not data.Highlight.Parent then
+                    local hl = Instance.new("Highlight")
+                    hl.Name = "ESPHighlight_" .. p.Name
+                    hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+                    hl.FillColor = Color3.fromRGB(255, 60, 60)
+                    hl.FillTransparency = 0.65
+                    hl.OutlineColor = Color3.new(1, 1, 1)
+                    hl.OutlineTransparency = 0.1
+                    hl.Parent = guiParent
+                    data.Highlight = hl
+                end
+                data.Highlight.Adornee = tChar
+
+                -- Cập nhật tên, máu và khoảng cách
+                local hum = tChar:FindFirstChildOfClass("Humanoid")
+                local hpText = hum and string.format(" <font color='#2ECC71'>[%d HP]</font>", math.floor(hum.Health)) or ""
+                if myPos then
+                    local dist = math.floor((myPos - targetPos).Magnitude)
+                    data.Billboard.NameLabel.Text = string.format("%s%s\n<font color='#00FFFF'>[%dm]</font>", p.DisplayName, hpText, dist)
                 else
-                    if ActiveESPs[p] then 
-                        if ActiveESPs[p].Billboard then ActiveESPs[p].Billboard:Destroy() end
-                        if ActiveESPs[p].Highlight then ActiveESPs[p].Highlight:Destroy() end
-                        ActiveESPs[p] = nil 
-                    end
+                    data.Billboard.NameLabel.Text = p.DisplayName .. hpText
                 end
             end)
         end
     end
     
-    for p, tbl in pairs(ActiveESPs) do
+    for p, _ in pairs(ActiveESPs) do
         if not Players:FindFirstChild(p.Name) then 
-            if tbl.Billboard then tbl.Billboard:Destroy() end; if tbl.Highlight then tbl.Highlight:Destroy() end; ActiveESPs[p] = nil 
+            clearSingleESP(p)
         end
     end
 end
