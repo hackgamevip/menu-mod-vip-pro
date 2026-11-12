@@ -1,5 +1,5 @@
 -- ==========================================
--- MENU VIP PRO V1.13.5 (FIXED ESP RED BOX + LONG RANGE TP + CAMERA SPEED SYNC)
+-- MENU VIP PRO V1.13.6 (CLEANED TP LABEL + LONG RANGE SPECTATE FIX)
 -- ==========================================
 repeat task.wait() until game:IsLoaded()
 
@@ -345,7 +345,6 @@ local function getUniversalRoot(char)
         or char:FindFirstChildWhichIsA("BasePart")
 end
 
--- Lấy CFrame chuẩn của nhân vật ngay cả khi ở xa > 1000m (StreamingEnabled)
 local function getCharacterCFrame(char)
     if not char then return nil end
     local root = getUniversalRoot(char)
@@ -385,7 +384,7 @@ local function createCycleBtn(parent, prefix, options, stateVar)
     
     local function updateText()
         local item = options[State[stateVar]] or options[1]
-        title.Text = prefix .. " < " .. item.Name .. " >"
+        title.Text = prefix .. " " .. item.Name
     end
     updateText()
     
@@ -577,7 +576,7 @@ task.spawn(function()
         )
         local execTime = math.floor(workspace.DistributedGameTime); local hours = math.floor(execTime / 3600); local mins = math.floor((execTime % 3600) / 60); local secs = execTime % 60
         extraInfoLabel.Text = string.format(
-            "<font color='#FF00FF'>Thời gian chơi:</font> %02d:%02d:%02d\n<font color='#FF00FF'>Giờ hệ thống:</font> %s\n<font color='#FF00FF'>Phiên bản:</font> VIP PRO MAX V1.13.5",
+            "<font color='#FF00FF'>Thời gian chơi:</font> %02d:%02d:%02d\n<font color='#FF00FF'>Giờ hệ thống:</font> %s\n<font color='#FF00FF'>Phiên bản:</font> VIP PRO MAX V1.13.6",
             hours, mins, secs, os.date("%H:%M:%S")
         )
     end
@@ -633,7 +632,6 @@ createToggle(page2, "👀 Nhìn xuyên map (xray)", "XRay", function(v)
 end)
 createToggle(page2, "🔴 ESP người chơi", "ESP")
 
--- === TÍNH NĂNG MỞ RỘNG (TAB 2) ===
 createDivider(page2, "TÍNH NĂNG MỞ RỘNG")
 
 local airWalkPart = nil
@@ -752,7 +750,7 @@ createDualButtons(
 )
 
 -- ==========================================
--- [TAB 3: PLAYER (ĐÃ SỬA CHẠY NHANH ĐỒNG BỘ CAMERA)]
+-- [TAB 3: PLAYER]
 -- ==========================================
 createToggle(page3, "🕊️ bay trên bầu trời", "Fly", function(v)
     local char = player.Character
@@ -1060,12 +1058,14 @@ end
 renderSavedTps()
 
 -- ==========================================
--- [TAB 7: TP NGƯỜI CHƠI (HỖ TRỢ TP XA > 1000M XUYÊN STREAMING)]
+-- [TAB 7: TP NGƯỜI CHƠI (ĐÃ XÓA CHỮ NẰM NGANG & DẤU <>, SỬA XEM XA > 1000M)]
 -- ==========================================
 local targetTpPlayer = nil
 local autoTpPlayerEnabled = false
 local spectatePlayerEnabled = false
 local wasHorizontalTp = false
+local spectateProxyPart = nil
+local lastSpectateStreamTick = 0
 
 local function restoreNormalPosture()
     local myChar = player.Character
@@ -1177,8 +1177,7 @@ tpPosLabel.ZIndex = 10
 
 local function updateTpPosText()
     local item = TpPositions[State.TpPositionIdx] or TpPositions[1]
-    local suffix = item.IsHorizontal and " (NẰM NGANG)" or ""
-    tpPosLabel.Text = "📍 VỊ TRÍ TP: <font color='#FFFF55'>&lt; " .. string.upper(item.Name) .. suffix .. " &gt;</font>"
+    tpPosLabel.Text = "📍 VỊ TRÍ TP: <font color='#FFFF55'>" .. string.upper(item.Name) .. "</font>"
 end
 updateTpPosText()
 
@@ -1280,7 +1279,6 @@ local function updateTargetLabel()
     end
 end
 
--- Hàm TP đến người chơi hỗ trợ khoảng cách xa > 1000m (StreamingEnabled)
 local lastStreamRequest = 0
 local function teleportToSelectedPlayer(isManualClick)
     if not targetTpPlayer or not targetTpPlayer.Character then return false end
@@ -1297,7 +1295,6 @@ local function teleportToSelectedPlayer(isManualClick)
         local targetPos = targetCF.Position
         local dist = (myRoot.Position - targetPos).Magnitude
 
-        -- Nếu mục tiêu ở quá xa (> 250m) hoặc chưa tải xong BasePart, yêu cầu tải vùng bản đồ xung quanh họ
         if (dist > 250 or not getUniversalRoot(targetTpPlayer.Character)) and (tick() - lastStreamRequest > 0.6) then
             lastStreamRequest = tick()
             task.spawn(function()
@@ -1327,7 +1324,6 @@ local function teleportToSelectedPlayer(isManualClick)
         myRoot.AssemblyLinearVelocity = Vector3.zero
         myRoot.AssemblyAngularVelocity = Vector3.zero
 
-        -- Nếu bấm "TP 1 LẦN" từ khoảng cách xa (> 500m), giữ nhân vật và bồi lại tọa độ sau khi stream xong
         if isManualClick and dist > 500 then
             task.spawn(function()
                 for _ = 1, 6 do
@@ -1351,10 +1347,16 @@ end
 
 local function resetCameraSubject()
     pcall(function()
+        if spectateProxyPart then
+            spectateProxyPart:Destroy()
+            spectateProxyPart = nil
+        end
+        player.ReplicationFocus = nil
         local cam = workspace.CurrentCamera
         if cam and player.Character then
             local myHum = player.Character:FindFirstChildOfClass("Humanoid")
             if myHum then
+                cam.CameraType = Enum.CameraType.Custom
                 cam.CameraSubject = myHum
             end
         end
@@ -2022,7 +2024,7 @@ task.spawn(function()
 end)
 
 -- ==========================================
--- VÒNG LẶP VẬT LÝ & CHUYỂN ĐỘNG (ĐỒNG BỘ CAMERA KHÔNG TRỄ)
+-- VÒNG LẶP VẬT LÝ & CHUYỂN ĐỘNG
 -- ==========================================
 RunService.Stepped:Connect(function()
     local char = player.Character
@@ -2038,11 +2040,49 @@ RunService.Heartbeat:Connect(function(deltaTime)
         teleportToSelectedPlayer(false)
     end
 
+    -- Xem người chơi (Spectate) hỗ trợ khoảng cách xa > 1000m xuyên StreamingEnabled
     if spectatePlayerEnabled and targetTpPlayer and targetTpPlayer.Character then
         local cam = workspace.CurrentCamera
-        local targetHum = targetTpPlayer.Character:FindFirstChildOfClass("Humanoid") or getUniversalRoot(targetTpPlayer.Character)
-        if cam and targetHum and cam.CameraSubject ~= targetHum then
-            cam.CameraSubject = targetHum
+        local tChar = targetTpPlayer.Character
+        local targetHum = tChar:FindFirstChildOfClass("Humanoid")
+        local targetRoot = getUniversalRoot(tChar)
+        local targetCF = getCharacterCFrame(tChar)
+
+        if cam and targetCF then
+            -- Nếu mục tiêu ở gần và đã tải xong BasePart + Humanoid
+            if targetRoot and targetHum then
+                pcall(function() player.ReplicationFocus = targetRoot end)
+                if cam.CameraSubject ~= targetHum then
+                    cam.CameraSubject = targetHum
+                end
+            else
+                -- Nếu mục tiêu ở quá xa (> 1000m) chưa tải BasePart, tạo Part neo Camera và yêu cầu tải bản đồ quanh mục tiêu
+                if not spectateProxyPart or not spectateProxyPart.Parent then
+                    spectateProxyPart = Instance.new("Part")
+                    spectateProxyPart.Name = "VipSpectateProxy"
+                    spectateProxyPart.Size = Vector3.new(1, 1, 1)
+                    spectateProxyPart.Transparency = 1
+                    spectateProxyPart.Anchored = true
+                    spectateProxyPart.CanCollide = false
+                    spectateProxyPart.CanQuery = false
+                    spectateProxyPart.CanTouch = false
+                    spectateProxyPart.Parent = workspace
+                end
+                spectateProxyPart.CFrame = targetCF
+                pcall(function() player.ReplicationFocus = spectateProxyPart end)
+                if cam.CameraSubject ~= spectateProxyPart then
+                    cam.CameraSubject = spectateProxyPart
+                end
+                if tick() - lastSpectateStreamTick > 0.5 then
+                    lastSpectateStreamTick = tick()
+                    local streamPos = targetCF.Position
+                    task.spawn(function()
+                        pcall(function()
+                            player:RequestStreamAroundAsync(streamPos, 3)
+                        end)
+                    end)
+                end
+            end
         end
     end
     
@@ -2056,7 +2096,6 @@ RunService.Heartbeat:Connect(function(deltaTime)
         
         if State.Jump then hum.UseJumpPower = true; hum.JumpPower = State.JumpValue end
 
-        -- Chạy nhanh & Lướt xử lý trong bước vật lý Heartbeat + vận tốc để Camera luôn bám sát 100%
         if not State.Fly and not autoTpPlayerEnabled then
             if State.Speed then
                 hum.WalkSpeed = State.SpeedValue
