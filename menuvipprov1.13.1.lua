@@ -1,5 +1,5 @@
 -- ==========================================
--- MENU VIP PRO V1.13.1 (FIXED SYNTAX ERROR)
+-- MENU VIP PRO V1.13.2 (RESIZABLE 4 CORNERS + NEW SCRIPTS)
 -- ==========================================
 repeat task.wait() until game:IsLoaded()
 
@@ -118,7 +118,7 @@ local function saveConfig()
 end
 
 -- ==========================================
--- GIAO DIỆN CHÍNH & THÔNG BÁO (COMPACT)
+-- GIAO DIỆN CHÍNH & THÔNG BÁO
 -- ==========================================
 local gui = Instance.new("ScreenGui")
 gui.Name = "MenuVipProMax"
@@ -168,7 +168,6 @@ local function MakeToast(title, desc, color)
     end)
 end
 
--- Hàm hỗ trợ tải script ngoài và tự sửa lỗi viết hoa chữ 'Local' ở đầu file nếu có
 local function safeLoadUrl(url)
     task.spawn(function()
         local ok, content = pcall(function() return game:HttpGet(url) end)
@@ -221,6 +220,8 @@ Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 14)
 local frameStroke = Instance.new("UIStroke", frame); frameStroke.Color = Theme.Stroke; frameStroke.Thickness = 1.8
 table.insert(RGBElements, {Type = "Frame", Stroke = frameStroke})
 
+local savedOpenPosition = frame.Position
+
 local header = Instance.new("Frame", frame)
 header.Size = UDim2.new(1, 0, 0, 32); header.BackgroundColor3 = Theme.HeaderBg; header.BackgroundTransparency = 0; header.BorderSizePixel = 0; header.ZIndex = 10
 Instance.new("UICorner", header).CornerRadius = UDim.new(0, 14)
@@ -235,21 +236,124 @@ titleLabel.Text = "MENU VIP PRO MAX"
 titleLabel.TextColor3 = Theme.TextTitle; titleLabel.Font = Enum.Font.GothamBlack; titleLabel.TextSize = 13; titleLabel.ZIndex = 10
 
 local avatarImg = Instance.new("ImageLabel", header)
-avatarImg.Size = UDim2.new(0, 22, 0, 22); avatarImg.Position = UDim2.new(0, 10, 0.5, -11); avatarImg.BackgroundTransparency = 1; avatarImg.ZIndex = 10
+avatarImg.Size = UDim2.new(0, 22, 0, 22); avatarImg.Position = UDim2.new(0, 14, 0.5, -11); avatarImg.BackgroundTransparency = 1; avatarImg.ZIndex = 10
 pcall(function() avatarImg.Image = Players:GetUserThumbnailAsync(player.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size420x420) end)
 Instance.new("UICorner", avatarImg).CornerRadius = UDim.new(1, 0)
 local avatarStroke = Instance.new("UIStroke", avatarImg); avatarStroke.Color = Theme.Brand; avatarStroke.Thickness = 1.2; avatarStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 
+-- ==========================================
+-- HỆ THỐNG KÉO 4 GÓC PHÓNG TO / THU NHỎ MENU
+-- ==========================================
+local activeResizeCorner = nil
+local resizeStartInput = nil
+local resizeStartSize = nil
+local resizeStartPos = nil
+local MIN_WIDTH, MAX_WIDTH = 250, 580
+local MIN_HEIGHT, MAX_HEIGHT = 200, 460
+
 local dragToggle, dragStart, startPos
 header.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then dragToggle = true; dragStart = input.Position; startPos = frame.Position end
-end)
-UIS.InputChanged:Connect(function(input)
-    if dragToggle and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-        frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + (input.Position.X - dragStart.X), startPos.Y.Scale, startPos.Y.Offset + (input.Position.Y - dragStart.Y))
+    if activeResizeCorner then return end
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragToggle = true; dragStart = input.Position; startPos = frame.Position
     end
 end)
-UIS.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then dragToggle = false end end)
+UIS.InputChanged:Connect(function(input)
+    if dragToggle and not activeResizeCorner and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + (input.Position.X - dragStart.X), startPos.Y.Scale, startPos.Y.Offset + (input.Position.Y - dragStart.Y))
+        savedOpenPosition = frame.Position
+    end
+end)
+UIS.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragToggle = false
+    end
+end)
+
+local function createCornerResizeHandle(cornerType, posUDim, anchorVec, symbolText)
+    local handle = Instance.new("TextButton", frame)
+    handle.Name = "Resize_" .. cornerType
+    handle.Size = UDim2.new(0, 24, 0, 24)
+    handle.Position = posUDim
+    handle.AnchorPoint = anchorVec
+    handle.BackgroundTransparency = 1
+    handle.Text = symbolText
+    handle.TextColor3 = Theme.Brand
+    handle.TextTransparency = 0.25
+    handle.Font = Enum.Font.GothamBlack
+    handle.TextSize = 15
+    handle.ZIndex = 50
+
+    handle.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            activeResizeCorner = cornerType
+            dragToggle = false
+            resizeStartInput = input.Position
+            resizeStartSize = frame.Size
+            resizeStartPos = frame.Position
+            handle.TextColor3 = Theme.AccentOn
+            handle.TextTransparency = 0
+        end
+    end)
+
+    handle.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            if activeResizeCorner == cornerType then
+                activeResizeCorner = nil
+                savedOpenPosition = frame.Position
+            end
+            handle.TextColor3 = Theme.Brand
+            handle.TextTransparency = 0.25
+        end
+    end)
+end
+
+-- Tạo 4 góc kéo: Trái-Trên (TL), Phải-Trên (TR), Trái-Dưới (BL), Phải-Dưới (BR)
+createCornerResizeHandle("TL", UDim2.new(0, 0, 0, 0), Vector2.new(0, 0), "⌜")
+createCornerResizeHandle("TR", UDim2.new(1, 0, 0, 0), Vector2.new(1, 0), "⌝")
+createCornerResizeHandle("BL", UDim2.new(0, 0, 1, 0), Vector2.new(0, 1), "⌞")
+createCornerResizeHandle("BR", UDim2.new(1, 0, 1, 0), Vector2.new(1, 1), "⌟")
+
+UIS.InputChanged:Connect(function(input)
+    if activeResizeCorner and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        local dx = input.Position.X - resizeStartInput.X
+        local dy = input.Position.Y - resizeStartInput.Y
+
+        local startW = resizeStartSize.X.Offset
+        local startH = resizeStartSize.Y.Offset
+        local newW, newH = startW, startH
+        local newPosX = resizeStartPos.X.Offset
+        local newPosY = resizeStartPos.Y.Offset
+
+        if activeResizeCorner == "BR" then
+            newW = math.clamp(startW + dx, MIN_WIDTH, MAX_WIDTH)
+            newH = math.clamp(startH + dy, MIN_HEIGHT, MAX_HEIGHT)
+        elseif activeResizeCorner == "BL" then
+            newW = math.clamp(startW - dx, MIN_WIDTH, MAX_WIDTH)
+            newH = math.clamp(startH + dy, MIN_HEIGHT, MAX_HEIGHT)
+            newPosX = resizeStartPos.X.Offset + (startW - newW)
+        elseif activeResizeCorner == "TR" then
+            newW = math.clamp(startW + dx, MIN_WIDTH, MAX_WIDTH)
+            newH = math.clamp(startH - dy, MIN_HEIGHT, MAX_HEIGHT)
+            newPosY = resizeStartPos.Y.Offset + (startH - newH)
+        elseif activeResizeCorner == "TL" then
+            newW = math.clamp(startW - dx, MIN_WIDTH, MAX_WIDTH)
+            newH = math.clamp(startH - dy, MIN_HEIGHT, MAX_HEIGHT)
+            newPosX = resizeStartPos.X.Offset + (startW - newW)
+            newPosY = resizeStartPos.Y.Offset + (startH - newH)
+        end
+
+        frame.Size = UDim2.new(0, newW, 0, newH)
+        frame.Position = UDim2.new(resizeStartPos.X.Scale, newPosX, resizeStartPos.Y.Scale, newPosY)
+        savedOpenPosition = frame.Position
+    end
+end)
+
+UIS.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        activeResizeCorner = nil
+    end
+end)
 
 -- SCROLLING TAB BAR
 local tabBar = Instance.new("ScrollingFrame", frame)
@@ -344,7 +448,7 @@ openBtn.MouseButton1Click:Connect(function()
         openStroke.Color = opened and Theme.AccentOff or Theme.Brand
         TweenService:Create(openStroke, TweenInfo.new(0.3), {Color = opened and Theme.AccentOff or Theme.Brand}):Play()
     end
-    frame:TweenPosition(opened and UDim2.new(0.5, -175, 0.5, -152) or UDim2.new(0.5, -175, 1.2, 0), "Out", "Back", 0.45)
+    frame:TweenPosition(opened and savedOpenPosition or UDim2.new(savedOpenPosition.X.Scale, savedOpenPosition.X.Offset, 1.2, 0), "Out", "Back", 0.45)
 end)
 
 local function getUniversalRoot(char)
@@ -358,7 +462,7 @@ end
 
 local function createDivider(parent, text)
     local dFrame = Instance.new("Frame", parent)
-    dFrame.Size = UDim2.new(0.92, 0, 0, 15)
+    dFrame.Size = UDim2.new(0.92, 0, 0, 18)
     dFrame.BackgroundTransparency = 1
     local label = Instance.new("TextLabel", dFrame)
     label.Size = UDim2.new(1, 0, 1, 0)
@@ -366,7 +470,7 @@ local function createDivider(parent, text)
     label.Text = "─── " .. text .. " ───"
     label.TextColor3 = Theme.Brand
     label.Font = Enum.Font.GothamBold
-    label.TextSize = 10
+    label.TextSize = 10.5
     return dFrame
 end
 
@@ -515,7 +619,7 @@ task.spawn(function()
 end)
 
 -- ==========================================
--- [TAB 1: THÔNG TIN - ĐÃ TÁCH XUỐNG DÒNG RIÊNG BIỆT]
+-- [TAB 1: THÔNG TIN - TÁCH XUỐNG DÒNG RIÊNG BIỆT]
 -- ==========================================
 local function createInfoBox(parent, icon, titleText, heightOffset)
     local item = Instance.new("Frame", parent)
@@ -576,7 +680,7 @@ task.spawn(function()
         )
         local execTime = math.floor(workspace.DistributedGameTime); local hours = math.floor(execTime / 3600); local mins = math.floor((execTime % 3600) / 60); local secs = execTime % 60
         extraInfoLabel.Text = string.format(
-            "<font color='#FF00FF'>Thời gian chơi:</font> %02d:%02d:%02d\n<font color='#FF00FF'>Giờ hệ thống:</font> %s\n<font color='#FF00FF'>Phiên bản:</font> VIP PRO MAX V1.13.1",
+            "<font color='#FF00FF'>Thời gian chơi:</font> %02d:%02d:%02d\n<font color='#FF00FF'>Giờ hệ thống:</font> %s\n<font color='#FF00FF'>Phiên bản:</font> VIP PRO MAX V1.13.2",
             hours, mins, secs, os.date("%H:%M:%S")
         )
     end
@@ -690,7 +794,7 @@ createSlider(page3, "Độ sáng", 0, 5, "LightBrightness")
 createCycleBtn(page3, "🎨 Đổi màu:", PlayerLightColors, "LightColorIdx")
 
 -- ==========================================
--- [TAB 4: TIỆN ÍCH (ĐÃ SỬA LỖI THIẾU END)]
+-- [TAB 4: TIỆN ÍCH (TÍNH NĂNG MENU RỜI & SCRIPT MỚI)]
 -- ==========================================
 createToggle(page4, "💾 Lưu Cài Đặt", "AutoSave", function(v) 
     if v then saveConfig(); MakeToast("Đã Bật", "Đã lưu cấu hình hiện tại!", Theme.AccentOn)
@@ -753,6 +857,9 @@ local function rejoinServer()
     if #Players:GetPlayers() <= 1 then player:Kick("\nĐang vào lại server..."); task.wait(); TeleportService:Teleport(game.PlaceId, player) else TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, player) end
 end
 
+-- Dòng chữ phân mục phía trên Trời Sáng / Trời Tối
+createDivider(page4, "TÍNH NĂNG MENU RỜI")
+
 -- Nút Trời Sáng & Trời Tối
 createDualButtons(
     page4,
@@ -788,12 +895,11 @@ createDualButtons(
     "📁 TP SAVE ",
     Theme.Brand,
     function()
-        -- menu save vị trí
         safeLoadUrl("https://raw.githubusercontent.com/haudeptrai2k6/menu-hack-vip13/refs/heads/main/menu-save.lua")
     end
 )
 
--- FLY V1 & FLY V3 (Đã đóng hàm đầy đủ)
+-- FLY V1 & FLY V3
 createDualButtons(
     page4,
     "🕊️ FLY V1",
@@ -806,15 +912,19 @@ createDualButtons(
     "🕊️ FLY V3",
     Theme.Brand,
     function()
-        -- menu fly v3
         safeLoadUrl("https://raw.githubusercontent.com/haudeptrai2k6/menu-hack-vip/refs/heads/main/menu-fly.lua")
     end
 )
 
--- Ô nút mới: TP PLAYS (người chơi)
+-- TP PLAYS (người chơi) & FLY V3 X (Future of Fly V3 X)
 createButton(page4, "🎯 TP PLAYS (người chơi)", Theme.AccentOn, function()
-    -- menu players người chơi
     safeLoadUrl("https://raw.githubusercontent.com/haudeptrai2k6/hack.lua/refs/heads/main/menu-tp-play.lua")
+end)
+
+createButton(page4, "🚀 FLY V3 X (FUTURE)", Theme.Brand, function()
+    pcall(function()
+        loadstring(game:HttpGet("https://scriptblox.com/raw/Universal-Script-Future-of-Fly-V3-X-235903"))()
+    end)
 end)
 
 -- ==========================================
@@ -1407,558 +1517,4 @@ Players.PlayerRemoving:Connect(function(leavingPlayer)
         if spectatePlayerEnabled then
             spectatePlayerEnabled = false
             resetCameraSubject()
-            updateSpectateBtnUI()
-        end
-        updateTargetLabel()
-        updateAutoTpBtnUI()
-        MakeToast("Mục tiêu đã thoát", leavingPlayer.DisplayName .. " đã rời khỏi server!", Theme.AccentOff)
-    end
-    updatePlayerList()
-end)
-
--- ==========================================
--- [TAB 8: AUTO SKILL]
--- ==========================================
-createDivider(page8, "KỸ NĂNG PHÍM CHỮ")
-createToggle(page8, "Tự động kích hoạt Phím [Z]", "AutoSkillZ")
-createToggle(page8, "Tự động kích hoạt Phím [X]", "AutoSkillX")
-createToggle(page8, "Tự động kích hoạt Phím [C]", "AutoSkillC")
-createToggle(page8, "Tự động kích hoạt Phím [V]", "AutoSkillV")
-createToggle(page8, "Tự động kích hoạt Phím [E]", "AutoSkillE")
-createToggle(page8, "Tự động kích hoạt Phím [F]", "AutoSkillF")
-
-createDivider(page8, "KỸ NĂNG PHÍM SỐ")
-createToggle(page8, "Tự động kích hoạt Phím [1]", "AutoSkill1")
-createToggle(page8, "Tự động kích hoạt Phím [2]", "AutoSkill2")
-createToggle(page8, "Tự động kích hoạt Phím [3]", "AutoSkill3")
-createToggle(page8, "Tự động kích hoạt Phím [4]", "AutoSkill4")
-createToggle(page8, "Tự động kích hoạt Phím [5]", "AutoSkill5")
-createToggle(page8, "Tự động kích hoạt Phím [6]", "AutoSkill6")
-
-task.spawn(function()
-    while task.wait(0.5) do 
-        local keysToPress = {}
-        if State.AutoSkillZ then table.insert(keysToPress, Enum.KeyCode.Z) end
-        if State.AutoSkillX then table.insert(keysToPress, Enum.KeyCode.X) end
-        if State.AutoSkillC then table.insert(keysToPress, Enum.KeyCode.C) end
-        if State.AutoSkillV then table.insert(keysToPress, Enum.KeyCode.V) end
-        if State.AutoSkillE then table.insert(keysToPress, Enum.KeyCode.E) end
-        if State.AutoSkillF then table.insert(keysToPress, Enum.KeyCode.F) end
-        
-        if State.AutoSkill1 then table.insert(keysToPress, Enum.KeyCode.One) end
-        if State.AutoSkill2 then table.insert(keysToPress, Enum.KeyCode.Two) end
-        if State.AutoSkill3 then table.insert(keysToPress, Enum.KeyCode.Three) end
-        if State.AutoSkill4 then table.insert(keysToPress, Enum.KeyCode.Four) end
-        if State.AutoSkill5 then table.insert(keysToPress, Enum.KeyCode.Five) end
-        if State.AutoSkill6 then table.insert(keysToPress, Enum.KeyCode.Six) end
-        
-        if #keysToPress > 0 then
-            for _, keyEnum in ipairs(keysToPress) do
-                task.spawn(function()
-                    pcall(function()
-                        Vim:SendKeyEvent(true, keyEnum, false, game)
-                        task.wait(0.02) 
-                        Vim:SendKeyEvent(false, keyEnum, false, game)
-                    end)
-                end)
-                task.wait(0.05) 
-            end
-        end
-    end
-end)
-
--- ==========================================
--- [TAB 9: CẤU HÌNH (TỐI ƯU HỆ THỐNG)]
--- ==========================================
-createDivider(page9, "TỐI ƯU HIỆU SUẤT TỐI ĐA")
-
-createSlider(page9, "Giới hạn FPS (Chống nóng máy)", 10, 120, "FpsCapValue", function(val)
-    pcall(function() setfpscap(val) end)
-end)
-
-createToggle(page9, "Tắt Render 3D (Màn trắng + Giảm CPU)", "Disable3D", function(v)
-    pcall(function() RunService:Set3dRenderingEnabled(not v) end)
-    if v then
-        screenOverlay.BackgroundColor3 = Color3.new(1, 1, 1) 
-        screenOverlay.Visible = true
-    else
-        if not State.AfkModeScreen then screenOverlay.Visible = false end
-    end
-end)
-
-createToggle(page9, "Chế độ AFK Ngủ (Màn đen + 10 FPS)", "AfkModeScreen", function(v)
-    if v then
-        pcall(function() setfpscap(10) end)
-        screenOverlay.BackgroundColor3 = Color3.new(0, 0, 0) 
-        screenOverlay.Visible = true
-        pcall(function() RunService:Set3dRenderingEnabled(false) end)
-    else
-        pcall(function() setfpscap(State.FpsCapValue) end)
-        if not State.Disable3D then 
-            screenOverlay.Visible = false 
-            pcall(function() RunService:Set3dRenderingEnabled(true) end)
-        else
-            screenOverlay.BackgroundColor3 = Color3.new(1, 1, 1) 
-        end
-    end
-end)
-
-createDivider(page9, "CÁC CHỨC NĂNG HỦY DIỆT ĐỒ HỌA")
-
-createToggle(page9, "📉 Giảm Lag (Xóa toàn bộ hiệu ứng)", "LowGfx", function(v)
-    if v then
-        Lighting.GlobalShadows = false
-        for _, obj in ipairs(workspace:GetDescendants()) do
-            pcall(function()
-                if obj:IsA("BasePart") and obj.Material ~= Enum.Material.SmoothPlastic then
-                    OriginalGFX[obj] = {Material = obj.Material}
-                    obj.Material = Enum.Material.SmoothPlastic
-                elseif (obj:IsA("Decal") or obj:IsA("Texture")) and obj.Transparency < 1 then
-                    OriginalGFX[obj] = {Transparency = obj.Transparency}
-                    obj.Transparency = 1
-                elseif (obj:IsA("ParticleEmitter") or obj:IsA("Trail") or obj:IsA("Beam") or obj:IsA("Fire") or obj:IsA("Smoke") or obj:IsA("Sparkles")) and obj.Enabled then
-                    OriginalGFX[obj] = {Enabled = obj.Enabled}
-                    obj.Enabled = false
-                end
-            end)
-        end
-    else
-        Lighting.GlobalShadows = true
-        for obj, props in pairs(OriginalGFX) do
-            pcall(function()
-                if obj and obj.Parent then
-                    for k, val in pairs(props) do obj[k] = val end
-                end
-            end)
-        end
-        OriginalGFX = {} 
-    end
-end)
-
-createToggle(page9, "☀️ Xóa sương mù (Ép tắt 100%)", "NoFog", function(v)
-    if not v then
-        Lighting.FogEnd = 100000 
-        Lighting.FogStart = 0
-    end
-end)
-
-task.spawn(function()
-    while task.wait(0.1) do
-        if State.NoFog then
-            Lighting.FogEnd = 100000
-            Lighting.FogStart = 0
-            local atmo = Lighting:FindFirstChildOfClass("Atmosphere")
-            if atmo then
-                atmo.Density = 0
-                atmo.Offset = 0
-            end
-        end
-    end
-end)
-
-createToggle(page9, "👻 Ẩn tất cả người chơi khác", "HidePlayers")
-
-local hiddenPartsCache = {}
-task.spawn(function()
-    while task.wait(0.5) do
-        if State.HidePlayers then
-            for _, p in pairs(Players:GetPlayers()) do
-                if p ~= player and p.Character then
-                    for _, v in ipairs(p.Character:GetDescendants()) do
-                        if v:IsA("BasePart") or v:IsA("Decal") then
-                            if v.Transparency < 1 then
-                                hiddenPartsCache[v] = v.Transparency
-                                v.Transparency = 1
-                            end
-                        end
-                    end
-                end
-            end
-        else
-            if next(hiddenPartsCache) then
-                for v, trans in pairs(hiddenPartsCache) do
-                    pcall(function() if v and v.Parent then v.Transparency = trans end end)
-                end
-                hiddenPartsCache = {}
-            end
-        end
-    end
-end)
-
-createToggle(page9, "🌊 Tối ưu Địa hình & Nước", "OptimizeTerrain", function(v)
-    pcall(function()
-        if v then
-            workspace.Terrain.WaterWaveSize = 0
-            workspace.Terrain.WaterWaveSpeed = 0
-            workspace.Terrain.WaterReflectance = 0
-            workspace.Terrain.WaterTransparency = 1
-        else
-            workspace.Terrain.WaterWaveSize = 0.15
-            workspace.Terrain.WaterWaveSpeed = 10
-            workspace.Terrain.WaterReflectance = 1
-            workspace.Terrain.WaterTransparency = 0.3
-        end
-    end)
-end)
-
-createToggle(page9, "🌑 Tắt đổ bóng vật thể (No Shadows)", "NoShadows")
-task.spawn(function()
-    while task.wait(2) do
-        if State.NoShadows then
-            pcall(function()
-                for _, v in ipairs(workspace:GetDescendants()) do
-                    if v:IsA("BasePart") and v.CastShadow then
-                        v.CastShadow = false
-                    end
-                end
-            end)
-        end
-    end
-end)
-
-createButton(page9, "🧹 Dọn rác bản đồ (Clear Debris)", Theme.AccentOff, function()
-    local count = 0
-    pcall(function()
-        for _, obj in ipairs(workspace:GetDescendants()) do
-            if not obj:IsDescendantOf(player.Character) and not obj.Parent:FindFirstChild("Humanoid") then
-                if obj:IsA("ParticleEmitter") or obj:IsA("Trail") or obj:IsA("Blood") or (obj:IsA("Decal") and obj.Name == "Blood") then
-                    obj:Destroy()
-                    count = count + 1
-                elseif obj:IsA("BasePart") and not obj.Anchored and obj.CanCollide == false and obj.Size.Magnitude < 5 then
-                    obj:Destroy()
-                    count = count + 1
-                end
-            end
-        end
-    end)
-    MakeToast("Dọn Rác", "Đã dọn dẹp " .. count .. " hiệu ứng/rác!", Theme.Brand)
-end)
-
--- ==========================================
--- [HỆ THỐNG AUTO COLLECT & PROXIMITY]
--- ==========================================
-task.spawn(function()
-    for _, obj in ipairs(workspace:GetDescendants()) do if obj:IsA("ProximityPrompt") then table.insert(cachedPrompts, obj) end end
-end)
-workspace.DescendantAdded:Connect(function(obj) if obj:IsA("ProximityPrompt") then table.insert(cachedPrompts, obj) end end)
-
-local originalPrompts = {}
-task.spawn(function()
-    while task.wait(1) do
-        if State.Instant then
-            for i = #cachedPrompts, 1, -1 do
-                local prompt = cachedPrompts[i]
-                if prompt.Parent then
-                    if not originalPrompts[prompt] then originalPrompts[prompt] = { HoldDuration = prompt.HoldDuration, MaxActivationDistance = prompt.MaxActivationDistance } end
-                    prompt.HoldDuration = 0; prompt.MaxActivationDistance = 25 
-                else table.remove(cachedPrompts, i) end
-            end
-        else
-            if next(originalPrompts) then
-                for prompt, data in pairs(originalPrompts) do if prompt and prompt.Parent then prompt.HoldDuration = data.HoldDuration; prompt.MaxActivationDistance = data.MaxActivationDistance end end
-                originalPrompts = {}
-            end
-        end
-    end
-end)
-
-task.spawn(function()
-    while task.wait(0.5) do
-        pcall(function()
-            if State.AutoCollect and player.Character then
-                local root = getUniversalRoot(player.Character)
-                if root then
-                    local rootPos = root.Position
-                    for _, prompt in ipairs(cachedPrompts) do
-                        if prompt.Parent and prompt.Parent:IsA("BasePart") and prompt.Enabled and (prompt.Parent.Position - rootPos).Magnitude <= 50 then if fireproximityprompt then fireproximityprompt(prompt) end end
-                    end
-                    local overlapParams = OverlapParams.new(); overlapParams.FilterDescendantsInstances = {player.Character}; overlapParams.FilterType = Enum.RaycastFilterType.Exclude
-                    local partsNearby = workspace:GetPartBoundsInRadius(rootPos, 50, overlapParams)
-                    for _, part in ipairs(partsNearby) do
-                        if part.Name == "Handle" and part.Parent and part.Parent:IsA("Tool") then
-                            part.CanCollide = false
-                            if firetouchinterest then firetouchinterest(root, part, 0); task.wait(0.01); firetouchinterest(root, part, 1) else part.CFrame = root.CFrame end
-                        end
-                    end
-                end
-            end
-        end)
-    end
-end)
-
--- ==========================================
--- [TỐI ƯU FPS: TÁCH LUỒNG ESP & HITBOX]
--- ==========================================
-local function updateESP_Hitbox()
-    if State.Hitbox then
-        for _, p in pairs(Players:GetPlayers()) do
-            if p ~= player and p.Character then
-                local hrp = getUniversalRoot(p.Character)
-                if hrp then
-                    if not originalHitboxSizes[p] then originalHitboxSizes[p] = hrp.Size end
-                    hrp.Size = Vector3.new(State.HitboxSize, State.HitboxSize, State.HitboxSize)
-                    hrp.Transparency = 0.5
-                    hrp.CanCollide = false
-                    hrp.Massless = true
-                end
-            end
-        end
-    else
-        if next(originalHitboxSizes) then
-            for p, size in pairs(originalHitboxSizes) do 
-                if p and p.Character then 
-                    local hrp = getUniversalRoot(p.Character)
-                    if hrp then 
-                        hrp.Size = size
-                        hrp.Transparency = 1 
-                        hrp.Massless = false 
-                    end 
-                end 
-            end
-            originalHitboxSizes = {}
-        end
-    end
-
-    if not State.ESP then
-        for p, bgui in pairs(ActiveESPs) do 
-            if bgui.Billboard then bgui.Billboard:Destroy() end
-            if bgui.Highlight then bgui.Highlight:Destroy() end
-            ActiveESPs[p] = nil 
-        end
-        return
-    end
-
-    for _, p in ipairs(Players:GetPlayers()) do
-        if p ~= player then
-            pcall(function()
-                local tChar = p.Character
-                local espPart = getUniversalRoot(tChar)
-                
-                if espPart then
-                    if not ActiveESPs[p] then ActiveESPs[p] = {} end
-                    
-                    if not ActiveESPs[p].Billboard or ActiveESPs[p].Billboard.Adornee ~= espPart or not ActiveESPs[p].Billboard.Parent then
-                        if ActiveESPs[p].Billboard then ActiveESPs[p].Billboard:Destroy() end
-                        local bgui = Instance.new("BillboardGui")
-                        bgui.Name = "MobileESP_" .. p.Name; bgui.Size = UDim2.new(0, 200, 0, 50); bgui.StudsOffset = Vector3.new(0, 3.5, 0)
-                        bgui.AlwaysOnTop = true; bgui.MaxDistance = math.huge; bgui.LightInfluence = 0; bgui.Adornee = espPart; bgui.Parent = guiParent
-                        local tLabel = Instance.new("TextLabel", bgui)
-                        tLabel.Name = "NameLabel"; tLabel.Size = UDim2.new(1, 0, 1, 0); tLabel.BackgroundTransparency = 1; tLabel.TextColor3 = Color3.fromRGB(255, 60, 60)
-                        tLabel.TextStrokeTransparency = 0.2; tLabel.TextStrokeColor3 = Color3.new(0, 0, 0); tLabel.Font = Enum.Font.GothamBold; tLabel.TextSize = 12; tLabel.RichText = true
-                        ActiveESPs[p].Billboard = bgui
-                    end
-                    
-                    if not ActiveESPs[p].Highlight or ActiveESPs[p].Highlight.Adornee ~= tChar or not ActiveESPs[p].Highlight.Parent then
-                        if ActiveESPs[p].Highlight then ActiveESPs[p].Highlight:Destroy() end
-                        local hl = Instance.new("Highlight")
-                        hl.Adornee = tChar; hl.FillColor = Color3.fromRGB(255, 60, 60); hl.FillTransparency = 0.6; hl.OutlineColor = Color3.new(1, 1, 1); hl.OutlineTransparency = 0.1
-                        hl.Parent = guiParent
-                        ActiveESPs[p].Highlight = hl
-                    end
-                    
-                    local myChar = player.Character; local myRoot = getUniversalRoot(myChar)
-                    if myRoot then
-                        local dist = math.floor((myRoot.Position - espPart.Position).Magnitude)
-                        ActiveESPs[p].Billboard.NameLabel.Text = p.DisplayName .. '\n<font color="#00FFFF">[' .. dist .. 'm]</font>'
-                    else
-                        ActiveESPs[p].Billboard.NameLabel.Text = p.DisplayName
-                    end
-                else
-                    if ActiveESPs[p] then 
-                        if ActiveESPs[p].Billboard then ActiveESPs[p].Billboard:Destroy() end
-                        if ActiveESPs[p].Highlight then ActiveESPs[p].Highlight:Destroy() end
-                        ActiveESPs[p] = nil 
-                    end
-                end
-            end)
-        end
-    end
-    
-    for p, tbl in pairs(ActiveESPs) do
-        if not Players:FindFirstChild(p.Name) then 
-            if tbl.Billboard then tbl.Billboard:Destroy() end; if tbl.Highlight then tbl.Highlight:Destroy() end; ActiveESPs[p] = nil 
-        end
-    end
-end
-
-task.spawn(function()
-    while task.wait(0.1) do
-        updateESP_Hitbox()
-    end
-end)
-
--- ==========================================
--- VÒNG LẶP VẬT LÝ & CHUYỂN ĐỘNG
--- ==========================================
-RunService.Stepped:Connect(function()
-    local char = player.Character
-    if char and (State.Noclip or (autoTpPlayerEnabled and wasHorizontalTp)) then
-        for _, p in ipairs(char:GetDescendants()) do
-            if p:IsA("BasePart") and p.CanCollide then p.CanCollide = false end
-        end
-    end
-end)
-
-RunService.RenderStepped:Connect(function(deltaTime)
-    local char = player.Character
-    if not char then return end
-    
-    local root = getUniversalRoot(char)
-    local hum = char:FindFirstChildOfClass("Humanoid")
-    
-    if hum and root then
-        if not State.Fly then 
-            if State.Speed and hum.MoveDirection.Magnitude > 0 then
-                local speedMultiplier = State.SpeedValue / 50 
-                root.CFrame = root.CFrame + (hum.MoveDirection * (speedMultiplier * 60 * deltaTime))
-            end
-
-            if State.AutoDash and hum.MoveDirection.Magnitude > 0 then
-                root.CFrame = root.CFrame + (hum.MoveDirection * (State.DashSpeed / 10))
-            end
-        end
-        
-        if State.SpinBot then 
-            root.CFrame = root.CFrame * CFrame.Angles(0, math.rad(State.SpinSpeed), 0) 
-        end
-        
-        if State.Noclip and hum.MoveDirection.Magnitude == 0 then
-            root.AssemblyLinearVelocity = Vector3.new(0, root.AssemblyLinearVelocity.Y, 0)
-        end
-    end
-end)
-
-RunService.Heartbeat:Connect(function()
-    if autoTpPlayerEnabled and targetTpPlayer then
-        teleportToSelectedPlayer()
-    end
-
-    if spectatePlayerEnabled and targetTpPlayer and targetTpPlayer.Character then
-        local cam = workspace.CurrentCamera
-        local targetHum = targetTpPlayer.Character:FindFirstChildOfClass("Humanoid") or getUniversalRoot(targetTpPlayer.Character)
-        if cam and targetHum and cam.CameraSubject ~= targetHum then
-            cam.CameraSubject = targetHum
-        end
-    end
-    
-    local char = player.Character
-    if not char then return end
-    local root = getUniversalRoot(char)
-    local hum = char:FindFirstChildOfClass("Humanoid")
-    
-    if hum then
-        if State.LockPosition and root then root.Anchored = true end
-        
-        if State.Jump then hum.UseJumpPower = true; hum.JumpPower = State.JumpValue end
-        
-        if State.Fly and root then
-            hum.PlatformStand = true
-            local bv = root:FindFirstChild("FlyBodyVelocity")
-            if not bv then
-                bv = Instance.new("BodyVelocity")
-                bv.Name = "FlyBodyVelocity"
-                bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
-                bv.Velocity = Vector3.zero
-                bv.Parent = root
-            end
-            
-            local bg = root:FindFirstChild("FlyBodyGyro")
-            if not bg then
-                bg = Instance.new("BodyGyro")
-                bg.Name = "FlyBodyGyro"
-                bg.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
-                bg.P = 10000
-                bg.D = 100
-                bg.Parent = root
-            end
-            
-            local cam = workspace.CurrentCamera
-            bg.CFrame = cam.CFrame
-            
-            local moveDir = hum.MoveDirection
-            if moveDir.Magnitude > 0 then
-                local camLook = cam.CFrame.LookVector
-                local camRight = cam.CFrame.RightVector
-                
-                local flatLook = Vector3.new(camLook.X, 0, camLook.Z)
-                local flatRight = Vector3.new(camRight.X, 0, camRight.Z)
-                
-                local forwardUnit = flatLook.Magnitude > 0.001 and flatLook.Unit or Vector3.zero
-                local rightUnit = flatRight.Magnitude > 0.001 and flatRight.Unit or Vector3.zero
-                
-                local dotForward = moveDir:Dot(forwardUnit)
-                local dotRight = moveDir:Dot(rightUnit)
-                
-                local flyDir = (camLook * dotForward) + (rightUnit * dotRight)
-                
-                if flyDir.Magnitude > 0.001 then
-                    bv.Velocity = flyDir.Unit * State.FlySpeed
-                else
-                    bv.Velocity = Vector3.zero
-                end
-            else
-                bv.Velocity = Vector3.zero
-            end
-        else
-            if root and root:FindFirstChild("FlyBodyVelocity") then root.FlyBodyVelocity:Destroy() end
-            if root and root:FindFirstChild("FlyBodyGyro") then root.FlyBodyGyro:Destroy() end
-            if not State.AntiStun and not (autoTpPlayerEnabled and wasHorizontalTp) then
-                hum.PlatformStand = false
-            end
-        end
-
-        if State.AntiStun then 
-            hum:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
-            hum:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, false)
-            
-            local currentState = hum:GetState()
-            if currentState == Enum.HumanoidStateType.FallingDown or currentState == Enum.HumanoidStateType.Ragdoll then 
-                hum:ChangeState(Enum.HumanoidStateType.GettingUp)
-            end
-            
-            if root then
-                local currentVel = root.AssemblyLinearVelocity
-                local horizontalVel = Vector3.new(currentVel.X, 0, currentVel.Z)
-                if horizontalVel.Magnitude > 75 then
-                    root.AssemblyLinearVelocity = Vector3.new(0, currentVel.Y, 0) 
-                end
-            end
-        end
-
-        if root then
-            local light = root:FindFirstChild("PlayerPointLight")
-            if State.PlayerLight then 
-                if not light then light = Instance.new("PointLight", root); light.Name = "PlayerPointLight"; light.Shadows = false end 
-                light.Brightness = State.LightBrightness; light.Range = State.LightRange
-                light.Color = PlayerLightColors[State.LightColorIdx].Value
-            else 
-                if light then light:Destroy() end 
-            end
-        end
-    end
-    
-    if State.Reach then
-        local tool = char:FindFirstChildOfClass("Tool")
-        if tool then
-            local handle = tool:FindFirstChild("Handle")
-            if handle then
-                if not originalToolSizes[tool] then originalToolSizes[tool] = handle.Size end
-                handle.Size = Vector3.new(State.ReachSize, State.ReachSize, State.ReachSize)
-                handle.Massless = true
-                handle.CanCollide = false
-                handle.Transparency = 0.8
-            end
-        end
-    else
-        if next(originalToolSizes) then
-            for t, origSize in pairs(originalToolSizes) do
-                if t and t.Parent and t:FindFirstChild("Handle") then
-                    t.Handle.Size = origSize
-                    t.Handle.Massless = false
-                    t.Handle.Transparency = 0
-                end
-            end
-            originalToolSizes = {}
-        end
-    end
-end)
+            updateSpectate
