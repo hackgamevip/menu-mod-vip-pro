@@ -207,15 +207,10 @@ UIS.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputT
 local frame = Instance.new("Frame", gui)
 frame.Size = UDim2.new(0, 350, 0, 355)
 frame.Position = UDim2.new(0.5, -175, 0.5, -195)
-
-openBtn.MouseButton1Click:Connect(function()
-    clickAnimate(openBtn); opened = not opened
-    if not State.RGB then
-        openStroke.Color = opened and Theme.AccentOff or Theme.Brand
-        TweenService:Create(openStroke, TweenInfo.new(0.3), {Color = opened and Theme.AccentOff or Theme.Brand}):Play()
-    end
-    frame:TweenPosition(opened and UDim2.new(0.5, -175, 0.5, -195) or UDim2.new(0.5, -175, 1.2, 0), "Out", "Back", 0.45, true)
-end)
+frame.BackgroundColor3 = Theme.MainBg; frame.BackgroundTransparency = 0.05; frame.ZIndex = 10
+Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 14)
+local frameStroke = Instance.new("UIStroke", frame); frameStroke.Color = Theme.Stroke; frameStroke.Thickness = 1.8
+table.insert(RGBElements, {Type = "Frame", Stroke = frameStroke})
 
 local header = Instance.new("Frame", frame)
 header.Size = UDim2.new(1, 0, 0, 32); header.BackgroundColor3 = Theme.HeaderBg; header.BackgroundTransparency = 0; header.BorderSizePixel = 0; header.ZIndex = 10
