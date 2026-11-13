@@ -3049,13 +3049,13 @@ end)
 end)()
 
 
----- ==========================================
--- [GÓI NÂNG CẤP TAB 1 V2: DỊU MẮT + ĐỔI VỊ TRÍ + CÔNG CỤ ID SERVER]
+-- ==========================================
+-- [GÓI NÂNG CẤP TAB 1 V3: ĐỔI VỊ TRÍ NÚT + BỘ LỌC DANH SÁCH SERVER]
 -- ==========================================
 ;(function()
     if not page1 then return end
 
-    -- Xóa giao diện Tab 1 cũ để nạp giao diện mới
+    -- Dọn sạch giao diện Tab 1 cũ để tạo bố cục mới
     for _, child in ipairs(page1:GetChildren()) do
         if child:IsA("Frame") then
             child:Destroy()
@@ -3093,7 +3093,6 @@ end)()
         end
     end)
 
-    -- Hàm tạo nút nhỏ dịu mắt (Đã khóa ApplyStrokeMode.Border chống chói chữ)
     local function makeSoftMiniBtn(parent, text, posUDim, sizeUDim, textCol, bgCol, borderCol)
         local btn = Instance.new("TextButton", parent)
         btn.Size = sizeUDim
@@ -3111,7 +3110,7 @@ end)()
         st.Thickness = 1
         st.Transparency = 0.35
         st.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-        return btn
+        return btn, st
     end
 
     local function makeCard(titleIcon, titleText, height, order)
@@ -3200,32 +3199,12 @@ end)()
     Instance.new("UICorner", hpBarFill).CornerRadius = UDim.new(1, 0)
 
     -- ==========================================
-    -- 2. THẺ MÁY CHỦ (LayoutOrder = 2)
+    -- 2. THẺ MÁY CHỦ (Đã chuyển nút 🔄 Reset NV lên vị trí của Copy ID)
     -- ==========================================
     local svCard, svBody = makeCard("🌐", "THÔNG TIN MÁY CHỦ", 108, 2)
 
-    local copyJobBtn = makeSoftMiniBtn(
-        svCard, "📜 Copy ID",
-        UDim2.new(1, -74, 0, 4), UDim2.new(0, 66, 0, 18),
-        Color3.fromRGB(165, 220, 185), Color3.fromRGB(28, 42, 35), Color3.fromRGB(75, 145, 105)
-    )
-    copyJobBtn.MouseButton1Click:Connect(function()
-        clickAnimate(copyJobBtn)
-        pcall(function()
-            if setclipboard then
-                setclipboard(tostring(game.JobId))
-                MakeToast("Đã Copy ID SV", "Đã lưu JobId vào bộ nhớ tạm!", Theme.AccentOn)
-            end
-        end)
-    end)
-
-    -- ==========================================
-    -- 3. THẺ TRẠNG THÁI & HỆ THỐNG (Đưa lên trên ô Dán ID - LayoutOrder = 3)
-    -- ==========================================
-    local sysCard, sysBody = makeCard("⚙️", "TRẠNG THÁI & HỆ THỐNG", 96, 3)
-
     local resetCharBtn = makeSoftMiniBtn(
-        sysCard, "🔄 Reset NV",
+        svCard, "🔄 Reset NV",
         UDim2.new(1, -80, 0, 4), UDim2.new(0, 72, 0, 18),
         Color3.fromRGB(230, 165, 170), Color3.fromRGB(45, 28, 34), Color3.fromRGB(155, 75, 85)
     )
@@ -3241,10 +3220,15 @@ end)()
     end)
 
     -- ==========================================
-    -- 4. CÔNG CỤ QUẢN LÝ & DÁN ID SERVER (LayoutOrder = 4)
+    -- 3. THẺ TRẠNG THÁI & HỆ THỐNG (LayoutOrder = 3)
+    -- ==========================================
+    local sysCard, sysBody = makeCard("⚙️", "TRẠNG THÁI & HỆ THỐNG", 96, 3)
+
+    -- ==========================================
+    -- 4. KHUNG QUẢN LÝ & KẾT NỐI ID SERVER (Đã chuyển 📜 Copy ID xuống đây)
     -- ==========================================
     local idToolCard = Instance.new("Frame", page1)
-    idToolCard.Size = UDim2.new(0.92, 0, 0, 96)
+    idToolCard.Size = UDim2.new(0.92, 0, 0, 92)
     idToolCard.BackgroundColor3 = Theme.ItemBg
     idToolCard.LayoutOrder = 4
     idToolCard.ZIndex = 10
@@ -3265,7 +3249,6 @@ end)()
     idHeader.TextXAlignment = Enum.TextXAlignment.Left
     idHeader.ZIndex = 10
 
-    -- Ô nhập ID Server
     local inputBg = Instance.new("Frame", idToolCard)
     inputBg.Size = UDim2.new(1, -16, 0, 28)
     inputBg.Position = UDim2.new(0, 8, 0, 24)
@@ -3316,29 +3299,52 @@ end)()
         end
     end)
 
-    -- Hàng 3 nút tính năng mở rộng cho ID Server
-    local renderServerList
+    -- Hàng 3 nút bên dưới ô nhập: [📜 Copy ID SV] - [📌 Lưu ID SV Này] - [📤 Copy Lệnh Join]
+    local btnCopyIdDown = makeSoftMiniBtn(
+        idToolCard, "📜 Copy ID SV",
+        UDim2.new(0, 8, 0, 58), UDim2.new(0.31, -4, 0, 24),
+        Color3.fromRGB(165, 220, 185), Color3.fromRGB(28, 42, 35), Color3.fromRGB(75, 145, 105)
+    )
     local btnSaveSv = makeSoftMiniBtn(
         idToolCard, "📌 Lưu ID SV Này",
-        UDim2.new(0, 8, 0, 58), UDim2.new(0.31, -4, 0, 24),
+        UDim2.new(0.345, 2, 0, 58), UDim2.new(0.31, -4, 0, 24),
         Color3.fromRGB(175, 215, 240), Color3.fromRGB(28, 38, 48), Color3.fromRGB(75, 125, 160)
     )
     local btnCopyScript = makeSoftMiniBtn(
         idToolCard, "📤 Copy Lệnh Join",
-        UDim2.new(0.345, 2, 0, 58), UDim2.new(0.31, -4, 0, 24),
+        UDim2.new(0.69, 0, 0, 58), UDim2.new(0.31, -8, 0, 24),
         Color3.fromRGB(225, 205, 155), Color3.fromRGB(42, 38, 28), Color3.fromRGB(145, 125, 70)
     )
-    local btnScanSv = makeSoftMiniBtn(
-        idToolCard, "🔎 Quét ID SV Khác",
-        UDim2.new(0.69, 0, 0, 58), UDim2.new(0.31, -8, 0, 24),
-        Color3.fromRGB(170, 220, 190), Color3.fromRGB(28, 42, 35), Color3.fromRGB(75, 145, 105)
-    )
+
+    btnCopyIdDown.MouseButton1Click:Connect(function()
+        clickAnimate(btnCopyIdDown)
+        pcall(function()
+            if setclipboard then
+                setclipboard(tostring(game.JobId))
+                MakeToast("Đã Copy ID SV", "Đã lưu JobId hiện tại vào bộ nhớ tạm!", Theme.AccentOn)
+            end
+        end)
+    end)
+
+    btnCopyScript.MouseButton1Click:Connect(function()
+        clickAnimate(btnCopyScript)
+        pcall(function()
+            if setclipboard and game.JobId ~= "" then
+                local joinScript = string.format(
+                    'game:GetService("TeleportService"):TeleportToPlaceInstance(%d, "%s", game.Players.LocalPlayer)',
+                    game.PlaceId, game.JobId
+                )
+                setclipboard(joinScript)
+                MakeToast("Đã Copy Lệnh Join", "Gửi lệnh này cho bạn bè để vào chung SV!", Theme.AccentOn)
+            end
+        end)
+    end)
 
     -- ==========================================
-    -- 5. DANH SÁCH ID SERVER ĐÃ LƯU / QUÉT ĐƯỢC (LayoutOrder = 5)
+    -- 5. CÁC Ô CHỌN DANH SÁCH (NẰM NGAY TRÊN CHỮ DANH SÁCH ID SERVER)
     -- ==========================================
     local svListCard = Instance.new("Frame", page1)
-    svListCard.Size = UDim2.new(0.92, 0, 0, 115)
+    svListCard.Size = UDim2.new(0.92, 0, 0, 150)
     svListCard.BackgroundColor3 = Theme.ItemBg
     svListCard.LayoutOrder = 5
     svListCard.ZIndex = 10
@@ -3348,11 +3354,54 @@ end)()
     slStroke.Thickness = 1.2
     table.insert(RGBElements, {Type = "Info", Stroke = slStroke})
 
+    -- Khung chứa 4 ô chọn danh sách nằm trên tiêu đề Danh Sách ID Server
+    local tabFilterRow = Instance.new("Frame", svListCard)
+    tabFilterRow.Size = UDim2.new(1, -12, 0, 24)
+    tabFilterRow.Position = UDim2.new(0, 6, 0, 6)
+    tabFilterRow.BackgroundTransparency = 1
+    tabFilterRow.ZIndex = 11
+
+    local tabBtnSaved, stSaved = makeSoftMiniBtn(
+        tabFilterRow, "💾 Đã Lưu",
+        UDim2.new(0, 0, 0, 0), UDim2.new(0.24, -2, 1, 0),
+        Color3.fromRGB(210, 235, 255), Color3.fromRGB(35, 65, 90), Color3.fromRGB(90, 165, 220)
+    )
+    local tabBtnLow, stLow = makeSoftMiniBtn(
+        tabFilterRow, "📉 Ít Người",
+        UDim2.new(0.25, 1, 0, 0), UDim2.new(0.25, -2, 1, 0),
+        Color3.fromRGB(175, 215, 240), Color3.fromRGB(26, 30, 40), Color3.fromRGB(65, 75, 95)
+    )
+    local tabBtnHigh, stHigh = makeSoftMiniBtn(
+        tabFilterRow, "📈 Đông Người",
+        UDim2.new(0.50, 1, 0, 0), UDim2.new(0.25, -2, 1, 0),
+        Color3.fromRGB(175, 215, 240), Color3.fromRGB(26, 30, 40), Color3.fromRGB(65, 75, 95)
+    )
+    local tabBtnPing, stPing = makeSoftMiniBtn(
+        tabFilterRow, "⚡ Ping Thấp",
+        UDim2.new(0.75, 1, 0, 0), UDim2.new(0.25, -1, 1, 0),
+        Color3.fromRGB(175, 215, 240), Color3.fromRGB(26, 30, 40), Color3.fromRGB(65, 75, 95)
+    )
+
+    local filterButtons = {
+        {btn = tabBtnSaved, st = stSaved},
+        {btn = tabBtnLow,   st = stLow},
+        {btn = tabBtnHigh,  st = stHigh},
+        {btn = tabBtnPing,  st = stPing}
+    }
+    local function highlightFilterTab(activeBtn)
+        for _, item in ipairs(filterButtons) do
+            local isAct = (item.btn == activeBtn)
+            item.btn.BackgroundColor3 = isAct and Color3.fromRGB(35, 65, 90) or Color3.fromRGB(26, 30, 40)
+            item.btn.TextColor3 = isAct and Color3.fromRGB(220, 240, 255) or Color3.fromRGB(160, 175, 195)
+            item.st.Color = isAct and Color3.fromRGB(90, 165, 220) or Color3.fromRGB(65, 75, 95)
+        end
+    end
+
     local svListTitle = Instance.new("TextLabel", svListCard)
-    svListTitle.Size = UDim2.new(1, -16, 0, 18)
-    svListTitle.Position = UDim2.new(0, 10, 0, 4)
+    svListTitle.Size = UDim2.new(1, -16, 0, 16)
+    svListTitle.Position = UDim2.new(0, 10, 0, 33)
     svListTitle.BackgroundTransparency = 1
-    svListTitle.Text = "📋 DANH SÁCH ID SERVER (ĐÃ LƯU / QUÉT)"
+    svListTitle.Text = "📋 DANH SÁCH ID SERVER ĐÃ LƯU"
     svListTitle.TextColor3 = Color3.fromRGB(130, 190, 230)
     svListTitle.Font = Enum.Font.GothamBold
     svListTitle.TextSize = 9.5
@@ -3360,8 +3409,8 @@ end)()
     svListTitle.ZIndex = 10
 
     local svScroll = Instance.new("ScrollingFrame", svListCard)
-    svScroll.Size = UDim2.new(1, -12, 1, -26)
-    svScroll.Position = UDim2.new(0, 6, 0, 22)
+    svScroll.Size = UDim2.new(1, -12, 1, -54)
+    svScroll.Position = UDim2.new(0, 6, 0, 50)
     svScroll.BackgroundTransparency = 1
     svScroll.BorderSizePixel = 0
     svScroll.ScrollBarThickness = 3
@@ -3374,7 +3423,7 @@ end)()
     svLayout.SortOrder = Enum.SortOrder.LayoutOrder
     svLayout.Padding = UDim.new(0, 4)
 
-    renderServerList = function(customList, isScanned)
+    local function renderServerList(customList, isScanned)
         for _, ch in ipairs(svScroll:GetChildren()) do
             if ch:IsA("Frame") then ch:Destroy() end
         end
@@ -3386,7 +3435,7 @@ end)()
             local lbl = Instance.new("TextLabel", empty)
             lbl.Size = UDim2.new(1, 0, 1, 0)
             lbl.BackgroundTransparency = 1
-            lbl.Text = "Chưa có ID Server nào. Bấm 'Lưu ID SV Này' hoặc 'Quét ID SV'!"
+            lbl.Text = isScanned and "Không tìm thấy server phù hợp!" or "Chưa có ID nào. Bấm 'Lưu ID SV Này' hoặc chọn ô bên trên!"
             lbl.TextColor3 = Color3.fromRGB(135, 140, 155)
             lbl.Font = Enum.Font.Gotham
             lbl.TextSize = 9.5
@@ -3405,7 +3454,7 @@ end)()
             infoTxt.Size = UDim2.new(0.56, 0, 1, 0)
             infoTxt.Position = UDim2.new(0, 8, 0, 0)
             infoTxt.BackgroundTransparency = 1
-            infoTxt.Text = string.format("%s (%s)", item.label or ("SV #" .. idx), string.sub(item.id, 1, 11) .. "..")
+            infoTxt.Text = string.format("%s (%s)", item.label or ("SV #" .. idx), string.sub(item.id, 1, 10) .. "..")
             infoTxt.TextColor3 = Color3.fromRGB(195, 205, 220)
             infoTxt.Font = Enum.Font.Gotham
             infoTxt.TextSize = 9.5
@@ -3439,12 +3488,67 @@ end)()
                 else
                     table.remove(savedServers, idx)
                     saveServerList()
-                    renderServerList()
+                    svListTitle.Text = "📋 DANH SÁCH ID SERVER ĐÃ LƯU (" .. #savedServers .. ")"
+                    renderServerList(savedServers, false)
                 end
             end)
         end
     end
-    renderServerList()
+
+    local function fetchAndShowServers(sortOrder, sortByPing, titlePrefix)
+        svListTitle.Text = "⏳ Đang tải " .. titlePrefix .. "..."
+        task.spawn(function()
+            local scanned = {}
+            pcall(function()
+                local url = "https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=" .. sortOrder .. "&limit=50"
+                local res = game:HttpGet(url)
+                local data = HttpService:JSONDecode(res)
+                if data and data.data then
+                    for _, s in ipairs(data.data) do
+                        if s.id and s.id ~= game.JobId and s.playing and s.maxPlayers and s.playing < s.maxPlayers then
+                            table.insert(scanned, {
+                                id = s.id,
+                                playing = tonumber(s.playing) or 0,
+                                ping = tonumber(s.ping) or 999,
+                                label = string.format("🌐 %d/%d người (%dms)", s.playing, s.maxPlayers, tonumber(s.ping) or 0)
+                            })
+                        end
+                    end
+                end
+            end)
+            if sortByPing and #scanned > 1 then
+                table.sort(scanned, function(a, b) return a.ping < b.ping end)
+            end
+            svListTitle.Text = titlePrefix .. " (" .. #scanned .. " SV)"
+            renderServerList(scanned, true)
+        end)
+    end
+
+    -- Sự kiện bấm 4 ô chọn Danh Sách
+    tabBtnSaved.MouseButton1Click:Connect(function()
+        clickAnimate(tabBtnSaved)
+        highlightFilterTab(tabBtnSaved)
+        svListTitle.Text = "📋 DANH SÁCH ID SERVER ĐÃ LƯU (" .. #savedServers .. ")"
+        renderServerList(savedServers, false)
+    end)
+
+    tabBtnLow.MouseButton1Click:Connect(function()
+        clickAnimate(tabBtnLow)
+        highlightFilterTab(tabBtnLow)
+        fetchAndShowServers("Asc", false, "📉 DANH SÁCH SV ÍT NGƯỜI")
+    end)
+
+    tabBtnHigh.MouseButton1Click:Connect(function()
+        clickAnimate(tabBtnHigh)
+        highlightFilterTab(tabBtnHigh)
+        fetchAndShowServers("Desc", false, "📈 DANH SÁCH SV ĐÔNG NGƯỜI")
+    end)
+
+    tabBtnPing.MouseButton1Click:Connect(function()
+        clickAnimate(tabBtnPing)
+        highlightFilterTab(tabBtnPing)
+        fetchAndShowServers("Asc", true, "⚡ DANH SÁCH SV PING THẤP")
+    end)
 
     btnSaveSv.MouseButton1Click:Connect(function()
         clickAnimate(btnSaveSv)
@@ -3452,6 +3556,7 @@ end)()
             MakeToast("Lỗi", "Không lấy được JobId của server này!", Theme.AccentOff)
             return
         end
+        highlightFilterTab(tabBtnSaved)
         for _, v in ipairs(savedServers) do
             if v.id == game.JobId then
                 MakeToast("Thông báo", "ID Server này đã có trong danh sách lưu!", Theme.Brand)
@@ -3467,57 +3572,14 @@ end)()
         saveServerList()
         svListTitle.Text = "📋 DANH SÁCH ID SERVER ĐÃ LƯU (" .. #savedServers .. ")"
         renderServerList(savedServers, false)
-        MakeToast("Đã Lưu Server", "Đã thêm ID Server hiện tại vào danh sách!", Theme.AccentOn)
+        MakeToast("Đã Lưu Server", "Đã thêm ID Server hiện tại vào mục Đã Lưu!", Theme.AccentOn)
     end)
 
-    btnCopyScript.MouseButton1Click:Connect(function()
-        clickAnimate(btnCopyScript)
-        pcall(function()
-            if setclipboard and game.JobId ~= "" then
-                local joinScript = string.format(
-                    'game:GetService("TeleportService"):TeleportToPlaceInstance(%d, "%s", game.Players.LocalPlayer)',
-                    game.PlaceId, game.JobId
-                )
-                setclipboard(joinScript)
-                MakeToast("Đã Copy Lệnh Join", "Gửi lệnh này cho bạn bè để vào chung SV!", Theme.AccentOn)
-            end
-        end)
-    end)
-
-    btnScanSv.MouseButton1Click:Connect(function()
-        clickAnimate(btnScanSv)
-        svListTitle.Text = "⏳ Đang quét danh sách ID Server..."
-        task.spawn(function()
-            local scanned = {}
-            pcall(function()
-                local url = "https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Asc&limit=25"
-                local res = game:HttpGet(url)
-                local data = HttpService:JSONDecode(res)
-                if data and data.data then
-                    for _, s in ipairs(data.data) do
-                        if s.id and s.id ~= game.JobId and s.playing and s.maxPlayers then
-                            table.insert(scanned, {
-                                id = s.id,
-                                label = string.format("🌐 %d/%d người (%dms)", s.playing, s.maxPlayers, tonumber(s.ping) or 0)
-                            })
-                        end
-                    end
-                end
-            end)
-            if #scanned > 0 then
-                svListTitle.Text = "🌐 KẾT QUẢ QUÉT ID SERVER (" .. #scanned .. " SV)"
-                renderServerList(scanned, true)
-                MakeToast("Quét Thành Công", "Tìm thấy " .. #scanned .. " Server! Bấm 'Lấy ID' hoặc 'Vào'.", Theme.AccentOn)
-            else
-                svListTitle.Text = "📋 DANH SÁCH ID SERVER ĐÃ LƯU"
-                renderServerList(savedServers, false)
-                MakeToast("Không tìm thấy", "Không quét được thêm server công khai nào!", Theme.AccentOff)
-            end
-        end)
-    end)
+    svListTitle.Text = "📋 DANH SÁCH ID SERVER ĐÃ LƯU (" .. #savedServers .. ")"
+    renderServerList(savedServers, false)
 
     -- ==========================================
-    -- VÒNG LẶP CẬP NHẬT THÔNG SỐ (MÀU PASTEL DỊU MẮT)
+    -- VÒNG LẶP CẬP NHẬT THÔNG SỐ (DỊU MẮT)
     -- ==========================================
     task.spawn(function()
         local Stats = game:GetService("Stats")
@@ -3596,7 +3658,7 @@ end)()
                 sysBody.Text = string.format(
                     "<font color='#78B4DC'>• Executor:</font> <font color='#78C896'>%s</font>   |   <font color='#78B4DC'>Đang bật:</font> <font color='#D8B870'>%d tính năng</font>\n" ..
                     "<font color='#78B4DC'>• Treo máy:</font> %02d:%02d:%02d   |   <font color='#78B4DC'>Giờ:</font> %s\n" ..
-                    "<font color='#78B4DC'>• Phiên bản:</font> <font color='#E09F67'>VIP PRO MAX V1.13.9</font>",
+                    "<font color='#78B4DC'>• Phiên bản:</font> <font color='#E09F67'>VIP PRO MAX V1.14.0</font>",
                     execName, activeCount,
                     h, m, s, os.date("%H:%M:%S")
                 )
