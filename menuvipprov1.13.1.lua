@@ -206,7 +206,7 @@ UIS.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputT
 
 local frame = Instance.new("Frame", gui)
 frame.Size = UDim2.new(0, 350, 0, 355)
-frame.Position = UDim2.new(0.5, -175, 0.5, -152)
+frame.Position = UDim2.new(0.5, -175, 0.5, -195)
 frame.BackgroundColor3 = Theme.MainBg; frame.BackgroundTransparency = 0.05; frame.ZIndex = 10
 Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 14)
 local frameStroke = Instance.new("UIStroke", frame); frameStroke.Color = Theme.Stroke; frameStroke.Thickness = 1.8
