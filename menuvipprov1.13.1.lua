@@ -2615,3 +2615,435 @@ RunService.Heartbeat:Connect(function(deltaTime)
         end
     end
 end)
+
+-- ==========================================
+-- [GÓI NÂNG CẤP MỞ RỘNG: SIMULATOR BOOST + TIỆN ÍCH + TÌM KIẾM TP]
+-- ==========================================
+;(function()
+    local GuiService = game:GetService("GuiService")
+    local SoundService = game:GetService("SoundService")
+
+    -- Tự động khởi tạo & đọc dữ liệu lưu của các tính năng mới
+    local NewStates = {
+        HidePopups = false,
+        MuteSFX = false,
+        DisableAnims = false,
+        DarkMap = false,
+        MiniHUD = false,
+        AutoReconnect = true,
+        MagnetOrbs = false
+    }
+    for k, v in pairs(NewStates) do
+        if State[k] == nil then State[k] = v end
+    end
+    pcall(function()
+        if isfile and isfile(configFileName) then
+            local data = HttpService:JSONDecode(readfile(configFileName))
+            for k, _ in pairs(NewStates) do
+                if data[k] ~= nil then State[k] = data[k] end
+            end
+        end
+    end)
+
+    local ExtCache = {
+        Popups = {},
+        Sounds = {},
+        Anims = {},
+        DarkParts = {},
+        LightingOrig = nil,
+        Tickets = {Popup = 0, Sound = 0, Anim = 0, Dark = 0}
+    }
+
+    -- ==========================================
+    -- 1. THÊM THANH TÌM KIẾM NHANH VÀO TAB 7 (TP PLAYER)
+    -- ==========================================
+    pcall(function()
+        if playerListContainer and playerListScroll then
+            local searchBar = Instance.new("Frame", playerListContainer)
+            searchBar.Size = UDim2.new(1, -8, 0, 24)
+            searchBar.Position = UDim2.new(0, 4, 0, 4)
+            searchBar.BackgroundColor3 = Color3.fromRGB(18, 19, 26)
+            searchBar.ZIndex = 11
+            Instance.new("UICorner", searchBar).CornerRadius = UDim.new(0, 6)
+            local sStroke = Instance.new("UIStroke", searchBar)
+            sStroke.Color = Theme.Brand
+            sStroke.Thickness = 1
+            table.insert(RGBElements, {Type = "Button", Stroke = sStroke, DefaultColor = Theme.Brand})
+
+            local searchBox = Instance.new("TextBox", searchBar)
+            searchBox.Size = UDim2.new(1, -16, 1, 0)
+            searchBox.Position = UDim2.new(0, 8, 0, 0)
+            searchBox.BackgroundTransparency = 1
+            searchBox.PlaceholderText = "🔍 Nhập tên hoặc @username để lọc nhanh..."
+            searchBox.PlaceholderColor3 = Theme.TextDim
+            searchBox.Text = ""
+            searchBox.TextColor3 = Theme.TextTitle
+            searchBox.Font = Enum.Font.GothamSemibold
+            searchBox.TextSize = 10
+            searchBox.TextXAlignment = Enum.TextXAlignment.Left
+            searchBox.ClearTextOnFocus = false
+            searchBox.ZIndex = 11
+
+            playerListScroll.Size = UDim2.new(1, -6, 1, -34)
+            playerListScroll.Position = UDim2.new(0, 3, 0, 30)
+
+            local function filterPlayerCards()
+                local keyword = string.lower(searchBox.Text:gsub("^%s*(.-)%s*$", "%1"))
+                for _, item in ipairs(playerListScroll:GetChildren()) do
+                    if item.Name == "PaddingFrame" then
+                        if keyword == "" then
+                            item.Visible = true
+                        else
+                            local matched = false
+                            for _, desc in ipairs(item:GetDescendants()) do
+                                if desc:IsA("TextLabel") and string.find(string.lower(desc.Text), keyword, 1, true) then
+                                    matched = true
+                                    break
+                                end
+                            end
+                            item.Visible = matched
+                        end
+                    end
+                end
+            end
+
+            searchBox:GetPropertyChangedSignal("Text"):Connect(filterPlayerCards)
+            playerListScroll.ChildAdded:Connect(function()
+                task.defer(filterPlayerCards)
+            end)
+        end
+    end)
+
+    -- ==========================================
+    -- 2. THÊM 4 TÍNH NĂNG SIMULATOR VÀO TAB 9 (CẤU HÌNH)
+    -- ==========================================
+    createDivider(page9, "TỐI ƯU CHUYÊN SÂU SIMULATOR")
+
+    -- [A] Ẩn chữ bay & Popup (+Tiền / +Sức mạnh / Damage)
+    local function processPopupObj(obj)
+        if not State.HidePopups or not obj or not obj.Parent then return end
+        if obj:IsA("BillboardGui") and not string.find(obj.Name, "^MobileESP_") then
+            if obj.Enabled then
+                if ExtCache.Popups[obj] == nil then ExtCache.Popups[obj] = obj.Enabled end
+                obj.Enabled = false
+            end
+        elseif obj:IsA("TextLabel") and obj:IsDescendantOf(player:FindFirstChild("PlayerGui")) and not obj:IsDescendantOf(gui) then
+            local txt = obj.Text or ""
+            if string.find(txt, "^%+[%d%.]+") or string.find(string.lower(obj.Name), "popup") or string.find(string.lower(obj.Name), "damage") then
+                if obj.Visible then
+                    if ExtCache.Popups[obj] == nil then ExtCache.Popups[obj] = obj.Visible end
+                    obj.Visible = false
+                end
+            end
+        end
+    end
+
+    createToggle(page9, "🚫 Ẩn chữ bay & Popup (+Chỉ số/Damage)", "HidePopups", function(v)
+        ExtCache.Tickets.Popup = ExtCache.Tickets.Popup + 1
+        local myTicket = ExtCache.Tickets.Popup
+        if v then
+            task.spawn(function()
+                for i, obj in ipairs(workspace:GetDescendants()) do
+                    if myTicket ~= ExtCache.Tickets.Popup then return end
+                    pcall(processPopupObj, obj)
+                    if i % 350 == 0 then task.wait() end
+                end
+            end)
+        else
+            task.spawn(function()
+                local c = 0
+                for obj, orig in pairs(ExtCache.Popups) do
+                    if myTicket ~= ExtCache.Tickets.Popup then return end
+                    pcall(function()
+                        if obj and obj.Parent then
+                            if obj:IsA("BillboardGui") then obj.Enabled = orig else obj.Visible = orig end
+                        end
+                    end)
+                    c = c + 1
+                    if c % 350 == 0 then task.wait() end
+                end
+                if myTicket == ExtCache.Tickets.Popup then ExtCache.Popups = {} end
+            end)
+        end
+    end)
+
+    -- [B] Tắt toàn bộ tiếng động Game (Mute SFX - Giữ lại nhạc Tab 5)
+    local function processSoundObj(obj)
+        if not State.MuteSFX or not obj or not obj.Parent then return end
+        if obj:IsA("Sound") and obj ~= currentSound then
+            if obj.Volume > 0 then
+                if ExtCache.Sounds[obj] == nil then ExtCache.Sounds[obj] = obj.Volume end
+                obj.Volume = 0
+            end
+        end
+    end
+
+    createToggle(page9, "🔇 Tắt tiếng động Game (Giữ nhạc Menu)", "MuteSFX", function(v)
+        ExtCache.Tickets.Sound = ExtCache.Tickets.Sound + 1
+        local myTicket = ExtCache.Tickets.Sound
+        if v then
+            task.spawn(function()
+                for _, container in ipairs({workspace, SoundService, player:FindFirstChild("PlayerGui")}) do
+                    if container then
+                        for i, obj in ipairs(container:GetDescendants()) do
+                            if myTicket ~= ExtCache.Tickets.Sound then return end
+                            pcall(processSoundObj, obj)
+                            if i % 350 == 0 then task.wait() end
+                        end
+                    end
+                end
+            end)
+        else
+            task.spawn(function()
+                local c = 0
+                for s, vol in pairs(ExtCache.Sounds) do
+                    if myTicket ~= ExtCache.Tickets.Sound then return end
+                    pcall(function() if s and s.Parent then s.Volume = vol end end)
+                    c = c + 1
+                    if c % 350 == 0 then task.wait() end
+                end
+                if myTicket == ExtCache.Tickets.Sound then ExtCache.Sounds = {} end
+            end)
+        end
+    end)
+
+    -- [C] Tắt hoạt ảnh Nhân vật & Quái (Disable Animations)
+    local function stopAnimator(obj)
+        if not State.DisableAnims or not obj or not obj.Parent then return end
+        if obj:IsA("Animator") then
+            for _, track in ipairs(obj:GetPlayingAnimationTracks()) do
+                pcall(function() track:Stop(0) end)
+            end
+        elseif obj:IsA("BaseScript") and obj.Name == "Animate" then
+            if obj.Disabled == false then
+                ExtCache.Anims[obj] = false
+                obj.Disabled = true
+            end
+        end
+    end
+
+    createToggle(page9, "🎭 Tắt hoạt ảnh Nhân vật & Quái (Giảm CPU)", "DisableAnims", function(v)
+        ExtCache.Tickets.Anim = ExtCache.Tickets.Anim + 1
+        local myTicket = ExtCache.Tickets.Anim
+        if v then
+            task.spawn(function()
+                for i, obj in ipairs(workspace:GetDescendants()) do
+                    if myTicket ~= ExtCache.Tickets.Anim then return end
+                    pcall(stopAnimator, obj)
+                    if i % 350 == 0 then task.wait() end
+                end
+            end)
+        else
+            for scr, state in pairs(ExtCache.Anims) do
+                pcall(function() if scr and scr.Parent then scr.Disabled = state end end)
+            end
+            ExtCache.Anims = {}
+        end
+    end)
+
+    -- [D] Chế độ Bản đồ Tối Dịu Mắt (Dark Flat Map)
+    local darkColor = Color3.fromRGB(38, 40, 48)
+    local function processDarkPart(obj)
+        if not State.DarkMap or not obj or not obj.Parent then return end
+        if obj:IsA("BasePart") and obj.Name ~= "VipAirWalk" and obj.Name ~= "VipSpectateProxy" then
+            for _, p in ipairs(Players:GetPlayers()) do
+                if p.Character and obj:IsDescendantOf(p.Character) then return end
+            end
+            if obj.Color ~= darkColor then
+                if ExtCache.DarkParts[obj] == nil then ExtCache.DarkParts[obj] = obj.Color end
+                obj.Color = darkColor
+            end
+        end
+    end
+
+    createToggle(page9, "🌑 Bản đồ Tối Dịu Mắt (Chống chói & Nhẹ máy)", "DarkMap", function(v)
+        ExtCache.Tickets.Dark = ExtCache.Tickets.Dark + 1
+        local myTicket = ExtCache.Tickets.Dark
+        if v then
+            pcall(function()
+                if not ExtCache.LightingOrig then
+                    ExtCache.LightingOrig = {
+                        Brightness = Lighting.Brightness,
+                        OutdoorAmbient = Lighting.OutdoorAmbient,
+                        Ambient = Lighting.Ambient
+                    }
+                end
+                Lighting.Brightness = 0.8
+                Lighting.OutdoorAmbient = Color3.fromRGB(65, 70, 85)
+                Lighting.Ambient = Color3.fromRGB(50, 55, 68)
+            end)
+            task.spawn(function()
+                for i, obj in ipairs(workspace:GetDescendants()) do
+                    if myTicket ~= ExtCache.Tickets.Dark then return end
+                    pcall(processDarkPart, obj)
+                    if i % 350 == 0 then task.wait() end
+                end
+            end)
+        else
+            pcall(function()
+                if ExtCache.LightingOrig then
+                    Lighting.Brightness = ExtCache.LightingOrig.Brightness
+                    Lighting.OutdoorAmbient = ExtCache.LightingOrig.OutdoorAmbient
+                    Lighting.Ambient = ExtCache.LightingOrig.Ambient
+                    ExtCache.LightingOrig = nil
+                end
+            end)
+            task.spawn(function()
+                local c = 0
+                for part, col in pairs(ExtCache.DarkParts) do
+                    if myTicket ~= ExtCache.Tickets.Dark then return end
+                    pcall(function() if part and part.Parent then part.Color = col end end)
+                    c = c + 1
+                    if c % 350 == 0 then task.wait() end
+                end
+                if myTicket == ExtCache.Tickets.Dark then ExtCache.DarkParts = {} end
+            end)
+        end
+    end)
+
+    -- Tự động bắt các Object/Popup/Âm thanh mới sinh ra
+    workspace.DescendantAdded:Connect(function(obj)
+        if State.HidePopups or State.MuteSFX or State.DisableAnims or State.DarkMap then
+            task.defer(function()
+                pcall(processPopupObj, obj)
+                pcall(processSoundObj, obj)
+                pcall(stopAnimator, obj)
+                pcall(processDarkPart, obj)
+            end)
+        end
+    end)
+    pcall(function()
+        player:WaitForChild("PlayerGui").DescendantAdded:Connect(function(obj)
+            if State.HidePopups or State.MuteSFX then
+                task.defer(function()
+                    pcall(processPopupObj, obj)
+                    pcall(processSoundObj, obj)
+                end)
+            end
+        end)
+    end)
+
+    -- ==========================================
+    -- 3. THÊM 3 TIỆN ÍCH TREO MÁY VÀO TAB 4 (TIỆN ÍCH)
+    -- ==========================================
+    createDivider(page4, "TIỆN ÍCH TREO MÁY & HỖ TRỢ")
+
+    -- [E] Đồng hồ FPS & Ping Mini ngoài màn hình
+    local miniHudFrame = Instance.new("Frame", gui)
+    miniHudFrame.Size = UDim2.new(0, 128, 0, 26)
+    miniHudFrame.Position = UDim2.new(0, 62, 0.25, 7)
+    miniHudFrame.BackgroundColor3 = Theme.MainBg
+    miniHudFrame.BackgroundTransparency = 0.15
+    miniHudFrame.Visible = State.MiniHUD
+    miniHudFrame.ZIndex = 10
+    Instance.new("UICorner", miniHudFrame).CornerRadius = UDim.new(1, 0)
+    local hudStroke = Instance.new("UIStroke", miniHudFrame)
+    hudStroke.Color = Theme.Brand
+    hudStroke.Thickness = 1.4
+    table.insert(RGBElements, {Type = "Button", Stroke = hudStroke, DefaultColor = Theme.Brand})
+
+    local hudLabel = Instance.new("TextLabel", miniHudFrame)
+    hudLabel.Size = UDim2.new(1, 0, 1, 0)
+    hudLabel.BackgroundTransparency = 1
+    hudLabel.RichText = true
+    hudLabel.Text = "⚡ 60 FPS | 🌐 0 ms"
+    hudLabel.TextColor3 = Theme.TextTitle
+    hudLabel.Font = Enum.Font.GothamBold
+    hudLabel.TextSize = 10
+    hudLabel.ZIndex = 10
+
+    local hudDrag, hudStart, hudPos
+    miniHudFrame.InputBegan:Connect(function(inp)
+        if inp.UserInputType == Enum.UserInputType.MouseButton1 or inp.UserInputType == Enum.UserInputType.Touch then
+            hudDrag = true; hudStart = inp.Position; hudPos = miniHudFrame.Position
+        end
+    end)
+    UIS.InputChanged:Connect(function(inp)
+        if hudDrag and (inp.UserInputType == Enum.UserInputType.MouseMovement or inp.UserInputType == Enum.UserInputType.Touch) then
+            miniHudFrame.Position = UDim2.new(hudPos.X.Scale, hudPos.X.Offset + (inp.Position.X - hudStart.X), hudPos.Y.Scale, hudPos.Y.Offset + (inp.Position.Y - hudStart.Y))
+        end
+    end)
+    UIS.InputEnded:Connect(function(inp)
+        if inp.UserInputType == Enum.UserInputType.MouseButton1 or inp.UserInputType == Enum.UserInputType.Touch then hudDrag = false end
+    end)
+
+    createToggle(page4, "📟 Đồng hồ FPS & Ping Mini ngoài màn hình", "MiniHUD", function(v)
+        miniHudFrame.Visible = v
+    end)
+
+    task.spawn(function()
+        local Stats = game:GetService("Stats")
+        while task.wait(0.6) do
+            if State.MiniHUD and miniHudFrame.Visible then
+                local pingNum = 0
+                pcall(function()
+                    if Stats and Stats:FindFirstChild("Network") and Stats.Network:FindFirstChild("ServerStatsItem") then
+                        local raw = Stats.Network.ServerStatsItem["Data Ping"]:GetValueString()
+                        pingNum = tonumber(raw and raw:match("%d+")) or math.floor(player:GetNetworkPing() * 1000)
+                    else
+                        pingNum = math.floor(player:GetNetworkPing() * 1000)
+                    end
+                end)
+                local fCol = fps >= 45 and "#2ECC71" or (fps >= 25 and "#F1C40F" or "#FF4757")
+                hudLabel.Text = string.format("⚡ <font color='%s'>%d FPS</font> | 🌐 <font color='#00E5FF'>%d ms</font>", fCol, fps, pingNum)
+            end
+        end
+    end)
+
+    -- [F] Tự động vào lại khi mất kết nối (Auto Reconnect)
+    createToggle(page4, "🔌 Tự động vào lại khi văng game (Reconnect)", "AutoReconnect")
+
+    local function triggerReconnect()
+        if State.AutoReconnect then
+            MakeToast("🔌 Auto Reconnect", "Phát hiện mất kết nối! Đang vào lại...", Theme.Brand)
+            task.wait(2)
+            pcall(function() TeleportService:Teleport(game.PlaceId, player) end)
+        end
+    end
+    pcall(function()
+        GuiService.ErrorMessageChanged:Connect(function(msg)
+            if msg and msg ~= "" then triggerReconnect() end
+        end)
+    end)
+
+    -- [G] Hút Tiền, Ngọc & Vật phẩm rơi (Magnet Orbs/Coins)
+    createToggle(page4, "🧲 Hút Tiền, Ngọc & Vật phẩm rơi (Magnet)", "MagnetOrbs")
+
+    local magnetKeywords = {"coin", "gem", "orb", "diamond", "cash", "money", "yen", "token", "drop", "star", "crystal", "gold", "silver", "emerald"}
+    local function isMagnetItem(part)
+        if not part:IsA("BasePart") or part.Anchored and part.Size.Magnitude > 8 then return false end
+        local name = string.lower(part.Name)
+        local pName = part.Parent and string.lower(part.Parent.Name) or ""
+        for _, kw in ipairs(magnetKeywords) do
+            if string.find(name, kw, 1, true) or string.find(pName, kw, 1, true) then
+                return true
+            end
+        end
+        return false
+    end
+
+    task.spawn(function()
+        while task.wait(0.35) do
+            if State.MagnetOrbs and player.Character then
+                pcall(function()
+                    local root = getUniversalRoot(player.Character)
+                    if not root then return end
+                    local overlap = OverlapParams.new()
+                    overlap.FilterDescendantsInstances = {player.Character}
+                    overlap.FilterType = Enum.RaycastFilterType.Exclude
+                    local nearby = workspace:GetPartBoundsInRadius(root.Position, 85, overlap)
+                    for _, part in ipairs(nearby) do
+                        if isMagnetItem(part) then
+                            part.CanCollide = false
+                            if firetouchinterest then
+                                firetouchinterest(root, part, 0)
+                                firetouchinterest(root, part, 1)
+                            end
+                            part.CFrame = root.CFrame
+                        end
+                    end
+                end)
+            end
+        end
+    end)
+end)()
