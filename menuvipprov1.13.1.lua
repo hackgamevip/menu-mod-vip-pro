@@ -3047,3 +3047,335 @@ end)
         end
     end)
 end)()
+
+
+-- ==========================================
+-- [GÓI NÂNG CẤP TAB 1: THÔNG TIN DASHBOARD PRO]
+-- ==========================================
+;(function()
+    if not page1 then return end
+
+    -- Dọn sạch giao diện Tab 1 cũ để thay bằng Dashboard mới
+    for _, child in ipairs(page1:GetChildren()) do
+        if child:IsA("Frame") then
+            child:Destroy()
+        end
+    end
+
+    local gameName = "Đang tải tên game..."
+    task.spawn(function()
+        pcall(function()
+            local info = MarketplaceService:GetProductInfo(game.PlaceId)
+            if info and info.Name then gameName = info.Name end
+        end)
+    end)
+
+    local execName = "Roblox Client"
+    pcall(function()
+        if identifyexecutor then
+            execName = tostring(identifyexecutor())
+        elseif getexecutorname then
+            execName = tostring(getexecutorname())
+        end
+    end)
+
+    local function makeCard(titleIcon, titleText, height, order)
+        local card = Instance.new("Frame", page1)
+        card.Size = UDim2.new(0.92, 0, 0, height)
+        card.BackgroundColor3 = Theme.ItemBg
+        card.LayoutOrder = order
+        card.ZIndex = 10
+        Instance.new("UICorner", card).CornerRadius = UDim.new(0, 8)
+        local stroke = Instance.new("UIStroke", card)
+        stroke.Color = Theme.Stroke
+        stroke.Thickness = 1.2
+        table.insert(RGBElements, {Type = "Info", Stroke = stroke})
+
+        local headerTitle = Instance.new("TextLabel", card)
+        headerTitle.Size = UDim2.new(1, -16, 0, 20)
+        headerTitle.Position = UDim2.new(0, 10, 0, 4)
+        headerTitle.BackgroundTransparency = 1
+        headerTitle.Text = titleIcon .. " " .. titleText
+        headerTitle.TextColor3 = Theme.Brand
+        headerTitle.Font = Enum.Font.GothamBlack
+        headerTitle.TextSize = 11
+        headerTitle.TextXAlignment = Enum.TextXAlignment.Left
+        headerTitle.ZIndex = 10
+
+        local line = Instance.new("Frame", card)
+        line.Size = UDim2.new(1, -20, 0, 1)
+        line.Position = UDim2.new(0, 10, 0, 24)
+        line.BackgroundColor3 = Theme.Stroke
+        line.BorderSizePixel = 0
+        line.ZIndex = 10
+
+        local body = Instance.new("TextLabel", card)
+        body.Size = UDim2.new(1, -20, 1, -30)
+        body.Position = UDim2.new(0, 10, 0, 28)
+        body.BackgroundTransparency = 1
+        body.RichText = true
+        body.Text = "Đang tải..."
+        body.TextColor3 = Theme.TextTitle
+        body.Font = Enum.Font.GothamSemibold
+        body.TextSize = 10.5
+        body.LineHeight = 1.22
+        body.TextXAlignment = Enum.TextXAlignment.Left
+        body.TextYAlignment = Enum.TextYAlignment.Top
+        body.ZIndex = 10
+
+        return card, body
+    end
+
+    -- 1. THẺ NHÂN VẬT (CÓ THANH MÁU + NÚT COPY TỌA ĐỘ)
+    local charCard, charBody = makeCard("👤", "THÔNG TIN NHÂN VẬT", 122, 1)
+
+    local copyCoordBtn = Instance.new("TextButton", charCard)
+    copyCoordBtn.Size = UDim2.new(0, 78, 0, 18)
+    copyCoordBtn.Position = UDim2.new(1, -86, 0, 4)
+    copyCoordBtn.BackgroundColor3 = Color3.fromRGB(25, 45, 65)
+    copyCoordBtn.Text = "📍 Copy Tọa Độ"
+    copyCoordBtn.TextColor3 = Theme.Brand
+    copyCoordBtn.Font = Enum.Font.GothamBold
+    copyCoordBtn.TextSize = 9
+    copyCoordBtn.ZIndex = 11
+    Instance.new("UICorner", copyCoordBtn).CornerRadius = UDim.new(0, 5)
+    local ccStroke = Instance.new("UIStroke", copyCoordBtn)
+    ccStroke.Color = Theme.Brand
+    ccStroke.Thickness = 1
+
+    copyCoordBtn.MouseButton1Click:Connect(function()
+        clickAnimate(copyCoordBtn)
+        pcall(function()
+            local root = getUniversalRoot(player.Character)
+            if root and setclipboard then
+                local p = root.Position
+                local str = string.format("%.1f, %.1f, %.1f", p.X, p.Y, p.Z)
+                setclipboard(str)
+                MakeToast("Đã Copy Tọa Độ", str, Theme.AccentOn)
+            end
+        end)
+    end)
+
+    local hpBarBg = Instance.new("Frame", charCard)
+    hpBarBg.Size = UDim2.new(1, -20, 0, 6)
+    hpBarBg.Position = UDim2.new(0, 10, 1, -11)
+    hpBarBg.BackgroundColor3 = Color3.fromRGB(20, 20, 26)
+    hpBarBg.BorderSizePixel = 0
+    hpBarBg.ZIndex = 11
+    Instance.new("UICorner", hpBarBg).CornerRadius = UDim.new(1, 0)
+
+    local hpBarFill = Instance.new("Frame", hpBarBg)
+    hpBarFill.Size = UDim2.new(1, 0, 1, 0)
+    hpBarFill.BackgroundColor3 = Theme.AccentOn
+    hpBarFill.BorderSizePixel = 0
+    hpBarFill.ZIndex = 11
+    Instance.new("UICorner", hpBarFill).CornerRadius = UDim.new(1, 0)
+
+    -- 2. THẺ MÁY CHỦ (LỌC SẠCH PING + TÊN GAME + COPY ID)
+    local svCard, svBody = makeCard("🌐", "THÔNG TIN MÁY CHỦ", 108, 2)
+
+    local copyJobBtn = Instance.new("TextButton", svCard)
+    copyJobBtn.Size = UDim2.new(0, 68, 0, 18)
+    copyJobBtn.Position = UDim2.new(1, -76, 0, 4)
+    copyJobBtn.BackgroundColor3 = Color3.fromRGB(30, 50, 40)
+    copyJobBtn.Text = "📜 Copy ID"
+    copyJobBtn.TextColor3 = Theme.AccentOn
+    copyJobBtn.Font = Enum.Font.GothamBold
+    copyJobBtn.TextSize = 9
+    copyJobBtn.ZIndex = 11
+    Instance.new("UICorner", copyJobBtn).CornerRadius = UDim.new(0, 5)
+    local cjStroke = Instance.new("UIStroke", copyJobBtn)
+    cjStroke.Color = Theme.AccentOn
+    cjStroke.Thickness = 1
+
+    copyJobBtn.MouseButton1Click:Connect(function()
+        clickAnimate(copyJobBtn)
+        pcall(function()
+            if setclipboard then
+                setclipboard(tostring(game.JobId))
+                MakeToast("Đã Copy JobId", "Đã lưu ID máy chủ vào bộ nhớ tạm!", Theme.AccentOn)
+            end
+        end)
+    end)
+
+    -- 3. KHUNG NHẬP ID SERVER (CÓ NÚT XÓA NHANH + VÀO)
+    local joinFrame = Instance.new("Frame", page1)
+    joinFrame.Size = UDim2.new(0.92, 0, 0, 34)
+    joinFrame.BackgroundColor3 = Theme.ItemBg
+    joinFrame.LayoutOrder = 3
+    joinFrame.ZIndex = 10
+    Instance.new("UICorner", joinFrame).CornerRadius = UDim.new(0, 8)
+    local jfStroke = Instance.new("UIStroke", joinFrame)
+    jfStroke.Color = Theme.Stroke
+    jfStroke.Thickness = 1.2
+    table.insert(RGBElements, {Type = "Info", Stroke = jfStroke})
+
+    local jobInput = Instance.new("TextBox", joinFrame)
+    jobInput.Size = UDim2.new(0.56, 0, 1, 0)
+    jobInput.Position = UDim2.new(0.03, 0, 0, 0)
+    jobInput.BackgroundTransparency = 1
+    jobInput.PlaceholderText = "🔍 Dán ID Server cần vào..."
+    jobInput.PlaceholderColor3 = Theme.TextDim
+    jobInput.Text = ""
+    jobInput.TextColor3 = Theme.Brand
+    jobInput.Font = Enum.Font.GothamSemibold
+    jobInput.TextSize = 10
+    jobInput.TextXAlignment = Enum.TextXAlignment.Left
+    jobInput.ClearTextOnFocus = false
+    jobInput.ZIndex = 10
+
+    local clearPasteBtn = Instance.new("TextButton", joinFrame)
+    clearPasteBtn.Size = UDim2.new(0.16, 0, 0.72, 0)
+    clearPasteBtn.Position = UDim2.new(0.60, 0, 0.14, 0)
+    clearPasteBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 65)
+    clearPasteBtn.Text = "XÓA"
+    clearPasteBtn.TextColor3 = Theme.TextTitle
+    clearPasteBtn.Font = Enum.Font.GothamBold
+    clearPasteBtn.TextSize = 9.5
+    clearPasteBtn.ZIndex = 10
+    Instance.new("UICorner", clearPasteBtn).CornerRadius = UDim.new(0, 6)
+
+    clearPasteBtn.MouseButton1Click:Connect(function()
+        clickAnimate(clearPasteBtn)
+        jobInput.Text = ""
+    end)
+
+    local goJoinBtn = Instance.new("TextButton", joinFrame)
+    goJoinBtn.Size = UDim2.new(0.20, 0, 0.72, 0)
+    goJoinBtn.Position = UDim2.new(0.78, 0, 0.14, 0)
+    goJoinBtn.BackgroundColor3 = Theme.AccentOn
+    goJoinBtn.Text = "VÀO"
+    goJoinBtn.TextColor3 = Color3.new(1, 1, 1)
+    goJoinBtn.Font = Enum.Font.GothamBlack
+    goJoinBtn.TextSize = 10
+    goJoinBtn.ZIndex = 10
+    Instance.new("UICorner", goJoinBtn).CornerRadius = UDim.new(0, 6)
+
+    goJoinBtn.MouseButton1Click:Connect(function()
+        clickAnimate(goJoinBtn)
+        local targetId = jobInput.Text:gsub("%s+", "")
+        if targetId ~= "" then
+            MakeToast("Đang Chuyển Server", "Đang kết nối tới JobId...", Theme.AccentOn)
+            pcall(function() TeleportService:TeleportToPlaceInstance(game.PlaceId, targetId, player) end)
+        else
+            MakeToast("⚠️ Trống ID", "Hãy dán JobId máy chủ vào ô trước!", Theme.AccentOff)
+        end
+    end)
+
+    -- 4. THẺ TRẠNG THÁI & HỆ THỐNG (EXECUTOR + ĐẾM TÍNH NĂNG BẬT + RESET NHANH)
+    local sysCard, sysBody = makeCard("⚙️", "TRẠNG THÁI & HỆ THỐNG", 96, 4)
+
+    local resetCharBtn = Instance.new("TextButton", sysCard)
+    resetCharBtn.Size = UDim2.new(0, 78, 0, 18)
+    resetCharBtn.Position = UDim2.new(1, -86, 0, 4)
+    resetCharBtn.BackgroundColor3 = Color3.fromRGB(60, 30, 38)
+    resetCharBtn.Text = "🔄 Reset NV"
+    resetCharBtn.TextColor3 = Theme.AccentOff
+    resetCharBtn.Font = Enum.Font.GothamBold
+    resetCharBtn.TextSize = 9
+    resetCharBtn.ZIndex = 11
+    Instance.new("UICorner", resetCharBtn).CornerRadius = UDim.new(0, 5)
+    local rcStroke = Instance.new("UIStroke", resetCharBtn)
+    rcStroke.Color = Theme.AccentOff
+    rcStroke.Thickness = 1
+
+    resetCharBtn.MouseButton1Click:Connect(function()
+        clickAnimate(resetCharBtn)
+        pcall(function()
+            local hum = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
+            if hum then
+                hum.Health = 0
+                MakeToast("Đã Reset", "Đang hồi sinh lại nhân vật...", Theme.AccentOff)
+            end
+        end)
+    end)
+
+    -- VÒNG LẶP CẬP NHẬT THÔNG TIN SẮC NÉT
+    task.spawn(function()
+        local Stats = game:GetService("Stats")
+        while task.wait(0.5) do
+            if page1.Visible then
+                -- Cập nhật Nhân vật
+                local hp, maxHp, ws, jp = 0, 100, 0, 0
+                local coords = "0.0, 0.0, 0.0"
+                if player.Character then
+                    local hum = player.Character:FindFirstChildOfClass("Humanoid")
+                    if hum then
+                        hp = math.floor(hum.Health)
+                        maxHp = math.max(1, math.floor(hum.MaxHealth))
+                        ws = math.floor(hum.WalkSpeed)
+                        jp = math.floor(hum.JumpPower)
+                    end
+                    local root = getUniversalRoot(player.Character)
+                    if root then
+                        local pos = root.Position
+                        coords = string.format("%.1f, %.1f, %.1f", pos.X, pos.Y, pos.Z)
+                    end
+                end
+
+                local hpRatio = math.clamp(hp / maxHp, 0, 1)
+                local hpHex = hpRatio > 0.5 and "#2ECC71" or (hpRatio > 0.25 and "#F1C40F" or "#FF4757")
+                TweenService:Create(hpBarFill, TweenInfo.new(0.25), {
+                    Size = UDim2.new(hpRatio, 0, 1, 0),
+                    BackgroundColor3 = Color3.fromHex(hpHex)
+                }):Play()
+
+                charBody.Text = string.format(
+                    "<font color='#00E5FF'>• Tên:</font> %s <font color='#A4B0BE'>(@%s)</font>\n" ..
+                    "<font color='#00E5FF'>• ID / Tuổi:</font> %d <font color='#FFD700'>(%d ngày)</font>\n" ..
+                    "<font color='#00E5FF'>• Máu (HP):</font> <font color='%s'>%d / %d (%d%%)</font>\n" ..
+                    "<font color='#00E5FF'>• Tốc chạy:</font> <font color='#2ECC71'>%d</font>   |   <font color='#00E5FF'>Nhảy:</font> <font color='#2ECC71'>%d</font>\n" ..
+                    "<font color='#00E5FF'>• Tọa độ:</font> <font color='#FFD700'>%s</font>",
+                    player.DisplayName, player.Name,
+                    player.UserId, player.AccountAge,
+                    hpHex, hp, maxHp, math.floor(hpRatio * 100),
+                    ws, jp,
+                    coords
+                )
+
+                -- Cập nhật Máy chủ (Làm sạch chuỗi Ping)
+                local pingNum = 0
+                pcall(function()
+                    if Stats and Stats:FindFirstChild("Network") and Stats.Network:FindFirstChild("ServerStatsItem") then
+                        local raw = Stats.Network.ServerStatsItem["Data Ping"]:GetValueString()
+                        pingNum = tonumber(raw and raw:match("%d+")) or math.floor(player:GetNetworkPing() * 1000)
+                    else
+                        pingNum = math.floor(player:GetNetworkPing() * 1000)
+                    end
+                end)
+                local fpsHex = fps >= 45 and "#2ECC71" or (fps >= 25 and "#F1C40F" or "#FF4757")
+                local pingHex = pingNum <= 100 and "#2ECC71" or (pingNum <= 200 and "#F1C40F" or "#FF4757")
+                local shortJob = game.JobId ~= "" and (string.sub(game.JobId, 1, 18) .. "...") or "Private/Studio"
+
+                svBody.Text = string.format(
+                    "<font color='#00E5FF'>• Tựa game:</font> <font color='#FFD700'>%s</font>\n" ..
+                    "<font color='#00E5FF'>• FPS:</font> <font color='%s'>%d</font>   |   <font color='#00E5FF'>Ping:</font> <font color='%s'>%d ms</font>\n" ..
+                    "<font color='#00E5FF'>• Người chơi:</font> %d / %d   |   <font color='#00E5FF'>PlaceId:</font> %d\n" ..
+                    "<font color='#00E5FF'>• ID Server:</font> <font color='#A4B0BE'>%s</font>",
+                    string.sub(gameName, 1, 26),
+                    fpsHex, fps, pingHex, pingNum,
+                    #Players:GetPlayers(), Players.MaxPlayers, game.PlaceId,
+                    shortJob
+                )
+
+                -- Cập nhật Trạng thái & Hệ thống
+                local activeCount = 0
+                for _, v in pairs(State) do
+                    if v == true then activeCount = activeCount + 1 end
+                end
+                local execTime = math.floor(workspace.DistributedGameTime)
+                local h = math.floor(execTime / 3600)
+                local m = math.floor((execTime % 3600) / 60)
+                local s = execTime % 60
+
+                sysBody.Text = string.format(
+                    "<font color='#00E5FF'>• Executor:</font> <font color='#2ECC71'>%s</font>   |   <font color='#00E5FF'>Đang bật:</font> <font color='#FFD700'>%d tính năng</font>\n" ..
+                    "<font color='#00E5FF'>• Treo máy:</font> %02d:%02d:%02d   |   <font color='#00E5FF'>Giờ:</font> %s\n" ..
+                    "<font color='#00E5FF'>• Phiên bản:</font> <font color='#FF9F43'>VIP PRO MAX V1.13.8</font>",
+                    execName, activeCount,
+                    h, m, s, os.date("%H:%M:%S")
+                )
+            end
+        end
+    end)
+end)()
