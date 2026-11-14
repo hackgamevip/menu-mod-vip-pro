@@ -1,5 +1,5 @@
 -- ==========================================
--- MENU VIP PRO V1.13.7 (FIXED COMPLETE SCRIPT)
+-- MENU VIP PRO MAX V1.14.2 (UI ERGONOMIC PRO)
 -- ==========================================
 repeat task.wait() until game:IsLoaded()
 
@@ -28,24 +28,28 @@ local State = {
     FpsCapValue = 60, Disable3D = false, AfkModeScreen = false, RemoveTextures = false,
     HidePlayers = false, OptimizeTerrain = false, NoShadows = false,
     DisableParticles = false, DisablePostEffects = false, HidePetsAccessories = false, AutoClearRAM = false,
-    AutoSkillDelay = 1, 
+    AutoSkillDelay = 5,
     AutoSkillZ = false, AutoSkillX = false, AutoSkillC = false, AutoSkillV = false, AutoSkillE = false, AutoSkillF = false,
     AutoSkill1 = false, AutoSkill2 = false, AutoSkill3 = false, AutoSkill4 = false, AutoSkill5 = false, AutoSkill6 = false,
     TpPositionIdx = 1, TpDistance = 4,
-    AirWalk = false
+    AirWalk = false,
+    HidePopups = false, MuteSFX = false, DisableAnims = false, DarkMap = false,
+    MiniHUD = false, AutoReconnect = true, MagnetOrbs = false
 }
 
+-- Bảng màu Soft Dark Ergonomic (Dịu mắt, chống chói khi nhìn lâu)
 local Theme = {
-    MainBg = Color3.fromRGB(20, 20, 26),      
-    HeaderBg = Color3.fromRGB(26, 26, 34),    
-    TabBg = Color3.fromRGB(24, 24, 30),       
-    ItemBg = Color3.fromRGB(35, 35, 45),      
-    Stroke = Color3.fromRGB(60, 60, 75),      
-    TextTitle = Color3.fromRGB(210, 225, 240),
-    TextDim = Color3.fromRGB(160, 160, 175),  
-    AccentOn = Color3.fromRGB(46, 204, 113),  
-    AccentOff = Color3.fromRGB(255, 71, 87),  
-    Brand = Color3.fromRGB(0, 200, 255)
+    MainBg = Color3.fromRGB(18, 19, 26),      
+    HeaderBg = Color3.fromRGB(24, 26, 35),    
+    TabBg = Color3.fromRGB(21, 22, 30),       
+    ItemBg = Color3.fromRGB(28, 30, 40),      
+    ItemActive = Color3.fromRGB(28, 40, 38),
+    Stroke = Color3.fromRGB(50, 54, 70),      
+    TextTitle = Color3.fromRGB(214, 222, 235),
+    TextDim = Color3.fromRGB(142, 150, 168),  
+    AccentOn = Color3.fromRGB(68, 196, 130),  
+    AccentOff = Color3.fromRGB(218, 88, 102),  
+    Brand = Color3.fromRGB(92, 180, 232)
 }
 
 local PlayerLightColors = {
@@ -123,7 +127,7 @@ local function saveConfig()
 end
 
 -- ==========================================
--- GIAO DIỆN CHÍNH & THÔNG BÁO (COMPACT)
+-- GIAO DIỆN CHÍNH & THÔNG BÁO (MODERN UI)
 -- ==========================================
 local gui = Instance.new("ScreenGui")
 gui.Name = "MenuVipProMax"
@@ -133,16 +137,16 @@ gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 gui.Parent = guiParent
 
 local notifGui = Instance.new("Frame", gui)
-notifGui.Size = UDim2.new(0, 190, 0.8, 0); notifGui.Position = UDim2.new(1, -200, 0.1, 0)
+notifGui.Size = UDim2.new(0, 195, 0.8, 0); notifGui.Position = UDim2.new(1, -205, 0.1, 0)
 notifGui.BackgroundTransparency = 1; notifGui.ZIndex = 9999
 local notifLayout = Instance.new("UIListLayout", notifGui)
 notifLayout.SortOrder = Enum.SortOrder.LayoutOrder; notifLayout.VerticalAlignment = Enum.VerticalAlignment.Bottom; notifLayout.Padding = UDim.new(0, 6)
 
 local function MakeToast(title, desc, color)
     local toast = Instance.new("Frame", notifGui)
-    toast.Size = UDim2.new(1, 0, 0, 44); toast.BackgroundColor3 = Theme.ItemBg
+    toast.Size = UDim2.new(1, 0, 0, 44); toast.BackgroundColor3 = Theme.HeaderBg
     toast.BackgroundTransparency = 1; Instance.new("UICorner", toast).CornerRadius = UDim.new(0, 8)
-    local stroke = Instance.new("UIStroke", toast); stroke.Color = color; stroke.Thickness = 1.2; stroke.Transparency = 1
+    local stroke = Instance.new("UIStroke", toast); stroke.Color = color; stroke.Thickness = 1.1; stroke.Transparency = 1
     
     local colorBar = Instance.new("Frame", toast)
     colorBar.Size = UDim2.new(0, 3, 1, -12); colorBar.Position = UDim2.new(0, 6, 0, 6)
@@ -150,26 +154,26 @@ local function MakeToast(title, desc, color)
     colorBar.BackgroundTransparency = 1
 
     local tLabel = Instance.new("TextLabel", toast)
-    tLabel.Size = UDim2.new(1, -24, 0, 16); tLabel.Position = UDim2.new(0, 16, 0, 5)
-    tLabel.BackgroundTransparency = 1; tLabel.Text = title; tLabel.TextColor3 = color; tLabel.Font = Enum.Font.GothamBold; tLabel.TextSize = 11; tLabel.TextXAlignment = Enum.TextXAlignment.Left; tLabel.TextTransparency = 1
+    tLabel.Size = UDim2.new(1, -22, 0, 16); tLabel.Position = UDim2.new(0, 15, 0, 5)
+    tLabel.BackgroundTransparency = 1; tLabel.Text = title; tLabel.TextColor3 = color; tLabel.Font = Enum.Font.GothamBold; tLabel.TextSize = 10.5; tLabel.TextXAlignment = Enum.TextXAlignment.Left; tLabel.TextTransparency = 1
     
     local dLabel = Instance.new("TextLabel", toast)
-    dLabel.Size = UDim2.new(1, -24, 0, 16); dLabel.Position = UDim2.new(0, 16, 0, 22)
-    dLabel.BackgroundTransparency = 1; dLabel.Text = desc; dLabel.TextColor3 = Theme.TextTitle; dLabel.Font = Enum.Font.Gotham; dLabel.TextSize = 10; dLabel.TextXAlignment = Enum.TextXAlignment.Left; dLabel.TextTransparency = 1
+    dLabel.Size = UDim2.new(1, -22, 0, 16); dLabel.Position = UDim2.new(0, 15, 0, 22)
+    dLabel.BackgroundTransparency = 1; dLabel.Text = desc; dLabel.TextColor3 = Theme.TextTitle; dLabel.Font = Enum.Font.Gotham; dLabel.TextSize = 9.5; dLabel.TextXAlignment = Enum.TextXAlignment.Left; dLabel.TextTransparency = 1; dLabel.TextTruncate = Enum.TextTruncate.AtEnd
     
-    TweenService:Create(toast, TweenInfo.new(0.3), {BackgroundTransparency = 0.1}):Play()
-    TweenService:Create(stroke, TweenInfo.new(0.3), {Transparency = 0}):Play()
-    TweenService:Create(colorBar, TweenInfo.new(0.3), {BackgroundTransparency = 0}):Play()
-    TweenService:Create(tLabel, TweenInfo.new(0.3), {TextTransparency = 0}):Play()
-    TweenService:Create(dLabel, TweenInfo.new(0.3), {TextTransparency = 0}):Play()
+    TweenService:Create(toast, TweenInfo.new(0.25), {BackgroundTransparency = 0.06}):Play()
+    TweenService:Create(stroke, TweenInfo.new(0.25), {Transparency = 0.2}):Play()
+    TweenService:Create(colorBar, TweenInfo.new(0.25), {BackgroundTransparency = 0}):Play()
+    TweenService:Create(tLabel, TweenInfo.new(0.25), {TextTransparency = 0}):Play()
+    TweenService:Create(dLabel, TweenInfo.new(0.25), {TextTransparency = 0}):Play()
     
     task.delay(2.2, function()
-        TweenService:Create(toast, TweenInfo.new(0.4), {BackgroundTransparency = 1}):Play()
-        TweenService:Create(stroke, TweenInfo.new(0.4), {Transparency = 1}):Play()
-        TweenService:Create(colorBar, TweenInfo.new(0.4), {BackgroundTransparency = 1}):Play()
-        TweenService:Create(tLabel, TweenInfo.new(0.4), {TextTransparency = 1}):Play()
-        TweenService:Create(dLabel, TweenInfo.new(0.4), {TextTransparency = 1}):Play()
-        task.wait(0.4); toast:Destroy()
+        TweenService:Create(toast, TweenInfo.new(0.35), {BackgroundTransparency = 1}):Play()
+        TweenService:Create(stroke, TweenInfo.new(0.35), {Transparency = 1}):Play()
+        TweenService:Create(colorBar, TweenInfo.new(0.35), {BackgroundTransparency = 1}):Play()
+        TweenService:Create(tLabel, TweenInfo.new(0.35), {TextTransparency = 1}):Play()
+        TweenService:Create(dLabel, TweenInfo.new(0.35), {TextTransparency = 1}):Play()
+        task.wait(0.35); toast:Destroy()
     end)
 end
 
@@ -178,118 +182,167 @@ screenOverlay.Size = UDim2.new(2, 0, 2, 0); screenOverlay.Position = UDim2.new(-
 screenOverlay.BackgroundColor3 = Color3.new(0,0,0); screenOverlay.ZIndex = 0; screenOverlay.Visible = false
 
 local openBtn = Instance.new("TextButton", gui)
-openBtn.Size = UDim2.new(0, 40, 0, 40); openBtn.Position = UDim2.new(0, 15, 0.25, 0)
-openBtn.Text = "🇻🇳"; openBtn.BackgroundColor3 = Theme.MainBg; openBtn.BackgroundTransparency = 0.25
+openBtn.Size = UDim2.new(0, 42, 0, 42); openBtn.Position = UDim2.new(0, 15, 0.25, 0)
+openBtn.Text = "🇻🇳"; openBtn.BackgroundColor3 = Theme.MainBg; openBtn.BackgroundTransparency = 0.15
 openBtn.TextColor3 = Theme.Brand; openBtn.Font = Enum.Font.GothamBold; openBtn.TextSize = 19; openBtn.ZIndex = 10
 Instance.new("UICorner", openBtn).CornerRadius = UDim.new(1, 0)
 local openStroke = Instance.new("UIStroke", openBtn)
-openStroke.Color = Theme.Brand; openStroke.Thickness = 1.8; openStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border 
+openStroke.Color = Theme.AccentOff; openStroke.Thickness = 1.6; openStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border 
 
 local function clickAnimate(obj)
-    local scale = Instance.new("UIScale", obj)
-    TweenService:Create(scale, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Scale = 0.92}):Play()
-    task.wait(0.1)
-    TweenService:Create(scale, TweenInfo.new(0.15, Enum.EasingStyle.Bounce, Enum.EasingDirection.Out), {Scale = 1}):Play()
-    task.delay(0.3, function() scale:Destroy() end)
+    local scale = obj:FindFirstChildOfClass("UIScale") or Instance.new("UIScale", obj)
+    TweenService:Create(scale, TweenInfo.new(0.08, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Scale = 0.94}):Play()
+    task.delay(0.08, function()
+        if scale and scale.Parent then
+            TweenService:Create(scale, TweenInfo.new(0.14, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Scale = 1}):Play()
+        end
+    end)
 end
 
-local btnDragToggle, btnDragStart, btnStartPos
-openBtn.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then btnDragToggle = true; btnDragStart = input.Position; btnStartPos = openBtn.Position end
-end)
-UIS.InputChanged:Connect(function(input)
-    if btnDragToggle and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-        openBtn.Position = UDim2.new(btnStartPos.X.Scale, btnStartPos.X.Offset + (input.Position.X - btnDragStart.X), btnStartPos.Y.Scale, btnStartPos.Y.Offset + (input.Position.Y - btnDragStart.Y))
-    end
-end)
-UIS.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then btnDragToggle = false end end)
+do
+    local btnDragToggle, btnDragStart, btnStartPos
+    openBtn.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            btnDragToggle = true; btnDragStart = input.Position; btnStartPos = openBtn.Position
+        end
+    end)
+    UIS.InputChanged:Connect(function(input)
+        if btnDragToggle and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            openBtn.Position = UDim2.new(btnStartPos.X.Scale, btnStartPos.X.Offset + (input.Position.X - btnDragStart.X), btnStartPos.Y.Scale, btnStartPos.Y.Offset + (input.Position.Y - btnDragStart.Y))
+        end
+    end)
+    UIS.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then btnDragToggle = false end
+    end)
+end
+
+-- Khung chính đặt cao hơn thanh Hotbar để không che vật phẩm
+local OPEN_POS = UDim2.new(0.5, -180, 0.5, -182)
+local CLOSE_POS = UDim2.new(0.5, -180, 1.2, 0)
 
 local frame = Instance.new("Frame", gui)
-frame.Size = UDim2.new(0, 350, 0, 355)
-frame.Position = UDim2.new(0.5, -175, 0.5, -195)
-frame.BackgroundColor3 = Theme.MainBg; frame.BackgroundTransparency = 0.05; frame.ZIndex = 10
-Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 14)
-local frameStroke = Instance.new("UIStroke", frame); frameStroke.Color = Theme.Stroke; frameStroke.Thickness = 1.8
+frame.Size = UDim2.new(0, 360, 0, 340)
+frame.Position = OPEN_POS
+frame.BackgroundColor3 = Theme.MainBg; frame.BackgroundTransparency = 0.03; frame.ZIndex = 10
+Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 12)
+local frameStroke = Instance.new("UIStroke", frame); frameStroke.Color = Theme.Stroke; frameStroke.Thickness = 1.5
 table.insert(RGBElements, {Type = "Frame", Stroke = frameStroke})
 
 local header = Instance.new("Frame", frame)
-header.Size = UDim2.new(1, 0, 0, 32); header.BackgroundColor3 = Theme.HeaderBg; header.BackgroundTransparency = 0; header.BorderSizePixel = 0; header.ZIndex = 10
-Instance.new("UICorner", header).CornerRadius = UDim.new(0, 14)
+header.Size = UDim2.new(1, 0, 0, 34); header.BackgroundColor3 = Theme.HeaderBg; header.BackgroundTransparency = 0; header.BorderSizePixel = 0; header.ZIndex = 10
+Instance.new("UICorner", header).CornerRadius = UDim.new(0, 12)
 local headerCover = Instance.new("Frame", header) 
 headerCover.Size = UDim2.new(1, 0, 0, 10); headerCover.Position = UDim2.new(0, 0, 1, -10); headerCover.BackgroundColor3 = Theme.HeaderBg; headerCover.BorderSizePixel = 0; headerCover.ZIndex = 10
-local headerStroke = Instance.new("UIStroke", header); headerStroke.Color = Theme.Stroke; headerStroke.Thickness = 1.2; headerStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-table.insert(RGBElements, {Type = "Header", Stroke = headerStroke})
+local headerLine = Instance.new("Frame", header)
+headerLine.Size = UDim2.new(1, 0, 0, 1); headerLine.Position = UDim2.new(0, 0, 1, -1); headerLine.BackgroundColor3 = Theme.Stroke; headerLine.BorderSizePixel = 0; headerLine.ZIndex = 11
 
 local titleLabel = Instance.new("TextLabel", header)
-titleLabel.Size = UDim2.new(1, 0, 1, 0); titleLabel.BackgroundTransparency = 1
+titleLabel.Size = UDim2.new(1, -90, 1, 0); titleLabel.Position = UDim2.new(0, 42, 0, 0); titleLabel.BackgroundTransparency = 1
 titleLabel.Text = "MENU VIP PRO MAX"
-titleLabel.TextColor3 = Theme.TextTitle; titleLabel.Font = Enum.Font.GothamBlack; titleLabel.TextSize = 13; titleLabel.ZIndex = 10
+titleLabel.TextColor3 = Theme.TextTitle; titleLabel.Font = Enum.Font.GothamBlack; titleLabel.TextSize = 12.5; titleLabel.TextXAlignment = Enum.TextXAlignment.Left; titleLabel.ZIndex = 11
+
+local verBadge = Instance.new("TextLabel", header)
+verBadge.Size = UDim2.new(0, 42, 0, 16); verBadge.Position = UDim2.new(1, -76, 0.5, -8)
+verBadge.BackgroundColor3 = Color3.fromRGB(32, 42, 56); verBadge.Text = "v1.14"; verBadge.TextColor3 = Theme.Brand
+verBadge.Font = Enum.Font.GothamBold; verBadge.TextSize = 9.5; verBadge.ZIndex = 11
+Instance.new("UICorner", verBadge).CornerRadius = UDim.new(1, 0)
+local verStroke = Instance.new("UIStroke", verBadge); verStroke.Color = Theme.Brand; verStroke.Thickness = 0.8; verStroke.Transparency = 0.4
+
+local minBtn = Instance.new("TextButton", header)
+minBtn.Size = UDim2.new(0, 22, 0, 22); minBtn.Position = UDim2.new(1, -28, 0.5, -11)
+minBtn.BackgroundColor3 = Color3.fromRGB(35, 38, 50); minBtn.Text = "—"; minBtn.TextColor3 = Theme.TextDim
+minBtn.Font = Enum.Font.GothamBlack; minBtn.TextSize = 11; minBtn.AutoButtonColor = false; minBtn.ZIndex = 11
+Instance.new("UICorner", minBtn).CornerRadius = UDim.new(0, 6)
+local minStroke = Instance.new("UIStroke", minBtn); minStroke.Color = Theme.Stroke; minStroke.Thickness = 1
 
 local avatarImg = Instance.new("ImageLabel", header)
-avatarImg.Size = UDim2.new(0, 22, 0, 22); avatarImg.Position = UDim2.new(0, 10, 0.5, -11); avatarImg.BackgroundTransparency = 1; avatarImg.ZIndex = 10
+avatarImg.Size = UDim2.new(0, 22, 0, 22); avatarImg.Position = UDim2.new(0, 10, 0.5, -11); avatarImg.BackgroundTransparency = 1; avatarImg.ZIndex = 11
 pcall(function() avatarImg.Image = Players:GetUserThumbnailAsync(player.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size420x420) end)
 Instance.new("UICorner", avatarImg).CornerRadius = UDim.new(1, 0)
 local avatarStroke = Instance.new("UIStroke", avatarImg); avatarStroke.Color = Theme.Brand; avatarStroke.Thickness = 1.2; avatarStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 
-local dragToggle, dragStart, startPos
-header.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then dragToggle = true; dragStart = input.Position; startPos = frame.Position end
-end)
-UIS.InputChanged:Connect(function(input)
-    if dragToggle and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-        frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + (input.Position.X - dragStart.X), startPos.Y.Scale, startPos.Y.Offset + (input.Position.Y - dragStart.Y))
-    end
-end)
-UIS.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then dragToggle = false end end)
+do
+    local dragToggle, dragStart, startPos
+    header.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragToggle = true; dragStart = input.Position; startPos = frame.Position
+        end
+    end)
+    UIS.InputChanged:Connect(function(input)
+        if dragToggle and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + (input.Position.X - dragStart.X), startPos.Y.Scale, startPos.Y.Offset + (input.Position.Y - dragStart.Y))
+            OPEN_POS = frame.Position
+        end
+    end)
+    UIS.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then dragToggle = false end
+    end)
+end
 
--- SCROLLING TAB BAR
+-- THANH TAB HIỆN ĐẠI (PILL TABS + AUTO SCROLL)
 local tabBar = Instance.new("ScrollingFrame", frame)
-tabBar.Size = UDim2.new(1, 0, 0, 28); tabBar.Position = UDim2.new(0, 0, 0, 32)
+tabBar.Size = UDim2.new(1, 0, 0, 32); tabBar.Position = UDim2.new(0, 0, 0, 34)
 tabBar.BackgroundColor3 = Theme.TabBg; tabBar.BorderSizePixel = 0; tabBar.ZIndex = 10
 tabBar.ScrollBarThickness = 0; tabBar.ScrollingDirection = Enum.ScrollingDirection.X
 tabBar.ClipsDescendants = true
 
+local tabPad = Instance.new("UIPadding", tabBar)
+tabPad.PaddingLeft = UDim.new(0, 6); tabPad.PaddingRight = UDim.new(0, 6)
+tabPad.PaddingTop = UDim.new(0, 4); tabPad.PaddingBottom = UDim.new(0, 4)
+
 local tabLayout = Instance.new("UIListLayout", tabBar)
 tabLayout.FillDirection = Enum.FillDirection.Horizontal
+tabLayout.VerticalAlignment = Enum.VerticalAlignment.Center
 tabLayout.SortOrder = Enum.SortOrder.LayoutOrder
+tabLayout.Padding = UDim.new(0, 4)
 tabLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-    tabBar.CanvasSize = UDim2.new(0, tabLayout.AbsoluteContentSize.X, 0, 0)
+    tabBar.CanvasSize = UDim2.new(0, tabLayout.AbsoluteContentSize.X + 12, 0, 0)
 end)
 
+local tabBarBottomLine = Instance.new("Frame", frame)
+tabBarBottomLine.Size = UDim2.new(1, 0, 0, 1); tabBarBottomLine.Position = UDim2.new(0, 0, 0, 66)
+tabBarBottomLine.BackgroundColor3 = Theme.Stroke; tabBarBottomLine.BorderSizePixel = 0; tabBarBottomLine.ZIndex = 11
+
+local allTabs = {}
 local function createTab(name, width)
     local btn = Instance.new("TextButton", tabBar)
     btn.Size = UDim2.new(0, width, 1, 0)
-    btn.Text = name; btn.BackgroundTransparency = 1; btn.TextColor3 = Theme.TextDim
-    btn.BorderSizePixel = 0; btn.Font = Enum.Font.GothamBold; btn.TextSize = 8; btn.ZIndex = 10
+    btn.Text = name; btn.BackgroundColor3 = Color3.fromRGB(28, 30, 40)
+    btn.BackgroundTransparency = 1; btn.TextColor3 = Theme.TextDim
+    btn.BorderSizePixel = 0; btn.Font = Enum.Font.GothamBold; btn.TextSize = 9; btn.AutoButtonColor = false; btn.ZIndex = 10
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
+
     local indicator = Instance.new("Frame", btn)
-    indicator.Size = UDim2.new(0.5, 0, 0, 2); indicator.Position = UDim2.new(0.25, 0, 1, -2)
-    indicator.BackgroundColor3 = Theme.Brand; indicator.BorderSizePixel = 0; indicator.Visible = false; indicator.ZIndex = 10
+    indicator.Size = UDim2.new(0.55, 0, 0, 2); indicator.Position = UDim2.new(0.225, 0, 1, -2)
+    indicator.BackgroundColor3 = Theme.Brand; indicator.BorderSizePixel = 0; indicator.Visible = false; indicator.ZIndex = 11
     Instance.new("UICorner", indicator).CornerRadius = UDim.new(1, 0)
+
+    table.insert(allTabs, {Btn = btn, Ind = indicator})
     return btn, indicator
 end
 
-local tab1, ind1 = createTab("THÔNG TIN", 65)
-local tab2, ind2 = createTab("TÍNH NĂNG", 65)
-local tab3, ind3 = createTab("PLAYER",    55)
+local tab1, ind1 = createTab("THÔNG TIN", 66)
+local tab2, ind2 = createTab("TÍNH NĂNG", 66)
+local tab3, ind3 = createTab("PLAYER",    54)
 local tab4, ind4 = createTab("TIỆN ÍCH",  58)
-local tab5, ind5 = createTab("NHẠC ID",   55) 
-local tab6, ind6 = createTab("TP SAVE",   58)
-local tab7, ind7 = createTab("TP PLAYER", 65)
+local tab5, ind5 = createTab("NHẠC ID",   56) 
+local tab6, ind6 = createTab("TP SAVE",   56)
+local tab7, ind7 = createTab("TP PLAYER", 66)
 local tab8, ind8 = createTab("AUTO SKILL", 68) 
-local tab9, ind9 = createTab("CẤU HÌNH",  65)
+local tab9, ind9 = createTab("CẤU HÌNH",  64)
 
 local pageContainer = Instance.new("Frame", frame)
-pageContainer.Size = UDim2.new(1, 0, 1, -62); pageContainer.Position = UDim2.new(0, 0, 0, 61); pageContainer.BackgroundTransparency = 1; pageContainer.ZIndex = 10
+pageContainer.Size = UDim2.new(1, 0, 1, -67); pageContainer.Position = UDim2.new(0, 0, 0, 67); pageContainer.BackgroundTransparency = 1; pageContainer.ZIndex = 10
 
 local function createPage()
     local pg = Instance.new("ScrollingFrame", pageContainer)
     pg.Size = UDim2.new(1, 0, 1, 0); pg.BackgroundTransparency = 1
-    pg.ScrollBarThickness = 4; pg.ScrollBarImageColor3 = Theme.Brand; pg.Visible = false; pg.BorderSizePixel = 0; pg.ZIndex = 10
+    pg.ScrollBarThickness = 3; pg.ScrollBarImageColor3 = Theme.Brand; pg.Visible = false; pg.BorderSizePixel = 0; pg.ZIndex = 10
     local layout = Instance.new("UIListLayout", pg)
     layout.HorizontalAlignment = Enum.HorizontalAlignment.Center; layout.Padding = UDim.new(0, 6); layout.SortOrder = Enum.SortOrder.LayoutOrder 
     local pad = Instance.new("UIPadding", pg)
-    pad.PaddingTop = UDim.new(0, 6); pad.PaddingBottom = UDim.new(0, 16) 
-    layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function() pg.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y + 30) end)
+    pad.PaddingTop = UDim.new(0, 7); pad.PaddingBottom = UDim.new(0, 16) 
+    layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function() pg.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y + 26) end)
     return pg
 end
 
@@ -297,24 +350,43 @@ local page1, page2, page3, page4, page8, page9 = createPage(), createPage(), cre
 
 local page5 = Instance.new("Frame", pageContainer)
 page5.Size = UDim2.new(1, 0, 1, 0); page5.BackgroundTransparency = 1; page5.Visible = false; page5.ZIndex = 10
-local l5 = Instance.new("UIListLayout", page5); l5.HorizontalAlignment = Enum.HorizontalAlignment.Center; l5.Padding = UDim.new(0, 6); l5.SortOrder = Enum.SortOrder.LayoutOrder; Instance.new("UIPadding", page5).PaddingTop = UDim.new(0, 6)
+local l5 = Instance.new("UIListLayout", page5); l5.HorizontalAlignment = Enum.HorizontalAlignment.Center; l5.Padding = UDim.new(0, 6); l5.SortOrder = Enum.SortOrder.LayoutOrder; Instance.new("UIPadding", page5).PaddingTop = UDim.new(0, 7)
 
 local page6 = Instance.new("Frame", pageContainer)
 page6.Size = UDim2.new(1, 0, 1, 0); page6.BackgroundTransparency = 1; page6.Visible = false; page6.ZIndex = 10
-local l6 = Instance.new("UIListLayout", page6); l6.HorizontalAlignment = Enum.HorizontalAlignment.Center; l6.Padding = UDim.new(0, 6); l6.SortOrder = Enum.SortOrder.LayoutOrder; Instance.new("UIPadding", page6).PaddingTop = UDim.new(0, 6)
+local l6 = Instance.new("UIListLayout", page6); l6.HorizontalAlignment = Enum.HorizontalAlignment.Center; l6.Padding = UDim.new(0, 6); l6.SortOrder = Enum.SortOrder.LayoutOrder; Instance.new("UIPadding", page6).PaddingTop = UDim.new(0, 7)
 
 local page7 = Instance.new("Frame", pageContainer)
 page7.Size = UDim2.new(1, 0, 1, 0); page7.BackgroundTransparency = 1; page7.Visible = false; page7.ZIndex = 10
 local l7 = Instance.new("UIListLayout", page7); l7.HorizontalAlignment = Enum.HorizontalAlignment.Center; l7.Padding = UDim.new(0, 5); l7.SortOrder = Enum.SortOrder.LayoutOrder
-local pad7 = Instance.new("UIPadding", page7); pad7.PaddingTop = UDim.new(0, 5)
+local pad7 = Instance.new("UIPadding", page7); pad7.PaddingTop = UDim.new(0, 6)
 
+local onTab9Shown = nil
 local function showTab(pg, tb, ind)
     for _, p in pairs({page1, page2, page3, page4, page5, page6, page7, page8, page9}) do p.Visible = false end
-    for _, t in pairs({tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9}) do t.TextColor3 = Theme.TextDim end
-    for _, i in pairs({ind1, ind2, ind3, ind4, ind5, ind6, ind7, ind8, ind9}) do i.Visible = false end
-    pg.Visible = true; tb.TextColor3 = Theme.TextTitle; ind.Visible = true
+    for _, item in ipairs(allTabs) do
+        item.Btn.TextColor3 = Theme.TextDim
+        item.Btn.BackgroundTransparency = 1
+        item.Ind.Visible = false
+    end
+    pg.Visible = true
+    tb.TextColor3 = Theme.TextTitle
+    tb.BackgroundColor3 = Color3.fromRGB(32, 42, 58)
+    TweenService:Create(tb, TweenInfo.new(0.2), {BackgroundTransparency = 0}):Play()
+    ind.Visible = true
     ind.Size = UDim2.new(0, 0, 0, 2)
-    TweenService:Create(ind, TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Size = UDim2.new(0.5, 0, 0, 2)}):Play()
+    TweenService:Create(ind, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Size = UDim2.new(0.55, 0, 0, 2)}):Play()
+
+    -- Tự động cuộn thanh Tab để nút đang chọn luôn nằm gọn trong khung
+    pcall(function()
+        local btnX = tb.AbsolutePosition.X - tabBar.AbsolutePosition.X + tabBar.CanvasPosition.X
+        local targetScroll = math.clamp(btnX - (tabBar.AbsoluteSize.X * 0.5) + (tb.AbsoluteSize.X * 0.5), 0, math.max(0, tabBar.CanvasSize.X.Offset - tabBar.AbsoluteSize.X))
+        TweenService:Create(tabBar, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {CanvasPosition = Vector2.new(targetScroll, 0)}):Play()
+    end)
+
+    if pg == page9 and onTab9Shown then
+        task.spawn(onTab9Shown)
+    end
 end
 
 tab1.MouseButton1Click:Connect(function() showTab(page1, tab1, ind1) end)
@@ -329,13 +401,22 @@ tab9.MouseButton1Click:Connect(function() showTab(page9, tab9, ind9) end)
 showTab(page1, tab1, ind1)
 
 local opened = true
-openBtn.MouseButton1Click:Connect(function()
-    clickAnimate(openBtn); opened = not opened
+local function toggleMenuWindow()
+    opened = not opened
     if not State.RGB then
-        openStroke.Color = opened and Theme.AccentOff or Theme.Brand
         TweenService:Create(openStroke, TweenInfo.new(0.3), {Color = opened and Theme.AccentOff or Theme.Brand}):Play()
     end
-    frame:TweenPosition(opened and UDim2.new(0.5, -175, 0.5, -152) or UDim2.new(0.5, -175, 1.2, 0), "Out", "Back", 0.45)
+    frame:TweenPosition(opened and OPEN_POS or CLOSE_POS, "Out", "Back", 0.4, true)
+end
+
+openBtn.MouseButton1Click:Connect(function()
+    clickAnimate(openBtn)
+    toggleMenuWindow()
+end)
+
+minBtn.MouseButton1Click:Connect(function()
+    clickAnimate(minBtn)
+    toggleMenuWindow()
 end)
 
 local function getUniversalRoot(char)
@@ -359,27 +440,40 @@ local function getCharacterCFrame(char)
     return nil
 end
 
+-- ==========================================
+-- COMPONENTS ĐƯỢC THIẾT KẾ LẠI (SWITCH, SLIDER, DIVIDER)
+-- ==========================================
 local function createDivider(parent, text)
     local dFrame = Instance.new("Frame", parent)
-    dFrame.Size = UDim2.new(0.92, 0, 0, 15)
+    dFrame.Size = UDim2.new(0.93, 0, 0, 20)
     dFrame.BackgroundTransparency = 1
-    local label = Instance.new("TextLabel", dFrame)
-    label.Size = UDim2.new(1, 0, 1, 0)
-    label.BackgroundTransparency = 1
-    label.Text = "─── " .. text .. " ───"
-    label.TextColor3 = Theme.Brand
-    label.Font = Enum.Font.GothamBold
-    label.TextSize = 10
+    dFrame.ZIndex = 10
+
+    local lineLeft = Instance.new("Frame", dFrame)
+    lineLeft.Size = UDim2.new(1, 0, 0, 1); lineLeft.Position = UDim2.new(0, 0, 0.5, 0)
+    lineLeft.BackgroundColor3 = Theme.Stroke; lineLeft.BorderSizePixel = 0; lineLeft.ZIndex = 10
+
+    local pill = Instance.new("TextLabel", dFrame)
+    pill.AutomaticSize = Enum.AutomaticSize.X
+    pill.Size = UDim2.new(0, 0, 0, 16)
+    pill.AnchorPoint = Vector2.new(0.5, 0.5)
+    pill.Position = UDim2.new(0.5, 0, 0.5, 0)
+    pill.BackgroundColor3 = Theme.MainBg
+    pill.Text = "  " .. text .. "  "
+    pill.TextColor3 = Theme.Brand
+    pill.Font = Enum.Font.GothamBold
+    pill.TextSize = 9.5
+    pill.ZIndex = 11
     return dFrame
 end
 
 local function createCycleBtn(parent, prefix, options, stateVar)
     local btnFrame = Instance.new("Frame", parent)
-    btnFrame.Size = UDim2.new(0.92, 0, 0, 32); btnFrame.BackgroundTransparency = 1
+    btnFrame.Size = UDim2.new(0.93, 0, 0, 32); btnFrame.BackgroundTransparency = 1
     local btn = Instance.new("TextButton", btnFrame)
     btn.Size = UDim2.new(1, 0, 1, 0); btn.BackgroundColor3 = Theme.ItemBg; btn.Text = ""; btn.AutoButtonColor = false; btn.ZIndex = 10
     Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
-    local stroke = Instance.new("UIStroke", btn); stroke.Color = Theme.Brand; stroke.Thickness = 1.2; stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    local stroke = Instance.new("UIStroke", btn); stroke.Color = Theme.Brand; stroke.Thickness = 1; stroke.Transparency = 0.25; stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
     table.insert(RGBElements, {Type = "Button", Stroke = stroke, DefaultColor = Theme.Brand})
     
     local title = Instance.new("TextLabel", btn)
@@ -401,76 +495,89 @@ local function createCycleBtn(parent, prefix, options, stateVar)
     return btnFrame
 end
 
+-- Công tắc trượt iOS hiện đại, chống mỏi mắt
 local function createToggle(parent, text, varName, callback)
     local btnFrame = Instance.new("Frame", parent)
-    btnFrame.Size = UDim2.new(0.92, 0, 0, 34); btnFrame.BackgroundTransparency = 1
+    btnFrame.Size = UDim2.new(0.93, 0, 0, 35); btnFrame.BackgroundTransparency = 1
+
     local btn = Instance.new("TextButton", btnFrame)
     btn.Size = UDim2.new(1, 0, 1, 0); btn.Text = ""; btn.AutoButtonColor = false; btn.ZIndex = 10
     Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
-    local stroke = Instance.new("UIStroke", btn); stroke.Thickness = 1.2
-    
+    local stroke = Instance.new("UIStroke", btn); stroke.Thickness = 1
+
+    local leftBar = Instance.new("Frame", btn)
+    leftBar.Size = UDim2.new(0, 3, 0, 18); leftBar.Position = UDim2.new(0, 6, 0.5, -9)
+    leftBar.BorderSizePixel = 0; leftBar.ZIndex = 11
+    Instance.new("UICorner", leftBar).CornerRadius = UDim.new(1, 0)
+
     local title = Instance.new("TextLabel", btn)
-    title.Size = UDim2.new(0.74, 0, 1, 0); title.Position = UDim2.new(0.04, 0, 0, 0)
-    title.BackgroundTransparency = 1; title.Text = text; title.TextColor3 = Theme.TextTitle; title.Font = Enum.Font.GothamSemibold; title.TextSize = 11.5; title.TextXAlignment = Enum.TextXAlignment.Left; title.ZIndex = 10
-    local status = Instance.new("TextLabel", btn)
-    status.Size = UDim2.new(0.18, 0, 1, 0); status.Position = UDim2.new(0.78, 0, 0, 0)
-    status.BackgroundTransparency = 1; status.Font = Enum.Font.GothamBold; status.TextSize = 11; status.TextXAlignment = Enum.TextXAlignment.Right; status.ZIndex = 10
-    
-    local active = State[varName] or false
-    status.Text = active and "ON" or "OFF"; status.TextColor3 = active and Theme.AccentOn or Theme.AccentOff
-    stroke.Color = active and Theme.AccentOn or Theme.Stroke
-    btn.BackgroundColor3 = active and Color3.fromRGB(35, 45, 40) or Theme.ItemBg
-    
+    title.Size = UDim2.new(1, -80, 1, 0); title.Position = UDim2.new(0, 16, 0, 0)
+    title.BackgroundTransparency = 1; title.Text = text; title.TextColor3 = Theme.TextTitle
+    title.Font = Enum.Font.GothamSemibold; title.TextSize = 11; title.TextXAlignment = Enum.TextXAlignment.Left
+    title.TextTruncate = Enum.TextTruncate.AtEnd; title.ZIndex = 11
+
+    local switchTrack = Instance.new("Frame", btn)
+    switchTrack.Size = UDim2.new(0, 40, 0, 20); switchTrack.Position = UDim2.new(1, -48, 0.5, -10)
+    switchTrack.BorderSizePixel = 0; switchTrack.ZIndex = 11
+    Instance.new("UICorner", switchTrack).CornerRadius = UDim.new(1, 0)
+    local switchStroke = Instance.new("UIStroke", switchTrack); switchStroke.Thickness = 1; switchStroke.Transparency = 0.3
+
+    local switchKnob = Instance.new("Frame", switchTrack)
+    switchKnob.Size = UDim2.new(0, 14, 0, 14)
+    switchKnob.BorderSizePixel = 0; switchKnob.ZIndex = 12
+    Instance.new("UICorner", switchKnob).CornerRadius = UDim.new(1, 0)
+
+    local active = State[varName] and true or false
+
+    local function applyVisual(isOn, instant)
+        local tInfo = TweenInfo.new(instant and 0 or 0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+        local trackCol = isOn and Color3.fromRGB(36, 115, 78) or Color3.fromRGB(20, 22, 30)
+        local knobCol = isOn and Color3.fromRGB(235, 255, 245) or Color3.fromRGB(130, 138, 155)
+        local knobPos = isOn and UDim2.new(1, -17, 0.5, -7) or UDim2.new(0, 3, 0.5, -7)
+        local barCol = isOn and Theme.AccentOn or Color3.fromRGB(65, 70, 88)
+        local bgCol = isOn and Theme.ItemActive or Theme.ItemBg
+        local borderCol = isOn and Color3.fromRGB(58, 135, 96) or Theme.Stroke
+
+        TweenService:Create(switchTrack, tInfo, {BackgroundColor3 = trackCol}):Play()
+        TweenService:Create(switchStroke, tInfo, {Color = isOn and Theme.AccentOn or Theme.Stroke}):Play()
+        TweenService:Create(switchKnob, tInfo, {Position = knobPos, BackgroundColor3 = knobCol}):Play()
+        TweenService:Create(leftBar, tInfo, {BackgroundColor3 = barCol}):Play()
+        TweenService:Create(btn, tInfo, {BackgroundColor3 = bgCol}):Play()
+        if not State.RGB then
+            TweenService:Create(stroke, tInfo, {Color = borderCol}):Play()
+        end
+    end
+
+    applyVisual(active, true)
     table.insert(RGBElements, {Type = "Toggle", Stroke = stroke, State = function() return State[varName] end})
 
     btn.MouseButton1Click:Connect(function()
-        clickAnimate(btn); State[varName] = not State[varName]; active = State[varName]
-        status.Text = active and "ON" or "OFF"
-        TweenService:Create(status, TweenInfo.new(0.2), {TextColor3 = active and Theme.AccentOn or Theme.AccentOff}):Play()
-        if not State.RGB then TweenService:Create(stroke, TweenInfo.new(0.2), {Color = active and Theme.AccentOn or Theme.Stroke}):Play() end
-        TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = active and Color3.fromRGB(35, 45, 40) or Theme.ItemBg}):Play()
-        if varName ~= "AutoSave" then if active then MakeToast("Đã Bật", text, Theme.AccentOn) else MakeToast("Đã Tắt", text, Theme.AccentOff) end; if State.AutoSave then saveConfig() end end
+        clickAnimate(btn)
+        State[varName] = not State[varName]
+        active = State[varName]
+        applyVisual(active, false)
+        if varName ~= "AutoSave" then
+            if active then MakeToast("Đã Bật", text, Theme.AccentOn) else MakeToast("Đã Tắt", text, Theme.AccentOff) end
+            if State.AutoSave then saveConfig() end
+        end
         if callback then callback(active) end
     end)
-    if active and callback then task.spawn(callback, active) end
-    return btnFrame
-end
 
-local function createTab9Toggle(parent, text, varName, callback)
-    local frameItem = createToggle(parent, text, varName, callback)
-    local btn = frameItem:FindFirstChildOfClass("TextButton")
-    Tab9Toggles[varName] = function(targetState)
-        if State[varName] ~= targetState then
-            State[varName] = targetState
-            if btn then
-                local stroke = btn:FindFirstChildOfClass("UIStroke")
-                for _, lbl in ipairs(btn:GetChildren()) do
-                    if lbl:IsA("TextLabel") and (lbl.Text == "ON" or lbl.Text == "OFF") then
-                        lbl.Text = targetState and "ON" or "OFF"
-                        TweenService:Create(lbl, TweenInfo.new(0.2), {TextColor3 = targetState and Theme.AccentOn or Theme.AccentOff}):Play()
-                    end
-                end
-                if stroke and not State.RGB then
-                    TweenService:Create(stroke, TweenInfo.new(0.2), {Color = targetState and Theme.AccentOn or Theme.Stroke}):Play()
-                end
-                TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = targetState and Color3.fromRGB(35, 45, 40) or Theme.ItemBg}):Play()
-            end
-            if callback then task.spawn(callback, targetState) end
-        end
-    end
-    return frameItem
+    btnFrame:SetAttribute("SyncToggle", false)
+    if active and callback then task.spawn(callback, active) end
+    return btnFrame, applyVisual
 end
 
 local function createButton(parent, text, color, callback)
     local btnFrame = Instance.new("Frame", parent)
-    btnFrame.Size = UDim2.new(0.92, 0, 0, 32); btnFrame.BackgroundTransparency = 1
+    btnFrame.Size = UDim2.new(0.93, 0, 0, 32); btnFrame.BackgroundTransparency = 1
     local btn = Instance.new("TextButton", btnFrame)
     btn.Size = UDim2.new(1, 0, 1, 0); btn.BackgroundColor3 = Theme.ItemBg; btn.Text = ""; btn.AutoButtonColor = false; btn.ZIndex = 10
     Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
-    local stroke = Instance.new("UIStroke", btn); stroke.Color = color; stroke.Thickness = 1.2; stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    local stroke = Instance.new("UIStroke", btn); stroke.Color = color; stroke.Thickness = 1.1; stroke.Transparency = 0.25; stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
     table.insert(RGBElements, {Type = "Button", Stroke = stroke, DefaultColor = color})
     local title = Instance.new("TextLabel", btn)
-    title.Size = UDim2.new(1, 0, 1, 0); title.BackgroundTransparency = 1; title.Text = text; title.TextColor3 = color; title.Font = Enum.Font.GothamBold; title.TextSize = 11.5; title.ZIndex = 10
+    title.Size = UDim2.new(1, 0, 1, 0); title.BackgroundTransparency = 1; title.Text = text; title.TextColor3 = color; title.Font = Enum.Font.GothamBold; title.TextSize = 11; title.ZIndex = 10
     btn.MouseButton1Click:Connect(function()
         clickAnimate(btn); if not State.RGB then TweenService:Create(stroke, TweenInfo.new(0.15), {Color = Theme.TextTitle}):Play() end
         task.wait(0.15); if not State.RGB then TweenService:Create(stroke, TweenInfo.new(0.3), {Color = color}):Play() end
@@ -481,53 +588,93 @@ end
 
 local function createDualButtons(parent, text1, color1, cb1, text2, color2, cb2)
     local dFrame = Instance.new("Frame", parent)
-    dFrame.Size = UDim2.new(0.92, 0, 0, 32); dFrame.BackgroundTransparency = 1
+    dFrame.Size = UDim2.new(0.93, 0, 0, 32); dFrame.BackgroundTransparency = 1
     local function makeBtn(xPos, txt, col, cb)
         local btn = Instance.new("TextButton", dFrame)
-        btn.Size = UDim2.new(0.485, 0, 1, 0); btn.Position = UDim2.new(xPos, 0, 0, 0); btn.BackgroundColor3 = Theme.ItemBg; btn.Text = ""; btn.AutoButtonColor = false; btn.ZIndex = 10
+        btn.Size = UDim2.new(0.486, 0, 1, 0); btn.Position = UDim2.new(xPos, 0, 0, 0); btn.BackgroundColor3 = Theme.ItemBg; btn.Text = ""; btn.AutoButtonColor = false; btn.ZIndex = 10
         Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
-        local stroke = Instance.new("UIStroke", btn); stroke.Color = col; stroke.Thickness = 1.2; stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+        local stroke = Instance.new("UIStroke", btn); stroke.Color = col; stroke.Thickness = 1.1; stroke.Transparency = 0.25; stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
         table.insert(RGBElements, {Type = "Button", Stroke = stroke, DefaultColor = col})
         local title = Instance.new("TextLabel", btn)
-        title.Size = UDim2.new(1, 0, 1, 0); title.BackgroundTransparency = 1; title.Text = txt; title.TextColor3 = col; title.Font = Enum.Font.GothamBold; title.TextSize = 10; title.ZIndex = 10
+        title.Size = UDim2.new(1, -6, 1, 0); title.Position = UDim2.new(0, 3, 0, 0); title.BackgroundTransparency = 1; title.Text = txt; title.TextColor3 = col; title.Font = Enum.Font.GothamBold; title.TextSize = 10; title.TextTruncate = Enum.TextTruncate.AtEnd; title.ZIndex = 10
         btn.MouseButton1Click:Connect(function()
             clickAnimate(btn); if not State.RGB then TweenService:Create(stroke, TweenInfo.new(0.15), {Color = Theme.TextTitle}):Play() end
             task.wait(0.15); if not State.RGB then TweenService:Create(stroke, TweenInfo.new(0.3), {Color = col}):Play() end
             if txt ~= "🗑️ XÓA TẤT CẢ" then MakeToast("Đã thực thi", txt, col) end; cb()
         end)
     end
-    makeBtn(0, text1, color1, cb1); makeBtn(0.515, text2, color2, cb2)
+    makeBtn(0, text1, color1, cb1); makeBtn(0.514, text2, color2, cb2)
     return dFrame
 end
 
+-- Thanh kéo có nút tròn (Slider Knob) & khung hiển thị số
 local function createSlider(parent, text, min, max, varName, callback)
     local sFrame = Instance.new("Frame", parent)
-    sFrame.Size = UDim2.new(0.92, 0, 0, 38); sFrame.BackgroundTransparency = 1
+    sFrame.Size = UDim2.new(0.93, 0, 0, 42); sFrame.BackgroundTransparency = 1
     local bg = Instance.new("Frame", sFrame); bg.Size = UDim2.new(1, 0, 1, 0); bg.BackgroundColor3 = Theme.ItemBg; bg.ZIndex = 10
     Instance.new("UICorner", bg).CornerRadius = UDim.new(0, 8)
-    local stroke = Instance.new("UIStroke", bg); stroke.Color = Theme.Stroke; stroke.Thickness = 1.2
+    local stroke = Instance.new("UIStroke", bg); stroke.Color = Theme.Stroke; stroke.Thickness = 1
     table.insert(RGBElements, {Type = "Slider", Stroke = stroke})
+
     local titleLabel = Instance.new("TextLabel", bg)
-    titleLabel.Size = UDim2.new(0.7, 0, 0.45, 0); titleLabel.Position = UDim2.new(0.04, 0, 0.08, 0); titleLabel.BackgroundTransparency = 1; titleLabel.Text = text; titleLabel.TextColor3 = Theme.TextDim; titleLabel.Font = Enum.Font.GothamSemibold; titleLabel.TextSize = 11; titleLabel.TextXAlignment = Enum.TextXAlignment.Left; titleLabel.ZIndex = 10
-    local valLabel = Instance.new("TextLabel", bg)
-    valLabel.Size = UDim2.new(0.25, 0, 0.45, 0); valLabel.Position = UDim2.new(0.71, 0, 0.08, 0); valLabel.BackgroundTransparency = 1; valLabel.Text = tostring(State[varName]); valLabel.TextColor3 = Theme.Brand; valLabel.Font = Enum.Font.GothamBold; valLabel.TextSize = 11; valLabel.TextXAlignment = Enum.TextXAlignment.Right; valLabel.ZIndex = 10
+    titleLabel.Size = UDim2.new(0.72, 0, 0, 18); titleLabel.Position = UDim2.new(0, 12, 0, 4)
+    titleLabel.BackgroundTransparency = 1; titleLabel.Text = text; titleLabel.TextColor3 = Theme.TextTitle
+    titleLabel.Font = Enum.Font.GothamSemibold; titleLabel.TextSize = 10.5; titleLabel.TextXAlignment = Enum.TextXAlignment.Left; titleLabel.ZIndex = 10
+
+    local valBadge = Instance.new("Frame", bg)
+    valBadge.Size = UDim2.new(0, 44, 0, 16); valBadge.Position = UDim2.new(1, -54, 0, 5)
+    valBadge.BackgroundColor3 = Color3.fromRGB(20, 22, 30); valBadge.ZIndex = 10
+    Instance.new("UICorner", valBadge).CornerRadius = UDim.new(0, 5)
+    local valStroke = Instance.new("UIStroke", valBadge); valStroke.Color = Theme.Stroke; valStroke.Thickness = 0.8
+
+    local valLabel = Instance.new("TextLabel", valBadge)
+    valLabel.Size = UDim2.new(1, 0, 1, 0); valLabel.BackgroundTransparency = 1
+    valLabel.Text = tostring(State[varName]); valLabel.TextColor3 = Theme.Brand
+    valLabel.Font = Enum.Font.GothamBold; valLabel.TextSize = 10; valLabel.ZIndex = 11
+
     local track = Instance.new("Frame", bg)
-    track.Size = UDim2.new(0.92, 0, 0.18, 0); track.Position = UDim2.new(0.04, 0, 0.64, 0); track.BackgroundColor3 = Theme.MainBg; track.ZIndex = 10
+    track.Size = UDim2.new(1, -24, 0, 6); track.Position = UDim2.new(0, 12, 0, 28)
+    track.BackgroundColor3 = Color3.fromRGB(16, 17, 24); track.ZIndex = 10
     Instance.new("UICorner", track).CornerRadius = UDim.new(1, 0)
+
+    local initPos = math.clamp((State[varName] - min) / (max - min), 0, 1)
     local fill = Instance.new("Frame", track)
-    fill.Size = UDim2.new(math.clamp((State[varName] - min) / (max - min), 0, 1), 0, 1, 0); fill.BackgroundColor3 = Theme.AccentOn; fill.ZIndex = 10
+    fill.Size = UDim2.new(initPos, 0, 1, 0); fill.BackgroundColor3 = Theme.AccentOn; fill.ZIndex = 11
     Instance.new("UICorner", fill).CornerRadius = UDim.new(1, 0)
-    
+
+    local knob = Instance.new("Frame", track)
+    knob.Size = UDim2.new(0, 12, 0, 12); knob.AnchorPoint = Vector2.new(0.5, 0.5)
+    knob.Position = UDim2.new(initPos, 0, 0.5, 0)
+    knob.BackgroundColor3 = Color3.fromRGB(240, 248, 255); knob.ZIndex = 12
+    Instance.new("UICorner", knob).CornerRadius = UDim.new(1, 0)
+    local knobStroke = Instance.new("UIStroke", knob); knobStroke.Color = Theme.AccentOn; knobStroke.Thickness = 1.5
+
     local dragging = false
     local function updateSlider(input)
         local pos = math.clamp((input.Position.X - track.AbsolutePosition.X) / track.AbsoluteSize.X, 0, 1)
         local value = math.floor(min + ((max - min) * pos))
-        valLabel.Text = tostring(value); TweenService:Create(fill, TweenInfo.new(0.1), {Size = UDim2.new(pos, 0, 1, 0)}):Play()
-        State[varName] = value; if callback then callback(value) end; if State.AutoSave then saveConfig() end
+        valLabel.Text = tostring(value)
+        TweenService:Create(fill, TweenInfo.new(0.08), {Size = UDim2.new(pos, 0, 1, 0)}):Play()
+        TweenService:Create(knob, TweenInfo.new(0.08), {Position = UDim2.new(pos, 0, 0.5, 0)}):Play()
+        State[varName] = value
+        if callback then callback(value) end
+        if State.AutoSave then saveConfig() end
     end
-    track.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then dragging = true; updateSlider(input) end end)
-    UIS.InputChanged:Connect(function(input) if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then updateSlider(input) end end)
-    UIS.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then dragging = false end end)
+    bg.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true; updateSlider(input)
+        end
+    end)
+    UIS.InputChanged:Connect(function(input)
+        if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            updateSlider(input)
+        end
+    end)
+    UIS.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = false
+        end
+    end)
     if callback then task.spawn(callback, State[varName]) end
     return sFrame
 end
@@ -535,80 +682,15 @@ end
 task.spawn(function()
     while task.wait(0.05) do
         if State.RGB then
-            local hue = tick() % 5 / 5; local color = Color3.fromHSV(hue, 1, 1)
-            titleLabel.TextColor3 = color; frameStroke.Color = color; headerStroke.Color = color; avatarStroke.Color = color; openStroke.Color = color
+            local hue = tick() % 5 / 5; local color = Color3.fromHSV(hue, 0.75, 0.95)
+            titleLabel.TextColor3 = color; frameStroke.Color = color; avatarStroke.Color = color; openStroke.Color = color
             for _, obj in pairs(RGBElements) do if obj.Stroke and obj.Stroke.Parent then obj.Stroke.Color = color end end
         end
     end
 end)
 
--- ==========================================
--- [TAB 1: THÔNG TIN]
--- ==========================================
-local function createInfoBox(parent, icon, titleText, heightOffset)
-    local item = Instance.new("Frame", parent)
-    item.Size = UDim2.new(0.92, 0, 0, heightOffset or 90); item.BackgroundColor3 = Theme.ItemBg; item.ZIndex = 10
-    Instance.new("UICorner", item).CornerRadius = UDim.new(0, 8)
-    local stroke = Instance.new("UIStroke", item); stroke.Color = Theme.Stroke; stroke.Thickness = 1.2; table.insert(RGBElements, {Type = "Info", Stroke = stroke})
-    local title = Instance.new("TextLabel", item)
-    title.Size = UDim2.new(1, -16, 0, 20); title.Position = UDim2.new(0, 8, 0, 4); title.BackgroundTransparency = 1; title.Text = icon .. " " .. titleText; title.TextColor3 = Theme.Brand; title.Font = Enum.Font.GothamBold; title.TextSize = 11; title.TextXAlignment = Enum.TextXAlignment.Left; title.ZIndex = 10
-    local content = Instance.new("TextLabel", item)
-    content.Size = UDim2.new(1, -16, 1, -26); content.Position = UDim2.new(0, 8, 0, 24); content.BackgroundTransparency = 1; content.Text = "Đang tải..."; content.TextColor3 = Theme.TextTitle; content.Font = Enum.Font.Gotham; content.TextSize = 10.5; content.TextXAlignment = Enum.TextXAlignment.Left; content.TextYAlignment = Enum.TextYAlignment.Top; content.RichText = true; content.ZIndex = 10
-    return content, item
-end
-
-local playerInfoLabel = createInfoBox(page1, "👤", "THÔNG TIN NHÂN VẬT", 104)
-local serverInfoLabel, serverInfoFrame = createInfoBox(page1, "🌐", "THÔNG TIN MÁY CHỦ", 90)
-
-local copyIdBtn = Instance.new("TextButton", serverInfoFrame)
-copyIdBtn.Size = UDim2.new(0, 22, 0, 22); copyIdBtn.Position = UDim2.new(1, -26, 1, -24); copyIdBtn.Text = "📜"; copyIdBtn.BackgroundTransparency = 1; copyIdBtn.TextSize = 13; copyIdBtn.ZIndex = 11
-copyIdBtn.MouseButton1Click:Connect(function()
-    clickAnimate(copyIdBtn)
-    pcall(function() if setclipboard then setclipboard(tostring(game.JobId)); MakeToast("Đã Copy", "Đã lưu ID Server vào bộ nhớ tạm", Theme.AccentOn); local oldText = copyIdBtn.Text; copyIdBtn.Text = "✅"; task.wait(1); copyIdBtn.Text = oldText end end)
-end)
-
-local joinIdFrame = Instance.new("Frame", page1)
-joinIdFrame.Size = UDim2.new(0.92, 0, 0, 34); joinIdFrame.BackgroundColor3 = Theme.ItemBg; joinIdFrame.ZIndex = 10
-Instance.new("UICorner", joinIdFrame).CornerRadius = UDim.new(0, 8)
-local jStroke = Instance.new("UIStroke", joinIdFrame); jStroke.Color = Theme.Stroke; jStroke.Thickness = 1.2; table.insert(RGBElements, {Type = "Info", Stroke = jStroke})
-local idBox = Instance.new("TextBox", joinIdFrame)
-idBox.Size = UDim2.new(0.65, 0, 1, 0); idBox.Position = UDim2.new(0.04, 0, 0, 0); idBox.BackgroundTransparency = 1; idBox.PlaceholderText = "Dán ID Server vào đây..."; idBox.Text = ""; idBox.TextColor3 = Theme.Brand; idBox.Font = Enum.Font.Gotham; idBox.TextSize = 10.5; idBox.TextXAlignment = Enum.TextXAlignment.Left; idBox.ClearTextOnFocus = false; idBox.ZIndex = 10
-local joinBtn = Instance.new("TextButton", joinIdFrame)
-joinBtn.Size = UDim2.new(0.25, 0, 0.7, 0); joinBtn.Position = UDim2.new(0.72, 0, 0.15, 0); joinBtn.BackgroundColor3 = Theme.AccentOn; joinBtn.Text = "VÀO"; joinBtn.TextColor3 = Color3.new(1, 1, 1); joinBtn.Font = Enum.Font.GothamBold; joinBtn.TextSize = 10.5; joinBtn.ZIndex = 10
-Instance.new("UICorner", joinBtn).CornerRadius = UDim.new(0, 6)
-joinBtn.MouseButton1Click:Connect(function() clickAnimate(joinBtn); local targetId = idBox.Text:gsub("%s+", ""); if targetId ~= "" then MakeToast("Đang Join", "Đang chuyển máy chủ...", Theme.AccentOn); pcall(function() TeleportService:TeleportToPlaceInstance(game.PlaceId, targetId, player) end) end end)
-
-local extraInfoLabel = createInfoBox(page1, "⚙️", "TRẠNG THÁI", 78)
-local fps = 0; RunService.RenderStepped:Connect(function(dt) fps = math.floor(1/dt) end)
-
-task.spawn(function()
-    while task.wait(0.5) do
-        local hp, maxHp, ws, jp = 0, 0, 0, 0; local coords = "0, 0, 0"
-        if player.Character and player.Character:FindFirstChild("Humanoid") then
-            local hum = player.Character.Humanoid; hp = math.floor(hum.Health); maxHp = math.floor(hum.MaxHealth); ws = math.floor(hum.WalkSpeed); jp = math.floor(hum.JumpPower)
-        end
-        if player.Character then
-            local root = getUniversalRoot(player.Character)
-            if root then local pos = root.Position; coords = string.format("%.1f, %.1f, %.1f", pos.X, pos.Y, pos.Z) end
-        end
-        playerInfoLabel.Text = string.format(
-            "<font color='#FF00FF'>Tên:</font> %s (@%s)\n<font color='#FF00FF'>Máu:</font> %d / %d\n<font color='#FF00FF'>Tốc độ:</font> %d\n<font color='#FF00FF'>Lực nhảy:</font> %d\n<font color='#FF00FF'>Tọa độ:</font> %s",
-            player.DisplayName, player.Name, hp, maxHp, ws, jp, coords
-        )
-        local ping = "0"
-        pcall(function() local stats = game:GetService("Stats"); if stats and stats:FindFirstChild("Network") and stats.Network:FindFirstChild("ServerStatsItem") then ping = stats.Network.ServerStatsItem["Data Ping"]:GetValueString() else ping = tostring(math.floor(player:GetNetworkPing() * 1000)) .. " ms" end end)
-        local pCount = #Players:GetPlayers(); local maxP = Players.MaxPlayers; local jobText = game.JobId ~= "" and string.sub(game.JobId, 1, 14).."..." or "N/A"
-        serverInfoLabel.Text = string.format(
-            "<font color='#FF00FF'>FPS:</font> %d\n<font color='#FF00FF'>Ping:</font> %s\n<font color='#FF00FF'>Người chơi:</font> %d / %d\n<font color='#FF00FF'>ID SV:</font> %s",
-            fps, ping, pCount, maxP, jobText
-        )
-        local execTime = math.floor(workspace.DistributedGameTime); local hours = math.floor(execTime / 3600); local mins = math.floor((execTime % 3600) / 60); local secs = execTime % 60
-        extraInfoLabel.Text = string.format(
-            "<font color='#FF00FF'>Thời gian chơi:</font> %02d:%02d:%02d\n<font color='#FF00FF'>Giờ hệ thống:</font> %s\n<font color='#FF00FF'>Phiên bản:</font> VIP PRO MAX V1.13.7",
-            hours, mins, secs, os.date("%H:%M:%S")
-        )
-    end
-end)
+local fps = 60
+RunService.RenderStepped:Connect(function(dt) fps = math.floor(1 / math.max(dt, 0.001)) end)
 
 -- ==========================================
 -- [TAB 2: TÍNH NĂNG]
@@ -636,7 +718,7 @@ createToggle(page2, "🚷 Đi xuyên tường", "Noclip", function(v)
 end)
 
 local xrayTick = 0
-createToggle(page2, "👀 Nhìn xuyên map (xray)", "XRay", function(v) 
+createToggle(page2, "👀 Nhìn xuyên map (Xray)", "XRay", function(v) 
     xrayTick = xrayTick + 1; local currentTick = xrayTick
     task.spawn(function()
         if v then
@@ -722,7 +804,7 @@ createToggle(page2, "☁️ Đi bộ trên không (Air Walk)", "AirWalk", functi
     end
 end)
 
-createButton(page2, "🪄 GẬY CLICK TP", Theme.Brand, function()
+createButton(page2, "🪄 NHẬN GẬY CLICK TP", Theme.Brand, function()
     local backpack = player:FindFirstChildOfClass("Backpack")
     if not backpack then return end
     if backpack:FindFirstChild("⚡ Click TP") or (player.Character and player.Character:FindFirstChild("⚡ Click TP")) then
@@ -750,7 +832,7 @@ end)
 createDualButtons(
     page2,
     "🔭 MỞ KHÓA ZOOM CAM",
-    Color3.fromRGB(255, 180, 50),
+    Color3.fromRGB(225, 175, 75),
     function()
         pcall(function()
             player.CameraMaxZoomDistance = 10000
@@ -760,7 +842,7 @@ createDualButtons(
         end)
     end,
     "👥 TẠO PHÂN THÂN",
-    Color3.fromRGB(180, 100, 255),
+    Color3.fromRGB(175, 130, 235),
     function()
         local char = player.Character
         if char then
@@ -780,7 +862,7 @@ createDualButtons(
 -- ==========================================
 -- [TAB 3: PLAYER]
 -- ==========================================
-createToggle(page3, "🕊️ bay trên bầu trời", "Fly", function(v)
+createToggle(page3, "🕊️ Bay trên bầu trời", "Fly", function(v)
     local char = player.Character
     if char then
         local root = getUniversalRoot(char)
@@ -842,30 +924,30 @@ createSlider(page3, "Lực nhảy", 1, 1000, "JumpValue")
 createToggle(page3, "💨 Lướt liên tục", "AutoDash")
 createSlider(page3, "Tốc độ lướt", 1, 50, "DashSpeed")
 
-createToggle(page3, "⚔️ Đánh xa", "Reach")
+createToggle(page3, "⚔️ Đánh xa (Reach)", "Reach")
 createSlider(page3, "Kích thước vũ khí", 0, 300, "ReachSize")
-createToggle(page3, "🎯 Hitbox", "Hitbox")
+createToggle(page3, "🎯 Mở rộng Hitbox", "Hitbox")
 createSlider(page3, "Kích thước Hitbox", 0, 100, "HitboxSize")
 createToggle(page3, "🌪️ Xoay vòng tròn", "SpinBot")
 createSlider(page3, "Tốc độ xoay", 0, 100, "SpinSpeed")
 createToggle(page3, "💡 Ánh sáng quanh người", "PlayerLight", function(v) if not v and player.Character then local root = getUniversalRoot(player.Character); if root then local light = root:FindFirstChild("PlayerPointLight"); if light then light:Destroy() end end end end)
 createSlider(page3, "Phạm vi sáng (Max 60)", 0, 60, "LightRange")
 createSlider(page3, "Độ sáng", 0, 5, "LightBrightness")
-createCycleBtn(page3, "🎨 Đổi màu:", PlayerLightColors, "LightColorIdx")
+createCycleBtn(page3, "🎨 Đổi màu sáng:", PlayerLightColors, "LightColorIdx")
 
 -- ==========================================
 -- [TAB 4: TIỆN ÍCH]
 -- ==========================================
-createToggle(page4, "💾 Lưu Cài Đặt", "AutoSave", function(v) 
+createToggle(page4, "💾 Lưu Cài Đặt Tự Động", "AutoSave", function(v) 
     if v then saveConfig(); MakeToast("Đã Bật", "Đã lưu cấu hình hiện tại!", Theme.AccentOn)
     else pcall(function() if isfile and isfile(configFileName) then delfile(configFileName) end end); MakeToast("Đã Tắt", "Đã xóa cấu hình cũ!", Theme.AccentOff) end 
 end)
-createToggle(page4, "🌈 Chế độ RGB", "RGB", function(v) 
+createToggle(page4, "🌈 Chế độ viền RGB", "RGB", function(v) 
     if not v then 
-        titleLabel.TextColor3 = Theme.TextTitle; frameStroke.Color = Theme.Stroke; headerStroke.Color = Theme.Stroke; avatarStroke.Color = Theme.Brand; openStroke.Color = opened and Theme.AccentOff or Theme.Brand
+        titleLabel.TextColor3 = Theme.TextTitle; frameStroke.Color = Theme.Stroke; avatarStroke.Color = Theme.Brand; openStroke.Color = opened and Theme.AccentOff or Theme.Brand
         for _, obj in pairs(RGBElements) do
             if obj.Stroke and obj.Stroke.Parent then
-                if obj.Type == "Toggle" then obj.Stroke.Color = obj.State() and Theme.AccentOn or Theme.Stroke
+                if obj.Type == "Toggle" then obj.Stroke.Color = obj.State() and Color3.fromRGB(58, 135, 96) or Theme.Stroke
                 elseif obj.Type == "Button" then obj.Stroke.Color = obj.DefaultColor
                 elseif obj.Type == "Slider" or obj.Type == "Info" or obj.Type == "Container" then obj.Stroke.Color = Theme.Stroke end
             end
@@ -874,14 +956,14 @@ createToggle(page4, "🌈 Chế độ RGB", "RGB", function(v)
 end)
 
 createToggle(page4, "💫 Mở khóa ShiftLock Mobile", "ShiftLock", function(v) pcall(function() player.DevEnableMouseLock = v end) end)
-createToggle(page4, "🖱️ Auto Click", "AutoClick")
+createToggle(page4, "🖱️ Auto Click Vũ Khí", "AutoClick")
 task.spawn(function()
     while task.wait(0.1) do 
         if State.AutoClick and player.Character then pcall(function() local tool = player.Character:FindFirstChildOfClass("Tool"); if tool then tool:Activate() end end) end
     end
 end)
 
-createToggle(page4, "🛡️ Chống AFK (Antiafk)", "AntiAfk")
+createToggle(page4, "🛡️ Chống AFK (Anti-AFK)", "AntiAfk")
 
 player.Idled:Connect(function() 
     if State.AntiAfk then 
@@ -917,10 +999,12 @@ local function rejoinServer()
     if #Players:GetPlayers() <= 1 then player:Kick("\nĐang vào lại server..."); task.wait(); TeleportService:Teleport(game.PlaceId, player) else TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, player) end
 end
 
+createDivider(page4, "ĐIỀU KHIỂN SERVER & MÔI TRƯỜNG")
+
 createDualButtons(
     page4,
     "☀️ TRỜI SÁNG",
-    Color3.fromRGB(255, 200, 50),
+    Color3.fromRGB(225, 185, 75),
     function()
         pcall(function()
             Lighting.ClockTime = 12
@@ -928,7 +1012,7 @@ createDualButtons(
         end)
     end,
     "🌙 TRỜI TỐI",
-    Color3.fromRGB(130, 140, 255),
+    Color3.fromRGB(135, 150, 230),
     function()
         pcall(function()
             Lighting.ClockTime = 0
@@ -938,7 +1022,9 @@ createDualButtons(
 )
 
 createDualButtons(page4, "🔄 VÀO LẠI SV", Theme.AccentOn, rejoinServer, "🎲 ĐỔI SV NGẪU NHIÊN", Theme.Brand, function() hopServer("Desc") end)
-createDualButtons(page4, "📉 ĐỔI SV ÍT NGƯỜI", Color3.fromRGB(52, 152, 219), function() hopServer("Asc") end, "📈 ĐỔI SV NHIỀU NGƯỜI", Color3.fromRGB(231, 76, 60), function() hopServer("Desc") end)
+createDualButtons(page4, "📉 ĐỔI SV ÍT NGƯỜI", Color3.fromRGB(90, 170, 225), function() hopServer("Asc") end, "📈 ĐỔI SV ĐÔNG NGƯỜI", Color3.fromRGB(220, 105, 95), function() hopServer("Desc") end)
+
+createDivider(page4, "CÔNG CỤ SCRIPT NGOÀI")
 
 createDualButtons(
     page4,
@@ -949,7 +1035,7 @@ createDualButtons(
             loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))()
         end)
     end,
-    "📁 TP SAVE",
+    "📁 MENU TP SAVE",
     Theme.Brand,
     function()
         pcall(function()
@@ -985,7 +1071,7 @@ createDualButtons(
             loadstring(game:HttpGet("https://raw.githubusercontent.com/haudeptrai2k6/menu-hack-vip/refs/heads/main/menu-fly.lua"))()
         end)
     end,
-    "🎯 TP PLAYS (người chơi)",
+    "🎯 TP PLAYS",
     Theme.AccentOn,
     function()
         pcall(function()
@@ -998,92 +1084,150 @@ createDualButtons(
 -- [TAB 5: NHẠC ID] & [TAB 6: TP SAVE] 
 -- ==========================================
 local currentSound = nil; local currentMusicId = ""; local savedMusicList = {}
-local musicControlFrame = Instance.new("Frame", page5); musicControlFrame.Size = UDim2.new(0.92, 0, 0, 62); musicControlFrame.BackgroundColor3 = Theme.ItemBg; musicControlFrame.ZIndex = 10; musicControlFrame.LayoutOrder = 1; Instance.new("UICorner", musicControlFrame).CornerRadius = UDim.new(0, 8)
-local mStroke = Instance.new("UIStroke", musicControlFrame); mStroke.Color = Theme.Stroke; mStroke.Thickness = 1.2; table.insert(RGBElements, {Type = "Info", Stroke = mStroke})
-local musicIcon = Instance.new("TextLabel", musicControlFrame); musicIcon.Size = UDim2.new(0.12, 0, 0, 30); musicIcon.BackgroundTransparency = 1; musicIcon.Text = "🎼"; musicIcon.TextSize = 15; musicIcon.ZIndex = 10
-local musicIdBox = Instance.new("TextBox", musicControlFrame); musicIdBox.Size = UDim2.new(0.66, 0, 0, 30); musicIdBox.Position = UDim2.new(0.12, 0, 0, 0); musicIdBox.BackgroundTransparency = 1; musicIdBox.PlaceholderText = "Nhập ID Nhạc..."; musicIdBox.Text = ""; musicIdBox.TextColor3 = Theme.TextTitle; musicIdBox.Font = Enum.Font.GothamSemibold; musicIdBox.TextSize = 11; musicIdBox.TextXAlignment = Enum.TextXAlignment.Left; musicIdBox.ClearTextOnFocus = false; musicIdBox.ZIndex = 10
-local saveIdBtn = Instance.new("TextButton", musicControlFrame); saveIdBtn.Size = UDim2.new(0.22, 0, 0, 30); saveIdBtn.Position = UDim2.new(0.78, 0, 0, 0); saveIdBtn.BackgroundTransparency = 1; saveIdBtn.Text = "💾 Lưu"; saveIdBtn.TextColor3 = Theme.AccentOn; saveIdBtn.Font = Enum.Font.GothamBold; saveIdBtn.TextSize = 10.5; saveIdBtn.ZIndex = 10
-local divLine = Instance.new("Frame", musicControlFrame); divLine.Size = UDim2.new(0.92, 0, 0, 1); divLine.Position = UDim2.new(0.04, 0, 0, 30); divLine.BackgroundColor3 = Theme.Stroke; divLine.BorderSizePixel = 0; divLine.ZIndex = 10
-local nowPlayingLabel = Instance.new("TextLabel", musicControlFrame); nowPlayingLabel.Size = UDim2.new(0.92, 0, 0, 30); nowPlayingLabel.Position = UDim2.new(0.04, 0, 0, 31); nowPlayingLabel.BackgroundTransparency = 1; nowPlayingLabel.RichText = true; nowPlayingLabel.Text = "<font color='#FFFFFF'>🎵 Chưa có nhạc phát</font>"; nowPlayingLabel.Font = Enum.Font.GothamSemibold; nowPlayingLabel.TextSize = 11; nowPlayingLabel.TextWrapped = true; nowPlayingLabel.ZIndex = 10
+do
+    local musicControlFrame = Instance.new("Frame", page5); musicControlFrame.Size = UDim2.new(0.93, 0, 0, 62); musicControlFrame.BackgroundColor3 = Theme.ItemBg; musicControlFrame.ZIndex = 10; musicControlFrame.LayoutOrder = 1; Instance.new("UICorner", musicControlFrame).CornerRadius = UDim.new(0, 8)
+    local mStroke = Instance.new("UIStroke", musicControlFrame); mStroke.Color = Theme.Stroke; mStroke.Thickness = 1; table.insert(RGBElements, {Type = "Info", Stroke = mStroke})
+    local musicIcon = Instance.new("TextLabel", musicControlFrame); musicIcon.Size = UDim2.new(0.11, 0, 0, 30); musicIcon.BackgroundTransparency = 1; musicIcon.Text = "🎼"; musicIcon.TextSize = 14; musicIcon.ZIndex = 10
+    local musicIdBox = Instance.new("TextBox", musicControlFrame); musicIdBox.Size = UDim2.new(0.65, 0, 0, 30); musicIdBox.Position = UDim2.new(0.11, 0, 0, 0); musicIdBox.BackgroundTransparency = 1; musicIdBox.PlaceholderText = "Nhập ID Nhạc Roblox..."; musicIdBox.PlaceholderColor3 = Theme.TextDim; musicIdBox.Text = ""; musicIdBox.TextColor3 = Theme.TextTitle; musicIdBox.Font = Enum.Font.GothamSemibold; musicIdBox.TextSize = 10.5; musicIdBox.TextXAlignment = Enum.TextXAlignment.Left; musicIdBox.ClearTextOnFocus = false; musicIdBox.ZIndex = 10
+    
+    local saveIdBtn = Instance.new("TextButton", musicControlFrame)
+    saveIdBtn.Size = UDim2.new(0.21, 0, 0, 22); saveIdBtn.Position = UDim2.new(0.77, 0, 0, 4)
+    saveIdBtn.BackgroundColor3 = Color3.fromRGB(28, 48, 38); saveIdBtn.Text = "💾 Lưu"; saveIdBtn.TextColor3 = Theme.AccentOn
+    saveIdBtn.Font = Enum.Font.GothamBold; saveIdBtn.TextSize = 10; saveIdBtn.ZIndex = 10
+    Instance.new("UICorner", saveIdBtn).CornerRadius = UDim.new(0, 5)
+    local saveIdStroke = Instance.new("UIStroke", saveIdBtn); saveIdStroke.Color = Theme.AccentOn; saveIdStroke.Thickness = 0.9; saveIdStroke.Transparency = 0.3
 
-local function getSongName(id) local numId = tonumber(id); if not numId then return "ID sai!" end; local s, info = pcall(function() return MarketplaceService:GetProductInfo(numId) end); if s and info then return info.Name else return "Ẩn danh" end end
-local function playMusic(id)
-    if currentSound then currentSound:Destroy() end; local soundId = tostring(id):match("%d+"); if not soundId or soundId == "" then return end
-    currentMusicId = soundId; nowPlayingLabel.Text = "<font color='#FFFFFF'>⏳ Tải...</font>"
-    task.spawn(function() local name = getSongName(soundId); if currentMusicId == soundId then nowPlayingLabel.Text = "<font color='#FFFFFF'>🎵 Phát:</font> <font color='#FFFF00'>" .. name .. "</font>" end end)
-    currentSound = Instance.new("Sound"); currentSound.SoundId = "rbxassetid://" .. soundId; currentSound.Volume = State.MusicVolume; currentSound.Parent = workspace
-    currentSound.Ended:Connect(function()
-        if #savedMusicList > 0 then
-            local cx = 0; for i, v in ipairs(savedMusicList) do if v.id == currentMusicId then cx = i; break end end
-            local nx = cx + 1; if nx > #savedMusicList then nx = 1 end; playMusic(savedMusicList[nx].id)
+    local divLine = Instance.new("Frame", musicControlFrame); divLine.Size = UDim2.new(0.94, 0, 0, 1); divLine.Position = UDim2.new(0.03, 0, 0, 30); divLine.BackgroundColor3 = Theme.Stroke; divLine.BorderSizePixel = 0; divLine.ZIndex = 10
+    local nowPlayingLabel = Instance.new("TextLabel", musicControlFrame); nowPlayingLabel.Size = UDim2.new(0.92, 0, 0, 30); nowPlayingLabel.Position = UDim2.new(0.04, 0, 0, 31); nowPlayingLabel.BackgroundTransparency = 1; nowPlayingLabel.RichText = true; nowPlayingLabel.Text = "<font color='#9AA4B8'>🎵 Chưa có nhạc phát</font>"; nowPlayingLabel.Font = Enum.Font.GothamSemibold; nowPlayingLabel.TextSize = 10.5; nowPlayingLabel.TextWrapped = true; nowPlayingLabel.ZIndex = 10
+
+    local function getSongName(id) local numId = tonumber(id); if not numId then return "ID sai!" end; local s, info = pcall(function() return MarketplaceService:GetProductInfo(numId) end); if s and info then return info.Name else return "Ẩn danh" end end
+    local function playMusic(id)
+        if currentSound then currentSound:Destroy() end; local soundId = tostring(id):match("%d+"); if not soundId or soundId == "" then return end
+        currentMusicId = soundId; nowPlayingLabel.Text = "<font color='#D6DEEB'>⏳ Đang tải thông tin bài hát...</font>"
+        task.spawn(function() local name = getSongName(soundId); if currentMusicId == soundId then nowPlayingLabel.Text = "<font color='#9AA4B8'>🎵 Đang phát:</font> <font color='#F0C868'>" .. name .. "</font>" end end)
+        currentSound = Instance.new("Sound"); currentSound.SoundId = "rbxassetid://" .. soundId; currentSound.Volume = State.MusicVolume; currentSound.Parent = workspace
+        currentSound.Ended:Connect(function()
+            if #savedMusicList > 0 then
+                local cx = 0; for i, v in ipairs(savedMusicList) do if v.id == currentMusicId then cx = i; break end end
+                local nx = cx + 1; if nx > #savedMusicList then nx = 1 end; playMusic(savedMusicList[nx].id)
+            end
+        end)
+        currentSound:Play()
+    end
+    local function stopMusic() if currentSound then currentSound:Stop(); currentSound:Destroy(); currentSound = nil; currentMusicId = ""; nowPlayingLabel.Text = "<font color='#9AA4B8'>⏹ Đã dừng phát nhạc</font>" end end
+
+    local playControlFrame = createDualButtons(page5, "▶️ PHÁT NHẠC", Theme.AccentOn, function() playMusic(musicIdBox.Text) end, "⏹️ TẮT NHẠC", Theme.AccentOff, function() stopMusic() end); playControlFrame.LayoutOrder = 2
+    local volumeFrame = createSlider(page5, "ÂM LƯỢNG NHẠC 🔊", 0, 10, "MusicVolume", function(val) if currentSound then currentSound.Volume = val end end); volumeFrame.LayoutOrder = 3
+
+    -- Khung đóng gói Danh Sách Nhạc Đã Lưu gọn đẹp
+    local musicListCard = Instance.new("Frame", page5)
+    musicListCard.Size = UDim2.new(0.93, 0, 1, -166); musicListCard.BackgroundColor3 = Color3.fromRGB(23, 25, 34); musicListCard.LayoutOrder = 4; musicListCard.ZIndex = 10
+    Instance.new("UICorner", musicListCard).CornerRadius = UDim.new(0, 8)
+    local mlStroke = Instance.new("UIStroke", musicListCard); mlStroke.Color = Theme.Stroke; mlStroke.Thickness = 1; table.insert(RGBElements, {Type = "Info", Stroke = mlStroke})
+
+    local mlHeader = Instance.new("TextLabel", musicListCard)
+    mlHeader.Size = UDim2.new(1, -16, 0, 20); mlHeader.Position = UDim2.new(0, 10, 0, 3); mlHeader.BackgroundTransparency = 1
+    mlHeader.Text = "🎵 DANH SÁCH NHẠC ĐÃ LƯU"; mlHeader.TextColor3 = Theme.Brand; mlHeader.Font = Enum.Font.GothamBold; mlHeader.TextSize = 9.5; mlHeader.TextXAlignment = Enum.TextXAlignment.Left; mlHeader.ZIndex = 10
+
+    local savedMusicContent = Instance.new("ScrollingFrame", musicListCard)
+    savedMusicContent.Size = UDim2.new(1, -10, 1, -26); savedMusicContent.Position = UDim2.new(0, 5, 0, 24)
+    savedMusicContent.BackgroundTransparency = 1; savedMusicContent.ScrollBarThickness = 3; savedMusicContent.ScrollBarImageColor3 = Theme.Brand; savedMusicContent.BorderSizePixel = 0; savedMusicContent.ZIndex = 10
+    local sLayout = Instance.new("UIListLayout", savedMusicContent); sLayout.SortOrder = Enum.SortOrder.LayoutOrder; sLayout.Padding = UDim.new(0, 4)
+    sLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function() savedMusicContent.CanvasSize = UDim2.new(0, 0, 0, sLayout.AbsoluteContentSize.Y + 8) end)
+
+    local fileName = "MenuVipProMax_SavedMusic.json"
+    pcall(function() if isfile and isfile(fileName) then local decoded = HttpService:JSONDecode(readfile(fileName)); if type(decoded) == "table" then savedMusicList = decoded end end end)
+    local function saveMusicData() pcall(function() if writefile then writefile(fileName, HttpService:JSONEncode(savedMusicList)) end end) end
+    local function renderSavedMusic()
+        for _, child in pairs(savedMusicContent:GetChildren()) do if child:IsA("Frame") then child:Destroy() end end
+        mlHeader.Text = "🎵 DANH SÁCH NHẠC ĐÃ LƯU (" .. #savedMusicList .. ")"
+        if #savedMusicList == 0 then
+            local empty = Instance.new("Frame", savedMusicContent); empty.Size = UDim2.new(1, 0, 0, 45); empty.BackgroundTransparency = 1
+            local lbl = Instance.new("TextLabel", empty); lbl.Size = UDim2.new(1, 0, 1, 0); lbl.BackgroundTransparency = 1
+            lbl.Text = "Chưa có bài nhạc nào được lưu.\nNhập ID Nhạc bên trên và bấm '💾 Lưu' để thêm!"; lbl.TextColor3 = Theme.TextDim; lbl.Font = Enum.Font.Gotham; lbl.TextSize = 9.5; lbl.ZIndex = 10
+            return
         end
-    end)
-    currentSound:Play()
-end
-local function stopMusic() if currentSound then currentSound:Stop(); currentSound:Destroy(); currentSound = nil; currentMusicId = ""; nowPlayingLabel.Text = "<font color='#FFFFFF'>⏹ Đã dừng nhạc</font>" end end
+        for i, data in ipairs(savedMusicList) do
+            local item = Instance.new("Frame", savedMusicContent); item.Size = UDim2.new(1, -4, 0, 32); item.BackgroundColor3 = Theme.ItemBg; item.ZIndex = 10; Instance.new("UICorner", item).CornerRadius = UDim.new(0, 6)
+            local stroke = Instance.new("UIStroke", item); stroke.Color = Theme.Stroke; stroke.Thickness = 1; table.insert(RGBElements, {Type = "Info", Stroke = stroke})
+            local nameBox = Instance.new("TextBox", item); nameBox.Size = UDim2.new(0.56, 0, 1, 0); nameBox.Position = UDim2.new(0.04, 0, 0, 0); nameBox.Text = data.name; nameBox.TextColor3 = Theme.TextTitle; nameBox.Font = Enum.Font.GothamSemibold; nameBox.TextSize = 10; nameBox.BackgroundTransparency = 1; nameBox.TextXAlignment = Enum.TextXAlignment.Left; nameBox.ClearTextOnFocus = false; nameBox.ZIndex = 10
+            nameBox.FocusLost:Connect(function() if nameBox.Text ~= "" then data.name = nameBox.Text; saveMusicData() else nameBox.Text = data.name end end)
+            
+            local playBtn = Instance.new("TextButton", item); playBtn.Size = UDim2.new(0.18, 0, 0.7, 0); playBtn.Position = UDim2.new(0.62, 0, 0.15, 0); playBtn.Text = "▶ Phát"; playBtn.BackgroundColor3 = Color3.fromRGB(28, 48, 62); playBtn.TextColor3 = Theme.Brand; playBtn.Font = Enum.Font.GothamBold; playBtn.TextSize = 9.5; playBtn.ZIndex = 10; Instance.new("UICorner", playBtn).CornerRadius = UDim.new(0, 5)
+            local pSt = Instance.new("UIStroke", playBtn); pSt.Color = Theme.Brand; pSt.Thickness = 0.8; pSt.Transparency = 0.3
 
-local playControlFrame = createDualButtons(page5, "▶️ PHÁT NHẠC", Theme.AccentOn, function() playMusic(musicIdBox.Text) end, "⏸️ TẮT NHẠC", Theme.AccentOff, function() stopMusic() end); playControlFrame.LayoutOrder = 2
-local volumeFrame = createSlider(page5, "ÂM LƯỢNG 🔊", 0, 10, "MusicVolume", function(val) if currentSound then currentSound.Volume = val end end); volumeFrame.LayoutOrder = 3
-local savedMusicContent = Instance.new("ScrollingFrame", page5); savedMusicContent.Size = UDim2.new(0.92, 0, 1, -155); savedMusicContent.BackgroundTransparency = 1; savedMusicContent.ScrollBarThickness = 4; savedMusicContent.ScrollBarImageColor3 = Theme.Brand; savedMusicContent.BorderSizePixel = 0; savedMusicContent.ZIndex = 10; savedMusicContent.LayoutOrder = 4
-local sLayout = Instance.new("UIListLayout", savedMusicContent); sLayout.SortOrder = Enum.SortOrder.LayoutOrder; sLayout.Padding = UDim.new(0, 5)
-sLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function() savedMusicContent.CanvasSize = UDim2.new(0, 0, 0, sLayout.AbsoluteContentSize.Y + 12) end)
+            local delBtn = Instance.new("TextButton", item); delBtn.Size = UDim2.new(0.15, 0, 0.7, 0); delBtn.Position = UDim2.new(0.82, 0, 0.15, 0); delBtn.Text = "Xóa"; delBtn.BackgroundColor3 = Color3.fromRGB(48, 28, 34); delBtn.TextColor3 = Theme.AccentOff; delBtn.Font = Enum.Font.GothamBold; delBtn.TextSize = 9.5; delBtn.ZIndex = 10; Instance.new("UICorner", delBtn).CornerRadius = UDim.new(0, 5)
+            local dSt = Instance.new("UIStroke", delBtn); dSt.Color = Theme.AccentOff; dSt.Thickness = 0.8; dSt.Transparency = 0.3
 
-local fileName = "MenuVipProMax_SavedMusic.json"
-pcall(function() if isfile and isfile(fileName) then local decoded = HttpService:JSONDecode(readfile(fileName)); if type(decoded) == "table" then savedMusicList = decoded end end end)
-local function saveMusicData() pcall(function() if writefile then writefile(fileName, HttpService:JSONEncode(savedMusicList)) end end) end
-local function renderSavedMusic()
-    for _, child in pairs(savedMusicContent:GetChildren()) do if child:IsA("Frame") then child:Destroy() end end
-    for i, data in ipairs(savedMusicList) do
-        local item = Instance.new("Frame", savedMusicContent); item.Size = UDim2.new(1, -6, 0, 36); item.BackgroundColor3 = Theme.ItemBg; item.ZIndex = 10; Instance.new("UICorner", item).CornerRadius = UDim.new(0, 8)
-        local stroke = Instance.new("UIStroke", item); stroke.Color = Theme.Stroke; stroke.Thickness = 1.2; table.insert(RGBElements, {Type = "Info", Stroke = stroke})
-        local nameBox = Instance.new("TextBox", item); nameBox.Size = UDim2.new(0.54, 0, 1, 0); nameBox.Position = UDim2.new(0.05, 0, 0, 0); nameBox.Text = data.name; nameBox.TextColor3 = Theme.TextTitle; nameBox.Font = Enum.Font.GothamSemibold; nameBox.TextSize = 10.5; nameBox.BackgroundTransparency = 1; nameBox.TextXAlignment = Enum.TextXAlignment.Left; nameBox.ClearTextOnFocus = false; nameBox.ZIndex = 10
-        nameBox.FocusLost:Connect(function() if nameBox.Text ~= "" then data.name = nameBox.Text; saveMusicData() else nameBox.Text = data.name end end)
-        local playBtn = Instance.new("TextButton", item); playBtn.Size = UDim2.new(0.18, 0, 0.65, 0); playBtn.Position = UDim2.new(0.62, 0, 0.175, 0); playBtn.Text = "▶️"; playBtn.BackgroundColor3 = Theme.Brand; playBtn.TextColor3 = Color3.new(1,1,1); playBtn.Font = Enum.Font.GothamBold; playBtn.TextSize = 10; playBtn.ZIndex = 10; Instance.new("UICorner", playBtn).CornerRadius = UDim.new(0, 6)
-        local delBtn = Instance.new("TextButton", item); delBtn.Size = UDim2.new(0.15, 0, 0.65, 0); delBtn.Position = UDim2.new(0.82, 0, 0.175, 0); delBtn.Text = "❌"; delBtn.BackgroundColor3 = Theme.AccentOff; delBtn.TextColor3 = Color3.new(1,1,1); delBtn.Font = Enum.Font.GothamBold; delBtn.TextSize = 10; delBtn.ZIndex = 10; Instance.new("UICorner", delBtn).CornerRadius = UDim.new(0, 6)
-        playBtn.MouseButton1Click:Connect(function() clickAnimate(playBtn); musicIdBox.Text = data.id; playMusic(data.id) end)
-        delBtn.MouseButton1Click:Connect(function() clickAnimate(delBtn); table.remove(savedMusicList, i); saveMusicData(); renderSavedMusic() end)
-    end
-end
-saveIdBtn.MouseButton1Click:Connect(function() clickAnimate(saveIdBtn); local rawId = musicIdBox.Text:match("%d+"); if rawId and rawId ~= "" then saveIdBtn.Text = "⏳..."; task.spawn(function() local name = getSongName(rawId); table.insert(savedMusicList, {id = rawId, name = name}); saveMusicData(); renderSavedMusic(); saveIdBtn.Text = "💾 Lưu" end) end end)
-renderSavedMusic()
-
-local tpFileName = "MenuVipProMax_SavedTPs.json"; local savedTpList = {}; pcall(function() if isfile and isfile(tpFileName) then local decoded = HttpService:JSONDecode(readfile(tpFileName)); if type(decoded) == "table" then savedTpList = decoded end end end)
-local function saveTpData() pcall(function() if writefile then local d = {}; for _, v in ipairs(savedTpList) do if not v.isTemp then table.insert(d, v) end end; writefile(tpFileName, HttpService:JSONEncode(d)) end end) end
-local pendingDeleteAll = false
-local renderSavedTps
-
-local tpControlFrame_New = createDualButtons(page6, "📍 LƯU VỊ TRÍ", Theme.Brand, function()
-    if player.Character then
-        local root = getUniversalRoot(player.Character)
-        if root then
-            local cf = {root.CFrame:GetComponents()}; local mx = 0
-            for _, v in ipairs(savedTpList) do local num = string.match(v.name, "Lưu Vị Trí (%d+)"); if num then mx = math.max(mx, tonumber(num)) end end
-            table.insert(savedTpList, {name = "Lưu Vị Trí " .. (mx + 1), cframe = cf, isTemp = false}); saveTpData(); renderSavedTps()
+            playBtn.MouseButton1Click:Connect(function() clickAnimate(playBtn); musicIdBox.Text = data.id; playMusic(data.id) end)
+            delBtn.MouseButton1Click:Connect(function() clickAnimate(delBtn); table.remove(savedMusicList, i); saveMusicData(); renderSavedMusic() end)
         end
     end
-end, "🗑️ XÓA TẤT CẢ", Theme.AccentOff, function() 
-    if not pendingDeleteAll then pendingDeleteAll = true; MakeToast("⚠️ CẢNH BÁO", "Ấn lần nữa để xác nhận xóa sạch!", Theme.AccentOff); task.delay(3, function() pendingDeleteAll = false end)
-    else savedTpList = {}; saveTpData(); renderSavedTps(); MakeToast("Thành công", "Đã xóa toàn bộ!", Theme.Brand); pendingDeleteAll = false end
-end); tpControlFrame_New.LayoutOrder = 1 
-
-local savedTpContent = Instance.new("ScrollingFrame", page6); savedTpContent.Size = UDim2.new(0.92, 0, 1, -48); savedTpContent.BackgroundTransparency = 1; savedTpContent.ScrollBarThickness = 4; savedTpContent.ScrollBarImageColor3 = Theme.Brand; savedTpContent.BorderSizePixel = 0; savedTpContent.ZIndex = 10; savedTpContent.LayoutOrder = 2
-local tpLayout = Instance.new("UIListLayout", savedTpContent); tpLayout.SortOrder = Enum.SortOrder.LayoutOrder; tpLayout.Padding = UDim.new(0, 5)
-tpLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function() savedTpContent.CanvasSize = UDim2.new(0, 0, 0, tpLayout.AbsoluteContentSize.Y + 12) end)
-
-renderSavedTps = function()
-    for _, child in pairs(savedTpContent:GetChildren()) do if child:IsA("Frame") then child:Destroy() end end
-    for i, data in ipairs(savedTpList) do
-        local item = Instance.new("Frame", savedTpContent); item.Size = UDim2.new(1, -6, 0, 36); item.BackgroundColor3 = Theme.ItemBg; item.ZIndex = 10; Instance.new("UICorner", item).CornerRadius = UDim.new(0, 8)
-        local stroke = Instance.new("UIStroke", item); stroke.Color = Theme.Stroke; stroke.Thickness = 1.2; table.insert(RGBElements, {Type = "Info", Stroke = stroke})
-        local nameBox = Instance.new("TextBox", item); nameBox.Size = UDim2.new(0.48, 0, 1, 0); nameBox.Position = UDim2.new(0.04, 0, 0, 0); nameBox.Text = data.name; nameBox.TextColor3 = Theme.TextTitle; nameBox.Font = Enum.Font.GothamSemibold; nameBox.TextSize = 11; nameBox.BackgroundTransparency = 1; nameBox.TextXAlignment = Enum.TextXAlignment.Left; nameBox.ClearTextOnFocus = false; nameBox.ZIndex = 10
-        nameBox.FocusLost:Connect(function() if nameBox.Text ~= "" then data.name = nameBox.Text; saveTpData() else nameBox.Text = data.name end end)
-        local tpBtn = Instance.new("TextButton", item); tpBtn.Size = UDim2.new(0.24, 0, 0.65, 0); tpBtn.Position = UDim2.new(0.54, 0, 0.175, 0); tpBtn.Text = "TP"; tpBtn.BackgroundColor3 = Theme.Brand; tpBtn.TextColor3 = Color3.new(1,1,1); tpBtn.Font = Enum.Font.GothamBold; tpBtn.TextSize = 10.5; tpBtn.ZIndex = 10; Instance.new("UICorner", tpBtn).CornerRadius = UDim.new(0, 6)
-        local delBtn = Instance.new("TextButton", item); delBtn.Size = UDim2.new(0.15, 0, 0.65, 0); delBtn.Position = UDim2.new(0.81, 0, 0.175, 0); delBtn.Text = "X"; delBtn.BackgroundColor3 = Theme.AccentOff; delBtn.TextColor3 = Color3.new(1,1,1); delBtn.Font = Enum.Font.GothamBold; delBtn.TextSize = 11; delBtn.ZIndex = 10; Instance.new("UICorner", delBtn).CornerRadius = UDim.new(0, 6)
-        tpBtn.MouseButton1Click:Connect(function() clickAnimate(tpBtn); if player.Character then local r = getUniversalRoot(player.Character); if r then r.CFrame = CFrame.new(unpack(data.cframe)); MakeToast("Dịch chuyển", "Đến " .. data.name, Theme.Brand) end end end)
-        delBtn.MouseButton1Click:Connect(function() clickAnimate(delBtn); table.remove(savedTpList, i); saveTpData(); renderSavedTps() end)
-    end
+    saveIdBtn.MouseButton1Click:Connect(function() clickAnimate(saveIdBtn); local rawId = musicIdBox.Text:match("%d+"); if rawId and rawId ~= "" then saveIdBtn.Text = "⏳..."; task.spawn(function() local name = getSongName(rawId); table.insert(savedMusicList, {id = rawId, name = name}); saveMusicData(); renderSavedMusic(); saveIdBtn.Text = "💾 Lưu" end) end end)
+    renderSavedMusic()
 end
-renderSavedTps()
+
+do
+    local tpFileName = "MenuVipProMax_SavedTPs.json"; local savedTpList = {}; pcall(function() if isfile and isfile(tpFileName) then local decoded = HttpService:JSONDecode(readfile(tpFileName)); if type(decoded) == "table" then savedTpList = decoded end end end)
+    local function saveTpData() pcall(function() if writefile then local d = {}; for _, v in ipairs(savedTpList) do if not v.isTemp then table.insert(d, v) end end; writefile(tpFileName, HttpService:JSONEncode(d)) end end) end
+    local pendingDeleteAll = false
+    local renderSavedTps
+
+    local tpControlFrame_New = createDualButtons(page6, "📍 LƯU VỊ TRÍ HIỆN TẠI", Theme.Brand, function()
+        if player.Character then
+            local root = getUniversalRoot(player.Character)
+            if root then
+                local cf = {root.CFrame:GetComponents()}; local mx = 0
+                for _, v in ipairs(savedTpList) do local num = string.match(v.name, "Lưu Vị Trí (%d+)"); if num then mx = math.max(mx, tonumber(num)) end end
+                table.insert(savedTpList, {name = "Lưu Vị Trí " .. (mx + 1), cframe = cf, isTemp = false}); saveTpData(); renderSavedTps()
+            end
+        end
+    end, "🗑️ XÓA TẤT CẢ", Theme.AccentOff, function() 
+        if not pendingDeleteAll then pendingDeleteAll = true; MakeToast("⚠️ CẢNH BÁO", "Ấn lần nữa để xác nhận xóa sạch!", Theme.AccentOff); task.delay(3, function() pendingDeleteAll = false end)
+        else savedTpList = {}; saveTpData(); renderSavedTps(); MakeToast("Thành công", "Đã xóa toàn bộ!", Theme.Brand); pendingDeleteAll = false end
+    end); tpControlFrame_New.LayoutOrder = 1 
+
+    local tpListCard = Instance.new("Frame", page6)
+    tpListCard.Size = UDim2.new(0.93, 0, 1, -48); tpListCard.BackgroundColor3 = Color3.fromRGB(23, 25, 34); tpListCard.LayoutOrder = 2; tpListCard.ZIndex = 10
+    Instance.new("UICorner", tpListCard).CornerRadius = UDim.new(0, 8)
+    local tlStroke = Instance.new("UIStroke", tpListCard); tlStroke.Color = Theme.Stroke; tlStroke.Thickness = 1; table.insert(RGBElements, {Type = "Info", Stroke = tlStroke})
+
+    local tlHeader = Instance.new("TextLabel", tpListCard)
+    tlHeader.Size = UDim2.new(1, -16, 0, 20); tlHeader.Position = UDim2.new(0, 10, 0, 3); tlHeader.BackgroundTransparency = 1
+    tlHeader.Text = "📍 DANH SÁCH TỌA ĐỘ ĐÃ LƯU"; tlHeader.TextColor3 = Theme.Brand; tlHeader.Font = Enum.Font.GothamBold; tlHeader.TextSize = 9.5; tlHeader.TextXAlignment = Enum.TextXAlignment.Left; tlHeader.ZIndex = 10
+
+    local savedTpContent = Instance.new("ScrollingFrame", tpListCard); savedTpContent.Size = UDim2.new(1, -10, 1, -26); savedTpContent.Position = UDim2.new(0, 5, 0, 24); savedTpContent.BackgroundTransparency = 1; savedTpContent.ScrollBarThickness = 3; savedTpContent.ScrollBarImageColor3 = Theme.Brand; savedTpContent.BorderSizePixel = 0; savedTpContent.ZIndex = 10
+    local tpLayout = Instance.new("UIListLayout", savedTpContent); tpLayout.SortOrder = Enum.SortOrder.LayoutOrder; tpLayout.Padding = UDim.new(0, 4)
+    tpLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function() savedTpContent.CanvasSize = UDim2.new(0, 0, 0, tpLayout.AbsoluteContentSize.Y + 10) end)
+
+    renderSavedTps = function()
+        for _, child in pairs(savedTpContent:GetChildren()) do if child:IsA("Frame") then child:Destroy() end end
+        tlHeader.Text = "📍 DANH SÁCH TỌA ĐỘ ĐÃ LƯU (" .. #savedTpList .. ")"
+        if #savedTpList == 0 then
+            local empty = Instance.new("Frame", savedTpContent); empty.Size = UDim2.new(1, 0, 0, 45); empty.BackgroundTransparency = 1
+            local lbl = Instance.new("TextLabel", empty); lbl.Size = UDim2.new(1, 0, 1, 0); lbl.BackgroundTransparency = 1
+            lbl.Text = "Chưa có vị trí nào được lưu.\nBấm '📍 LƯU VỊ TRÍ HIỆN TẠI' để đánh dấu tọa độ!"; lbl.TextColor3 = Theme.TextDim; lbl.Font = Enum.Font.Gotham; lbl.TextSize = 9.5; lbl.ZIndex = 10
+            return
+        end
+        for i, data in ipairs(savedTpList) do
+            local item = Instance.new("Frame", savedTpContent); item.Size = UDim2.new(1, -4, 0, 34); item.BackgroundColor3 = Theme.ItemBg; item.ZIndex = 10; Instance.new("UICorner", item).CornerRadius = UDim.new(0, 6)
+            local stroke = Instance.new("UIStroke", item); stroke.Color = Theme.Stroke; stroke.Thickness = 1; table.insert(RGBElements, {Type = "Info", Stroke = stroke})
+            
+            local nameBox = Instance.new("TextBox", item); nameBox.Size = UDim2.new(0.52, 0, 1, 0); nameBox.Position = UDim2.new(0.04, 0, 0, 0); nameBox.Text = data.name; nameBox.TextColor3 = Theme.TextTitle; nameBox.Font = Enum.Font.GothamSemibold; nameBox.TextSize = 10.5; nameBox.BackgroundTransparency = 1; nameBox.TextXAlignment = Enum.TextXAlignment.Left; nameBox.ClearTextOnFocus = false; nameBox.ZIndex = 10
+            nameBox.FocusLost:Connect(function() if nameBox.Text ~= "" then data.name = nameBox.Text; saveTpData() else nameBox.Text = data.name end end)
+            
+            local tpBtn = Instance.new("TextButton", item); tpBtn.Size = UDim2.new(0.22, 0, 0.68, 0); tpBtn.Position = UDim2.new(0.57, 0, 0.16, 0); tpBtn.Text = "⚡ TP"; tpBtn.BackgroundColor3 = Color3.fromRGB(26, 46, 62); tpBtn.TextColor3 = Theme.Brand; tpBtn.Font = Enum.Font.GothamBold; tpBtn.TextSize = 10; tpBtn.ZIndex = 10; Instance.new("UICorner", tpBtn).CornerRadius = UDim.new(0, 5)
+            local tpSt = Instance.new("UIStroke", tpBtn); tpSt.Color = Theme.Brand; tpSt.Thickness = 0.9; tpSt.Transparency = 0.25
+
+            local delBtn = Instance.new("TextButton", item); delBtn.Size = UDim2.new(0.15, 0, 0.68, 0); delBtn.Position = UDim2.new(0.81, 0, 0.16, 0); delBtn.Text = "Xóa"; delBtn.BackgroundColor3 = Color3.fromRGB(48, 28, 34); delBtn.TextColor3 = Theme.AccentOff; delBtn.Font = Enum.Font.GothamBold; delBtn.TextSize = 9.5; delBtn.ZIndex = 10; Instance.new("UICorner", delBtn).CornerRadius = UDim.new(0, 5)
+            local dlSt = Instance.new("UIStroke", delBtn); dlSt.Color = Theme.AccentOff; dlSt.Thickness = 0.9; dlSt.Transparency = 0.25
+
+            tpBtn.MouseButton1Click:Connect(function() clickAnimate(tpBtn); if player.Character then local r = getUniversalRoot(player.Character); if r then r.CFrame = CFrame.new(unpack(data.cframe)); MakeToast("Dịch chuyển", "Đến " .. data.name, Theme.Brand) end end end)
+            delBtn.MouseButton1Click:Connect(function() clickAnimate(delBtn); table.remove(savedTpList, i); saveTpData(); renderSavedTps() end)
+        end
+    end
+    renderSavedTps()
+end
 
 -- ==========================================
 -- [TAB 7: TP NGƯỜI CHƠI]
@@ -1094,6 +1238,7 @@ local spectatePlayerEnabled = false
 local wasHorizontalTp = false
 local spectateProxyPart = nil
 local lastSpectateStreamTick = 0
+local playerListContainer, playerListScroll
 
 local function restoreNormalPosture()
     local myChar = player.Character
@@ -1121,190 +1266,6 @@ local function restoreNormalPosture()
         end
     end
     wasHorizontalTp = false
-end
-
-local tpControlCard = Instance.new("Frame", page7)
-tpControlCard.Size = UDim2.new(0.94, 0, 0, 86)
-tpControlCard.BackgroundColor3 = Color3.fromRGB(28, 30, 42)
-tpControlCard.LayoutOrder = 1
-tpControlCard.ZIndex = 10
-Instance.new("UICorner", tpControlCard).CornerRadius = UDim.new(0, 8)
-local tpCardStroke = Instance.new("UIStroke", tpControlCard)
-tpCardStroke.Color = Theme.Brand
-tpCardStroke.Thickness = 1.4
-table.insert(RGBElements, {Type = "Button", Stroke = tpCardStroke, DefaultColor = Theme.Brand})
-
-local targetHeaderRow = Instance.new("Frame", tpControlCard)
-targetHeaderRow.Size = UDim2.new(1, -12, 0, 26)
-targetHeaderRow.Position = UDim2.new(0, 6, 0, 4)
-targetHeaderRow.BackgroundColor3 = Color3.fromRGB(18, 20, 28)
-targetHeaderRow.ZIndex = 10
-Instance.new("UICorner", targetHeaderRow).CornerRadius = UDim.new(0, 6)
-
-local selectedAvatarImg = Instance.new("ImageLabel", targetHeaderRow)
-selectedAvatarImg.Size = UDim2.new(0, 20, 0, 20)
-selectedAvatarImg.Position = UDim2.new(0, 5, 0.5, -10)
-selectedAvatarImg.BackgroundColor3 = Color3.fromRGB(40, 40, 55)
-selectedAvatarImg.Image = "rbxassetid://0"
-selectedAvatarImg.ZIndex = 10
-Instance.new("UICorner", selectedAvatarImg).CornerRadius = UDim.new(1, 0)
-local selAvaStroke = Instance.new("UIStroke", selectedAvatarImg)
-selAvaStroke.Color = Theme.Brand
-selAvaStroke.Thickness = 1
-
-local targetStatusLabel = Instance.new("TextLabel", targetHeaderRow)
-targetStatusLabel.Size = UDim2.new(1, -112, 1, 0)
-targetStatusLabel.Position = UDim2.new(0, 30, 0, 0)
-targetStatusLabel.BackgroundTransparency = 1
-targetStatusLabel.RichText = true
-targetStatusLabel.Text = "🎯 <font color='#FF6B81'>Chưa chọn mục tiêu</font>"
-targetStatusLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-targetStatusLabel.Font = Enum.Font.GothamBold
-targetStatusLabel.TextSize = 11
-targetStatusLabel.TextTruncate = Enum.TextTruncate.AtEnd
-targetStatusLabel.TextXAlignment = Enum.TextXAlignment.Left
-targetStatusLabel.ZIndex = 10
-
-local spectateBtn = Instance.new("TextButton", targetHeaderRow)
-spectateBtn.Size = UDim2.new(0, 76, 0, 20)
-spectateBtn.Position = UDim2.new(1, -80, 0.5, -10)
-spectateBtn.BackgroundColor3 = Color3.fromRGB(55, 35, 45)
-spectateBtn.Text = "👁️ XEM [TẮT]"
-spectateBtn.TextColor3 = Theme.AccentOff
-spectateBtn.Font = Enum.Font.GothamBold
-spectateBtn.TextSize = 9.5
-spectateBtn.AutoButtonColor = false
-spectateBtn.ZIndex = 10
-Instance.new("UICorner", spectateBtn).CornerRadius = UDim.new(0, 5)
-local spectateStroke = Instance.new("UIStroke", spectateBtn)
-spectateStroke.Color = Theme.AccentOff
-spectateStroke.Thickness = 1
-spectateStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-
-local tpPosBtn = Instance.new("TextButton", tpControlCard)
-tpPosBtn.Size = UDim2.new(1, -12, 0, 24)
-tpPosBtn.Position = UDim2.new(0, 6, 0, 33)
-tpPosBtn.BackgroundColor3 = Color3.fromRGB(0, 105, 155)
-tpPosBtn.Text = ""
-tpPosBtn.AutoButtonColor = false
-tpPosBtn.ZIndex = 10
-Instance.new("UICorner", tpPosBtn).CornerRadius = UDim.new(0, 6)
-local tpPosStroke = Instance.new("UIStroke", tpPosBtn)
-tpPosStroke.Color = Color3.fromRGB(80, 220, 255)
-tpPosStroke.Thickness = 1.2
-tpPosStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-
-local tpPosLabel = Instance.new("TextLabel", tpPosBtn)
-tpPosLabel.Size = UDim2.new(1, 0, 1, 0)
-tpPosLabel.BackgroundTransparency = 1
-tpPosLabel.RichText = true
-tpPosLabel.TextColor3 = Color3.new(1, 1, 1)
-tpPosLabel.Font = Enum.Font.GothamBlack
-tpPosLabel.TextSize = 11
-tpPosLabel.ZIndex = 10
-
-local function updateTpPosText()
-    local item = TpPositions[State.TpPositionIdx] or TpPositions[1]
-    tpPosLabel.Text = "📍 VỊ TRÍ TP: <font color='#FFFF55'>" .. string.upper(item.Name) .. "</font>"
-end
-updateTpPosText()
-
-tpPosBtn.MouseButton1Click:Connect(function()
-    clickAnimate(tpPosBtn)
-    State.TpPositionIdx = State.TpPositionIdx + 1
-    if State.TpPositionIdx > #TpPositions then State.TpPositionIdx = 1 end
-    updateTpPosText()
-    local currentMode = TpPositions[State.TpPositionIdx] or TpPositions[1]
-    if not currentMode.IsHorizontal and wasHorizontalTp then
-        restoreNormalPosture()
-    end
-    if State.AutoSave then saveConfig() end
-end)
-
-local tpDistContainer = Instance.new("Frame", tpControlCard)
-tpDistContainer.Size = UDim2.new(1, -12, 0, 24)
-tpDistContainer.Position = UDim2.new(0, 6, 0, 59)
-tpDistContainer.BackgroundTransparency = 1
-tpDistContainer.ZIndex = 10
-
-local tpDistTitle = Instance.new("TextLabel", tpDistContainer)
-tpDistTitle.Size = UDim2.new(0.7, 0, 0, 12)
-tpDistTitle.Position = UDim2.new(0, 2, 0, 0)
-tpDistTitle.BackgroundTransparency = 1
-tpDistTitle.Text = "📏 Khoảng cách đứng (Studs):"
-tpDistTitle.TextColor3 = Color3.fromRGB(240, 245, 255)
-tpDistTitle.Font = Enum.Font.GothamBold
-tpDistTitle.TextSize = 10.5
-tpDistTitle.TextXAlignment = Enum.TextXAlignment.Left
-tpDistTitle.ZIndex = 10
-
-local tpDistValLabel = Instance.new("TextLabel", tpDistContainer)
-tpDistValLabel.Size = UDim2.new(0.3, -4, 0, 12)
-tpDistValLabel.Position = UDim2.new(0.7, 0, 0, 0)
-tpDistValLabel.BackgroundTransparency = 1
-tpDistValLabel.Text = tostring(State.TpDistance) .. " m"
-tpDistValLabel.TextColor3 = Color3.fromRGB(255, 235, 60)
-tpDistValLabel.Font = Enum.Font.GothamBlack
-tpDistValLabel.TextSize = 11
-tpDistValLabel.TextXAlignment = Enum.TextXAlignment.Right
-tpDistValLabel.ZIndex = 10
-
-local tpDistTrack = Instance.new("Frame", tpDistContainer)
-tpDistTrack.Size = UDim2.new(1, -4, 0, 7)
-tpDistTrack.Position = UDim2.new(0, 2, 0, 15)
-tpDistTrack.BackgroundColor3 = Color3.fromRGB(15, 16, 22)
-tpDistTrack.ZIndex = 10
-Instance.new("UICorner", tpDistTrack).CornerRadius = UDim.new(1, 0)
-local tpDistTrackStroke = Instance.new("UIStroke", tpDistTrack)
-tpDistTrackStroke.Color = Color3.fromRGB(70, 80, 100)
-tpDistTrackStroke.Thickness = 1
-
-local tpDistFill = Instance.new("Frame", tpDistTrack)
-tpDistFill.Size = UDim2.new(math.clamp((State.TpDistance - 1) / 24, 0, 1), 0, 1, 0)
-tpDistFill.BackgroundColor3 = Theme.AccentOn
-tpDistFill.ZIndex = 10
-Instance.new("UICorner", tpDistFill).CornerRadius = UDim.new(1, 0)
-
-local draggingTpDist = false
-local function updateTpDistSlider(input)
-    local pos = math.clamp((input.Position.X - tpDistTrack.AbsolutePosition.X) / tpDistTrack.AbsoluteSize.X, 0, 1)
-    local value = math.floor(1 + (24 * pos))
-    tpDistValLabel.Text = tostring(value) .. " m"
-    TweenService:Create(tpDistFill, TweenInfo.new(0.08), {Size = UDim2.new(pos, 0, 1, 0)}):Play()
-    State.TpDistance = value
-    if State.AutoSave then saveConfig() end
-end
-tpDistTrack.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        draggingTpDist = true
-        updateTpDistSlider(input)
-    end
-end)
-UIS.InputChanged:Connect(function(input)
-    if draggingTpDist and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-        updateTpDistSlider(input)
-    end
-end)
-UIS.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        draggingTpDist = false
-    end
-end)
-
-local function updateTargetLabel()
-    if targetTpPlayer then
-        targetStatusLabel.Text = string.format("🎯 <font color='#2ECC71'>%s</font> <font color='#FFD700'>(@%s)</font>", targetTpPlayer.DisplayName, targetTpPlayer.Name)
-        selAvaStroke.Color = Theme.AccentOn
-        task.spawn(function()
-            pcall(function()
-                selectedAvatarImg.Image = Players:GetUserThumbnailAsync(targetTpPlayer.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size420x420)
-            end)
-        end)
-    else
-        targetStatusLabel.Text = "🎯 <font color='#FF6B81'>Chưa chọn mục tiêu</font>"
-        selAvaStroke.Color = Theme.AccentOff
-        selectedAvatarImg.Image = "rbxassetid://0"
-    end
 end
 
 local lastStreamRequest = 0
@@ -1391,265 +1352,458 @@ local function resetCameraSubject()
     end)
 end
 
-local tpActionRow = Instance.new("Frame", page7)
-tpActionRow.Size = UDim2.new(0.94, 0, 0, 28)
-tpActionRow.BackgroundTransparency = 1
-tpActionRow.LayoutOrder = 2
+do
+    local tpControlCard = Instance.new("Frame", page7)
+    tpControlCard.Size = UDim2.new(0.93, 0, 0, 86)
+    tpControlCard.BackgroundColor3 = Theme.ItemBg
+    tpControlCard.LayoutOrder = 1
+    tpControlCard.ZIndex = 10
+    Instance.new("UICorner", tpControlCard).CornerRadius = UDim.new(0, 8)
+    local tpCardStroke = Instance.new("UIStroke", tpControlCard)
+    tpCardStroke.Color = Theme.Stroke
+    tpCardStroke.Thickness = 1.1
+    table.insert(RGBElements, {Type = "Info", Stroke = tpCardStroke})
 
-local tpOnceBtn = Instance.new("TextButton", tpActionRow)
-tpOnceBtn.Size = UDim2.new(0.485, 0, 1, 0)
-tpOnceBtn.Position = UDim2.new(0, 0, 0, 0)
-tpOnceBtn.BackgroundColor3 = Color3.fromRGB(25, 45, 65)
-tpOnceBtn.Text = "⚡ TP 1 LẦN"
-tpOnceBtn.TextColor3 = Theme.Brand
-tpOnceBtn.Font = Enum.Font.GothamBlack
-tpOnceBtn.TextSize = 11
-tpOnceBtn.AutoButtonColor = false
-tpOnceBtn.ZIndex = 10
-Instance.new("UICorner", tpOnceBtn).CornerRadius = UDim.new(0, 6)
-local tpOnceStroke = Instance.new("UIStroke", tpOnceBtn)
-tpOnceStroke.Color = Theme.Brand
-tpOnceStroke.Thickness = 1.2
-tpOnceStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-table.insert(RGBElements, {Type = "Button", Stroke = tpOnceStroke, DefaultColor = Theme.Brand})
+    local targetHeaderRow = Instance.new("Frame", tpControlCard)
+    targetHeaderRow.Size = UDim2.new(1, -12, 0, 26)
+    targetHeaderRow.Position = UDim2.new(0, 6, 0, 4)
+    targetHeaderRow.BackgroundColor3 = Color3.fromRGB(20, 22, 30)
+    targetHeaderRow.ZIndex = 10
+    Instance.new("UICorner", targetHeaderRow).CornerRadius = UDim.new(0, 6)
 
-local autoTpBtn = Instance.new("TextButton", tpActionRow)
-autoTpBtn.Size = UDim2.new(0.485, 0, 1, 0)
-autoTpBtn.Position = UDim2.new(0.515, 0, 0, 0)
-autoTpBtn.BackgroundColor3 = Color3.fromRGB(50, 30, 38)
-autoTpBtn.Text = "🔁 AUTO TP [TẮT]"
-autoTpBtn.TextColor3 = Theme.AccentOff
-autoTpBtn.Font = Enum.Font.GothamBlack
-autoTpBtn.TextSize = 11
-autoTpBtn.AutoButtonColor = false
-autoTpBtn.ZIndex = 10
-Instance.new("UICorner", autoTpBtn).CornerRadius = UDim.new(0, 6)
-local autoTpStroke = Instance.new("UIStroke", autoTpBtn)
-autoTpStroke.Color = Theme.AccentOff
-autoTpStroke.Thickness = 1.2
-autoTpStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-table.insert(RGBElements, {Type = "Toggle", Stroke = autoTpStroke, State = function() return autoTpPlayerEnabled end})
+    local selectedAvatarImg = Instance.new("ImageLabel", targetHeaderRow)
+    selectedAvatarImg.Size = UDim2.new(0, 20, 0, 20)
+    selectedAvatarImg.Position = UDim2.new(0, 5, 0.5, -10)
+    selectedAvatarImg.BackgroundColor3 = Color3.fromRGB(35, 38, 50)
+    selectedAvatarImg.Image = "rbxassetid://0"
+    selectedAvatarImg.ZIndex = 10
+    Instance.new("UICorner", selectedAvatarImg).CornerRadius = UDim.new(1, 0)
+    local selAvaStroke = Instance.new("UIStroke", selectedAvatarImg)
+    selAvaStroke.Color = Theme.Brand
+    selAvaStroke.Thickness = 1
 
-local function updateAutoTpBtnUI()
-    autoTpBtn.Text = autoTpPlayerEnabled and "🔁 AUTO TP [BẬT]" or "🔁 AUTO TP [TẮT]"
-    autoTpBtn.TextColor3 = autoTpPlayerEnabled and Theme.AccentOn or Theme.AccentOff
-    autoTpBtn.BackgroundColor3 = autoTpPlayerEnabled and Color3.fromRGB(30, 55, 40) or Color3.fromRGB(50, 30, 38)
-    if not State.RGB then
-        autoTpStroke.Color = autoTpPlayerEnabled and Theme.AccentOn or Theme.AccentOff
+    local targetStatusLabel = Instance.new("TextLabel", targetHeaderRow)
+    targetStatusLabel.Size = UDim2.new(1, -112, 1, 0)
+    targetStatusLabel.Position = UDim2.new(0, 30, 0, 0)
+    targetStatusLabel.BackgroundTransparency = 1
+    targetStatusLabel.RichText = true
+    targetStatusLabel.Text = "🎯 <font color='#DA5866'>Chưa chọn mục tiêu</font>"
+    targetStatusLabel.TextColor3 = Theme.TextTitle
+    targetStatusLabel.Font = Enum.Font.GothamBold
+    targetStatusLabel.TextSize = 10.5
+    targetStatusLabel.TextTruncate = Enum.TextTruncate.AtEnd
+    targetStatusLabel.TextXAlignment = Enum.TextXAlignment.Left
+    targetStatusLabel.ZIndex = 10
+
+    local spectateBtn = Instance.new("TextButton", targetHeaderRow)
+    spectateBtn.Size = UDim2.new(0, 76, 0, 20)
+    spectateBtn.Position = UDim2.new(1, -80, 0.5, -10)
+    spectateBtn.BackgroundColor3 = Color3.fromRGB(45, 28, 35)
+    spectateBtn.Text = "👁️ XEM [TẮT]"
+    spectateBtn.TextColor3 = Theme.AccentOff
+    spectateBtn.Font = Enum.Font.GothamBold
+    spectateBtn.TextSize = 9
+    spectateBtn.AutoButtonColor = false
+    spectateBtn.ZIndex = 10
+    Instance.new("UICorner", spectateBtn).CornerRadius = UDim.new(0, 5)
+    local spectateStroke = Instance.new("UIStroke", spectateBtn)
+    spectateStroke.Color = Theme.AccentOff
+    spectateStroke.Thickness = 0.9
+    spectateStroke.Transparency = 0.25
+
+    local tpPosBtn = Instance.new("TextButton", tpControlCard)
+    tpPosBtn.Size = UDim2.new(1, -12, 0, 24)
+    tpPosBtn.Position = UDim2.new(0, 6, 0, 33)
+    tpPosBtn.BackgroundColor3 = Color3.fromRGB(26, 44, 62)
+    tpPosBtn.Text = ""
+    tpPosBtn.AutoButtonColor = false
+    tpPosBtn.ZIndex = 10
+    Instance.new("UICorner", tpPosBtn).CornerRadius = UDim.new(0, 6)
+    local tpPosStroke = Instance.new("UIStroke", tpPosBtn)
+    tpPosStroke.Color = Theme.Brand
+    tpPosStroke.Thickness = 1
+    tpPosStroke.Transparency = 0.25
+
+    local tpPosLabel = Instance.new("TextLabel", tpPosBtn)
+    tpPosLabel.Size = UDim2.new(1, 0, 1, 0)
+    tpPosLabel.BackgroundTransparency = 1
+    tpPosLabel.RichText = true
+    tpPosLabel.TextColor3 = Theme.TextTitle
+    tpPosLabel.Font = Enum.Font.GothamBold
+    tpPosLabel.TextSize = 10.5
+    tpPosLabel.ZIndex = 10
+
+    local function updateTpPosText()
+        local item = TpPositions[State.TpPositionIdx] or TpPositions[1]
+        tpPosLabel.Text = "📍 VỊ TRÍ TP: <font color='#F0C868'>" .. string.upper(item.Name) .. "</font>"
     end
-end
+    updateTpPosText()
 
-local function updateSpectateBtnUI()
-    spectateBtn.Text = spectatePlayerEnabled and "👁️ XEM [BẬT]" or "👁️ XEM [TẮT]"
-    spectateBtn.TextColor3 = spectatePlayerEnabled and Theme.AccentOn or Theme.AccentOff
-    spectateBtn.BackgroundColor3 = spectatePlayerEnabled and Color3.fromRGB(30, 55, 40) or Color3.fromRGB(55, 35, 45)
-    spectateStroke.Color = spectatePlayerEnabled and Theme.AccentOn or Theme.AccentOff
-end
-
-tpOnceBtn.MouseButton1Click:Connect(function()
-    clickAnimate(tpOnceBtn)
-    if not targetTpPlayer then
-        MakeToast("⚠️ Chưa chọn ai", "Hãy bấm chọn 1 người chơi ở danh sách dưới!", Theme.AccentOff)
-        return
-    end
-    if teleportToSelectedPlayer(true) then
-        local modeName = (TpPositions[State.TpPositionIdx] or TpPositions[1]).Name
-        MakeToast("Dịch Chuyển", "Đến " .. targetTpPlayer.DisplayName .. " (" .. modeName .. ")", Theme.Brand)
-    else
-        MakeToast("Lỗi", "Người chơi chưa tải nhân vật hoặc đã chết!", Theme.AccentOff)
-    end
-end)
-
-autoTpBtn.MouseButton1Click:Connect(function()
-    clickAnimate(autoTpBtn)
-    if not targetTpPlayer then
-        MakeToast("⚠️ Chưa chọn ai", "Hãy bấm chọn 1 người chơi ở danh sách dưới!", Theme.AccentOff)
-        return
-    end
-    autoTpPlayerEnabled = not autoTpPlayerEnabled
-    updateAutoTpBtnUI()
-    if autoTpPlayerEnabled then
-        MakeToast("Đã Bật Auto TP", "Đang bám theo " .. targetTpPlayer.DisplayName, Theme.AccentOn)
-    else
-        restoreNormalPosture()
-        MakeToast("Đã Tắt Auto TP", "Đã dừng bám theo mục tiêu", Theme.AccentOff)
-    end
-end)
-
-spectateBtn.MouseButton1Click:Connect(function()
-    clickAnimate(spectateBtn)
-    if not targetTpPlayer then
-        MakeToast("⚠️ Chưa chọn ai", "Hãy bấm chọn 1 người chơi ở danh sách dưới!", Theme.AccentOff)
-        return
-    end
-    spectatePlayerEnabled = not spectatePlayerEnabled
-    updateSpectateBtnUI()
-    if spectatePlayerEnabled then
-        MakeToast("Đã Bật Spectate", "Đang xem góc nhìn của " .. targetTpPlayer.DisplayName, Theme.AccentOn)
-    else
-        resetCameraSubject()
-        MakeToast("Đã Tắt Spectate", "Đã trả góc nhìn về nhân vật của bạn", Theme.AccentOff)
-    end
-end)
-
-local playerListContainer = Instance.new("Frame", page7)
-playerListContainer.Size = UDim2.new(0.94, 0, 1, -132)
-playerListContainer.BackgroundColor3 = Color3.fromRGB(24, 25, 34)
-playerListContainer.LayoutOrder = 3
-playerListContainer.ZIndex = 10
-Instance.new("UICorner", playerListContainer).CornerRadius = UDim.new(0, 8)
-local listContainerStroke = Instance.new("UIStroke", playerListContainer)
-listContainerStroke.Color = Theme.Stroke
-listContainerStroke.Thickness = 1.2
-table.insert(RGBElements, {Type = "Info", Stroke = listContainerStroke})
-
-local playerListScroll = Instance.new("ScrollingFrame", playerListContainer)
-playerListScroll.Size = UDim2.new(1, -6, 1, -8)
-playerListScroll.Position = UDim2.new(0, 3, 0, 4)
-playerListScroll.BackgroundTransparency = 1
-playerListScroll.BorderSizePixel = 0
-playerListScroll.ScrollBarThickness = 5
-playerListScroll.ScrollBarImageColor3 = Theme.Brand
-playerListScroll.ScrollingDirection = Enum.ScrollingDirection.Y
-playerListScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
-playerListScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
-playerListScroll.ZIndex = 10
-
-local playerScrollLayout = Instance.new("UIListLayout", playerListScroll)
-playerScrollLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-playerScrollLayout.SortOrder = Enum.SortOrder.LayoutOrder
-playerScrollLayout.Padding = UDim.new(0, 4)
-
-local playerScrollPad = Instance.new("UIPadding", playerListScroll)
-playerScrollPad.PaddingTop = UDim.new(0, 2)
-playerScrollPad.PaddingBottom = UDim.new(0, 6)
-playerScrollPad.PaddingRight = UDim.new(0, 6)
-
-local function updatePlayerList()
-    local cleanRGB = {}; for _, obj in ipairs(RGBElements) do if obj.Stroke and obj.Stroke.Parent then table.insert(cleanRGB, obj) end end; RGBElements = cleanRGB
-    for _, child in pairs(playerListScroll:GetChildren()) do
-        if child.Name == "PaddingFrame" then child:Destroy() end
-    end
-    for _, p in pairs(Players:GetPlayers()) do
-        if p ~= player then
-            local isSelected = (targetTpPlayer == p)
-            local pFrame = Instance.new("Frame", playerListScroll)
-            pFrame.Name = "PaddingFrame"
-            pFrame.Size = UDim2.new(1, -2, 0, 34)
-            pFrame.BackgroundTransparency = 1
-            pFrame.ZIndex = 10
-            
-            local btn = Instance.new("TextButton", pFrame)
-            btn.Size = UDim2.new(1, 0, 1, 0)
-            btn.BackgroundColor3 = isSelected and Color3.fromRGB(30, 60, 42) or Theme.ItemBg
-            btn.Text = ""
-            btn.AutoButtonColor = false
-            btn.ZIndex = 10
-            Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
-            
-            local stroke = Instance.new("UIStroke", btn)
-            stroke.Color = isSelected and Theme.AccentOn or Theme.Stroke
-            stroke.Thickness = 1.2
-            table.insert(RGBElements, {Type = "Info", Stroke = stroke})
-            
-            local nLabel = Instance.new("TextLabel", btn)
-            nLabel.Size = UDim2.new(0.76, 0, 0.52, 0)
-            nLabel.Position = UDim2.new(0.04, 0, 0.04, 0)
-            nLabel.BackgroundTransparency = 1
-            nLabel.Text = (isSelected and "✅ " or "👤 ") .. p.DisplayName
-            nLabel.TextColor3 = isSelected and Theme.AccentOn or Theme.TextTitle
-            nLabel.Font = Enum.Font.GothamBold
-            nLabel.TextSize = 11.5
-            nLabel.TextXAlignment = Enum.TextXAlignment.Left
-            nLabel.ZIndex = 10
-            
-            local subLabel = Instance.new("TextLabel", btn)
-            subLabel.Size = UDim2.new(0.76, 0, 0.44, 0)
-            subLabel.Position = UDim2.new(0.04, 0, 0.52, 0)
-            subLabel.BackgroundTransparency = 1
-            subLabel.Text = "@" .. p.Name
-            subLabel.TextColor3 = Color3.fromRGB(100, 255, 130)
-            subLabel.Font = Enum.Font.GothamSemibold
-            subLabel.TextSize = 9.5
-            subLabel.TextXAlignment = Enum.TextXAlignment.Left
-            subLabel.ZIndex = 10
-            
-            local targetAvatar = Instance.new("ImageLabel", btn)
-            targetAvatar.Size = UDim2.new(0, 24, 0, 24)
-            targetAvatar.Position = UDim2.new(1, -30, 0.5, -12)
-            targetAvatar.BackgroundTransparency = 1
-            targetAvatar.ZIndex = 10
-            Instance.new("UICorner", targetAvatar).CornerRadius = UDim.new(1, 0)
-            
-            local targetStroke = Instance.new("UIStroke", targetAvatar)
-            targetStroke.Color = isSelected and Theme.AccentOn or Theme.Stroke
-            targetStroke.Thickness = 1.2
-            targetStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-            table.insert(RGBElements, {Type = "Info", Stroke = targetStroke})
-            
-            task.spawn(function()
-                pcall(function()
-                    targetAvatar.Image = Players:GetUserThumbnailAsync(p.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size420x420)
-                end)
-            end)
-            
-            btn.MouseButton1Click:Connect(function()
-                clickAnimate(btn)
-                targetTpPlayer = p
-                updateTargetLabel()
-                updatePlayerList()
-                MakeToast("Đã chọn mục tiêu", p.DisplayName .. " (@" .. p.Name .. ")", Theme.AccentOn)
-            end)
-        end
-    end
-end
-updatePlayerList()
-
-Players.PlayerAdded:Connect(function()
-    task.wait(0.5)
-    updatePlayerList()
-end)
-
-Players.PlayerRemoving:Connect(function(leavingPlayer)
-    if leavingPlayer == targetTpPlayer then
-        targetTpPlayer = nil
-        if autoTpPlayerEnabled then
-            autoTpPlayerEnabled = false
+    tpPosBtn.MouseButton1Click:Connect(function()
+        clickAnimate(tpPosBtn)
+        State.TpPositionIdx = State.TpPositionIdx + 1
+        if State.TpPositionIdx > #TpPositions then State.TpPositionIdx = 1 end
+        updateTpPosText()
+        local currentMode = TpPositions[State.TpPositionIdx] or TpPositions[1]
+        if not currentMode.IsHorizontal and wasHorizontalTp then
             restoreNormalPosture()
         end
-        if spectatePlayerEnabled then
-            spectatePlayerEnabled = false
-            resetCameraSubject()
-            updateSpectateBtnUI()
+        if State.AutoSave then saveConfig() end
+    end)
+
+    local tpDistContainer = Instance.new("Frame", tpControlCard)
+    tpDistContainer.Size = UDim2.new(1, -12, 0, 24)
+    tpDistContainer.Position = UDim2.new(0, 6, 0, 59)
+    tpDistContainer.BackgroundTransparency = 1
+    tpDistContainer.ZIndex = 10
+
+    local tpDistTitle = Instance.new("TextLabel", tpDistContainer)
+    tpDistTitle.Size = UDim2.new(0.7, 0, 0, 12)
+    tpDistTitle.Position = UDim2.new(0, 2, 0, 0)
+    tpDistTitle.BackgroundTransparency = 1
+    tpDistTitle.Text = "📏 Khoảng cách đứng (Studs):"
+    tpDistTitle.TextColor3 = Theme.TextDim
+    tpDistTitle.Font = Enum.Font.GothamSemibold
+    tpDistTitle.TextSize = 10
+    tpDistTitle.TextXAlignment = Enum.TextXAlignment.Left
+    tpDistTitle.ZIndex = 10
+
+    local tpDistValLabel = Instance.new("TextLabel", tpDistContainer)
+    tpDistValLabel.Size = UDim2.new(0.3, -4, 0, 12)
+    tpDistValLabel.Position = UDim2.new(0.7, 0, 0, 0)
+    tpDistValLabel.BackgroundTransparency = 1
+    tpDistValLabel.Text = tostring(State.TpDistance) .. " m"
+    tpDistValLabel.TextColor3 = Color3.fromRGB(240, 200, 104)
+    tpDistValLabel.Font = Enum.Font.GothamBold
+    tpDistValLabel.TextSize = 10.5
+    tpDistValLabel.TextXAlignment = Enum.TextXAlignment.Right
+    tpDistValLabel.ZIndex = 10
+
+    local tpDistTrack = Instance.new("Frame", tpDistContainer)
+    tpDistTrack.Size = UDim2.new(1, -4, 0, 6)
+    tpDistTrack.Position = UDim2.new(0, 2, 0, 15)
+    tpDistTrack.BackgroundColor3 = Color3.fromRGB(16, 17, 24)
+    tpDistTrack.ZIndex = 10
+    Instance.new("UICorner", tpDistTrack).CornerRadius = UDim.new(1, 0)
+
+    local initTpPos = math.clamp((State.TpDistance - 1) / 24, 0, 1)
+    local tpDistFill = Instance.new("Frame", tpDistTrack)
+    tpDistFill.Size = UDim2.new(initTpPos, 0, 1, 0)
+    tpDistFill.BackgroundColor3 = Theme.AccentOn
+    tpDistFill.ZIndex = 11
+    Instance.new("UICorner", tpDistFill).CornerRadius = UDim.new(1, 0)
+
+    local tpKnob = Instance.new("Frame", tpDistTrack)
+    tpKnob.Size = UDim2.new(0, 10, 0, 10); tpKnob.AnchorPoint = Vector2.new(0.5, 0.5)
+    tpKnob.Position = UDim2.new(initTpPos, 0, 0.5, 0)
+    tpKnob.BackgroundColor3 = Color3.fromRGB(240, 248, 255); tpKnob.ZIndex = 12
+    Instance.new("UICorner", tpKnob).CornerRadius = UDim.new(1, 0)
+
+    local draggingTpDist = false
+    local function updateTpDistSlider(input)
+        local pos = math.clamp((input.Position.X - tpDistTrack.AbsolutePosition.X) / tpDistTrack.AbsoluteSize.X, 0, 1)
+        local value = math.floor(1 + (24 * pos))
+        tpDistValLabel.Text = tostring(value) .. " m"
+        TweenService:Create(tpDistFill, TweenInfo.new(0.08), {Size = UDim2.new(pos, 0, 1, 0)}):Play()
+        TweenService:Create(tpKnob, TweenInfo.new(0.08), {Position = UDim2.new(pos, 0, 0.5, 0)}):Play()
+        State.TpDistance = value
+        if State.AutoSave then saveConfig() end
+    end
+    tpDistContainer.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            draggingTpDist = true; updateTpDistSlider(input)
         end
-        updateTargetLabel()
+    end)
+    UIS.InputChanged:Connect(function(input)
+        if draggingTpDist and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            updateTpDistSlider(input)
+        end
+    end)
+    UIS.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            draggingTpDist = false
+        end
+    end)
+
+    local function updateTargetLabel()
+        if targetTpPlayer then
+            targetStatusLabel.Text = string.format("🎯 <font color='#44C482'>%s</font> <font color='#F0C868'>(@%s)</font>", targetTpPlayer.DisplayName, targetTpPlayer.Name)
+            selAvaStroke.Color = Theme.AccentOn
+            task.spawn(function()
+                pcall(function()
+                    selectedAvatarImg.Image = Players:GetUserThumbnailAsync(targetTpPlayer.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size420x420)
+                end)
+            end)
+        else
+            targetStatusLabel.Text = "🎯 <font color='#DA5866'>Chưa chọn mục tiêu</font>"
+            selAvaStroke.Color = Theme.AccentOff
+            selectedAvatarImg.Image = "rbxassetid://0"
+        end
+    end
+
+    local tpActionRow = Instance.new("Frame", page7)
+    tpActionRow.Size = UDim2.new(0.93, 0, 0, 28)
+    tpActionRow.BackgroundTransparency = 1
+    tpActionRow.LayoutOrder = 2
+
+    local tpOnceBtn = Instance.new("TextButton", tpActionRow)
+    tpOnceBtn.Size = UDim2.new(0.486, 0, 1, 0)
+    tpOnceBtn.Position = UDim2.new(0, 0, 0, 0)
+    tpOnceBtn.BackgroundColor3 = Color3.fromRGB(24, 40, 56)
+    tpOnceBtn.Text = "⚡ TP 1 LẦN"
+    tpOnceBtn.TextColor3 = Theme.Brand
+    tpOnceBtn.Font = Enum.Font.GothamBold
+    tpOnceBtn.TextSize = 10.5
+    tpOnceBtn.AutoButtonColor = false
+    tpOnceBtn.ZIndex = 10
+    Instance.new("UICorner", tpOnceBtn).CornerRadius = UDim.new(0, 6)
+    local tpOnceStroke = Instance.new("UIStroke", tpOnceBtn)
+    tpOnceStroke.Color = Theme.Brand
+    tpOnceStroke.Thickness = 1; tpOnceStroke.Transparency = 0.25
+    table.insert(RGBElements, {Type = "Button", Stroke = tpOnceStroke, DefaultColor = Theme.Brand})
+
+    local autoTpBtn = Instance.new("TextButton", tpActionRow)
+    autoTpBtn.Size = UDim2.new(0.486, 0, 1, 0)
+    autoTpBtn.Position = UDim2.new(0.514, 0, 0, 0)
+    autoTpBtn.BackgroundColor3 = Color3.fromRGB(45, 28, 35)
+    autoTpBtn.Text = "🔁 AUTO TP [TẮT]"
+    autoTpBtn.TextColor3 = Theme.AccentOff
+    autoTpBtn.Font = Enum.Font.GothamBold
+    autoTpBtn.TextSize = 10.5
+    autoTpBtn.AutoButtonColor = false
+    autoTpBtn.ZIndex = 10
+    Instance.new("UICorner", autoTpBtn).CornerRadius = UDim.new(0, 6)
+    local autoTpStroke = Instance.new("UIStroke", autoTpBtn)
+    autoTpStroke.Color = Theme.AccentOff
+    autoTpStroke.Thickness = 1; autoTpStroke.Transparency = 0.25
+    table.insert(RGBElements, {Type = "Toggle", Stroke = autoTpStroke, State = function() return autoTpPlayerEnabled end})
+
+    local function updateAutoTpBtnUI()
+        autoTpBtn.Text = autoTpPlayerEnabled and "🔁 AUTO TP [BẬT]" or "🔁 AUTO TP [TẮT]"
+        autoTpBtn.TextColor3 = autoTpPlayerEnabled and Theme.AccentOn or Theme.AccentOff
+        autoTpBtn.BackgroundColor3 = autoTpPlayerEnabled and Color3.fromRGB(28, 48, 38) or Color3.fromRGB(45, 28, 35)
+        if not State.RGB then
+            autoTpStroke.Color = autoTpPlayerEnabled and Theme.AccentOn or Theme.AccentOff
+        end
+    end
+
+    local function updateSpectateBtnUI()
+        spectateBtn.Text = spectatePlayerEnabled and "👁️ XEM [BẬT]" or "👁️ XEM [TẮT]"
+        spectateBtn.TextColor3 = spectatePlayerEnabled and Theme.AccentOn or Theme.AccentOff
+        spectateBtn.BackgroundColor3 = spectatePlayerEnabled and Color3.fromRGB(28, 48, 38) or Color3.fromRGB(45, 28, 35)
+        spectateStroke.Color = spectatePlayerEnabled and Theme.AccentOn or Theme.AccentOff
+    end
+
+    tpOnceBtn.MouseButton1Click:Connect(function()
+        clickAnimate(tpOnceBtn)
+        if not targetTpPlayer then
+            MakeToast("⚠️ Chưa chọn ai", "Hãy bấm chọn 1 người chơi ở danh sách dưới!", Theme.AccentOff)
+            return
+        end
+        if teleportToSelectedPlayer(true) then
+            local modeName = (TpPositions[State.TpPositionIdx] or TpPositions[1]).Name
+            MakeToast("Dịch Chuyển", "Đến " .. targetTpPlayer.DisplayName .. " (" .. modeName .. ")", Theme.Brand)
+        else
+            MakeToast("Lỗi", "Người chơi chưa tải nhân vật hoặc đã chết!", Theme.AccentOff)
+        end
+    end)
+
+    autoTpBtn.MouseButton1Click:Connect(function()
+        clickAnimate(autoTpBtn)
+        if not targetTpPlayer then
+            MakeToast("⚠️ Chưa chọn ai", "Hãy bấm chọn 1 người chơi ở danh sách dưới!", Theme.AccentOff)
+            return
+        end
+        autoTpPlayerEnabled = not autoTpPlayerEnabled
         updateAutoTpBtnUI()
-        MakeToast("Mục tiêu đã thoát", leavingPlayer.DisplayName .. " đã rời khỏi server!", Theme.AccentOff)
+        if autoTpPlayerEnabled then
+            MakeToast("Đã Bật Auto TP", "Đang bám theo " .. targetTpPlayer.DisplayName, Theme.AccentOn)
+        else
+            restoreNormalPosture()
+            MakeToast("Đã Tắt Auto TP", "Đã dừng bám theo mục tiêu", Theme.AccentOff)
+        end
+    end)
+
+    spectateBtn.MouseButton1Click:Connect(function()
+        clickAnimate(spectateBtn)
+        if not targetTpPlayer then
+            MakeToast("⚠️ Chưa chọn ai", "Hãy bấm chọn 1 người chơi ở danh sách dưới!", Theme.AccentOff)
+            return
+        end
+        spectatePlayerEnabled = not spectatePlayerEnabled
+        updateSpectateBtnUI()
+        if spectatePlayerEnabled then
+            MakeToast("Đã Bật Spectate", "Đang xem góc nhìn của " .. targetTpPlayer.DisplayName, Theme.AccentOn)
+        else
+            resetCameraSubject()
+            MakeToast("Đã Tắt Spectate", "Đã trả góc nhìn về nhân vật của bạn", Theme.AccentOff)
+        end
+    end)
+
+    playerListContainer = Instance.new("Frame", page7)
+    playerListContainer.Size = UDim2.new(0.93, 0, 1, -130)
+    playerListContainer.BackgroundColor3 = Color3.fromRGB(23, 25, 34)
+    playerListContainer.LayoutOrder = 3
+    playerListContainer.ZIndex = 10
+    Instance.new("UICorner", playerListContainer).CornerRadius = UDim.new(0, 8)
+    local listContainerStroke = Instance.new("UIStroke", playerListContainer)
+    listContainerStroke.Color = Theme.Stroke
+    listContainerStroke.Thickness = 1
+    table.insert(RGBElements, {Type = "Info", Stroke = listContainerStroke})
+
+    playerListScroll = Instance.new("ScrollingFrame", playerListContainer)
+    playerListScroll.Size = UDim2.new(1, -6, 1, -8)
+    playerListScroll.Position = UDim2.new(0, 3, 0, 4)
+    playerListScroll.BackgroundTransparency = 1
+    playerListScroll.BorderSizePixel = 0
+    playerListScroll.ScrollBarThickness = 3
+    playerListScroll.ScrollBarImageColor3 = Theme.Brand
+    playerListScroll.ScrollingDirection = Enum.ScrollingDirection.Y
+    playerListScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+    playerListScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+    playerListScroll.ZIndex = 10
+
+    local playerScrollLayout = Instance.new("UIListLayout", playerListScroll)
+    playerScrollLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    playerScrollLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    playerScrollLayout.Padding = UDim.new(0, 4)
+
+    local playerScrollPad = Instance.new("UIPadding", playerListScroll)
+    playerScrollPad.PaddingTop = UDim.new(0, 2)
+    playerScrollPad.PaddingBottom = UDim.new(0, 6)
+    playerScrollPad.PaddingRight = UDim.new(0, 4)
+
+    local function updatePlayerList()
+        local cleanRGB = {}; for _, obj in ipairs(RGBElements) do if obj.Stroke and obj.Stroke.Parent then table.insert(cleanRGB, obj) end end; RGBElements = cleanRGB
+        for _, child in pairs(playerListScroll:GetChildren()) do
+            if child.Name == "PaddingFrame" then child:Destroy() end
+        end
+        for _, p in pairs(Players:GetPlayers()) do
+            if p ~= player then
+                local isSelected = (targetTpPlayer == p)
+                local pFrame = Instance.new("Frame", playerListScroll)
+                pFrame.Name = "PaddingFrame"
+                pFrame.Size = UDim2.new(1, -2, 0, 34)
+                pFrame.BackgroundTransparency = 1
+                pFrame.ZIndex = 10
+                
+                local btn = Instance.new("TextButton", pFrame)
+                btn.Size = UDim2.new(1, 0, 1, 0)
+                btn.BackgroundColor3 = isSelected and Theme.ItemActive or Theme.ItemBg
+                btn.Text = ""
+                btn.AutoButtonColor = false
+                btn.ZIndex = 10
+                Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
+                
+                local stroke = Instance.new("UIStroke", btn)
+                stroke.Color = isSelected and Theme.AccentOn or Theme.Stroke
+                stroke.Thickness = 1
+                table.insert(RGBElements, {Type = "Info", Stroke = stroke})
+                
+                local nLabel = Instance.new("TextLabel", btn)
+                nLabel.Size = UDim2.new(0.76, 0, 0.52, 0)
+                nLabel.Position = UDim2.new(0.04, 0, 0.04, 0)
+                nLabel.BackgroundTransparency = 1
+                nLabel.Text = (isSelected and "✅ " or "👤 ") .. p.DisplayName
+                nLabel.TextColor3 = isSelected and Theme.AccentOn or Theme.TextTitle
+                nLabel.Font = Enum.Font.GothamBold
+                nLabel.TextSize = 11
+                nLabel.TextXAlignment = Enum.TextXAlignment.Left
+                nLabel.ZIndex = 10
+                
+                local subLabel = Instance.new("TextLabel", btn)
+                subLabel.Size = UDim2.new(0.76, 0, 0.44, 0)
+                subLabel.Position = UDim2.new(0.04, 0, 0.52, 0)
+                subLabel.BackgroundTransparency = 1
+                subLabel.Text = "@" .. p.Name
+                subLabel.TextColor3 = Color3.fromRGB(115, 200, 145)
+                subLabel.Font = Enum.Font.GothamSemibold
+                subLabel.TextSize = 9.5
+                subLabel.TextXAlignment = Enum.TextXAlignment.Left
+                subLabel.ZIndex = 10
+                
+                local targetAvatar = Instance.new("ImageLabel", btn)
+                targetAvatar.Size = UDim2.new(0, 24, 0, 24)
+                targetAvatar.Position = UDim2.new(1, -30, 0.5, -12)
+                targetAvatar.BackgroundTransparency = 1
+                targetAvatar.ZIndex = 10
+                Instance.new("UICorner", targetAvatar).CornerRadius = UDim.new(1, 0)
+                
+                local targetStroke = Instance.new("UIStroke", targetAvatar)
+                targetStroke.Color = isSelected and Theme.AccentOn or Theme.Stroke
+                targetStroke.Thickness = 1
+                targetStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+                table.insert(RGBElements, {Type = "Info", Stroke = targetStroke})
+                
+                task.spawn(function()
+                    pcall(function()
+                        targetAvatar.Image = Players:GetUserThumbnailAsync(p.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size420x420)
+                    end)
+                end)
+                
+                btn.MouseButton1Click:Connect(function()
+                    clickAnimate(btn)
+                    targetTpPlayer = p
+                    updateTargetLabel()
+                    updatePlayerList()
+                    MakeToast("Đã chọn mục tiêu", p.DisplayName .. " (@" .. p.Name .. ")", Theme.AccentOn)
+                end)
+            end
+        end
     end
     updatePlayerList()
-end)
+
+    Players.PlayerAdded:Connect(function()
+        task.wait(0.5)
+        updatePlayerList()
+    end)
+
+    Players.PlayerRemoving:Connect(function(leavingPlayer)
+        if leavingPlayer == targetTpPlayer then
+            targetTpPlayer = nil
+            if autoTpPlayerEnabled then
+                autoTpPlayerEnabled = false
+                restoreNormalPosture()
+            end
+            if spectatePlayerEnabled then
+                spectatePlayerEnabled = false
+                resetCameraSubject()
+                updateSpectateBtnUI()
+            end
+            updateTargetLabel()
+            updateAutoTpBtnUI()
+            MakeToast("Mục tiêu đã thoát", leavingPlayer.DisplayName .. " đã rời khỏi server!", Theme.AccentOff)
+        end
+        updatePlayerList()
+    end)
+end
 
 -- ==========================================
 -- [TAB 8: AUTO SKILL]
 -- ==========================================
+createDivider(page8, "TỐC ĐỘ KÍCH HOẠT CHIÊU")
+createSlider(page8, "⏱️ Chu kỳ nhấn phím (x0.1 giây)", 1, 50, "AutoSkillDelay")
+
 createDivider(page8, "KỸ NĂNG PHÍM CHỮ")
-createToggle(page8, "Tự động kích hoạt Phím [Z]", "AutoSkillZ")
-createToggle(page8, "Tự động kích hoạt Phím [X]", "AutoSkillX")
-createToggle(page8, "Tự động kích hoạt Phím [C]", "AutoSkillC")
-createToggle(page8, "Tự động kích hoạt Phím [V]", "AutoSkillV")
-createToggle(page8, "Tự động kích hoạt Phím [E]", "AutoSkillE")
-createToggle(page8, "Tự động kích hoạt Phím [F]", "AutoSkillF")
+createToggle(page8, "⌨️ Tự động kích hoạt Phím [Z]", "AutoSkillZ")
+createToggle(page8, "⌨️ Tự động kích hoạt Phím [X]", "AutoSkillX")
+createToggle(page8, "⌨️ Tự động kích hoạt Phím [C]", "AutoSkillC")
+createToggle(page8, "⌨️ Tự động kích hoạt Phím [V]", "AutoSkillV")
+createToggle(page8, "⌨️ Tự động kích hoạt Phím [E]", "AutoSkillE")
+createToggle(page8, "⌨️ Tự động kích hoạt Phím [F]", "AutoSkillF")
 
 createDivider(page8, "KỸ NĂNG PHÍM SỐ")
-createToggle(page8, "Tự động kích hoạt Phím [1]", "AutoSkill1")
-createToggle(page8, "Tự động kích hoạt Phím [2]", "AutoSkill2")
-createToggle(page8, "Tự động kích hoạt Phím [3]", "AutoSkill3")
-createToggle(page8, "Tự động kích hoạt Phím [4]", "AutoSkill4")
-createToggle(page8, "Tự động kích hoạt Phím [5]", "AutoSkill5")
-createToggle(page8, "Tự động kích hoạt Phím [6]", "AutoSkill6")
+createToggle(page8, "🔢 Tự động kích hoạt Phím [1]", "AutoSkill1")
+createToggle(page8, "🔢 Tự động kích hoạt Phím [2]", "AutoSkill2")
+createToggle(page8, "🔢 Tự động kích hoạt Phím [3]", "AutoSkill3")
+createToggle(page8, "🔢 Tự động kích hoạt Phím [4]", "AutoSkill4")
+createToggle(page8, "🔢 Tự động kích hoạt Phím [5]", "AutoSkill5")
+createToggle(page8, "🔢 Tự động kích hoạt Phím [6]", "AutoSkill6")
 
 task.spawn(function()
-    while task.wait(0.5) do 
+    while true do
+        local waitTime = math.clamp((tonumber(State.AutoSkillDelay) or 5) * 0.1, 0.1, 5)
+        task.wait(waitTime)
         local keysToPress = {}
         if State.AutoSkillZ then table.insert(keysToPress, Enum.KeyCode.Z) end
         if State.AutoSkillX then table.insert(keysToPress, Enum.KeyCode.X) end
@@ -1674,25 +1828,16 @@ task.spawn(function()
                         Vim:SendKeyEvent(false, keyEnum, false, game)
                     end)
                 end)
-                task.wait(0.05) 
+                task.wait(0.04) 
             end
         end
     end
 end)
 
-            
-
 -- ==========================================
--- [TAB 9: CẤU HÌNH (ĐÃ FIX LỖI 200 BIẾN LOCAL LÀM MẤT MENU)]
+-- [TAB 9: CẤU HÌNH (HIỂN THỊ TỨC THÌ LIVE MONITOR)]
 -- ==========================================
 ;(function()
-    local Stats = game:GetService("Stats")
-
-    if State.DisableParticles == nil then State.DisableParticles = false end
-    if State.DisablePostEffects == nil then State.DisablePostEffects = false end
-    if State.HidePetsAccessories == nil then State.HidePetsAccessories = false end
-    if State.AutoClearRAM == nil then State.AutoClearRAM = false end
-
     local Cache = {
         Particles = {},
         PostEffects = {},
@@ -1705,70 +1850,84 @@ end)
     }
 
     local function createTab9Toggle(parent, text, varName, callback)
-        local frameItem = createToggle(parent, text, varName, callback)
-        local btn = frameItem:FindFirstChildOfClass("TextButton")
+        local frameItem, applyVis = createToggle(parent, text, varName, callback)
         Cache.Toggles[varName] = function(targetState)
             if State[varName] ~= targetState then
                 State[varName] = targetState
-                if btn then
-                    local stroke = btn:FindFirstChildOfClass("UIStroke")
-                    for _, lbl in ipairs(btn:GetChildren()) do
-                        if lbl:IsA("TextLabel") and (lbl.Text == "ON" or lbl.Text == "OFF") then
-                            lbl.Text = targetState and "ON" or "OFF"
-                            TweenService:Create(lbl, TweenInfo.new(0.2), {TextColor3 = targetState and Theme.AccentOn or Theme.AccentOff}):Play()
-                        end
-                    end
-                    if stroke and not State.RGB then
-                        TweenService:Create(stroke, TweenInfo.new(0.2), {Color = targetState and Theme.AccentOn or Theme.Stroke}):Play()
-                    end
-                    TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = targetState and Color3.fromRGB(35, 45, 40) or Theme.ItemBg}):Play()
-                end
+                if applyVis then applyVis(targetState, false) end
                 if callback then task.spawn(callback, targetState) end
             end
         end
         return frameItem
     end
 
-    -- 1. BẢNG ĐO THÔNG SỐ THỜI GIAN THỰC (LIVE MONITOR)
+    -- 1. BẢNG ĐO THÔNG SỐ THỜI GIAN THỰC (LIVE MONITOR - CẬP NHẬT TỨC THÌ)
     local liveMonitorCard = Instance.new("Frame", page9)
-    liveMonitorCard.Size = UDim2.new(0.92, 0, 0, 52)
-    liveMonitorCard.BackgroundColor3 = Color3.fromRGB(25, 27, 38)
+    liveMonitorCard.Size = UDim2.new(0.93, 0, 0, 54)
+    liveMonitorCard.BackgroundColor3 = Color3.fromRGB(23, 26, 36)
     liveMonitorCard.ZIndex = 10
     Instance.new("UICorner", liveMonitorCard).CornerRadius = UDim.new(0, 8)
     local monitorStroke = Instance.new("UIStroke", liveMonitorCard)
     monitorStroke.Color = Theme.Brand
-    monitorStroke.Thickness = 1.3
+    monitorStroke.Thickness = 1.1; monitorStroke.Transparency = 0.2
     table.insert(RGBElements, {Type = "Button", Stroke = monitorStroke, DefaultColor = Theme.Brand})
 
     local monitorTitle = Instance.new("TextLabel", liveMonitorCard)
     monitorTitle.Size = UDim2.new(1, -16, 0, 16)
-    monitorTitle.Position = UDim2.new(0, 8, 0, 4)
+    monitorTitle.Position = UDim2.new(0, 10, 0, 4)
     monitorTitle.BackgroundTransparency = 1
     monitorTitle.Text = "📊 THÔNG SỐ HIỆU NĂNG THỜI GIAN THỰC (LIVE MONITOR)"
     monitorTitle.TextColor3 = Theme.Brand
-    monitorTitle.Font = Enum.Font.GothamBlack
+    monitorTitle.Font = Enum.Font.GothamBold
     monitorTitle.TextSize = 9.5
     monitorTitle.TextXAlignment = Enum.TextXAlignment.Left
     monitorTitle.ZIndex = 10
 
     local monitorStatsLabel = Instance.new("TextLabel", liveMonitorCard)
-    monitorStatsLabel.Size = UDim2.new(1, -16, 0, 28)
-    monitorStatsLabel.Position = UDim2.new(0, 8, 0, 21)
+    monitorStatsLabel.Size = UDim2.new(1, -20, 0, 30)
+    monitorStatsLabel.Position = UDim2.new(0, 10, 0, 21)
     monitorStatsLabel.BackgroundTransparency = 1
     monitorStatsLabel.RichText = true
-    monitorStatsLabel.Text = "Đang đo thông số..."
     monitorStatsLabel.TextColor3 = Theme.TextTitle
     monitorStatsLabel.Font = Enum.Font.GothamSemibold
     monitorStatsLabel.TextSize = 10.5
+    monitorStatsLabel.LineHeight = 1.15
     monitorStatsLabel.TextXAlignment = Enum.TextXAlignment.Left
     monitorStatsLabel.TextYAlignment = Enum.TextYAlignment.Top
     monitorStatsLabel.ZIndex = 10
+
+    local function refreshLiveMonitor()
+        local pingStr = "0 ms"
+        local ramMB = 0
+        pcall(function()
+            if Stats and Stats:FindFirstChild("Network") and Stats.Network:FindFirstChild("ServerStatsItem") then
+                local rawPing = Stats.Network.ServerStatsItem["Data Ping"]:GetValueString()
+                local numPing = rawPing and rawPing:match("%d+")
+                pingStr = (numPing or tostring(math.floor(player:GetNetworkPing() * 1000))) .. " ms"
+            else
+                pingStr = tostring(math.floor(player:GetNetworkPing() * 1000)) .. " ms"
+            end
+        end)
+        pcall(function() ramMB = math.floor(Stats:GetTotalMemoryUsageMb()) end)
+        if ramMB == 0 then
+            pcall(function() ramMB = math.floor(collectgarbage("count") / 1024) end)
+        end
+        local fpsColor = fps >= 45 and "#44C482" or (fps >= 25 and "#E5B85B" or "#DA5866")
+        monitorStatsLabel.Text = string.format(
+            "⚡ FPS: <font color='%s'>%d</font>   |   🌐 Ping: <font color='#5CB4E8'>%s</font>\n🧠 RAM: <font color='#E5A55D'>%d MB</font>   |   🧱 Vật thể (Parts): <font color='#A89EE8'>%d</font>",
+            fpsColor, fps, pingStr, ramMB, Cache.PartCount
+        )
+    end
+
+    onTab9Shown = refreshLiveMonitor
+    refreshLiveMonitor()
 
     task.spawn(function()
         for i, v in ipairs(workspace:GetDescendants()) do
             if v:IsA("BasePart") then Cache.PartCount = Cache.PartCount + 1 end
             if i % 500 == 0 then task.wait() end
         end
+        refreshLiveMonitor()
     end)
     workspace.DescendantAdded:Connect(function(v)
         if v:IsA("BasePart") then Cache.PartCount = Cache.PartCount + 1 end
@@ -1778,28 +1937,9 @@ end)
     end)
 
     task.spawn(function()
-        while task.wait(0.8) do
+        while task.wait(0.6) do
             if page9.Visible then
-                local pingStr = "0 ms"
-                local ramMB = 0
-                pcall(function()
-                    if Stats and Stats:FindFirstChild("Network") and Stats.Network:FindFirstChild("ServerStatsItem") then
-                        local rawPing = Stats.Network.ServerStatsItem["Data Ping"]:GetValueString()
-                        local numPing = rawPing and rawPing:match("%d+")
-                        pingStr = (numPing or tostring(math.floor(player:GetNetworkPing() * 1000))) .. " ms"
-                    else
-                        pingStr = tostring(math.floor(player:GetNetworkPing() * 1000)) .. " ms"
-                    end
-                end)
-                pcall(function() ramMB = math.floor(Stats:GetTotalMemoryUsageMb()) end)
-                if ramMB == 0 then
-                    pcall(function() ramMB = math.floor(collectgarbage("count") / 1024) end)
-                end
-                local fpsColor = fps >= 45 and "#2ECC71" or (fps >= 25 and "#F1C40F" or "#FF4757")
-                monitorStatsLabel.Text = string.format(
-                    "⚡ FPS: <font color='%s'>%d</font>   |   🌐 Ping: <font color='#00E5FF'>%s</font>\n🧠 RAM: <font color='#FF9F43'>%d MB</font>   |   🧱 Vật thể (Parts): <font color='#A29BFE'>%d</font>",
-                    fpsColor, fps, pingStr, ramMB, Cache.PartCount
-                )
+                refreshLiveMonitor()
             end
         end
     end)
@@ -1947,7 +2087,7 @@ end)
     -- 3. CÁC NÚT ĐIỀU KHIỂN TRONG TAB CẤU HÌNH
     createDivider(page9, "TỐI ƯU HIỆU SUẤT TỐI ĐA")
 
-    createButton(page9, "🥔 SIÊU KHOAI TÂY (1-Click Ultra Boost)", Color3.fromRGB(255, 195, 18), function()
+    createButton(page9, "🥔 SIÊU KHOAI TÂY (1-Click Ultra Boost)", Color3.fromRGB(230, 185, 70), function()
         pcall(function() settings().Rendering.QualityLevel = Enum.QualityLevel.Level01 end)
         local boostKeys = {"LowGfx", "DisableParticles", "DisablePostEffects", "NoFog", "NoShadows", "OptimizeTerrain", "HidePetsAccessories"}
         for _, key in ipairs(boostKeys) do
@@ -2204,8 +2344,6 @@ end)
     end)
 end)()
 
-
-
 -- ==========================================
 -- [HỆ THỐNG AUTO COLLECT & PROXIMITY]
 -- ==========================================
@@ -2259,7 +2397,7 @@ task.spawn(function()
 end)
 
 -- ==========================================
--- [ESP GỌN ĐẸP (KHÔNG HỘP ĐỎ) + XUYÊN STREAMING]
+-- [ESP GỌN ĐẸP + XUYÊN STREAMING]
 -- ==========================================
 local function clearSingleESP(p)
     if ActiveESPs[p] then
@@ -2364,7 +2502,7 @@ local function updateESP_Hitbox()
                     tLabel.Name = "NameLabel"
                     tLabel.Size = UDim2.new(1, 0, 1, 0)
                     tLabel.BackgroundTransparency = 1
-                    tLabel.TextColor3 = Color3.fromRGB(255, 60, 60)
+                    tLabel.TextColor3 = Color3.fromRGB(255, 75, 85)
                     tLabel.TextStrokeTransparency = 0.15
                     tLabel.TextStrokeColor3 = Color3.new(0, 0, 0)
                     tLabel.Font = Enum.Font.GothamBold
@@ -2378,7 +2516,7 @@ local function updateESP_Hitbox()
                     local hl = Instance.new("Highlight")
                     hl.Name = "ESPHighlight_" .. p.Name
                     hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-                    hl.FillColor = Color3.fromRGB(255, 60, 60)
+                    hl.FillColor = Color3.fromRGB(255, 65, 75)
                     hl.FillTransparency = 0.65
                     hl.OutlineColor = Color3.new(1, 1, 1)
                     hl.OutlineTransparency = 0.1
@@ -2389,7 +2527,7 @@ local function updateESP_Hitbox()
 
                 if myPos then
                     local dist = math.floor((myPos - targetPos).Magnitude)
-                    data.Billboard.NameLabel.Text = p.DisplayName .. '\n<font color="#00FFFF">[' .. dist .. 'm]</font>'
+                    data.Billboard.NameLabel.Text = p.DisplayName .. '\n<font color="#78D2FF">[' .. dist .. 'm]</font>'
                 else
                     data.Billboard.NameLabel.Text = p.DisplayName
                 end
@@ -2422,7 +2560,7 @@ RunService.Stepped:Connect(function()
     end
 end)
 
-RunService.Heartbeat:Connect(function(deltaTime)
+RunService.Heartbeat:Connect(function()
     if autoTpPlayerEnabled and targetTpPlayer then
         teleportToSelectedPlayer(false)
     end
@@ -2623,28 +2761,6 @@ end)
     local GuiService = game:GetService("GuiService")
     local SoundService = game:GetService("SoundService")
 
-    -- Tự động khởi tạo & đọc dữ liệu lưu của các tính năng mới
-    local NewStates = {
-        HidePopups = false,
-        MuteSFX = false,
-        DisableAnims = false,
-        DarkMap = false,
-        MiniHUD = false,
-        AutoReconnect = true,
-        MagnetOrbs = false
-    }
-    for k, v in pairs(NewStates) do
-        if State[k] == nil then State[k] = v end
-    end
-    pcall(function()
-        if isfile and isfile(configFileName) then
-            local data = HttpService:JSONDecode(readfile(configFileName))
-            for k, _ in pairs(NewStates) do
-                if data[k] ~= nil then State[k] = data[k] end
-            end
-        end
-    end)
-
     local ExtCache = {
         Popups = {},
         Sounds = {},
@@ -2654,9 +2770,7 @@ end)
         Tickets = {Popup = 0, Sound = 0, Anim = 0, Dark = 0}
     }
 
-    -- ==========================================
-    -- 1. THÊM THANH TÌM KIẾM NHANH VÀO TAB 7 (TP PLAYER)
-    -- ==========================================
+    -- 1. THANH TÌM KIẾM NHANH TRONG TAB 7 (TP PLAYER)
     pcall(function()
         if playerListContainer and playerListScroll then
             local searchBar = Instance.new("Frame", playerListContainer)
@@ -2667,7 +2781,7 @@ end)
             Instance.new("UICorner", searchBar).CornerRadius = UDim.new(0, 6)
             local sStroke = Instance.new("UIStroke", searchBar)
             sStroke.Color = Theme.Brand
-            sStroke.Thickness = 1
+            sStroke.Thickness = 0.9; sStroke.Transparency = 0.3
             table.insert(RGBElements, {Type = "Button", Stroke = sStroke, DefaultColor = Theme.Brand})
 
             local searchBox = Instance.new("TextBox", searchBar)
@@ -2714,12 +2828,9 @@ end)
         end
     end)
 
-    -- ==========================================
     -- 2. THÊM 4 TÍNH NĂNG SIMULATOR VÀO TAB 9 (CẤU HÌNH)
-    -- ==========================================
     createDivider(page9, "TỐI ƯU CHUYÊN SÂU SIMULATOR")
 
-    -- [A] Ẩn chữ bay & Popup (+Tiền / +Sức mạnh / Damage)
     local function processPopupObj(obj)
         if not State.HidePopups or not obj or not obj.Parent then return end
         if obj:IsA("BillboardGui") and not string.find(obj.Name, "^MobileESP_") then
@@ -2767,7 +2878,6 @@ end)
         end
     end)
 
-    -- [B] Tắt toàn bộ tiếng động Game (Mute SFX - Giữ lại nhạc Tab 5)
     local function processSoundObj(obj)
         if not State.MuteSFX or not obj or not obj.Parent then return end
         if obj:IsA("Sound") and obj ~= currentSound then
@@ -2807,7 +2917,6 @@ end)
         end
     end)
 
-    -- [C] Tắt hoạt ảnh Nhân vật & Quái (Disable Animations)
     local function stopAnimator(obj)
         if not State.DisableAnims or not obj or not obj.Parent then return end
         if obj:IsA("Animator") then
@@ -2841,7 +2950,6 @@ end)
         end
     end)
 
-    -- [D] Chế độ Bản đồ Tối Dịu Mắt (Dark Flat Map)
     local darkColor = Color3.fromRGB(38, 40, 48)
     local function processDarkPart(obj)
         if not State.DarkMap or not obj or not obj.Parent then return end
@@ -2901,7 +3009,6 @@ end)
         end
     end)
 
-    -- Tự động bắt các Object/Popup/Âm thanh mới sinh ra
     workspace.DescendantAdded:Connect(function(obj)
         if State.HidePopups or State.MuteSFX or State.DisableAnims or State.DarkMap then
             task.defer(function()
@@ -2923,23 +3030,20 @@ end)
         end)
     end)
 
-    -- ==========================================
     -- 3. THÊM 3 TIỆN ÍCH TREO MÁY VÀO TAB 4 (TIỆN ÍCH)
-    -- ==========================================
     createDivider(page4, "TIỆN ÍCH TREO MÁY & HỖ TRỢ")
 
-    -- [E] Đồng hồ FPS & Ping Mini ngoài màn hình
     local miniHudFrame = Instance.new("Frame", gui)
     miniHudFrame.Size = UDim2.new(0, 128, 0, 26)
-    miniHudFrame.Position = UDim2.new(0, 62, 0.25, 7)
+    miniHudFrame.Position = UDim2.new(0, 64, 0.25, 8)
     miniHudFrame.BackgroundColor3 = Theme.MainBg
-    miniHudFrame.BackgroundTransparency = 0.15
+    miniHudFrame.BackgroundTransparency = 0.12
     miniHudFrame.Visible = State.MiniHUD
     miniHudFrame.ZIndex = 10
     Instance.new("UICorner", miniHudFrame).CornerRadius = UDim.new(1, 0)
     local hudStroke = Instance.new("UIStroke", miniHudFrame)
     hudStroke.Color = Theme.Brand
-    hudStroke.Thickness = 1.4
+    hudStroke.Thickness = 1.2
     table.insert(RGBElements, {Type = "Button", Stroke = hudStroke, DefaultColor = Theme.Brand})
 
     local hudLabel = Instance.new("TextLabel", miniHudFrame)
@@ -2972,7 +3076,6 @@ end)
     end)
 
     task.spawn(function()
-        local Stats = game:GetService("Stats")
         while task.wait(0.6) do
             if State.MiniHUD and miniHudFrame.Visible then
                 local pingNum = 0
@@ -2984,13 +3087,12 @@ end)
                         pingNum = math.floor(player:GetNetworkPing() * 1000)
                     end
                 end)
-                local fCol = fps >= 45 and "#2ECC71" or (fps >= 25 and "#F1C40F" or "#FF4757")
-                hudLabel.Text = string.format("⚡ <font color='%s'>%d FPS</font> | 🌐 <font color='#00E5FF'>%d ms</font>", fCol, fps, pingNum)
+                local fCol = fps >= 45 and "#44C482" or (fps >= 25 and "#E5B85B" or "#DA5866")
+                hudLabel.Text = string.format("⚡ <font color='%s'>%d FPS</font> | 🌐 <font color='#5CB4E8'>%d ms</font>", fCol, fps, pingNum)
             end
         end
     end)
 
-    -- [F] Tự động vào lại khi mất kết nối (Auto Reconnect)
     createToggle(page4, "🔌 Tự động vào lại khi văng game (Reconnect)", "AutoReconnect")
 
     local function triggerReconnect()
@@ -3006,7 +3108,6 @@ end)
         end)
     end)
 
-    -- [G] Hút Tiền, Ngọc & Vật phẩm rơi (Magnet Orbs/Coins)
     createToggle(page4, "🧲 Hút Tiền, Ngọc & Vật phẩm rơi (Magnet)", "MagnetOrbs")
 
     local magnetKeywords = {"coin", "gem", "orb", "diamond", "cash", "money", "yen", "token", "drop", "star", "crystal", "gold", "silver", "emerald"}
@@ -3048,14 +3149,12 @@ end)
     end)
 end)()
 
-
 -- ==========================================
--- [GÓI NÂNG CẤP TAB 1 V3: ĐỔI VỊ TRÍ NÚT + BỘ LỌC DANH SÁCH SERVER]
+-- [TAB 1: THÔNG TIN & QUẢN LÝ SERVER]
 -- ==========================================
 ;(function()
     if not page1 then return end
 
-    -- Dọn sạch giao diện Tab 1 cũ để tạo bố cục mới
     for _, child in ipairs(page1:GetChildren()) do
         if child:IsA("Frame") then
             child:Destroy()
@@ -3115,14 +3214,14 @@ end)()
 
     local function makeCard(titleIcon, titleText, height, order)
         local card = Instance.new("Frame", page1)
-        card.Size = UDim2.new(0.92, 0, 0, height)
+        card.Size = UDim2.new(0.93, 0, 0, height)
         card.BackgroundColor3 = Theme.ItemBg
         card.LayoutOrder = order
         card.ZIndex = 10
         Instance.new("UICorner", card).CornerRadius = UDim.new(0, 8)
         local stroke = Instance.new("UIStroke", card)
         stroke.Color = Theme.Stroke
-        stroke.Thickness = 1.2
+        stroke.Thickness = 1
         table.insert(RGBElements, {Type = "Info", Stroke = stroke})
 
         local headerTitle = Instance.new("TextLabel", card)
@@ -3132,7 +3231,7 @@ end)()
         headerTitle.Text = titleIcon .. " " .. titleText
         headerTitle.TextColor3 = Color3.fromRGB(130, 190, 230)
         headerTitle.Font = Enum.Font.GothamBold
-        headerTitle.TextSize = 10.5
+        headerTitle.TextSize = 10
         headerTitle.TextXAlignment = Enum.TextXAlignment.Left
         headerTitle.ZIndex = 10
 
@@ -3145,14 +3244,14 @@ end)()
 
         local body = Instance.new("TextLabel", card)
         body.Size = UDim2.new(1, -20, 1, -30)
-        body.Position = UDim2.new(0, 10, 0, 28)
+        body.Position = UDim2.new(0, 10, 0, 27)
         body.BackgroundTransparency = 1
         body.RichText = true
         body.Text = "Đang tải..."
         body.TextColor3 = Color3.fromRGB(200, 208, 220)
         body.Font = Enum.Font.Gotham
         body.TextSize = 10.5
-        body.LineHeight = 1.22
+        body.LineHeight = 1.2
         body.TextXAlignment = Enum.TextXAlignment.Left
         body.TextYAlignment = Enum.TextYAlignment.Top
         body.ZIndex = 10
@@ -3160,10 +3259,8 @@ end)()
         return card, body
     end
 
-    -- ==========================================
-    -- 1. THẺ NHÂN VẬT (LayoutOrder = 1)
-    -- ==========================================
-    local charCard, charBody = makeCard("👤", "THÔNG TIN NHÂN VẬT", 122, 1)
+    -- 1. THẺ NHÂN VẬT
+    local charCard, charBody = makeCard("👤", "THÔNG TIN NHÂN VẬT", 118, 1)
 
     local copyCoordBtn = makeSoftMiniBtn(
         charCard, "📍 Copy Tọa Độ",
@@ -3184,9 +3281,9 @@ end)()
     end)
 
     local hpBarBg = Instance.new("Frame", charCard)
-    hpBarBg.Size = UDim2.new(1, -20, 0, 5)
-    hpBarBg.Position = UDim2.new(0, 10, 1, -10)
-    hpBarBg.BackgroundColor3 = Color3.fromRGB(22, 22, 28)
+    hpBarBg.Size = UDim2.new(1, -20, 0, 4)
+    hpBarBg.Position = UDim2.new(0, 10, 1, -8)
+    hpBarBg.BackgroundColor3 = Color3.fromRGB(20, 22, 28)
     hpBarBg.BorderSizePixel = 0
     hpBarBg.ZIndex = 11
     Instance.new("UICorner", hpBarBg).CornerRadius = UDim.new(1, 0)
@@ -3198,10 +3295,8 @@ end)()
     hpBarFill.ZIndex = 11
     Instance.new("UICorner", hpBarFill).CornerRadius = UDim.new(1, 0)
 
-    -- ==========================================
-    -- 2. THẺ MÁY CHỦ (Đã chuyển nút 🔄 Reset NV lên vị trí của Copy ID)
-    -- ==========================================
-    local svCard, svBody = makeCard("🌐", "THÔNG TIN MÁY CHỦ", 108, 2)
+    -- 2. THẺ MÁY CHỦ
+    local svCard, svBody = makeCard("🌐", "THÔNG TIN MÁY CHỦ", 104, 2)
 
     local resetCharBtn = makeSoftMiniBtn(
         svCard, "🔄 Reset NV",
@@ -3219,23 +3314,19 @@ end)()
         end)
     end)
 
-    -- ==========================================
-    -- 3. THẺ TRẠNG THÁI & HỆ THỐNG (LayoutOrder = 3)
-    -- ==========================================
-    local sysCard, sysBody = makeCard("⚙️", "TRẠNG THÁI & HỆ THỐNG", 96, 3)
+    -- 3. THẺ TRẠNG THÁI & HỆ THỐNG
+    local sysCard, sysBody = makeCard("⚙️", "TRẠNG THÁI & HỆ THỐNG", 92, 3)
 
-    -- ==========================================
-    -- 4. KHUNG QUẢN LÝ & KẾT NỐI ID SERVER (Đã chuyển 📜 Copy ID xuống đây)
-    -- ==========================================
+    -- 4. KHUNG QUẢN LÝ & KẾT NỐI ID SERVER
     local idToolCard = Instance.new("Frame", page1)
-    idToolCard.Size = UDim2.new(0.92, 0, 0, 92)
+    idToolCard.Size = UDim2.new(0.93, 0, 0, 92)
     idToolCard.BackgroundColor3 = Theme.ItemBg
     idToolCard.LayoutOrder = 4
     idToolCard.ZIndex = 10
     Instance.new("UICorner", idToolCard).CornerRadius = UDim.new(0, 8)
     local itStroke = Instance.new("UIStroke", idToolCard)
     itStroke.Color = Theme.Stroke
-    itStroke.Thickness = 1.2
+    itStroke.Thickness = 1
     table.insert(RGBElements, {Type = "Info", Stroke = itStroke})
 
     local idHeader = Instance.new("TextLabel", idToolCard)
@@ -3252,11 +3343,11 @@ end)()
     local inputBg = Instance.new("Frame", idToolCard)
     inputBg.Size = UDim2.new(1, -16, 0, 28)
     inputBg.Position = UDim2.new(0, 8, 0, 24)
-    inputBg.BackgroundColor3 = Color3.fromRGB(24, 24, 32)
+    inputBg.BackgroundColor3 = Color3.fromRGB(20, 22, 30)
     inputBg.ZIndex = 10
     Instance.new("UICorner", inputBg).CornerRadius = UDim.new(0, 6)
     local ibStroke = Instance.new("UIStroke", inputBg)
-    ibStroke.Color = Color3.fromRGB(55, 60, 75)
+    ibStroke.Color = Theme.Stroke
     ibStroke.Thickness = 1
 
     local jobInput = Instance.new("TextBox", inputBg)
@@ -3264,7 +3355,7 @@ end)()
     jobInput.Position = UDim2.new(0.03, 0, 0, 0)
     jobInput.BackgroundTransparency = 1
     jobInput.PlaceholderText = "🔍 Dán ID Server cần vào..."
-    jobInput.PlaceholderColor3 = Color3.fromRGB(130, 135, 150)
+    jobInput.PlaceholderColor3 = Theme.TextDim
     jobInput.Text = ""
     jobInput.TextColor3 = Color3.fromRGB(195, 215, 235)
     jobInput.Font = Enum.Font.Gotham
@@ -3276,7 +3367,7 @@ end)()
     local clearBtn = makeSoftMiniBtn(
         inputBg, "XÓA",
         UDim2.new(0.59, 0, 0.14, 0), UDim2.new(0.17, 0, 0.72, 0),
-        Color3.fromRGB(200, 205, 215), Color3.fromRGB(42, 44, 56), Color3.fromRGB(80, 85, 105)
+        Color3.fromRGB(200, 205, 215), Color3.fromRGB(38, 40, 52), Color3.fromRGB(75, 80, 100)
     )
     clearBtn.MouseButton1Click:Connect(function()
         clickAnimate(clearBtn)
@@ -3286,7 +3377,7 @@ end)()
     local joinBtnNew = makeSoftMiniBtn(
         inputBg, "VÀO",
         UDim2.new(0.78, 0, 0.14, 0), UDim2.new(0.19, 0, 0.72, 0),
-        Color3.fromRGB(210, 245, 225), Color3.fromRGB(35, 115, 75), Color3.fromRGB(65, 175, 115)
+        Color3.fromRGB(210, 245, 225), Color3.fromRGB(35, 110, 72), Color3.fromRGB(65, 175, 115)
     )
     joinBtnNew.MouseButton1Click:Connect(function()
         clickAnimate(joinBtnNew)
@@ -3299,7 +3390,6 @@ end)()
         end
     end)
 
-    -- Hàng 3 nút bên dưới ô nhập: [📜 Copy ID SV] - [📌 Lưu ID SV Này] - [📤 Copy Lệnh Join]
     local btnCopyIdDown = makeSoftMiniBtn(
         idToolCard, "📜 Copy ID SV",
         UDim2.new(0, 8, 0, 58), UDim2.new(0.31, -4, 0, 24),
@@ -3340,21 +3430,18 @@ end)()
         end)
     end)
 
-    -- ==========================================
-    -- 5. CÁC Ô CHỌN DANH SÁCH (NẰM NGAY TRÊN CHỮ DANH SÁCH ID SERVER)
-    -- ==========================================
+    -- 5. DANH SÁCH & BỘ LỌC SERVER
     local svListCard = Instance.new("Frame", page1)
-    svListCard.Size = UDim2.new(0.92, 0, 0, 150)
+    svListCard.Size = UDim2.new(0.93, 0, 0, 150)
     svListCard.BackgroundColor3 = Theme.ItemBg
     svListCard.LayoutOrder = 5
     svListCard.ZIndex = 10
     Instance.new("UICorner", svListCard).CornerRadius = UDim.new(0, 8)
     local slStroke = Instance.new("UIStroke", svListCard)
     slStroke.Color = Theme.Stroke
-    slStroke.Thickness = 1.2
+    slStroke.Thickness = 1
     table.insert(RGBElements, {Type = "Info", Stroke = slStroke})
 
-    -- Khung chứa 4 ô chọn danh sách nằm trên tiêu đề Danh Sách ID Server
     local tabFilterRow = Instance.new("Frame", svListCard)
     tabFilterRow.Size = UDim2.new(1, -12, 0, 24)
     tabFilterRow.Position = UDim2.new(0, 6, 0, 6)
@@ -3369,17 +3456,17 @@ end)()
     local tabBtnLow, stLow = makeSoftMiniBtn(
         tabFilterRow, "📉 Ít Người",
         UDim2.new(0.25, 1, 0, 0), UDim2.new(0.25, -2, 1, 0),
-        Color3.fromRGB(175, 215, 240), Color3.fromRGB(26, 30, 40), Color3.fromRGB(65, 75, 95)
+        Color3.fromRGB(175, 215, 240), Color3.fromRGB(24, 26, 36), Color3.fromRGB(65, 75, 95)
     )
     local tabBtnHigh, stHigh = makeSoftMiniBtn(
         tabFilterRow, "📈 Đông Người",
         UDim2.new(0.50, 1, 0, 0), UDim2.new(0.25, -2, 1, 0),
-        Color3.fromRGB(175, 215, 240), Color3.fromRGB(26, 30, 40), Color3.fromRGB(65, 75, 95)
+        Color3.fromRGB(175, 215, 240), Color3.fromRGB(24, 26, 36), Color3.fromRGB(65, 75, 95)
     )
     local tabBtnPing, stPing = makeSoftMiniBtn(
         tabFilterRow, "⚡ Ping Thấp",
         UDim2.new(0.75, 1, 0, 0), UDim2.new(0.25, -1, 1, 0),
-        Color3.fromRGB(175, 215, 240), Color3.fromRGB(26, 30, 40), Color3.fromRGB(65, 75, 95)
+        Color3.fromRGB(175, 215, 240), Color3.fromRGB(24, 26, 36), Color3.fromRGB(65, 75, 95)
     )
 
     local filterButtons = {
@@ -3391,8 +3478,8 @@ end)()
     local function highlightFilterTab(activeBtn)
         for _, item in ipairs(filterButtons) do
             local isAct = (item.btn == activeBtn)
-            item.btn.BackgroundColor3 = isAct and Color3.fromRGB(35, 65, 90) or Color3.fromRGB(26, 30, 40)
-            item.btn.TextColor3 = isAct and Color3.fromRGB(220, 240, 255) or Color3.fromRGB(160, 175, 195)
+            item.btn.BackgroundColor3 = isAct and Color3.fromRGB(35, 65, 90) or Color3.fromRGB(24, 26, 36)
+            item.btn.TextColor3 = isAct and Color3.fromRGB(220, 240, 255) or Color3.fromRGB(150, 165, 185)
             item.st.Color = isAct and Color3.fromRGB(90, 165, 220) or Color3.fromRGB(65, 75, 95)
         end
     end
@@ -3414,7 +3501,7 @@ end)()
     svScroll.BackgroundTransparency = 1
     svScroll.BorderSizePixel = 0
     svScroll.ScrollBarThickness = 3
-    svScroll.ScrollBarImageColor3 = Color3.fromRGB(100, 150, 190)
+    svScroll.ScrollBarImageColor3 = Theme.Brand
     svScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
     svScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
     svScroll.ZIndex = 10
@@ -3436,7 +3523,7 @@ end)()
             lbl.Size = UDim2.new(1, 0, 1, 0)
             lbl.BackgroundTransparency = 1
             lbl.Text = isScanned and "Không tìm thấy server phù hợp!" or "Chưa có ID nào. Bấm 'Lưu ID SV Này' hoặc chọn ô bên trên!"
-            lbl.TextColor3 = Color3.fromRGB(135, 140, 155)
+            lbl.TextColor3 = Theme.TextDim
             lbl.Font = Enum.Font.Gotham
             lbl.TextSize = 9.5
             lbl.ZIndex = 10
@@ -3446,7 +3533,7 @@ end)()
         for idx, item in ipairs(listToRender) do
             local row = Instance.new("Frame", svScroll)
             row.Size = UDim2.new(1, -6, 0, 26)
-            row.BackgroundColor3 = Color3.fromRGB(26, 27, 36)
+            row.BackgroundColor3 = Color3.fromRGB(22, 24, 32)
             row.ZIndex = 10
             Instance.new("UICorner", row).CornerRadius = UDim.new(0, 5)
 
@@ -3524,7 +3611,6 @@ end)()
         end)
     end
 
-    -- Sự kiện bấm 4 ô chọn Danh Sách
     tabBtnSaved.MouseButton1Click:Connect(function()
         clickAnimate(tabBtnSaved)
         highlightFilterTab(tabBtnSaved)
@@ -3578,90 +3664,91 @@ end)()
     svListTitle.Text = "📋 DANH SÁCH ID SERVER ĐÃ LƯU (" .. #savedServers .. ")"
     renderServerList(savedServers, false)
 
-    -- ==========================================
-    -- VÒNG LẶP CẬP NHẬT THÔNG SỐ (DỊU MẮT)
-    -- ==========================================
+    local function updateTab1Stats()
+        local hp, maxHp, ws, jp = 0, 100, 0, 0
+        local coords = "0.0, 0.0, 0.0"
+        if player.Character then
+            local hum = player.Character:FindFirstChildOfClass("Humanoid")
+            if hum then
+                hp = math.floor(hum.Health)
+                maxHp = math.max(1, math.floor(hum.MaxHealth))
+                ws = math.floor(hum.WalkSpeed)
+                jp = math.floor(hum.JumpPower)
+            end
+            local root = getUniversalRoot(player.Character)
+            if root then
+                local pos = root.Position
+                coords = string.format("%.1f, %.1f, %.1f", pos.X, pos.Y, pos.Z)
+            end
+        end
+
+        local hpRatio = math.clamp(hp / maxHp, 0, 1)
+        local hpHex = hpRatio > 0.5 and "#78C896" or (hpRatio > 0.25 and "#DFB868" or "#DF7878")
+        TweenService:Create(hpBarFill, TweenInfo.new(0.25), {
+            Size = UDim2.new(hpRatio, 0, 1, 0),
+            BackgroundColor3 = Color3.fromHex(hpHex)
+        }):Play()
+
+        charBody.Text = string.format(
+            "<font color='#78B4DC'>• Tên:</font> %s <font color='#909AA8'>(@%s)</font>\n" ..
+            "<font color='#78B4DC'>• ID / Tuổi:</font> %d <font color='#D8B870'>(%d ngày)</font>\n" ..
+            "<font color='#78B4DC'>• Máu (HP):</font> <font color='%s'>%d / %d (%d%%)</font>\n" ..
+            "<font color='#78B4DC'>• Tốc chạy:</font> <font color='#78C896'>%d</font>   |   <font color='#78B4DC'>Nhảy:</font> <font color='#78C896'>%d</font>\n" ..
+            "<font color='#78B4DC'>• Tọa độ:</font> <font color='#D8B870'>%s</font>",
+            player.DisplayName, player.Name,
+            player.UserId, player.AccountAge,
+            hpHex, hp, maxHp, math.floor(hpRatio * 100),
+            ws, jp,
+            coords
+        )
+
+        local pingNum = 0
+        pcall(function()
+            if Stats and Stats:FindFirstChild("Network") and Stats.Network:FindFirstChild("ServerStatsItem") then
+                local raw = Stats.Network.ServerStatsItem["Data Ping"]:GetValueString()
+                pingNum = tonumber(raw and raw:match("%d+")) or math.floor(player:GetNetworkPing() * 1000)
+            else
+                pingNum = math.floor(player:GetNetworkPing() * 1000)
+            end
+        end)
+        local fpsHex = fps >= 45 and "#78C896" or (fps >= 25 and "#DFB868" or "#DF7878")
+        local pingHex = pingNum <= 120 and "#78C896" or (pingNum <= 220 and "#DFB868" or "#DF7878")
+        local shortJob = game.JobId ~= "" and (string.sub(game.JobId, 1, 18) .. "...") or "Private/Studio"
+
+        svBody.Text = string.format(
+            "<font color='#78B4DC'>• Tựa game:</font> <font color='#D8B870'>%s</font>\n" ..
+            "<font color='#78B4DC'>• FPS:</font> <font color='%s'>%d</font>   |   <font color='#78B4DC'>Ping:</font> <font color='%s'>%d ms</font>\n" ..
+            "<font color='#78B4DC'>• Người chơi:</font> %d / %d   |   <font color='#78B4DC'>PlaceId:</font> %d\n" ..
+            "<font color='#78B4DC'>• ID Server:</font> <font color='#909AA8'>%s</font>",
+            string.sub(gameName, 1, 26),
+            fpsHex, fps, pingHex, pingNum,
+            #Players:GetPlayers(), Players.MaxPlayers, game.PlaceId,
+            shortJob
+        )
+
+        local activeCount = 0
+        for _, v in pairs(State) do
+            if v == true then activeCount = activeCount + 1 end
+        end
+        local execTime = math.floor(workspace.DistributedGameTime)
+        local h = math.floor(execTime / 3600)
+        local m = math.floor((execTime % 3600) / 60)
+        local s = execTime % 60
+
+        sysBody.Text = string.format(
+            "<font color='#78B4DC'>• Executor:</font> <font color='#78C896'>%s</font>   |   <font color='#78B4DC'>Đang bật:</font> <font color='#D8B870'>%d tính năng</font>\n" ..
+            "<font color='#78B4DC'>• Treo máy:</font> %02d:%02d:%02d   |   <font color='#78B4DC'>Giờ:</font> %s\n" ..
+            "<font color='#78B4DC'>• Phiên bản:</font> <font color='#E09F67'>VIP PRO MAX V1.14.2</font>",
+            execName, activeCount,
+            h, m, s, os.date("%H:%M:%S")
+        )
+    end
+
+    updateTab1Stats()
     task.spawn(function()
-        local Stats = game:GetService("Stats")
         while task.wait(0.5) do
             if page1.Visible then
-                local hp, maxHp, ws, jp = 0, 100, 0, 0
-                local coords = "0.0, 0.0, 0.0"
-                if player.Character then
-                    local hum = player.Character:FindFirstChildOfClass("Humanoid")
-                    if hum then
-                        hp = math.floor(hum.Health)
-                        maxHp = math.max(1, math.floor(hum.MaxHealth))
-                        ws = math.floor(hum.WalkSpeed)
-                        jp = math.floor(hum.JumpPower)
-                    end
-                    local root = getUniversalRoot(player.Character)
-                    if root then
-                        local pos = root.Position
-                        coords = string.format("%.1f, %.1f, %.1f", pos.X, pos.Y, pos.Z)
-                    end
-                end
-
-                local hpRatio = math.clamp(hp / maxHp, 0, 1)
-                local hpHex = hpRatio > 0.5 and "#78C896" or (hpRatio > 0.25 and "#DFB868" or "#DF7878")
-                TweenService:Create(hpBarFill, TweenInfo.new(0.25), {
-                    Size = UDim2.new(hpRatio, 0, 1, 0),
-                    BackgroundColor3 = Color3.fromHex(hpHex)
-                }):Play()
-
-                charBody.Text = string.format(
-                    "<font color='#78B4DC'>• Tên:</font> %s <font color='#909AA8'>(@%s)</font>\n" ..
-                    "<font color='#78B4DC'>• ID / Tuổi:</font> %d <font color='#D8B870'>(%d ngày)</font>\n" ..
-                    "<font color='#78B4DC'>• Máu (HP):</font> <font color='%s'>%d / %d (%d%%)</font>\n" ..
-                    "<font color='#78B4DC'>• Tốc chạy:</font> <font color='#78C896'>%d</font>   |   <font color='#78B4DC'>Nhảy:</font> <font color='#78C896'>%d</font>\n" ..
-                    "<font color='#78B4DC'>• Tọa độ:</font> <font color='#D8B870'>%s</font>",
-                    player.DisplayName, player.Name,
-                    player.UserId, player.AccountAge,
-                    hpHex, hp, maxHp, math.floor(hpRatio * 100),
-                    ws, jp,
-                    coords
-                )
-
-                local pingNum = 0
-                pcall(function()
-                    if Stats and Stats:FindFirstChild("Network") and Stats.Network:FindFirstChild("ServerStatsItem") then
-                        local raw = Stats.Network.ServerStatsItem["Data Ping"]:GetValueString()
-                        pingNum = tonumber(raw and raw:match("%d+")) or math.floor(player:GetNetworkPing() * 1000)
-                    else
-                        pingNum = math.floor(player:GetNetworkPing() * 1000)
-                    end
-                end)
-                local fpsHex = fps >= 45 and "#78C896" or (fps >= 25 and "#DFB868" or "#DF7878")
-                local pingHex = pingNum <= 120 and "#78C896" or (pingNum <= 220 and "#DFB868" or "#DF7878")
-                local shortJob = game.JobId ~= "" and (string.sub(game.JobId, 1, 18) .. "...") or "Private/Studio"
-
-                svBody.Text = string.format(
-                    "<font color='#78B4DC'>• Tựa game:</font> <font color='#D8B870'>%s</font>\n" ..
-                    "<font color='#78B4DC'>• FPS:</font> <font color='%s'>%d</font>   |   <font color='#78B4DC'>Ping:</font> <font color='%s'>%d ms</font>\n" ..
-                    "<font color='#78B4DC'>• Người chơi:</font> %d / %d   |   <font color='#78B4DC'>PlaceId:</font> %d\n" ..
-                    "<font color='#78B4DC'>• ID Server:</font> <font color='#909AA8'>%s</font>",
-                    string.sub(gameName, 1, 26),
-                    fpsHex, fps, pingHex, pingNum,
-                    #Players:GetPlayers(), Players.MaxPlayers, game.PlaceId,
-                    shortJob
-                )
-
-                local activeCount = 0
-                for _, v in pairs(State) do
-                    if v == true then activeCount = activeCount + 1 end
-                end
-                local execTime = math.floor(workspace.DistributedGameTime)
-                local h = math.floor(execTime / 3600)
-                local m = math.floor((execTime % 3600) / 60)
-                local s = execTime % 60
-
-                sysBody.Text = string.format(
-                    "<font color='#78B4DC'>• Executor:</font> <font color='#78C896'>%s</font>   |   <font color='#78B4DC'>Đang bật:</font> <font color='#D8B870'>%d tính năng</font>\n" ..
-                    "<font color='#78B4DC'>• Treo máy:</font> %02d:%02d:%02d   |   <font color='#78B4DC'>Giờ:</font> %s\n" ..
-                    "<font color='#78B4DC'>• Phiên bản:</font> <font color='#E09F67'>VIP PRO MAX V1.14.0</font>",
-                    execName, activeCount,
-                    h, m, s, os.date("%H:%M:%S")
-                )
+                updateTab1Stats()
             end
         end
     end)
