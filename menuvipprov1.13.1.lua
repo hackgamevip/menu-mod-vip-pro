@@ -3989,3 +3989,309 @@ end)()
         end
     end)
 end)()
+
+-- ==========================================
+-- [BẢN VÁ GỘP CHUNG CÔNG TẮC & THANH TRƯỢT - TAB NHÂN VẬT]
+-- Dán vào cuối Script hoặc thay thế phần [TAB 3: NHÂN VẬT]
+-- ==========================================
+;(function()
+    if not page3 then return end
+
+    -- Xóa các ô tách rời cũ trong Tab Nhân Vật (nếu có)
+    for _, child in ipairs(page3:GetChildren()) do
+        if child:IsA("Frame") then
+            child:Destroy()
+        end
+    end
+
+    -- Hàm tạo Khung Gộp: Công tắc Bật/Tắt (ở trên) + Thanh trượt (ở dưới)
+    local function createCombinedToggleSlider(parent, toggleText, toggleVar, sliderText, min, max, sliderVar, toggleCb, sliderCb)
+        local card = Instance.new("Frame", parent)
+        card.Size = UDim2.new(0.94, 0, 0, 64)
+        card.BackgroundColor3 = Theme.ItemBg
+        card.ZIndex = 10
+        Instance.new("UICorner", card).CornerRadius = UDim.new(0, 8)
+        local stroke = Instance.new("UIStroke", card)
+        stroke.Thickness = 1
+
+        -- 1. NỬA TRÊN: NÚT BẬT / TẮT
+        local topBtn = Instance.new("TextButton", card)
+        topBtn.Size = UDim2.new(1, 0, 0, 31)
+        topBtn.BackgroundTransparency = 1
+        topBtn.Text = ""
+        topBtn.AutoButtonColor = false
+        topBtn.ZIndex = 11
+
+        local leftBar = Instance.new("Frame", topBtn)
+        leftBar.Size = UDim2.new(0, 3, 0, 15)
+        leftBar.Position = UDim2.new(0, 6, 0.5, -7.5)
+        leftBar.BorderSizePixel = 0
+        leftBar.ZIndex = 12
+        Instance.new("UICorner", leftBar).CornerRadius = UDim.new(1, 0)
+
+        local title = Instance.new("TextLabel", topBtn)
+        title.Size = UDim2.new(1, -70, 1, 0)
+        title.Position = UDim2.new(0, 15, 0, 0)
+        title.BackgroundTransparency = 1
+        title.Text = toggleText
+        title.TextColor3 = Theme.TextTitle
+        title.Font = Enum.Font.GothamBold
+        title.TextSize = 10.5
+        title.TextXAlignment = Enum.TextXAlignment.Left
+        title.TextTruncate = Enum.TextTruncate.AtEnd
+        title.ZIndex = 12
+
+        local switchTrack = Instance.new("Frame", topBtn)
+        switchTrack.Size = UDim2.new(0, 38, 0, 18)
+        switchTrack.Position = UDim2.new(1, -46, 0.5, -9)
+        switchTrack.BorderSizePixel = 0
+        switchTrack.ZIndex = 12
+        Instance.new("UICorner", switchTrack).CornerRadius = UDim.new(1, 0)
+        local switchStroke = Instance.new("UIStroke", switchTrack)
+        switchStroke.Thickness = 1
+        switchStroke.Transparency = 0.25
+
+        local switchKnob = Instance.new("Frame", switchTrack)
+        switchKnob.Size = UDim2.new(0, 12, 0, 12)
+        switchKnob.BorderSizePixel = 0
+        switchKnob.ZIndex = 13
+        Instance.new("UICorner", switchKnob).CornerRadius = UDim.new(1, 0)
+
+        -- Vạch ngăn cách mảnh giữa phần Bật/Tắt và Thanh trượt
+        local divider = Instance.new("Frame", card)
+        divider.Size = UDim2.new(1, -16, 0, 1)
+        divider.Position = UDim2.new(0, 8, 0, 31)
+        divider.BackgroundColor3 = Theme.Stroke
+        divider.BackgroundTransparency = 0.35
+        divider.BorderSizePixel = 0
+        divider.ZIndex = 11
+
+        -- 2. NỬA DƯỚI: THANH TRƯỢT (SLIDER)
+        local sliderArea = Instance.new("Frame", card)
+        sliderArea.Size = UDim2.new(1, 0, 0, 32)
+        sliderArea.Position = UDim2.new(0, 0, 0, 32)
+        sliderArea.BackgroundTransparency = 1
+        sliderArea.ZIndex = 11
+
+        local sTitle = Instance.new("TextLabel", sliderArea)
+        sTitle.Size = UDim2.new(0.68, 0, 0, 14)
+        sTitle.Position = UDim2.new(0, 15, 0, 2)
+        sTitle.BackgroundTransparency = 1
+        sTitle.Text = "↳ " .. sliderText
+        sTitle.Font = Enum.Font.GothamSemibold
+        sTitle.TextSize = 9.5
+        sTitle.TextXAlignment = Enum.TextXAlignment.Left
+        sTitle.ZIndex = 12
+
+        local valBadge = Instance.new("Frame", sliderArea)
+        valBadge.Size = UDim2.new(0, 44, 0, 14)
+        valBadge.Position = UDim2.new(1, -52, 0, 2)
+        valBadge.BackgroundColor3 = Color3.fromRGB(16, 18, 26)
+        valBadge.ZIndex = 12
+        Instance.new("UICorner", valBadge).CornerRadius = UDim.new(0, 4)
+        local valStroke = Instance.new("UIStroke", valBadge)
+        valStroke.Color = Theme.Stroke
+        valStroke.Thickness = 0.8
+
+        local valLabel = Instance.new("TextLabel", valBadge)
+        valLabel.Size = UDim2.new(1, 0, 1, 0)
+        valLabel.BackgroundTransparency = 1
+        valLabel.Text = tostring(State[sliderVar])
+        valLabel.Font = Enum.Font.GothamBold
+        valLabel.TextSize = 9.5
+        valLabel.ZIndex = 13
+
+        local track = Instance.new("Frame", sliderArea)
+        track.Size = UDim2.new(1, -26, 0, 5)
+        track.Position = UDim2.new(0, 13, 0, 21)
+        track.BackgroundColor3 = Color3.fromRGB(15, 17, 24)
+        track.ZIndex = 12
+        Instance.new("UICorner", track).CornerRadius = UDim.new(1, 0)
+
+        local initPos = math.clamp((State[sliderVar] - min) / (max - min), 0, 1)
+        local fill = Instance.new("Frame", track)
+        fill.Size = UDim2.new(initPos, 0, 1, 0)
+        fill.ZIndex = 13
+        Instance.new("UICorner", fill).CornerRadius = UDim.new(1, 0)
+
+        local knob = Instance.new("Frame", track)
+        knob.Size = UDim2.new(0, 11, 0, 11)
+        knob.AnchorPoint = Vector2.new(0.5, 0.5)
+        knob.Position = UDim2.new(initPos, 0, 0.5, 0)
+        knob.BackgroundColor3 = Color3.fromRGB(240, 248, 255)
+        knob.ZIndex = 14
+        Instance.new("UICorner", knob).CornerRadius = UDim.new(1, 0)
+        local knobStroke = Instance.new("UIStroke", knob)
+        knobStroke.Thickness = 1.4
+
+        local active = State[toggleVar] and true or false
+
+        local function syncVisual(isOn, instant)
+            local tInfo = TweenInfo.new(instant and 0 or 0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+            local trackCol = isOn and Color3.fromRGB(34, 118, 82) or Color3.fromRGB(18, 20, 28)
+            local knobCol = isOn and Color3.fromRGB(240, 255, 245) or Color3.fromRGB(125, 135, 155)
+            local knobPos = isOn and UDim2.new(1, -15, 0.5, -6) or UDim2.new(0, 3, 0.5, -6)
+            local barCol = isOn and Theme.AccentOn or Color3.fromRGB(60, 66, 84)
+            local bgCol = isOn and (Theme.ItemActive or Color3.fromRGB(24, 42, 40)) or Theme.ItemBg
+            local borderCol = isOn and Color3.fromRGB(54, 140, 98) or Theme.Stroke
+            local sliderAccent = isOn and Theme.AccentOn or Theme.Brand
+
+            TweenService:Create(switchTrack, tInfo, {BackgroundColor3 = trackCol}):Play()
+            TweenService:Create(switchStroke, tInfo, {Color = isOn and Theme.AccentOn or Theme.Stroke}):Play()
+            TweenService:Create(switchKnob, tInfo, {Position = knobPos, BackgroundColor3 = knobCol}):Play()
+            TweenService:Create(leftBar, tInfo, {BackgroundColor3 = barCol}):Play()
+            TweenService:Create(card, tInfo, {BackgroundColor3 = bgCol}):Play()
+            TweenService:Create(fill, tInfo, {BackgroundColor3 = sliderAccent}):Play()
+            TweenService:Create(knobStroke, tInfo, {Color = sliderAccent}):Play()
+            TweenService:Create(valLabel, tInfo, {TextColor3 = sliderAccent}):Play()
+            TweenService:Create(sTitle, tInfo, {TextColor3 = isOn and Theme.TextTitle or Theme.TextDim}):Play()
+
+            if not State.RGB then
+                TweenService:Create(stroke, tInfo, {Color = borderCol}):Play()
+            end
+        end
+
+        syncVisual(active, true)
+        table.insert(RGBElements, {Type = "Toggle", Stroke = stroke, State = function() return State[toggleVar] end})
+
+        -- Sự kiện bấm Bật/Tắt ở nửa trên
+        topBtn.MouseButton1Click:Connect(function()
+            clickAnimate(card)
+            State[toggleVar] = not State[toggleVar]
+            active = State[toggleVar]
+            syncVisual(active, false)
+            if active then
+                MakeToast("Đã Bật", toggleText, Theme.AccentOn)
+            else
+                MakeToast("Đã Tắt", toggleText, Theme.AccentOff)
+            end
+            if State.AutoSave then saveConfig() end
+            if toggleCb then toggleCb(active) end
+        end)
+
+        -- Sự kiện kéo Thanh trượt ở nửa dưới
+        local dragging = false
+        local function updateSlider(input)
+            local pos = math.clamp((input.Position.X - track.AbsolutePosition.X) / track.AbsoluteSize.X, 0, 1)
+            local value = math.floor(min + ((max - min) * pos))
+            valLabel.Text = tostring(value)
+            TweenService:Create(fill, TweenInfo.new(0.08), {Size = UDim2.new(pos, 0, 1, 0)}):Play()
+            TweenService:Create(knob, TweenInfo.new(0.08), {Position = UDim2.new(pos, 0, 0.5, 0)}):Play()
+            State[sliderVar] = value
+            if sliderCb then sliderCb(value) end
+            if State.AutoSave then saveConfig() end
+        end
+
+        sliderArea.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                dragging = true
+                updateSlider(input)
+            end
+        end)
+        UIS.InputChanged:Connect(function(input)
+            if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+                updateSlider(input)
+            end
+        end)
+        UIS.InputEnded:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                dragging = false
+            end
+        end)
+
+        if active and toggleCb then task.spawn(toggleCb, active) end
+        if sliderCb then task.spawn(sliderCb, State[sliderVar]) end
+        return card
+    end
+
+    -- ==========================================
+    -- KHỞI TẠO CÁC Ô GỘP TRONG TAB 3 (NHÂN VẬT)
+    -- ==========================================
+
+    -- 1. Bay + Tốc độ bay
+    createCombinedToggleSlider(page3, "🕊️ Bay trên bầu trời (Fly)", "Fly", "Tốc độ bay", 10, 1000, "FlySpeed", function(v)
+        local char = player.Character
+        if char then
+            local root = getUniversalRoot(char)
+            local hum = char:FindFirstChildOfClass("Humanoid")
+            if v then
+                if root and not root:FindFirstChild("FlyBodyVelocity") then
+                    local bv = Instance.new("BodyVelocity")
+                    bv.Name = "FlyBodyVelocity"
+                    bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+                    bv.Velocity = Vector3.zero
+                    bv.Parent = root
+
+                    local bg = Instance.new("BodyGyro")
+                    bg.Name = "FlyBodyGyro"
+                    bg.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
+                    bg.P = 10000
+                    bg.D = 100
+                    bg.Parent = root
+                end
+            else
+                if root and root:FindFirstChild("FlyBodyVelocity") then root.FlyBodyVelocity:Destroy() end
+                if root and root:FindFirstChild("FlyBodyGyro") then root.FlyBodyGyro:Destroy() end
+                if hum then hum.PlatformStand = false end
+            end
+        end
+    end)
+
+    -- 2. Chạy nhanh + Tốc độ chạy
+    local defaultWalkSpeed = 16
+    createCombinedToggleSlider(page3, "🏃 Chạy nhanh (WalkSpeed)", "Speed", "Tốc độ chạy", 1, 1000, "SpeedValue", function(v)
+        local char = player.Character
+        local hum = char and char:FindFirstChildOfClass("Humanoid")
+        if hum then
+            if v then
+                if hum.WalkSpeed ~= State.SpeedValue then defaultWalkSpeed = hum.WalkSpeed end
+                hum.WalkSpeed = State.SpeedValue
+            else
+                hum.WalkSpeed = defaultWalkSpeed
+            end
+        end
+    end, function(val)
+        if State.Speed and player.Character then
+            local hum = player.Character:FindFirstChildOfClass("Humanoid")
+            if hum then hum.WalkSpeed = val end
+        end
+    end)
+
+    -- 3. Nhảy cao + Lực nhảy
+    local defaultJumpPower = 50
+    createCombinedToggleSlider(page3, "🦘 Nhảy cao (JumpPower)", "Jump", "Lực nhảy", 1, 1000, "JumpValue", function(v)
+        if player.Character and player.Character:FindFirstChild("Humanoid") then
+            if v then
+                defaultJumpPower = player.Character.Humanoid.JumpPower
+            else
+                player.Character.Humanoid.UseJumpPower = true
+                player.Character.Humanoid.JumpPower = defaultJumpPower
+            end
+        end
+    end)
+
+    -- 4. Lướt liên tục + Tốc độ lướt
+    createCombinedToggleSlider(page3, "💨 Lướt liên tục (Auto Dash)", "AutoDash", "Tốc độ lướt", 1, 50, "DashSpeed")
+
+    -- 5. Đánh xa + Kích thước vũ khí
+    createCombinedToggleSlider(page3, "⚔️ Đánh xa (Reach Vũ Khí)", "Reach", "Kích thước vũ khí", 0, 300, "ReachSize")
+
+    -- 6. Hitbox + Kích thước Hitbox
+    createCombinedToggleSlider(page3, "🎯 Mở rộng Hitbox", "Hitbox", "Kích thước Hitbox", 0, 100, "HitboxSize")
+
+    -- 7. Xoay vòng tròn + Tốc độ xoay
+    createCombinedToggleSlider(page3, "🌪️ Xoay vòng tròn (SpinBot)", "SpinBot", "Tốc độ xoay", 0, 100, "SpinSpeed")
+
+    -- 8. Ánh sáng quanh người (Gộp Công tắc + Phạm vi sáng + Độ sáng)
+    createCombinedToggleSlider(page3, "💡 Ánh sáng quanh người", "PlayerLight", "Phạm vi sáng (Max 60)", 0, 60, "LightRange", function(v)
+        if not v and player.Character then
+            local root = getUniversalRoot(player.Character)
+            if root then
+                local light = root:FindFirstChild("PlayerPointLight")
+                if light then light:Destroy() end
+            end
+        end
+    end)
+    createSlider(page3, "↳ Độ sáng đèn", 0, 5, "LightBrightness")
+    createCycleBtn(page3, "🎨 Đổi màu sáng:", PlayerLightColors, "LightColorIdx")
+end)()
