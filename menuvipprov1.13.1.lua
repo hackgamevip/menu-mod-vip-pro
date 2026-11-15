@@ -1,7 +1,9 @@
 -- ==========================================
--- MENU VIP PRO MAX V1.15.0 (MODERN BENTO & SIDEBAR UI)
+-- MENU VIP PRO MAX V1.15.0 (FIXED GUI DISPLAY)
 -- ==========================================
-repeat task.wait() until game:IsLoaded()
+if not game:IsLoaded() then
+    pcall(function() game.Loaded:Wait() end)
+end
 
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
@@ -9,13 +11,25 @@ local RunService = game:GetService("RunService")
 local Lighting = game:GetService("Lighting")
 local UIS = game:GetService("UserInputService")
 local VirtualUser = game:GetService("VirtualUser")
-local Vim = game:GetService("VirtualInputManager")
 local TeleportService = game:GetService("TeleportService")
 local HttpService = game:GetService("HttpService")
 local MarketplaceService = game:GetService("MarketplaceService")
 local Stats = game:GetService("Stats")
+local GuiService = game:GetService("GuiService")
+local SoundService = game:GetService("SoundService")
 
+-- Bọc an toàn VirtualInputManager để không làm sập script nếu bị chặn
+local Vim = nil
+pcall(function()
+    Vim = game:GetService("VirtualInputManager")
+end)
+
+-- Đảm bảo LocalPlayer luôn tồn tại trước khi lấy PlayerGui
 local player = Players.LocalPlayer
+while not player do
+    task.wait(0.1)
+    player = Players.LocalPlayer
+end
 
 local State = {
     Instant = false, Noclip = false, LowGfx = false, Speed = false, Jump = false,
@@ -37,7 +51,6 @@ local State = {
     MiniHUD = false, AutoReconnect = true, MagnetOrbs = false
 }
 
--- Bảng màu Modern Dark Glass (Dịu mắt, có chiều sâu)
 local Theme = {
     MainBg = Color3.fromRGB(15, 17, 24),
     SidebarBg = Color3.fromRGB(19, 21, 30),
@@ -66,26 +79,10 @@ local PlayerLightColors = {
 }
 
 local TpPositions = {
-    {
-        Name = "Sau lưng",
-        IsHorizontal = false,
-        GetOffset = function(d) return CFrame.new(0, 0, d) end
-    },
-    {
-        Name = "Trước mặt",
-        IsHorizontal = false,
-        GetOffset = function(d) return CFrame.new(0, 0, -d) * CFrame.Angles(0, math.pi, 0) end
-    },
-    {
-        Name = "Trên đầu",
-        IsHorizontal = true,
-        GetOffset = function(d) return CFrame.new(0, d, 0) * CFrame.Angles(math.rad(-90), 0, 0) end
-    },
-    {
-        Name = "Dưới chân",
-        IsHorizontal = true,
-        GetOffset = function(d) return CFrame.new(0, -d, 0) * CFrame.Angles(math.rad(90), 0, 0) end
-    }
+    {Name = "Sau lưng", IsHorizontal = false, GetOffset = function(d) return CFrame.new(0, 0, d) end},
+    {Name = "Trước mặt", IsHorizontal = false, GetOffset = function(d) return CFrame.new(0, 0, -d) * CFrame.Angles(0, math.pi, 0) end},
+    {Name = "Trên đầu", IsHorizontal = true, GetOffset = function(d) return CFrame.new(0, d, 0) * CFrame.Angles(math.rad(-90), 0, 0) end},
+    {Name = "Dưới chân", IsHorizontal = true, GetOffset = function(d) return CFrame.new(0, -d, 0) * CFrame.Angles(math.rad(90), 0, 0) end}
 }
 
 local RGBElements = {}
@@ -96,19 +93,38 @@ local cachedPrompts = {}
 local xrayMats = {}
 local OriginalGFX = {} 
 
-local guiParent = player:WaitForChild("PlayerGui")
-pcall(function()
+-- Kiểm tra quyền gắn UI thực sự, nếu lỗi tự động lùi về PlayerGui để luôn hiện Menu
+local playerGui = player:WaitForChild("PlayerGui", 10)
+local guiParent = playerGui
+
+local function resolveGuiParent()
+    local testGui = Instance.new("ScreenGui")
     if gethui and type(gethui) == "function" then
-        local hui = gethui()
-        if hui then guiParent = hui end
-    elseif game:GetService("CoreGui") then
-        guiParent = game:GetService("CoreGui")
+        local ok, hui = pcall(gethui)
+        if ok and hui and pcall(function() testGui.Parent = hui end) then
+            testGui:Destroy()
+            return hui
+        end
     end
-end)
+    local okCore, core = pcall(function() return game:GetService("CoreGui") end)
+    if okCore and core and pcall(function() testGui.Parent = core end) then
+        testGui:Destroy()
+        return core
+    end
+    testGui:Destroy()
+    return playerGui
+end
+
+guiParent = resolveGuiParent()
 
 pcall(function()
     for _, v in pairs(guiParent:GetChildren()) do
         if v.Name == "MenuVipProMax" then v:Destroy() end
+    end
+    if playerGui and guiParent ~= playerGui then
+        for _, v in pairs(playerGui:GetChildren()) do
+            if v.Name == "MenuVipProMax" then v:Destroy() end
+        end
     end
 end)
 
