@@ -84,6 +84,7 @@ local TpPositions = {
 }
 
 local RGBElements = {}
+local BrandCallbacks = {}
 local SyncCallbacks = {}
 local ActiveESPs = {}
 local SavedTpESPs = {}
@@ -92,6 +93,29 @@ local originalToolSizes = {}
 local cachedPrompts = {}
 local xrayMats = {}
 local OriginalGFX = {}
+
+local function cleanRGBElements()
+    local cleaned = {}
+    for _, obj in ipairs(RGBElements) do
+        if obj.Stroke and obj.Stroke.Parent then
+            table.insert(cleaned, obj)
+        end
+    end
+    RGBElements = cleaned
+end
+
+local function registerBrandUpdater(fn)
+    table.insert(BrandCallbacks, fn)
+end
+
+local function isDragUpdateInput(input, activeInput)
+    if not activeInput then return false end
+    if input == activeInput then return true end
+    if activeInput.UserInputType == Enum.UserInputType.MouseButton1 and input.UserInputType == Enum.UserInputType.MouseMovement then
+        return true
+    end
+    return false
+end
 
 local function utf8SafeTruncate(str, maxChars)
     if not str then return "" end
@@ -238,8 +262,9 @@ local screenOverlay = Instance.new("Frame", gui)
 screenOverlay.Size = UDim2.new(2, 0, 2, 0); screenOverlay.Position = UDim2.new(-0.5, 0, -0.5, 0)
 screenOverlay.BackgroundColor3 = Color3.new(0, 0, 0); screenOverlay.ZIndex = 0; screenOverlay.Visible = false
 
+-- Đặt mặc định ở Y = 0.12 để tránh đè lên nút "Chỉ mục / Nhiệm vụ" bên trái màn hình game
 local openBtn = Instance.new("TextButton", gui)
-openBtn.Size = UDim2.new(0, 44, 0, 44); openBtn.Position = UDim2.new(0, 15, 0.26, 0)
+openBtn.Size = UDim2.new(0, 44, 0, 44); openBtn.Position = UDim2.new(0, 14, 0.12, 0)
 openBtn.Text = "🇻🇳"; openBtn.BackgroundColor3 = Theme.HeaderBg; openBtn.BackgroundTransparency = 0.08
 openBtn.TextColor3 = Color3.fromRGB(255, 255, 255); openBtn.Font = Enum.Font.GothamBold; openBtn.TextSize = 20; openBtn.ZIndex = 10
 Instance.new("UICorner", openBtn).CornerRadius = UDim.new(0, 14)
@@ -257,19 +282,19 @@ local function clickAnimate(obj)
 end
 
 do
-    local btnDragToggle, btnDragStart, btnStartPos
+    local btnDragInput, btnDragStart, btnStartPos = nil, nil, nil
     openBtn.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            btnDragToggle = true; btnDragStart = input.Position; btnStartPos = openBtn.Position
+        if not btnDragInput and (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
+            btnDragInput = input; btnDragStart = input.Position; btnStartPos = openBtn.Position
         end
     end)
     UIS.InputChanged:Connect(function(input)
-        if btnDragToggle and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        if isDragUpdateInput(input, btnDragInput) then
             openBtn.Position = UDim2.new(btnStartPos.X.Scale, btnStartPos.X.Offset + (input.Position.X - btnDragStart.X), btnStartPos.Y.Scale, btnStartPos.Y.Offset + (input.Position.Y - btnDragStart.Y))
         end
     end)
     UIS.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then btnDragToggle = false end
+        if input == btnDragInput then btnDragInput = nil end
     end)
 end
 
@@ -335,7 +360,7 @@ do
     subTitleLabel.TextColor3 = Theme.TextDim; subTitleLabel.Font = Enum.Font.GothamSemibold; subTitleLabel.TextSize = 8.5; subTitleLabel.TextXAlignment = Enum.TextXAlignment.Left; subTitleLabel.ZIndex = 12
 
     local headerStatPill = Instance.new("Frame", header)
-    headerStatPill.Size = UDim2.new(0, 110, 0, 22); headerStatPill.Position = UDim2.new(1, -196, 0.5, -11)
+    headerStatPill.Size = UDim2.new(0, 110, 0, 22); headerStatPill.Position = UDim2.new(1, -200, 0.5, -11)
     headerStatPill.BackgroundColor3 = Color3.fromRGB(14, 16, 25); headerStatPill.ZIndex = 12
     Instance.new("UICorner", headerStatPill).CornerRadius = UDim.new(1, 0)
     local hspStroke = Instance.new("UIStroke", headerStatPill); hspStroke.Color = Theme.Stroke; hspStroke.Thickness = 1
@@ -345,12 +370,13 @@ do
     headerStatText.RichText = true; headerStatText.Text = "<font color='#38CC88'>60 FPS</font> • <font color='#58B6F2'>0ms</font>"
     headerStatText.TextColor3 = Theme.TextTitle; headerStatText.Font = Enum.Font.GothamBold; headerStatText.TextSize = 9; headerStatText.ZIndex = 13
 
+    -- Huy hiệu V1.17 viết hoa rõ nét, khung rộng 48px và viền mảnh 0.8 để chữ không bị dính trên Mobile
     local verBadge = Instance.new("TextLabel", header)
-    verBadge.Size = UDim2.new(0, 44, 0, 20); verBadge.Position = UDim2.new(1, -78, 0.5, -10)
-    verBadge.BackgroundColor3 = Theme.BrandSoft; verBadge.Text = "v1.17"; verBadge.TextColor3 = Theme.Brand
-    verBadge.Font = Enum.Font.GothamBold; verBadge.TextSize = 9.5; verBadge.ZIndex = 12
+    verBadge.Size = UDim2.new(0, 48, 0, 20); verBadge.Position = UDim2.new(1, -83, 0.5, -10)
+    verBadge.BackgroundColor3 = Theme.BrandSoft; verBadge.Text = "V1.17"; verBadge.TextColor3 = Theme.Brand
+    verBadge.Font = Enum.Font.GothamBold; verBadge.TextSize = 10; verBadge.ZIndex = 12
     Instance.new("UICorner", verBadge).CornerRadius = UDim.new(0, 7)
-    local verStroke = Instance.new("UIStroke", verBadge); verStroke.Color = Theme.Brand; verStroke.Thickness = 1; verStroke.Transparency = 0.25
+    local verStroke = Instance.new("UIStroke", verBadge); verStroke.Color = Theme.Brand; verStroke.Thickness = 0.8; verStroke.Transparency = 0.3
 
     local minBtn = Instance.new("TextButton", header)
     minBtn.Size = UDim2.new(0, 24, 0, 22); minBtn.Position = UDim2.new(1, -29, 0.5, -11)
@@ -360,24 +386,24 @@ do
     local minStroke = Instance.new("UIStroke", minBtn); minStroke.Color = Theme.Stroke; minStroke.Thickness = 1
 
     do
-        local dragToggle, dragStart, startPos
+        local dragInput, dragStart, startPos = nil, nil, nil
         header.InputBegan:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                dragToggle = true; dragStart = input.Position; startPos = frame.Position
+            if not dragInput and (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
+                dragInput = input; dragStart = input.Position; startPos = frame.Position
             end
         end)
         UIS.InputChanged:Connect(function(input)
-            if dragToggle and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            if isDragUpdateInput(input, dragInput) then
                 frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + (input.Position.X - dragStart.X), startPos.Y.Scale, startPos.Y.Offset + (input.Position.Y - dragStart.Y))
                 OPEN_POS = frame.Position
             end
         end)
         UIS.InputEnded:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then dragToggle = false end
+            if input == dragInput then dragInput = nil end
         end)
     end
 
-    -- SIDEBAR BENTO PILL HIỆN ĐẠI (CÓ HỘP ICON & VIỀN SÁNG)
+    -- SIDEBAR BENTO PILL HIỆN ĐẠI (TỐI ƯU KHOẢNG THỞ 9 TAB KHÔNG CHẠM ĐÁY)
     local sidebar = Instance.new("Frame", frame)
     sidebar.Size = UDim2.new(0, 114, 1, -38); sidebar.Position = UDim2.new(0, 0, 0, 38)
     sidebar.BackgroundColor3 = Theme.SidebarBg; sidebar.BorderSizePixel = 0; sidebar.ZIndex = 10
@@ -401,22 +427,22 @@ do
 
     local tabPad = Instance.new("UIPadding", tabBar)
     tabPad.PaddingLeft = UDim.new(0, 6); tabPad.PaddingRight = UDim.new(0, 7)
-    tabPad.PaddingTop = UDim.new(0, 5); tabPad.PaddingBottom = UDim.new(0, 6)
+    tabPad.PaddingTop = UDim.new(0, 4); tabPad.PaddingBottom = UDim.new(0, 4)
 
     local tabLayout = Instance.new("UIListLayout", tabBar)
     tabLayout.FillDirection = Enum.FillDirection.Vertical
     tabLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
     tabLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    tabLayout.Padding = UDim.new(0, 3)
+    tabLayout.Padding = UDim.new(0, 2.5)
     tabLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-        tabBar.CanvasSize = UDim2.new(0, 0, 0, tabLayout.AbsoluteContentSize.Y + 12)
+        tabBar.CanvasSize = UDim2.new(0, 0, 0, tabLayout.AbsoluteContentSize.Y + 8)
     end)
 
     local allTabs = {}
     local currentActiveTab = nil
     local function createTab(icon, name)
         local btn = Instance.new("TextButton", tabBar)
-        btn.Size = UDim2.new(1, 0, 0, 24)
+        btn.Size = UDim2.new(1, 0, 0, 23)
         btn.Text = ""; btn.BackgroundColor3 = Theme.BrandSoft
         btn.BackgroundTransparency = 1; btn.BorderSizePixel = 0; btn.AutoButtonColor = false; btn.ZIndex = 11
         Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 7)
@@ -429,7 +455,7 @@ do
         Instance.new("UICorner", indicator).CornerRadius = UDim.new(1, 0)
 
         local iconBox = Instance.new("Frame", btn)
-        iconBox.Size = UDim2.new(0, 18, 0, 18); iconBox.Position = UDim2.new(0, 7, 0.5, -9)
+        iconBox.Size = UDim2.new(0, 17, 0, 17); iconBox.Position = UDim2.new(0, 7, 0.5, -8.5)
         iconBox.BackgroundColor3 = Color3.fromRGB(22, 26, 38); iconBox.BorderSizePixel = 0; iconBox.ZIndex = 12
         Instance.new("UICorner", iconBox).CornerRadius = UDim.new(0, 5)
 
@@ -438,7 +464,7 @@ do
         iconLbl.BackgroundTransparency = 1; iconLbl.Text = icon; iconLbl.TextSize = 10.5; iconLbl.Font = Enum.Font.GothamBold; iconLbl.ZIndex = 13
 
         local txtLbl = Instance.new("TextLabel", btn)
-        txtLbl.Size = UDim2.new(1, -30, 1, 0); txtLbl.Position = UDim2.new(0, 29, 0, 0)
+        txtLbl.Size = UDim2.new(1, -30, 1, 0); txtLbl.Position = UDim2.new(0, 28, 0, 0)
         txtLbl.BackgroundTransparency = 1; txtLbl.Text = name; txtLbl.TextColor3 = Theme.TextDim
         txtLbl.Font = Enum.Font.GothamBold; txtLbl.TextSize = 9.2; txtLbl.TextXAlignment = Enum.TextXAlignment.Left; txtLbl.ZIndex = 12
 
@@ -524,6 +550,7 @@ do
         Theme.ItemActive = preset.ActiveBg
 
         if not State.RGB then
+            titleLabel.TextColor3 = Theme.TextTitle
             frameStroke.Color = Theme.Brand
             avatarStroke.Color = Theme.Brand
             openStroke.Color = opened and Theme.Brand or Theme.AccentOff
@@ -546,6 +573,18 @@ do
             item.Ind.BackgroundColor3 = Theme.Brand
             item.Stroke.Color = Theme.Brand
             item.IconBox.BackgroundColor3 = isSel and Theme.Brand or Color3.fromRGB(22, 26, 38)
+        end
+        cleanRGBElements()
+        for _, obj in ipairs(RGBElements) do
+            if obj.UseBrand then
+                obj.DefaultColor = Theme.Brand
+                if not State.RGB and obj.Stroke and obj.Stroke.Parent then
+                    obj.Stroke.Color = Theme.Brand
+                end
+            end
+        end
+        for _, fn in ipairs(BrandCallbacks) do
+            pcall(fn, Theme.Brand)
         end
         for k, _ in pairs(SyncCallbacks) do
             fireSync(k, State[k] and true or false, true)
@@ -607,7 +646,11 @@ local function createDivider(parent, text)
     pill.TextColor3 = Theme.Brand; pill.Font = Enum.Font.GothamBold; pill.TextSize = 8.8; pill.ZIndex = 11
     Instance.new("UICorner", pill).CornerRadius = UDim.new(1, 0)
     local pStroke = Instance.new("UIStroke", pill); pStroke.Color = Theme.Brand; pStroke.Thickness = 0.9; pStroke.Transparency = 0.45
-    table.insert(RGBElements, {Type = "Button", Stroke = pStroke, DefaultColor = Theme.Brand})
+    table.insert(RGBElements, {Type = "Button", Stroke = pStroke, DefaultColor = Theme.Brand, UseBrand = true})
+    registerBrandUpdater(function(newBrand)
+        if lineLeft and lineLeft.Parent then lineLeft.BackgroundColor3 = newBrand end
+        if pill and pill.Parent then pill.TextColor3 = newBrand end
+    end)
     return dFrame
 end
 
@@ -618,10 +661,13 @@ local function createCycleBtn(parent, prefix, options, stateVar)
     btn.Size = UDim2.new(1, 0, 1, 0); btn.BackgroundColor3 = Theme.ItemBg; btn.Text = ""; btn.AutoButtonColor = false; btn.ZIndex = 10
     Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
     local stroke = Instance.new("UIStroke", btn); stroke.Color = Theme.Brand; stroke.Thickness = 1; stroke.Transparency = 0.25; stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-    table.insert(RGBElements, {Type = "Button", Stroke = stroke, DefaultColor = Theme.Brand})
+    table.insert(RGBElements, {Type = "Button", Stroke = stroke, DefaultColor = Theme.Brand, UseBrand = true})
 
     local title = Instance.new("TextLabel", btn)
     title.Size = UDim2.new(1, 0, 1, 0); title.BackgroundTransparency = 1; title.TextColor3 = Theme.Brand; title.Font = Enum.Font.GothamBold; title.TextSize = 10.5; title.ZIndex = 10
+    registerBrandUpdater(function(newBrand)
+        if title and title.Parent then title.TextColor3 = newBrand end
+    end)
 
     local function updateText()
         local item = options[State[stateVar]] or options[1]
@@ -712,6 +758,7 @@ local function createToggle(parent, text, varName, callback)
 end
 
 local function createButton(parent, text, color, callback)
+    local isBrandColor = (color == Theme.Brand)
     local btnFrame = Instance.new("Frame", parent)
     btnFrame.Size = UDim2.new(0.94, 0, 0, 31); btnFrame.BackgroundTransparency = 1
     local btn = Instance.new("TextButton", btnFrame)
@@ -719,13 +766,20 @@ local function createButton(parent, text, color, callback)
     Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
     addSoftGradient(btn, Color3.fromRGB(32, 36, 50), Color3.fromRGB(24, 27, 38), 90)
     local stroke = Instance.new("UIStroke", btn); stroke.Color = color; stroke.Thickness = 1.1; stroke.Transparency = 0.25; stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-    table.insert(RGBElements, {Type = "Button", Stroke = stroke, DefaultColor = color})
+    local rgbEntry = {Type = "Button", Stroke = stroke, DefaultColor = color, UseBrand = isBrandColor}
+    table.insert(RGBElements, rgbEntry)
     local title = Instance.new("TextLabel", btn)
     title.Size = UDim2.new(1, 0, 1, 0); title.BackgroundTransparency = 1; title.Text = text; title.TextColor3 = color; title.Font = Enum.Font.GothamBold; title.TextSize = 10.5; title.ZIndex = 10
+    if isBrandColor then
+        registerBrandUpdater(function(newBrand)
+            if title and title.Parent then title.TextColor3 = newBrand end
+        end)
+    end
     btn.MouseButton1Click:Connect(function()
+        local activeCol = isBrandColor and Theme.Brand or color
         clickAnimate(btn); if not State.RGB then TweenService:Create(stroke, TweenInfo.new(0.15), {Color = Theme.TextTitle}):Play() end
-        task.wait(0.15); if not State.RGB then TweenService:Create(stroke, TweenInfo.new(0.3), {Color = color}):Play() end
-        MakeToast("Đã thực thi", text, color); callback()
+        task.wait(0.15); if not State.RGB then TweenService:Create(stroke, TweenInfo.new(0.3), {Color = activeCol}):Play() end
+        MakeToast("Đã thực thi", text, activeCol); callback()
     end)
     return btnFrame
 end
@@ -734,18 +788,25 @@ local function createDualButtons(parent, text1, color1, cb1, text2, color2, cb2)
     local dFrame = Instance.new("Frame", parent)
     dFrame.Size = UDim2.new(0.94, 0, 0, 30); dFrame.BackgroundTransparency = 1
     local function makeBtn(xPos, txt, col, cb)
+        local isBrandColor = (col == Theme.Brand)
         local btn = Instance.new("TextButton", dFrame)
         btn.Size = UDim2.new(0.486, 0, 1, 0); btn.Position = UDim2.new(xPos, 0, 0, 0); btn.BackgroundColor3 = Color3.fromRGB(255, 255, 255); btn.Text = ""; btn.AutoButtonColor = false; btn.ZIndex = 10
         Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
         addSoftGradient(btn, Color3.fromRGB(31, 35, 48), Color3.fromRGB(23, 26, 36), 90)
         local stroke = Instance.new("UIStroke", btn); stroke.Color = col; stroke.Thickness = 1.1; stroke.Transparency = 0.25; stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-        table.insert(RGBElements, {Type = "Button", Stroke = stroke, DefaultColor = col})
+        table.insert(RGBElements, {Type = "Button", Stroke = stroke, DefaultColor = col, UseBrand = isBrandColor})
         local title = Instance.new("TextLabel", btn)
         title.Size = UDim2.new(1, -6, 1, 0); title.Position = UDim2.new(0, 3, 0, 0); title.BackgroundTransparency = 1; title.Text = txt; title.TextColor3 = col; title.Font = Enum.Font.GothamBold; title.TextSize = 9.5; title.TextTruncate = Enum.TextTruncate.AtEnd; title.ZIndex = 10
+        if isBrandColor then
+            registerBrandUpdater(function(newBrand)
+                if title and title.Parent then title.TextColor3 = newBrand end
+            end)
+        end
         btn.MouseButton1Click:Connect(function()
+            local activeCol = isBrandColor and Theme.Brand or col
             clickAnimate(btn); if not State.RGB then TweenService:Create(stroke, TweenInfo.new(0.15), {Color = Theme.TextTitle}):Play() end
-            task.wait(0.15); if not State.RGB then TweenService:Create(stroke, TweenInfo.new(0.3), {Color = col}):Play() end
-            if txt ~= "🗑️ XÓA TẤT CẢ" then MakeToast("Đã thực thi", txt, col) end; cb()
+            task.wait(0.15); if not State.RGB then TweenService:Create(stroke, TweenInfo.new(0.3), {Color = activeCol}):Play() end
+            if txt ~= "🗑️ XÓA TẤT CẢ" then MakeToast("Đã thực thi", txt, activeCol) end; cb()
         end)
     end
     makeBtn(0, text1, color1, cb1); makeBtn(0.514, text2, color2, cb2)
@@ -793,7 +854,13 @@ local function createSlider(parent, text, min, max, varName, callback)
     Instance.new("UICorner", knob).CornerRadius = UDim.new(1, 0)
     local knobStroke = Instance.new("UIStroke", knob); knobStroke.Color = Theme.Brand; knobStroke.Thickness = 1.4
 
-    local dragging = false
+    registerBrandUpdater(function(newBrand)
+        if valLabel and valLabel.Parent then valLabel.TextColor3 = newBrand end
+        if fill and fill.Parent then fill.BackgroundColor3 = newBrand end
+        if knobStroke and knobStroke.Parent then knobStroke.Color = newBrand end
+    end)
+
+    local dragInput = nil
     local function updateSlider(input)
         local pos = math.clamp((input.Position.X - track.AbsolutePosition.X) / track.AbsoluteSize.X, 0, 1)
         local value = math.floor(min + ((max - min) * pos))
@@ -805,18 +872,18 @@ local function createSlider(parent, text, min, max, varName, callback)
         if State.AutoSave then saveConfig() end
     end
     bg.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            dragging = true; updateSlider(input)
+        if not dragInput and (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
+            dragInput = input; updateSlider(input)
         end
     end)
     UIS.InputChanged:Connect(function(input)
-        if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        if isDragUpdateInput(input, dragInput) then
             updateSlider(input)
         end
     end)
     UIS.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            dragging = false
+        if input == dragInput then
+            dragInput = nil
         end
     end)
     if callback then task.spawn(callback, State[varName]) end
@@ -864,7 +931,6 @@ local function createCombinedToggleSlider(parent, toggleText, toggleVar, sliderT
     sliderArea.Size = UDim2.new(1, 0, 0, 31); sliderArea.Position = UDim2.new(0, 0, 0, 31)
     sliderArea.BackgroundTransparency = 1; sliderArea.ZIndex = 11
 
-    -- Dùng dấu "•" thay cho "↳" để không bị lỗi ô vuông ▯ trên font Gotham Mobile
     local sTitle = Instance.new("TextLabel", sliderArea)
     sTitle.Size = UDim2.new(0.68, 0, 0, 14); sTitle.Position = UDim2.new(0, 15, 0, 2)
     sTitle.BackgroundTransparency = 1; sTitle.Text = "• " .. sliderText
@@ -938,7 +1004,7 @@ local function createCombinedToggleSlider(parent, toggleText, toggleVar, sliderT
         if toggleCb then toggleCb(active) end
     end)
 
-    local dragging = false
+    local dragInput = nil
     local function updateSlider(input)
         local pos = math.clamp((input.Position.X - track.AbsolutePosition.X) / track.AbsoluteSize.X, 0, 1)
         local value = math.floor(min + ((max - min) * pos))
@@ -951,18 +1017,18 @@ local function createCombinedToggleSlider(parent, toggleText, toggleVar, sliderT
     end
 
     sliderArea.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            dragging = true; updateSlider(input)
+        if not dragInput and (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
+            dragInput = input; updateSlider(input)
         end
     end)
     UIS.InputChanged:Connect(function(input)
-        if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        if isDragUpdateInput(input, dragInput) then
             updateSlider(input)
         end
     end)
     UIS.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            dragging = false
+        if input == dragInput then
+            dragInput = nil
         end
     end)
 
@@ -1007,7 +1073,24 @@ end)
 -- ==========================================
 -- [TAB 2: TÍNH NĂNG (SẮP XẾP THEO NHÓM RÕ RÀNG)]
 -- ==========================================
-createToggle(page2, "🛡️ Chống ngã & Chống văng xa", "AntiStun")
+local wasHorizontalTp = false
+
+-- Sửa lỗi không bật lại trạng thái FallingDown/Ragdoll khi tắt AntiStun
+createToggle(page2, "🛡️ Chống ngã & Chống văng xa", "AntiStun", function(v)
+    if not v and player.Character then
+        pcall(function()
+            local hum = player.Character:FindFirstChildOfClass("Humanoid")
+            if hum then
+                hum:SetStateEnabled(Enum.HumanoidStateType.FallingDown, true)
+                hum:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, true)
+                if not State.Fly and not wasHorizontalTp then
+                    hum.PlatformStand = false
+                end
+            end
+        end)
+    end
+end)
+
 createToggle(page2, "🔒 Khóa vị trí nhân vật (Anchor)", "LockPosition", function(v)
     if not v and player.Character then
         local r = getUniversalRoot(player.Character)
@@ -1283,7 +1366,7 @@ do
     tBtn.Size = UDim2.new(1, 0, 1, 0); tBtn.BackgroundColor3 = Theme.ItemBg; tBtn.Text = ""; tBtn.AutoButtonColor = false; tBtn.ZIndex = 10
     Instance.new("UICorner", tBtn).CornerRadius = UDim.new(0, 8)
     local tStroke = Instance.new("UIStroke", tBtn); tStroke.Color = Theme.Brand; tStroke.Thickness = 1.1; tStroke.Transparency = 0.2
-    table.insert(RGBElements, {Type = "Button", Stroke = tStroke, DefaultColor = Theme.Brand})
+    table.insert(RGBElements, {Type = "Button", Stroke = tStroke, DefaultColor = Theme.Brand, UseBrand = true})
 
     local tTitle = Instance.new("TextLabel", tBtn)
     tTitle.Size = UDim2.new(1, 0, 1, 0); tTitle.BackgroundTransparency = 1; tTitle.Font = Enum.Font.GothamBold; tTitle.TextSize = 10.2; tTitle.ZIndex = 11
@@ -1292,9 +1375,10 @@ do
         local p = ThemePresets[State.ThemeIdx] or ThemePresets[1]
         tTitle.Text = "🎨 Chủ đề giao diện: " .. p.Name
         tTitle.TextColor3 = Theme.Brand
-        tStroke.Color = Theme.Brand
+        if not State.RGB then tStroke.Color = Theme.Brand end
     end
     syncThemeText()
+    registerBrandUpdater(syncThemeText)
 
     tBtn.MouseButton1Click:Connect(function()
         clickAnimate(tBtn)
@@ -1311,26 +1395,38 @@ createToggle(page4, "💾 Lưu Cài Đặt Tự Động", "AutoSave", function(v
     else pcall(function() if isfile and isfile(configFileName) then delfile(configFileName) end end); MakeToast("Đã Tắt", "Đã xóa cấu hình cũ!", Theme.AccentOff) end
 end)
 
+-- Sửa lỗi mất màu viền chủ đề (Theme.Brand) khi tắt chế độ RGB
 createToggle(page4, "🌈 Chế độ viền RGB", "RGB", function(v)
     if not v then
-        titleLabel.TextColor3 = Theme.TextTitle; frameStroke.Color = Theme.Stroke; avatarStroke.Color = Theme.Brand; openStroke.Color = opened and Theme.Brand or Theme.AccentOff
+        titleLabel.TextColor3 = Theme.TextTitle
+        frameStroke.Color = Theme.Brand
+        avatarStroke.Color = Theme.Brand
+        openStroke.Color = opened and Theme.Brand or Theme.AccentOff
+        cleanRGBElements()
         for _, obj in pairs(RGBElements) do
             if obj.Stroke and obj.Stroke.Parent then
-                if obj.Type == "Toggle" then obj.Stroke.Color = obj.State() and Color3.fromRGB(54, 140, 98) or Theme.Stroke
-                elseif obj.Type == "Button" then obj.Stroke.Color = obj.DefaultColor
-                elseif obj.Type == "Slider" or obj.Type == "Info" or obj.Type == "Container" then obj.Stroke.Color = Theme.Stroke end
+                if obj.Type == "Frame" then
+                    obj.Stroke.Color = Theme.Brand
+                elseif obj.Type == "Toggle" then
+                    obj.Stroke.Color = obj.State() and Color3.fromRGB(54, 140, 98) or Theme.Stroke
+                elseif obj.Type == "Button" then
+                    obj.Stroke.Color = obj.UseBrand and Theme.Brand or obj.DefaultColor
+                elseif obj.Type == "Slider" or obj.Type == "Info" or obj.Type == "Container" then
+                    obj.Stroke.Color = Theme.Stroke
+                end
             end
         end
+        if refreshThemeVisuals then refreshThemeVisuals() end
     end
 end)
 
 local miniHudFrame = Instance.new("Frame", gui)
-miniHudFrame.Size = UDim2.new(0, 128, 0, 26); miniHudFrame.Position = UDim2.new(0, 66, 0.26, 9)
+miniHudFrame.Size = UDim2.new(0, 128, 0, 26); miniHudFrame.Position = UDim2.new(0, 65, 0.12, 9)
 miniHudFrame.BackgroundColor3 = Theme.MainBg; miniHudFrame.BackgroundTransparency = 0.12
 miniHudFrame.Visible = State.MiniHUD; miniHudFrame.ZIndex = 10
 Instance.new("UICorner", miniHudFrame).CornerRadius = UDim.new(1, 0)
 local hudStroke = Instance.new("UIStroke", miniHudFrame); hudStroke.Color = Theme.Brand; hudStroke.Thickness = 1.2
-table.insert(RGBElements, {Type = "Button", Stroke = hudStroke, DefaultColor = Theme.Brand})
+table.insert(RGBElements, {Type = "Button", Stroke = hudStroke, DefaultColor = Theme.Brand, UseBrand = true})
 
 local hudLabel = Instance.new("TextLabel", miniHudFrame)
 hudLabel.Size = UDim2.new(1, 0, 1, 0); hudLabel.BackgroundTransparency = 1; hudLabel.RichText = true
@@ -1338,19 +1434,19 @@ hudLabel.Text = "⚡ 60 FPS | 🌐 0 ms"; hudLabel.TextColor3 = Theme.TextTitle
 hudLabel.Font = Enum.Font.GothamBold; hudLabel.TextSize = 10; hudLabel.ZIndex = 10
 
 do
-    local hudDrag, hudStart, hudPos
+    local hudDragInput, hudStart, hudPos = nil, nil, nil
     miniHudFrame.InputBegan:Connect(function(inp)
-        if inp.UserInputType == Enum.UserInputType.MouseButton1 or inp.UserInputType == Enum.UserInputType.Touch then
-            hudDrag = true; hudStart = inp.Position; hudPos = miniHudFrame.Position
+        if not hudDragInput and (inp.UserInputType == Enum.UserInputType.MouseButton1 or inp.UserInputType == Enum.UserInputType.Touch) then
+            hudDragInput = inp; hudStart = inp.Position; hudPos = miniHudFrame.Position
         end
     end)
     UIS.InputChanged:Connect(function(inp)
-        if hudDrag and (inp.UserInputType == Enum.UserInputType.MouseMovement or inp.UserInputType == Enum.UserInputType.Touch) then
+        if isDragUpdateInput(inp, hudDragInput) then
             miniHudFrame.Position = UDim2.new(hudPos.X.Scale, hudPos.X.Offset + (inp.Position.X - hudStart.X), hudPos.Y.Scale, hudPos.Y.Offset + (inp.Position.Y - hudStart.Y))
         end
     end)
     UIS.InputEnded:Connect(function(inp)
-        if inp.UserInputType == Enum.UserInputType.MouseButton1 or inp.UserInputType == Enum.UserInputType.Touch then hudDrag = false end
+        if inp == hudDragInput then hudDragInput = nil end
     end)
 end
 
@@ -1490,18 +1586,23 @@ do
         end
     end
 
-    -- Hàng nút điều khiển 4 chức năng gọn gàng: Phát | Tạm dừng | Lặp bài | Tắt
     local ctrlRow = Instance.new("Frame", page5)
     ctrlRow.Size = UDim2.new(0.94, 0, 0, 26); ctrlRow.BackgroundTransparency = 1; ctrlRow.LayoutOrder = 2
 
     local function makeMusicCtrlBtn(posScale, sizeScale, txt, col)
+        local isBrandColor = (col == Theme.Brand)
         local b = Instance.new("TextButton", ctrlRow)
         b.Size = UDim2.new(sizeScale, -3, 1, 0); b.Position = UDim2.new(posScale, 0, 0, 0)
         b.BackgroundColor3 = Theme.ItemBg; b.Text = txt; b.TextColor3 = col
         b.Font = Enum.Font.GothamBold; b.TextSize = 9; b.AutoButtonColor = false; b.ZIndex = 10
         Instance.new("UICorner", b).CornerRadius = UDim.new(0, 6)
         local st = Instance.new("UIStroke", b); st.Color = col; st.Thickness = 1; st.Transparency = 0.25
-        table.insert(RGBElements, {Type = "Button", Stroke = st, DefaultColor = col})
+        table.insert(RGBElements, {Type = "Button", Stroke = st, DefaultColor = col, UseBrand = isBrandColor})
+        if isBrandColor then
+            registerBrandUpdater(function(newBrand)
+                if b and b.Parent then b.TextColor3 = newBrand end
+            end)
+        end
         return b, st
     end
 
@@ -1552,11 +1653,17 @@ do
     local sLayout = Instance.new("UIListLayout", savedMusicContent); sLayout.SortOrder = Enum.SortOrder.LayoutOrder; sLayout.Padding = UDim.new(0, 4)
     sLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function() savedMusicContent.CanvasSize = UDim2.new(0, 0, 0, sLayout.AbsoluteContentSize.Y + 8) end)
 
+    registerBrandUpdater(function(newBrand)
+        if mlHeader and mlHeader.Parent then mlHeader.TextColor3 = newBrand end
+        if savedMusicContent and savedMusicContent.Parent then savedMusicContent.ScrollBarImageColor3 = newBrand end
+    end)
+
     local fileName = "MenuVipProMax_SavedMusic.json"
     pcall(function() if isfile and isfile(fileName) then local decoded = HttpService:JSONDecode(readfile(fileName)); if type(decoded) == "table" then savedMusicList = decoded end end end)
     local function saveMusicData() pcall(function() if writefile then writefile(fileName, HttpService:JSONEncode(savedMusicList)) end end) end
     local function renderSavedMusic()
         for _, child in pairs(savedMusicContent:GetChildren()) do if child:IsA("Frame") then child:Destroy() end end
+        cleanRGBElements()
         mlHeader.Text = "🎵 DANH SÁCH NHẠC ĐÃ LƯU (" .. #savedMusicList .. ")"
         if #savedMusicList == 0 then
             local empty = Instance.new("Frame", savedMusicContent); empty.Size = UDim2.new(1, 0, 0, 38); empty.BackgroundTransparency = 1
@@ -1644,8 +1751,14 @@ do
     local tpLayout = Instance.new("UIListLayout", savedTpContent); tpLayout.SortOrder = Enum.SortOrder.LayoutOrder; tpLayout.Padding = UDim.new(0, 4)
     tpLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function() savedTpContent.CanvasSize = UDim2.new(0, 0, 0, tpLayout.AbsoluteContentSize.Y + 10) end)
 
+    registerBrandUpdater(function(newBrand)
+        if tlHeader and tlHeader.Parent then tlHeader.TextColor3 = newBrand end
+        if savedTpContent and savedTpContent.Parent then savedTpContent.ScrollBarImageColor3 = newBrand end
+    end)
+
     renderSavedTps = function()
         for _, child in pairs(savedTpContent:GetChildren()) do if child:IsA("Frame") then child:Destroy() end end
+        cleanRGBElements()
         tlHeader.Text = "📍 DANH SÁCH TỌA ĐỘ ĐÃ LƯU (" .. #savedTpList .. ")"
         if #savedTpList == 0 then
             local empty = Instance.new("Frame", savedTpContent); empty.Size = UDim2.new(1, 0, 0, 42); empty.BackgroundTransparency = 1
@@ -1708,7 +1821,6 @@ do
     end
     renderSavedTps()
 
-    -- Vòng lặp Auto Tuần Tra qua các điểm lưu được bật "🔁 Tuần tra"
     task.spawn(function()
         local loopIdx = 1
         while task.wait(1.4) do
@@ -1733,23 +1845,23 @@ do
 end
 
 -- ==========================================
--- [TAB 7: TP NGƯỜI CHƠI (BỐ CỤC GỌN + SỬA LỖI CHỮ IN HOA)]
+-- [TAB 7: TP NGƯỜI CHƠI (CUỘN MƯỢT KHÔNG GIẬT + KHÔNG KẸT TƯ THẾ TP 1 LẦN)]
 -- ==========================================
 local targetTpPlayer = nil
 local autoTpPlayerEnabled = false
 local spectatePlayerEnabled = false
-local wasHorizontalTp = false
 local spectateProxyPart = nil
 local lastSpectateStreamTick = 0
 local playerListContainer, playerListScroll
 local playerDistLabels = {}
+local playerCardRefs = {}
 
 local function restoreNormalPosture()
     local myChar = player.Character
     if not myChar then return end
     local myRoot = getUniversalRoot(myChar)
     local myHum = myChar:FindFirstChildOfClass("Humanoid")
-    if myHum and not State.Fly and not State.AntiStun then myHum.PlatformStand = false end
+    if myHum and not State.Fly then myHum.PlatformStand = false end
     if myRoot then
         myRoot.AssemblyLinearVelocity = Vector3.zero
         myRoot.AssemblyAngularVelocity = Vector3.zero
@@ -1795,12 +1907,16 @@ local function teleportToSelectedPlayer(isManualClick)
         local baseCFrame = CFrame.new(targetPos) * CFrame.Angles(0, targetYaw, 0)
         local finalCFrame = baseCFrame * mode.GetOffset(State.TpDistance)
 
-        if mode.IsHorizontal then
+        if mode.IsHorizontal and autoTpPlayerEnabled then
             if myHum then myHum.PlatformStand = true end
             wasHorizontalTp = true
             for _, part in ipairs(myChar:GetDescendants()) do
                 if part:IsA("BasePart") and part.CanCollide then part.CanCollide = false end
             end
+        elseif mode.IsHorizontal and isManualClick then
+            -- Khi chỉ bấm "TP 1 LẦN" ở chế độ Trên Đầu / Dưới Chân: đặt nhân vật đứng thẳng tại điểm đích hoặc tự trả lại tư thế ngay để không bị kẹt nằm đơ
+            finalCFrame = CFrame.new(finalCFrame.Position) * CFrame.Angles(0, targetYaw, 0)
+            if wasHorizontalTp then restoreNormalPosture() end
         elseif wasHorizontalTp then
             restoreNormalPosture()
         end
@@ -1808,6 +1924,7 @@ local function teleportToSelectedPlayer(isManualClick)
         myRoot.CFrame = finalCFrame
         myRoot.AssemblyLinearVelocity = Vector3.zero
         myRoot.AssemblyAngularVelocity = Vector3.zero
+        if State.AirWalk then airWalkY = myRoot.Position.Y - getFootOffset(myChar) end
 
         if isManualClick and dist > 500 then
             task.spawn(function()
@@ -1819,7 +1936,11 @@ local function teleportToSelectedPlayer(isManualClick)
                     if updatedCF and curRoot then
                         local _, yaw, _ = updatedCF:ToEulerAnglesYXZ()
                         local bCF = CFrame.new(updatedCF.Position) * CFrame.Angles(0, yaw, 0)
-                        curRoot.CFrame = bCF * mode.GetOffset(State.TpDistance)
+                        local stepCF = bCF * mode.GetOffset(State.TpDistance)
+                        if mode.IsHorizontal and not autoTpPlayerEnabled then
+                            stepCF = CFrame.new(stepCF.Position) * CFrame.Angles(0, yaw, 0)
+                        end
+                        curRoot.CFrame = stepCF
                         curRoot.AssemblyLinearVelocity = Vector3.zero
                     end
                 end
@@ -1881,6 +2002,7 @@ do
     tpPosBtn.BackgroundColor3 = Color3.fromRGB(26, 44, 62); tpPosBtn.Text = ""; tpPosBtn.AutoButtonColor = false; tpPosBtn.ZIndex = 10
     Instance.new("UICorner", tpPosBtn).CornerRadius = UDim.new(0, 6)
     local tpPosStroke = Instance.new("UIStroke", tpPosBtn); tpPosStroke.Color = Theme.Brand; tpPosStroke.Thickness = 1; tpPosStroke.Transparency = 0.25
+    table.insert(RGBElements, {Type = "Button", Stroke = tpPosStroke, DefaultColor = Theme.Brand, UseBrand = true})
 
     local tpPosLabel = Instance.new("TextLabel", tpPosBtn)
     tpPosLabel.Size = UDim2.new(1, 0, 1, 0); tpPosLabel.BackgroundTransparency = 1; tpPosLabel.RichText = true
@@ -1931,7 +2053,11 @@ do
     tpKnob.Position = UDim2.new(initTpPos, 0, 0.5, 0); tpKnob.BackgroundColor3 = Color3.fromRGB(240, 248, 255); tpKnob.ZIndex = 12
     Instance.new("UICorner", tpKnob).CornerRadius = UDim.new(1, 0)
 
-    local draggingTpDist = false
+    registerBrandUpdater(function(newBrand)
+        if tpDistFill and tpDistFill.Parent then tpDistFill.BackgroundColor3 = newBrand end
+    end)
+
+    local tpDistDragInput = nil
     local function updateTpDistSlider(input)
         local pos = math.clamp((input.Position.X - tpDistTrack.AbsolutePosition.X) / tpDistTrack.AbsoluteSize.X, 0, 1)
         local value = math.floor(1 + (24 * pos))
@@ -1942,18 +2068,18 @@ do
         if State.AutoSave then saveConfig() end
     end
     tpDistContainer.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            draggingTpDist = true; updateTpDistSlider(input)
+        if not tpDistDragInput and (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
+            tpDistDragInput = input; updateTpDistSlider(input)
         end
     end)
     UIS.InputChanged:Connect(function(input)
-        if draggingTpDist and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        if isDragUpdateInput(input, tpDistDragInput) then
             updateTpDistSlider(input)
         end
     end)
     UIS.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            draggingTpDist = false
+        if input == tpDistDragInput then
+            tpDistDragInput = nil
         end
     end)
 
@@ -1980,7 +2106,10 @@ do
     tpOnceBtn.AutoButtonColor = false; tpOnceBtn.ZIndex = 10
     Instance.new("UICorner", tpOnceBtn).CornerRadius = UDim.new(0, 6)
     local tpOnceStroke = Instance.new("UIStroke", tpOnceBtn); tpOnceStroke.Color = Theme.Brand; tpOnceStroke.Thickness = 1; tpOnceStroke.Transparency = 0.25
-    table.insert(RGBElements, {Type = "Button", Stroke = tpOnceStroke, DefaultColor = Theme.Brand})
+    table.insert(RGBElements, {Type = "Button", Stroke = tpOnceStroke, DefaultColor = Theme.Brand, UseBrand = true})
+    registerBrandUpdater(function(newBrand)
+        if tpOnceBtn and tpOnceBtn.Parent then tpOnceBtn.TextColor3 = newBrand end
+    end)
 
     local autoTpBtn = Instance.new("TextButton", tpActionRow)
     autoTpBtn.Size = UDim2.new(0.486, 0, 1, 0); autoTpBtn.Position = UDim2.new(0.514, 0, 0, 0)
@@ -2054,7 +2183,7 @@ do
     searchBar.BackgroundColor3 = Color3.fromRGB(16, 18, 26); searchBar.ZIndex = 11
     Instance.new("UICorner", searchBar).CornerRadius = UDim.new(0, 6)
     local sStroke = Instance.new("UIStroke", searchBar); sStroke.Color = Theme.Brand; sStroke.Thickness = 0.9; sStroke.Transparency = 0.35
-    table.insert(RGBElements, {Type = "Button", Stroke = sStroke, DefaultColor = Theme.Brand})
+    table.insert(RGBElements, {Type = "Button", Stroke = sStroke, DefaultColor = Theme.Brand, UseBrand = true})
 
     local searchBox = Instance.new("TextBox", searchBar)
     searchBox.Size = UDim2.new(1, -16, 1, 0); searchBox.Position = UDim2.new(0, 8, 0, 0)
@@ -2069,6 +2198,10 @@ do
     playerListScroll.ScrollBarThickness = 3; playerListScroll.ScrollBarImageColor3 = Theme.Brand
     playerListScroll.ScrollingDirection = Enum.ScrollingDirection.Y; playerListScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
     playerListScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y; playerListScroll.ZIndex = 10
+
+    registerBrandUpdater(function(newBrand)
+        if playerListScroll and playerListScroll.Parent then playerListScroll.ScrollBarImageColor3 = newBrand end
+    end)
 
     local playerScrollLayout = Instance.new("UIListLayout", playerListScroll)
     playerScrollLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center; playerScrollLayout.SortOrder = Enum.SortOrder.LayoutOrder; playerScrollLayout.Padding = UDim.new(0, 4)
@@ -2096,12 +2229,31 @@ do
     end
     searchBox:GetPropertyChangedSignal("Text"):Connect(filterPlayerCards)
 
+    -- Cập nhật trạng thái chọn tại chỗ mà không Destroy() danh sách, giúp thanh cuộn không bao giờ bị giật
+    local function refreshPlayerSelectionVisuals()
+        for p, ref in pairs(playerCardRefs) do
+            if ref and ref.Btn and ref.Btn.Parent then
+                local isSelected = (targetTpPlayer == p)
+                ref.Btn.BackgroundColor3 = isSelected and Theme.ItemActive or Theme.ItemBg
+                if not State.RGB then
+                    ref.Stroke.Color = isSelected and Theme.AccentOn or Theme.Stroke
+                    ref.AvaStroke.Color = isSelected and Theme.AccentOn or Theme.Brand
+                end
+                ref.NameLabel.Text = (isSelected and "✅ " or "") .. p.DisplayName
+                ref.NameLabel.TextColor3 = isSelected and Theme.AccentOn or Theme.TextTitle
+            end
+        end
+    end
+
     local function updatePlayerList()
+        local savedCanvasPos = playerListScroll.CanvasPosition
         playerDistLabels = {}
-        local cleanRGB = {}; for _, obj in ipairs(RGBElements) do if obj.Stroke and obj.Stroke.Parent then table.insert(cleanRGB, obj) end end; RGBElements = cleanRGB
+        playerCardRefs = {}
         for _, child in pairs(playerListScroll:GetChildren()) do
             if child.Name == "PaddingFrame" then child:Destroy() end
         end
+        cleanRGBElements()
+
         for _, p in pairs(Players:GetPlayers()) do
             if p ~= player then
                 local isSelected = (targetTpPlayer == p)
@@ -2144,6 +2296,7 @@ do
                 distPill.TextColor3 = Theme.Brand; distPill.Font = Enum.Font.GothamBold; distPill.TextSize = 8.5; distPill.ZIndex = 11
                 Instance.new("UICorner", distPill).CornerRadius = UDim.new(0, 5)
                 playerDistLabels[p] = distPill
+                playerCardRefs[p] = {Btn = btn, Stroke = stroke, AvaStroke = targetStroke, NameLabel = nLabel}
 
                 task.spawn(function()
                     pcall(function() targetAvatar.Image = Players:GetUserThumbnailAsync(p.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size420x420) end)
@@ -2153,12 +2306,17 @@ do
                     clickAnimate(btn)
                     targetTpPlayer = p
                     updateTargetLabel()
-                    updatePlayerList()
+                    refreshPlayerSelectionVisuals()
                     MakeToast("Đã chọn mục tiêu", p.DisplayName .. " (@" .. p.Name .. ")", Theme.AccentOn)
                 end)
             end
         end
         filterPlayerCards()
+        task.defer(function()
+            if playerListScroll and playerListScroll.Parent then
+                playerListScroll.CanvasPosition = savedCanvasPos
+            end
+        end)
     end
     updatePlayerList()
 
@@ -2380,12 +2538,15 @@ do
     Instance.new("UICorner", liveMonitorCard).CornerRadius = UDim.new(0, 8)
     addSoftGradient(liveMonitorCard, Color3.fromRGB(25, 32, 46), Color3.fromRGB(19, 22, 32), 0)
     local monitorStroke = Instance.new("UIStroke", liveMonitorCard); monitorStroke.Color = Theme.Brand; monitorStroke.Thickness = 1.1; monitorStroke.Transparency = 0.25
-    table.insert(RGBElements, {Type = "Button", Stroke = monitorStroke, DefaultColor = Theme.Brand})
+    table.insert(RGBElements, {Type = "Button", Stroke = monitorStroke, DefaultColor = Theme.Brand, UseBrand = true})
 
     local monitorTitle = Instance.new("TextLabel", liveMonitorCard)
     monitorTitle.Size = UDim2.new(1, -16, 0, 15); monitorTitle.Position = UDim2.new(0, 10, 0, 4)
     monitorTitle.BackgroundTransparency = 1; monitorTitle.Text = "📊 THÔNG SỐ HIỆU NĂNG THỜI GIAN THỰC (LIVE MONITOR)"
     monitorTitle.TextColor3 = Theme.Brand; monitorTitle.Font = Enum.Font.GothamBold; monitorTitle.TextSize = 9; monitorTitle.TextXAlignment = Enum.TextXAlignment.Left; monitorTitle.ZIndex = 10
+    registerBrandUpdater(function(newBrand)
+        if monitorTitle and monitorTitle.Parent then monitorTitle.TextColor3 = newBrand end
+    end)
 
     local monitorStatsLabel = Instance.new("TextLabel", liveMonitorCard)
     monitorStatsLabel.Size = UDim2.new(1, -20, 0, 28); monitorStatsLabel.Position = UDim2.new(0, 10, 0, 20)
@@ -3055,6 +3216,9 @@ do
         headerTitle.BackgroundTransparency = 1; headerTitle.Text = titleIcon .. " " .. titleText
         headerTitle.TextColor3 = Theme.Brand; headerTitle.Font = Enum.Font.GothamBold; headerTitle.TextSize = 9.5
         headerTitle.TextXAlignment = Enum.TextXAlignment.Left; headerTitle.ZIndex = 10
+        registerBrandUpdater(function(newBrand)
+            if headerTitle and headerTitle.Parent then headerTitle.TextColor3 = newBrand end
+        end)
 
         local line = Instance.new("Frame", card)
         line.Size = UDim2.new(1, -20, 0, 1); line.Position = UDim2.new(0, 10, 0, 22)
@@ -3069,7 +3233,6 @@ do
         return card, body
     end
 
-    -- Thu gọn chiều cao charCard từ 112 -> 94 để vừa khít 5 dòng và thanh máu không bị hở khoảng trống
     local charCard, charBody = makeCard("👤", "THÔNG TIN NHÂN VẬT", 94, 1)
     local copyCoordBtn = makeSoftMiniBtn(
         charCard, "📍 Copy Tọa Độ",
@@ -3141,6 +3304,9 @@ do
     idHeader.BackgroundTransparency = 1; idHeader.Text = "🔑 QUẢN LÝ & KẾT NỐI ID SERVER"
     idHeader.TextColor3 = Theme.Brand; idHeader.Font = Enum.Font.GothamBold; idHeader.TextSize = 9.5
     idHeader.TextXAlignment = Enum.TextXAlignment.Left; idHeader.ZIndex = 10
+    registerBrandUpdater(function(newBrand)
+        if idHeader and idHeader.Parent then idHeader.TextColor3 = newBrand end
+    end)
 
     local inputBg = Instance.new("Frame", idToolCard)
     inputBg.Size = UDim2.new(1, -16, 0, 25); inputBg.Position = UDim2.new(0, 8, 0, 22)
@@ -3251,11 +3417,17 @@ do
     svScroll.BackgroundTransparency = 1; svScroll.BorderSizePixel = 0; svScroll.ScrollBarThickness = 3
     svScroll.ScrollBarImageColor3 = Theme.Brand; svScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y; svScroll.CanvasSize = UDim2.new(0, 0, 0, 0); svScroll.ZIndex = 10
 
+    registerBrandUpdater(function(newBrand)
+        if svListTitle and svListTitle.Parent then svListTitle.TextColor3 = newBrand end
+        if svScroll and svScroll.Parent then svScroll.ScrollBarImageColor3 = newBrand end
+    end)
+
     local svLayout = Instance.new("UIListLayout", svScroll)
     svLayout.SortOrder = Enum.SortOrder.LayoutOrder; svLayout.Padding = UDim.new(0, 4)
 
     local function renderServerList(customList, isScanned)
         for _, ch in ipairs(svScroll:GetChildren()) do if ch:IsA("Frame") then ch:Destroy() end end
+        cleanRGBElements()
         local listToRender = customList or savedServers
         if #listToRender == 0 then
             local empty = Instance.new("Frame", svScroll); empty.Size = UDim2.new(1, 0, 0, 28); empty.BackgroundTransparency = 1
