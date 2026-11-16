@@ -1,5 +1,5 @@
 -- ==========================================
--- MENU VIP PRO MAX V1.15.0 (MODERN BENTO & SIDEBAR UI - CLEANED & OPTIMIZED)
+-- MENU VIP PRO MAX V1.16.0 (MODERN BENTO & SIDEBAR UI - REORGANIZED & UPGRADED)
 -- ==========================================
 repeat task.wait() until game:IsLoaded()
 
@@ -21,19 +21,21 @@ local player = Players.LocalPlayer
 
 local State = {
     Instant = false, Noclip = false, LowGfx = false, Speed = false, Jump = false,
-    InfJump = false, PlayerLight = false, ESP = false, AntiAfk = true, AntiStun = false, 
+    InfJump = false, PlayerLight = false, ESP = false, AntiAfk = true, AntiStun = false,
     XRay = false, LockPosition = false, AutoCollect = false, Fly = false, FlySpeed = 50,
     SpinBot = false, SpinSpeed = 50, Hitbox = false, HitboxSize = 15, AutoClick = false, RGB = false,
     Reach = false, ReachSize = 15, AutoDash = false, DashSpeed = 10, AutoSave = false, Astral = false,
     ShiftLock = false, SpeedValue = 60, JumpValue = 120, LightRange = 60, LightBrightness = 3,
-    MusicVolume = 5, LightColorIdx = 1, NoFog = false,
+    MusicVolume = 5, MusicLoop = false, LightColorIdx = 1, NoFog = false,
     FpsCapValue = 60, Disable3D = false, AfkModeScreen = false, RemoveTextures = false,
     HidePlayers = false, OptimizeTerrain = false, NoShadows = false,
     DisableParticles = false, DisablePostEffects = false, HidePetsAccessories = false, AutoClearRAM = false,
     AutoSkillDelay = 5,
-    AutoSkillZ = false, AutoSkillX = false, AutoSkillC = false, AutoSkillV = false, AutoSkillE = false, AutoSkillF = false,
+    AutoSkillZ = false, AutoSkillX = false, AutoSkillC = false, AutoSkillV = false,
+    AutoSkillE = false, AutoSkillF = false, AutoSkillQ = false, AutoSkillR = false,
     AutoSkill1 = false, AutoSkill2 = false, AutoSkill3 = false, AutoSkill4 = false, AutoSkill5 = false, AutoSkill6 = false,
     TpPositionIdx = 1, TpDistance = 4,
+    TpSaveESP = false, TpSaveLoop = false, TpSaveLoopDelay = 2,
     AirWalk = false,
     HidePopups = false, MuteSFX = false, DisableAnims = false, DarkMap = false,
     MiniHUD = false, AutoReconnect = true, MagnetOrbs = false
@@ -67,19 +69,46 @@ local PlayerLightColors = {
 }
 
 local TpPositions = {
-    {Name = "Sau lưng", IsHorizontal = false, GetOffset = function(d) return CFrame.new(0, 0, d) end},
-    {Name = "Trước mặt", IsHorizontal = false, GetOffset = function(d) return CFrame.new(0, 0, -d) * CFrame.Angles(0, math.pi, 0) end},
-    {Name = "Trên đầu", IsHorizontal = true, GetOffset = function(d) return CFrame.new(0, d, 0) * CFrame.Angles(math.rad(-90), 0, 0) end},
-    {Name = "Dưới chân", IsHorizontal = true, GetOffset = function(d) return CFrame.new(0, -d, 0) * CFrame.Angles(math.rad(90), 0, 0) end}
+    {Name = "Sau lưng", Upper = "SAU LƯNG", IsHorizontal = false, GetOffset = function(d) return CFrame.new(0, 0, d) end},
+    {Name = "Trước mặt", Upper = "TRƯỚC MẶT", IsHorizontal = false, GetOffset = function(d) return CFrame.new(0, 0, -d) * CFrame.Angles(0, math.pi, 0) end},
+    {Name = "Trên đầu", Upper = "TRÊN ĐẦU", IsHorizontal = true, GetOffset = function(d) return CFrame.new(0, d, 0) * CFrame.Angles(math.rad(-90), 0, 0) end},
+    {Name = "Dưới chân", Upper = "DƯỚI CHÂN", IsHorizontal = true, GetOffset = function(d) return CFrame.new(0, -d, 0) * CFrame.Angles(math.rad(90), 0, 0) end}
 }
 
 local RGBElements = {}
-local ActiveESPs = {} 
+local SyncCallbacks = {}
+local ActiveESPs = {}
+local SavedTpESPs = {}
 local originalHitboxSizes = {}
 local originalToolSizes = {}
 local cachedPrompts = {}
 local xrayMats = {}
-local OriginalGFX = {} 
+local OriginalGFX = {}
+
+local function utf8SafeTruncate(str, maxChars)
+    if not str then return "" end
+    local ok, len = pcall(utf8.len, str)
+    if ok and len and len > maxChars then
+        local byteOffset = utf8.offset(str, maxChars + 1)
+        if byteOffset then
+            return string.sub(str, 1, byteOffset - 1) .. ".."
+        end
+    end
+    return str
+end
+
+local function registerSync(varName, fn)
+    if not SyncCallbacks[varName] then SyncCallbacks[varName] = {} end
+    table.insert(SyncCallbacks[varName], fn)
+end
+
+local function fireSync(varName, isOn, instant)
+    if SyncCallbacks[varName] then
+        for _, fn in ipairs(SyncCallbacks[varName]) do
+            pcall(fn, isOn, instant)
+        end
+    end
+end
 
 local guiParent = player:WaitForChild("PlayerGui")
 pcall(function()
@@ -123,11 +152,11 @@ end
 
 local function getUniversalRoot(char)
     if not char then return nil end
-    return char:FindFirstChild("HumanoidRootPart") 
-        or char:FindFirstChild("Torso") 
-        or char:FindFirstChild("UpperTorso") 
+    return char:FindFirstChild("HumanoidRootPart")
+        or char:FindFirstChild("Torso")
+        or char:FindFirstChild("UpperTorso")
         or char:FindFirstChild("Head")
-        or char.PrimaryPart 
+        or char.PrimaryPart
         or char:FindFirstChildWhichIsA("BasePart")
 end
 
@@ -163,7 +192,7 @@ local function MakeToast(title, desc, color)
     toast.Size = UDim2.new(1, 0, 0, 44); toast.BackgroundColor3 = Theme.HeaderBg
     toast.BackgroundTransparency = 1; Instance.new("UICorner", toast).CornerRadius = UDim.new(0, 9)
     local stroke = Instance.new("UIStroke", toast); stroke.Color = color; stroke.Thickness = 1.1; stroke.Transparency = 1
-    
+
     local glowBar = Instance.new("Frame", toast)
     glowBar.Size = UDim2.new(0, 3, 1, -12); glowBar.Position = UDim2.new(0, 6, 0, 6)
     glowBar.BackgroundColor3 = color; glowBar.BorderSizePixel = 0; Instance.new("UICorner", glowBar).CornerRadius = UDim.new(1, 0)
@@ -172,17 +201,17 @@ local function MakeToast(title, desc, color)
     local tLabel = Instance.new("TextLabel", toast)
     tLabel.Size = UDim2.new(1, -22, 0, 16); tLabel.Position = UDim2.new(0, 15, 0, 5)
     tLabel.BackgroundTransparency = 1; tLabel.Text = title; tLabel.TextColor3 = color; tLabel.Font = Enum.Font.GothamBold; tLabel.TextSize = 10.5; tLabel.TextXAlignment = Enum.TextXAlignment.Left; tLabel.TextTransparency = 1
-    
+
     local dLabel = Instance.new("TextLabel", toast)
     dLabel.Size = UDim2.new(1, -22, 0, 16); dLabel.Position = UDim2.new(0, 15, 0, 22)
     dLabel.BackgroundTransparency = 1; dLabel.Text = desc; dLabel.TextColor3 = Theme.TextTitle; dLabel.Font = Enum.Font.Gotham; dLabel.TextSize = 9.5; dLabel.TextXAlignment = Enum.TextXAlignment.Left; dLabel.TextTransparency = 1; dLabel.TextTruncate = Enum.TextTruncate.AtEnd
-    
+
     TweenService:Create(toast, TweenInfo.new(0.25), {BackgroundTransparency = 0.05}):Play()
     TweenService:Create(stroke, TweenInfo.new(0.25), {Transparency = 0.2}):Play()
     TweenService:Create(glowBar, TweenInfo.new(0.25), {BackgroundTransparency = 0}):Play()
     TweenService:Create(tLabel, TweenInfo.new(0.25), {TextTransparency = 0}):Play()
     TweenService:Create(dLabel, TweenInfo.new(0.25), {TextTransparency = 0}):Play()
-    
+
     task.delay(2.2, function()
         TweenService:Create(toast, TweenInfo.new(0.35), {BackgroundTransparency = 1}):Play()
         TweenService:Create(stroke, TweenInfo.new(0.35), {Transparency = 1}):Play()
@@ -195,7 +224,7 @@ end
 
 local screenOverlay = Instance.new("Frame", gui)
 screenOverlay.Size = UDim2.new(2, 0, 2, 0); screenOverlay.Position = UDim2.new(-0.5, 0, -0.5, 0)
-screenOverlay.BackgroundColor3 = Color3.new(0,0,0); screenOverlay.ZIndex = 0; screenOverlay.Visible = false
+screenOverlay.BackgroundColor3 = Color3.new(0, 0, 0); screenOverlay.ZIndex = 0; screenOverlay.Visible = false
 
 local openBtn = Instance.new("TextButton", gui)
 openBtn.Size = UDim2.new(0, 44, 0, 44); openBtn.Position = UDim2.new(0, 15, 0.26, 0)
@@ -203,7 +232,7 @@ openBtn.Text = "🇻🇳"; openBtn.BackgroundColor3 = Theme.HeaderBg; openBtn.Ba
 openBtn.TextColor3 = Theme.Brand; openBtn.Font = Enum.Font.GothamBold; openBtn.TextSize = 20; openBtn.ZIndex = 10
 Instance.new("UICorner", openBtn).CornerRadius = UDim.new(0, 14)
 local openStroke = Instance.new("UIStroke", openBtn)
-openStroke.Color = Theme.Brand; openStroke.Thickness = 1.6; openStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border 
+openStroke.Color = Theme.Brand; openStroke.Thickness = 1.6; openStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 
 local function clickAnimate(obj)
     local scale = obj:FindFirstChildOfClass("UIScale") or Instance.new("UIScale", obj)
@@ -253,7 +282,7 @@ header.Size = UDim2.new(1, 0, 0, 36); header.BackgroundColor3 = Color3.fromRGB(2
 Instance.new("UICorner", header).CornerRadius = UDim.new(0, 12)
 addSoftGradient(header, Color3.fromRGB(28, 32, 46), Color3.fromRGB(21, 24, 34), 0)
 
-local headerCover = Instance.new("Frame", header) 
+local headerCover = Instance.new("Frame", header)
 headerCover.Size = UDim2.new(1, 0, 0, 10); headerCover.Position = UDim2.new(0, 0, 1, -10); headerCover.BackgroundColor3 = Color3.fromRGB(23, 26, 38); headerCover.BorderSizePixel = 0; headerCover.ZIndex = 11
 
 local headerLine = Instance.new("Frame", header)
@@ -294,7 +323,7 @@ headerStatText.TextColor3 = Theme.TextTitle; headerStatText.Font = Enum.Font.Got
 
 local verBadge = Instance.new("TextLabel", header)
 verBadge.Size = UDim2.new(0, 42, 0, 20); verBadge.Position = UDim2.new(1, -76, 0.5, -10)
-verBadge.BackgroundColor3 = Theme.BrandSoft; verBadge.Text = "v1.15"; verBadge.TextColor3 = Theme.Brand
+verBadge.BackgroundColor3 = Theme.BrandSoft; verBadge.Text = "v1.16"; verBadge.TextColor3 = Theme.Brand
 verBadge.Font = Enum.Font.GothamBold; verBadge.TextSize = 9.5; verBadge.ZIndex = 12
 Instance.new("UICorner", verBadge).CornerRadius = UDim.new(0, 6)
 local verStroke = Instance.new("UIStroke", verBadge); verStroke.Color = Theme.Brand; verStroke.Thickness = 0.9; verStroke.Transparency = 0.35
@@ -324,7 +353,7 @@ do
     end)
 end
 
--- SIDEBAR
+-- SIDEBAR (ĐÃ SẮP XẾP LẠI THỨ TỰ LOGIC)
 local sidebar = Instance.new("Frame", frame)
 sidebar.Size = UDim2.new(0, 108, 1, -36); sidebar.Position = UDim2.new(0, 0, 0, 36)
 sidebar.BackgroundColor3 = Theme.SidebarBg; sidebar.BorderSizePixel = 0; sidebar.ZIndex = 10
@@ -385,14 +414,16 @@ local function createTab(icon, name)
     return btn, indicator, txtLbl
 end
 
+-- Thứ tự Tab được sắp xếp lại theo nhóm chức năng trực quan:
+-- 1. Thông tin -> 2. Tính năng -> 3. Nhân vật -> 4. TP Player -> 5. TP Save -> 6. Auto Skill -> 7. Nhạc ID -> 8. Tiện ích -> 9. Cấu hình
 local tab1, ind1 = createTab("📊", "THÔNG TIN")
 local tab2, ind2 = createTab("⚡", "TÍNH NĂNG")
 local tab3, ind3 = createTab("🏃", "NHÂN VẬT")
-local tab4, ind4 = createTab("🛠️", "TIỆN ÍCH")
-local tab5, ind5 = createTab("🎵", "NHẠC ID") 
-local tab6, ind6 = createTab("📍", "TP SAVE")
 local tab7, ind7 = createTab("🎯", "TP PLAYER")
-local tab8, ind8 = createTab("⌨️", "AUTO SKILL") 
+local tab6, ind6 = createTab("📍", "TP SAVE")
+local tab8, ind8 = createTab("⌨️", "AUTO SKILL")
+local tab5, ind5 = createTab("🎵", "NHẠC ID")
+local tab4, ind4 = createTab("🛠️", "TIỆN ÍCH")
 local tab9, ind9 = createTab("🚀", "CẤU HÌNH")
 
 local pageContainer = Instance.new("Frame", frame)
@@ -404,10 +435,10 @@ local function createPage()
     pg.Size = UDim2.new(1, 0, 1, 0); pg.BackgroundTransparency = 1
     pg.ScrollBarThickness = 3; pg.ScrollBarImageColor3 = Theme.Brand; pg.Visible = false; pg.BorderSizePixel = 0; pg.ZIndex = 10
     local layout = Instance.new("UIListLayout", pg)
-    layout.HorizontalAlignment = Enum.HorizontalAlignment.Center; layout.Padding = UDim.new(0, 6); layout.SortOrder = Enum.SortOrder.LayoutOrder 
+    layout.HorizontalAlignment = Enum.HorizontalAlignment.Center; layout.Padding = UDim.new(0, 6); layout.SortOrder = Enum.SortOrder.LayoutOrder
     local pad = Instance.new("UIPadding", pg)
-    pad.PaddingTop = UDim.new(0, 7); pad.PaddingBottom = UDim.new(0, 14) 
-    layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function() pg.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y + 22) end)
+    pad.PaddingTop = UDim.new(0, 6); pad.PaddingBottom = UDim.new(0, 14)
+    layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function() pg.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y + 20) end)
     return pg
 end
 
@@ -415,11 +446,11 @@ local page1, page2, page3, page4, page8, page9 = createPage(), createPage(), cre
 
 local page5 = Instance.new("Frame", pageContainer)
 page5.Size = UDim2.new(1, 0, 1, 0); page5.BackgroundTransparency = 1; page5.Visible = false; page5.ZIndex = 10
-local l5 = Instance.new("UIListLayout", page5); l5.HorizontalAlignment = Enum.HorizontalAlignment.Center; l5.Padding = UDim.new(0, 6); l5.SortOrder = Enum.SortOrder.LayoutOrder; Instance.new("UIPadding", page5).PaddingTop = UDim.new(0, 7)
+local l5 = Instance.new("UIListLayout", page5); l5.HorizontalAlignment = Enum.HorizontalAlignment.Center; l5.Padding = UDim.new(0, 5); l5.SortOrder = Enum.SortOrder.LayoutOrder; Instance.new("UIPadding", page5).PaddingTop = UDim.new(0, 6)
 
 local page6 = Instance.new("Frame", pageContainer)
 page6.Size = UDim2.new(1, 0, 1, 0); page6.BackgroundTransparency = 1; page6.Visible = false; page6.ZIndex = 10
-local l6 = Instance.new("UIListLayout", page6); l6.HorizontalAlignment = Enum.HorizontalAlignment.Center; l6.Padding = UDim.new(0, 6); l6.SortOrder = Enum.SortOrder.LayoutOrder; Instance.new("UIPadding", page6).PaddingTop = UDim.new(0, 7)
+local l6 = Instance.new("UIListLayout", page6); l6.HorizontalAlignment = Enum.HorizontalAlignment.Center; l6.Padding = UDim.new(0, 5); l6.SortOrder = Enum.SortOrder.LayoutOrder; Instance.new("UIPadding", page6).PaddingTop = UDim.new(0, 6)
 
 local page7 = Instance.new("Frame", pageContainer)
 page7.Size = UDim2.new(1, 0, 1, 0); page7.BackgroundTransparency = 1; page7.Visible = false; page7.ZIndex = 10
@@ -503,16 +534,16 @@ local function createCycleBtn(parent, prefix, options, stateVar)
     Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
     local stroke = Instance.new("UIStroke", btn); stroke.Color = Theme.Brand; stroke.Thickness = 1; stroke.Transparency = 0.25; stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
     table.insert(RGBElements, {Type = "Button", Stroke = stroke, DefaultColor = Theme.Brand})
-    
+
     local title = Instance.new("TextLabel", btn)
     title.Size = UDim2.new(1, 0, 1, 0); title.BackgroundTransparency = 1; title.TextColor3 = Theme.Brand; title.Font = Enum.Font.GothamBold; title.TextSize = 10.5; title.ZIndex = 10
-    
+
     local function updateText()
         local item = options[State[stateVar]] or options[1]
         title.Text = prefix .. " " .. item.Name
     end
     updateText()
-    
+
     btn.MouseButton1Click:Connect(function()
         clickAnimate(btn)
         State[stateVar] = State[stateVar] + 1
@@ -525,7 +556,7 @@ end
 
 local function createToggle(parent, text, varName, callback)
     local btnFrame = Instance.new("Frame", parent)
-    btnFrame.Size = UDim2.new(0.94, 0, 0, 34); btnFrame.BackgroundTransparency = 1
+    btnFrame.Size = UDim2.new(0.94, 0, 0, 33); btnFrame.BackgroundTransparency = 1
 
     local btn = Instance.new("TextButton", btnFrame)
     btn.Size = UDim2.new(1, 0, 1, 0); btn.Text = ""; btn.AutoButtonColor = false; btn.ZIndex = 10
@@ -556,6 +587,7 @@ local function createToggle(parent, text, varName, callback)
     local active = State[varName] and true or false
 
     local function applyVisual(isOn, instant)
+        active = isOn
         local tInfo = TweenInfo.new(instant and 0 or 0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
         local trackCol = isOn and Color3.fromRGB(34, 118, 82) or Color3.fromRGB(18, 20, 28)
         local knobCol = isOn and Color3.fromRGB(240, 255, 245) or Color3.fromRGB(125, 135, 155)
@@ -575,13 +607,14 @@ local function createToggle(parent, text, varName, callback)
     end
 
     applyVisual(active, true)
+    registerSync(varName, applyVisual)
     table.insert(RGBElements, {Type = "Toggle", Stroke = stroke, State = function() return State[varName] end})
 
     btn.MouseButton1Click:Connect(function()
         clickAnimate(btn)
         State[varName] = not State[varName]
         active = State[varName]
-        applyVisual(active, false)
+        fireSync(varName, active, false)
         if varName ~= "AutoSave" then
             if active then MakeToast("Đã Bật", text, Theme.AccentOn) else MakeToast("Đã Tắt", text, Theme.AccentOff) end
             if State.AutoSave then saveConfig() end
@@ -614,7 +647,7 @@ end
 
 local function createDualButtons(parent, text1, color1, cb1, text2, color2, cb2)
     local dFrame = Instance.new("Frame", parent)
-    dFrame.Size = UDim2.new(0.94, 0, 0, 31); dFrame.BackgroundTransparency = 1
+    dFrame.Size = UDim2.new(0.94, 0, 0, 30); dFrame.BackgroundTransparency = 1
     local function makeBtn(xPos, txt, col, cb)
         local btn = Instance.new("TextButton", dFrame)
         btn.Size = UDim2.new(0.486, 0, 1, 0); btn.Position = UDim2.new(xPos, 0, 0, 0); btn.BackgroundColor3 = Color3.fromRGB(255, 255, 255); btn.Text = ""; btn.AutoButtonColor = false; btn.ZIndex = 10
@@ -636,19 +669,19 @@ end
 
 local function createSlider(parent, text, min, max, varName, callback)
     local sFrame = Instance.new("Frame", parent)
-    sFrame.Size = UDim2.new(0.94, 0, 0, 40); sFrame.BackgroundTransparency = 1
+    sFrame.Size = UDim2.new(0.94, 0, 0, 38); sFrame.BackgroundTransparency = 1
     local bg = Instance.new("Frame", sFrame); bg.Size = UDim2.new(1, 0, 1, 0); bg.BackgroundColor3 = Theme.ItemBg; bg.ZIndex = 10
     Instance.new("UICorner", bg).CornerRadius = UDim.new(0, 8)
     local stroke = Instance.new("UIStroke", bg); stroke.Color = Theme.Stroke; stroke.Thickness = 1
     table.insert(RGBElements, {Type = "Slider", Stroke = stroke})
 
     local titleLabel = Instance.new("TextLabel", bg)
-    titleLabel.Size = UDim2.new(0.72, 0, 0, 17); titleLabel.Position = UDim2.new(0, 12, 0, 4)
+    titleLabel.Size = UDim2.new(0.72, 0, 0, 17); titleLabel.Position = UDim2.new(0, 12, 0, 3)
     titleLabel.BackgroundTransparency = 1; titleLabel.Text = text; titleLabel.TextColor3 = Theme.TextTitle
     titleLabel.Font = Enum.Font.GothamSemibold; titleLabel.TextSize = 10; titleLabel.TextXAlignment = Enum.TextXAlignment.Left; titleLabel.ZIndex = 10
 
     local valBadge = Instance.new("Frame", bg)
-    valBadge.Size = UDim2.new(0, 44, 0, 15); valBadge.Position = UDim2.new(1, -54, 0, 5)
+    valBadge.Size = UDim2.new(0, 44, 0, 15); valBadge.Position = UDim2.new(1, -54, 0, 4)
     valBadge.BackgroundColor3 = Color3.fromRGB(17, 19, 27); valBadge.ZIndex = 10
     Instance.new("UICorner", valBadge).CornerRadius = UDim.new(0, 5)
     local valStroke = Instance.new("UIStroke", valBadge); valStroke.Color = Theme.Stroke; valStroke.Thickness = 0.8
@@ -659,7 +692,7 @@ local function createSlider(parent, text, min, max, varName, callback)
     valLabel.Font = Enum.Font.GothamBold; valLabel.TextSize = 9.5; valLabel.ZIndex = 11
 
     local track = Instance.new("Frame", bg)
-    track.Size = UDim2.new(1, -24, 0, 5); track.Position = UDim2.new(0, 12, 0, 27)
+    track.Size = UDim2.new(1, -24, 0, 5); track.Position = UDim2.new(0, 12, 0, 25)
     track.BackgroundColor3 = Color3.fromRGB(15, 17, 24); track.ZIndex = 10
     Instance.new("UICorner", track).CornerRadius = UDim.new(1, 0)
 
@@ -707,14 +740,14 @@ end
 
 local function createCombinedToggleSlider(parent, toggleText, toggleVar, sliderText, min, max, sliderVar, toggleCb, sliderCb)
     local card = Instance.new("Frame", parent)
-    card.Size = UDim2.new(0.94, 0, 0, 64)
+    card.Size = UDim2.new(0.94, 0, 0, 62)
     card.BackgroundColor3 = Theme.ItemBg
     card.ZIndex = 10
     Instance.new("UICorner", card).CornerRadius = UDim.new(0, 8)
     local stroke = Instance.new("UIStroke", card); stroke.Thickness = 1
 
     local topBtn = Instance.new("TextButton", card)
-    topBtn.Size = UDim2.new(1, 0, 0, 31); topBtn.BackgroundTransparency = 1
+    topBtn.Size = UDim2.new(1, 0, 0, 30); topBtn.BackgroundTransparency = 1
     topBtn.Text = ""; topBtn.AutoButtonColor = false; topBtn.ZIndex = 11
 
     local leftBar = Instance.new("Frame", topBtn)
@@ -739,16 +772,17 @@ local function createCombinedToggleSlider(parent, toggleText, toggleVar, sliderT
     Instance.new("UICorner", switchKnob).CornerRadius = UDim.new(1, 0)
 
     local divider = Instance.new("Frame", card)
-    divider.Size = UDim2.new(1, -16, 0, 1); divider.Position = UDim2.new(0, 8, 0, 31)
+    divider.Size = UDim2.new(1, -16, 0, 1); divider.Position = UDim2.new(0, 8, 0, 30)
     divider.BackgroundColor3 = Theme.Stroke; divider.BackgroundTransparency = 0.35; divider.BorderSizePixel = 0; divider.ZIndex = 11
 
     local sliderArea = Instance.new("Frame", card)
-    sliderArea.Size = UDim2.new(1, 0, 0, 32); sliderArea.Position = UDim2.new(0, 0, 0, 32)
+    sliderArea.Size = UDim2.new(1, 0, 0, 31); sliderArea.Position = UDim2.new(0, 0, 0, 31)
     sliderArea.BackgroundTransparency = 1; sliderArea.ZIndex = 11
 
+    -- Dùng dấu "•" thay cho "↳" để không bị lỗi ô vuông ▯ trên font Gotham Mobile
     local sTitle = Instance.new("TextLabel", sliderArea)
     sTitle.Size = UDim2.new(0.68, 0, 0, 14); sTitle.Position = UDim2.new(0, 15, 0, 2)
-    sTitle.BackgroundTransparency = 1; sTitle.Text = "↳ " .. sliderText
+    sTitle.BackgroundTransparency = 1; sTitle.Text = "• " .. sliderText
     sTitle.Font = Enum.Font.GothamSemibold; sTitle.TextSize = 9.5; sTitle.TextXAlignment = Enum.TextXAlignment.Left; sTitle.ZIndex = 12
 
     local valBadge = Instance.new("Frame", sliderArea)
@@ -762,7 +796,7 @@ local function createCombinedToggleSlider(parent, toggleText, toggleVar, sliderT
     valLabel.Text = tostring(State[sliderVar]); valLabel.Font = Enum.Font.GothamBold; valLabel.TextSize = 9.5; valLabel.ZIndex = 13
 
     local track = Instance.new("Frame", sliderArea)
-    track.Size = UDim2.new(1, -26, 0, 5); track.Position = UDim2.new(0, 13, 0, 21)
+    track.Size = UDim2.new(1, -26, 0, 5); track.Position = UDim2.new(0, 13, 0, 20)
     track.BackgroundColor3 = Color3.fromRGB(15, 17, 24); track.ZIndex = 12
     Instance.new("UICorner", track).CornerRadius = UDim.new(1, 0)
 
@@ -780,6 +814,7 @@ local function createCombinedToggleSlider(parent, toggleText, toggleVar, sliderT
     local active = State[toggleVar] and true or false
 
     local function syncVisual(isOn, instant)
+        active = isOn
         local tInfo = TweenInfo.new(instant and 0 or 0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
         local trackCol = isOn and Color3.fromRGB(34, 118, 82) or Color3.fromRGB(18, 20, 28)
         local knobCol = isOn and Color3.fromRGB(240, 255, 245) or Color3.fromRGB(125, 135, 155)
@@ -805,13 +840,14 @@ local function createCombinedToggleSlider(parent, toggleText, toggleVar, sliderT
     end
 
     syncVisual(active, true)
+    registerSync(toggleVar, syncVisual)
     table.insert(RGBElements, {Type = "Toggle", Stroke = stroke, State = function() return State[toggleVar] end})
 
     topBtn.MouseButton1Click:Connect(function()
         clickAnimate(card)
         State[toggleVar] = not State[toggleVar]
         active = State[toggleVar]
-        syncVisual(active, false)
+        fireSync(toggleVar, active, false)
         MakeToast(active and "Đã Bật" or "Đã Tắt", toggleText, active and Theme.AccentOn or Theme.AccentOff)
         if State.AutoSave then saveConfig() end
         if toggleCb then toggleCb(active) end
@@ -884,65 +920,22 @@ task.spawn(function()
 end)
 
 -- ==========================================
--- [TAB 2: TÍNH NĂNG]
+-- [TAB 2: TÍNH NĂNG (SẮP XẾP THEO NHÓM RÕ RÀNG)]
 -- ==========================================
+createDivider(page2, "SINH TỒN & DI CHUYỂN ĐẶC BIỆT")
 createToggle(page2, "🛡️ Chống ngã & Chống văng xa", "AntiStun")
-createToggle(page2, "🔒 Khóa vị trí nhân vật", "LockPosition", function(v)
+createToggle(page2, "🔒 Khóa vị trí nhân vật (Anchor)", "LockPosition", function(v)
     if not v and player.Character then
         local r = getUniversalRoot(player.Character)
         if r then r.Anchored = false end
     end
 end)
-createToggle(page2, "🚀 Nhảy trên không (Inf Jump)", "InfJump") 
+createToggle(page2, "🚀 Nhảy trên không (Inf Jump)", "InfJump")
 UIS.JumpRequest:Connect(function()
     if State.InfJump and player.Character and player.Character:FindFirstChildOfClass("Humanoid") then
         player.Character:FindFirstChildOfClass("Humanoid"):ChangeState(Enum.HumanoidStateType.Jumping)
     end
 end)
-createToggle(page2, "🐿️ Lấy đồ nhanh (Instant Prompt)", "Instant")
-createToggle(page2, "🧲 Auto nhặt đồ xung quanh", "AutoCollect")
-
-createToggle(page2, "🚷 Đi xuyên tường (Noclip)", "Noclip", function(v) 
-    if not v and player.Character then 
-        pcall(function() 
-            local hrp = getUniversalRoot(player.Character)
-            if hrp then 
-                hrp.AssemblyLinearVelocity = Vector3.zero 
-                hrp.AssemblyAngularVelocity = Vector3.zero
-            end
-            for _, part in ipairs(player.Character:GetDescendants()) do 
-                if part:IsA("BasePart") then part.CanCollide = true end 
-            end 
-        end)
-    end 
-end)
-
-local xrayTick = 0
-createToggle(page2, "👀 Nhìn xuyên bản đồ (Xray)", "XRay", function(v) 
-    xrayTick = xrayTick + 1; local currentTick = xrayTick
-    task.spawn(function()
-        if v then
-            for i, obj in ipairs(workspace:GetDescendants()) do
-                if currentTick ~= xrayTick then return end 
-                if obj:IsA("BasePart") and (not player.Character or not obj:IsDescendantOf(player.Character)) and obj.Name ~= "Terrain" and obj.Transparency < 1 then
-                    if not xrayMats[obj] then xrayMats[obj] = obj.Transparency end; obj.Transparency = 0.5
-                end
-                if i % 300 == 0 then task.wait() end 
-            end
-        else
-            local count = 0
-            for obj, origTrans in pairs(xrayMats) do
-                if currentTick ~= xrayTick then return end
-                if obj and obj.Parent then obj.Transparency = origTrans end
-                count = count + 1; if count % 300 == 0 then task.wait() end
-            end
-            if currentTick == xrayTick then xrayMats = {} end
-        end
-    end)
-end)
-createToggle(page2, "🔴 Định vị người chơi (ESP)", "ESP")
-
-createDivider(page2, "TÍNH NĂNG MỞ RỘNG")
 
 local airWalkPart, airWalkConn, airWalkY = nil, nil, nil
 local function getFootOffset(char)
@@ -992,6 +985,53 @@ createToggle(page2, "☁️ Đi bộ trên không (Air Walk)", "AirWalk", functi
         if airWalkPart then airWalkPart:Destroy(); airWalkPart = nil end
         airWalkY = nil
     end
+end)
+
+createToggle(page2, "🚷 Đi xuyên tường (Noclip)", "Noclip", function(v)
+    if not v and player.Character then
+        pcall(function()
+            local hrp = getUniversalRoot(player.Character)
+            if hrp then
+                hrp.AssemblyLinearVelocity = Vector3.zero
+                hrp.AssemblyAngularVelocity = Vector3.zero
+            end
+            for _, part in ipairs(player.Character:GetDescendants()) do
+                if part:IsA("BasePart") then part.CanCollide = true end
+            end
+        end)
+    end
+end)
+
+createDivider(page2, "TƯƠNG TÁC & TỰ ĐỘNG NHẶT ĐỒ")
+createToggle(page2, "⚡ Lấy đồ nhanh (Instant Prompt)", "Instant")
+createToggle(page2, "🧲 Auto nhặt đồ & Tool xung quanh", "AutoCollect")
+createToggle(page2, "💎 Hút Tiền, Ngọc & Vật phẩm rơi (Magnet)", "MagnetOrbs")
+
+createDivider(page2, "THỊ GIÁC & CÔNG CỤ THẾ GIỚI")
+createToggle(page2, "🔴 Định vị người chơi (ESP)", "ESP")
+
+local xrayTick = 0
+createToggle(page2, "👀 Nhìn xuyên bản đồ (Xray)", "XRay", function(v)
+    xrayTick = xrayTick + 1; local currentTick = xrayTick
+    task.spawn(function()
+        if v then
+            for i, obj in ipairs(workspace:GetDescendants()) do
+                if currentTick ~= xrayTick then return end
+                if obj:IsA("BasePart") and (not player.Character or not obj:IsDescendantOf(player.Character)) and obj.Name ~= "Terrain" and obj.Transparency < 1 then
+                    if not xrayMats[obj] then xrayMats[obj] = obj.Transparency end; obj.Transparency = 0.5
+                end
+                if i % 300 == 0 then task.wait() end
+            end
+        else
+            local count = 0
+            for obj, origTrans in pairs(xrayMats) do
+                if currentTick ~= xrayTick then return end
+                if obj and obj.Parent then obj.Transparency = origTrans end
+                count = count + 1; if count % 300 == 0 then task.wait() end
+            end
+            if currentTick == xrayTick then xrayMats = {} end
+        end
+    end)
 end)
 
 createButton(page2, "🪄 NHẬN GẬY CLICK TP", Theme.Brand, function()
@@ -1044,11 +1084,12 @@ createDualButtons(
 )
 
 -- ==========================================
--- [TAB 3: NHÂN VẬT (ĐÃ GỘP CHUNG CÔNG TẮC & SLIDER)]
+-- [TAB 3: NHÂN VẬT (DI CHUYỂN, CHIẾN ĐẤU & ÁNH SÁNG)]
 -- ==========================================
 local defaultWalkSpeed = 16
 local defaultJumpPower = 50
 
+createDivider(page3, "DI CHUYỂN & TỐC ĐỘ")
 createCombinedToggleSlider(page3, "🕊️ Bay trên bầu trời (Fly)", "Fly", "Tốc độ bay", 10, 1000, "FlySpeed", function(v)
     local char = player.Character
     if char then
@@ -1102,10 +1143,14 @@ createCombinedToggleSlider(page3, "🦘 Nhảy cao (JumpPower)", "Jump", "Lực 
 end)
 
 createCombinedToggleSlider(page3, "💨 Lướt liên tục (Auto Dash)", "AutoDash", "Tốc độ lướt", 1, 50, "DashSpeed")
+
+createDivider(page3, "CHIẾN ĐẤU & PHẠM VI (COMBAT)")
+createToggle(page3, "🖱️ Auto Click Vũ Khí", "AutoClick")
 createCombinedToggleSlider(page3, "⚔️ Đánh xa (Reach Vũ Khí)", "Reach", "Kích thước vũ khí", 0, 300, "ReachSize")
 createCombinedToggleSlider(page3, "🎯 Mở rộng Hitbox", "Hitbox", "Kích thước Hitbox", 0, 100, "HitboxSize")
 createCombinedToggleSlider(page3, "🌪️ Xoay vòng tròn (SpinBot)", "SpinBot", "Tốc độ xoay", 0, 100, "SpinSpeed")
 
+createDivider(page3, "ĐÈN CHIẾU SÁNG NHÂN VẬT")
 createCombinedToggleSlider(page3, "💡 Ánh sáng quanh người", "PlayerLight", "Phạm vi sáng (Max 60)", 0, 60, "LightRange", function(v)
     if not v and player.Character then
         local root = getUniversalRoot(player.Character)
@@ -1115,61 +1160,18 @@ createCombinedToggleSlider(page3, "💡 Ánh sáng quanh người", "PlayerLight
         end
     end
 end)
-createSlider(page3, "↳ Độ sáng đèn", 0, 5, "LightBrightness")
+createSlider(page3, "• Độ sáng đèn", 0, 5, "LightBrightness")
 createCycleBtn(page3, "🎨 Đổi màu sáng:", PlayerLightColors, "LightColorIdx")
 
 -- ==========================================
--- [TAB 4: TIỆN ÍCH]
+-- [TAB 4 (SIDEBAR #8): TIỆN ÍCH (GỌN GÀNG & ĐẦY ĐỦ)]
 -- ==========================================
-createToggle(page4, "💾 Lưu Cài Đặt Tự Động", "AutoSave", function(v) 
-    if v then saveConfig(); MakeToast("Đã Bật", "Đã lưu cấu hình hiện tại!", Theme.AccentOn)
-    else pcall(function() if isfile and isfile(configFileName) then delfile(configFileName) end end); MakeToast("Đã Tắt", "Đã xóa cấu hình cũ!", Theme.AccentOff) end 
-end)
-
-createToggle(page4, "🌈 Chế độ viền RGB", "RGB", function(v) 
-    if not v then 
-        titleLabel.TextColor3 = Theme.TextTitle; frameStroke.Color = Theme.Stroke; avatarStroke.Color = Theme.Brand; openStroke.Color = opened and Theme.Brand or Theme.AccentOff
-        for _, obj in pairs(RGBElements) do
-            if obj.Stroke and obj.Stroke.Parent then
-                if obj.Type == "Toggle" then obj.Stroke.Color = obj.State() and Color3.fromRGB(54, 140, 98) or Theme.Stroke
-                elseif obj.Type == "Button" then obj.Stroke.Color = obj.DefaultColor
-                elseif obj.Type == "Slider" or obj.Type == "Info" or obj.Type == "Container" then obj.Stroke.Color = Theme.Stroke end
-            end
-        end
-    end 
-end)
-
-createToggle(page4, "💫 Mở khóa ShiftLock Mobile", "ShiftLock", function(v) pcall(function() player.DevEnableMouseLock = v end) end)
-createToggle(page4, "🖱️ Auto Click Vũ Khí", "AutoClick")
-task.spawn(function()
-    while task.wait(0.1) do 
-        if State.AutoClick and player.Character then
-            pcall(function()
-                local tool = player.Character:FindFirstChildOfClass("Tool")
-                if tool then tool:Activate() end
-            end)
-        end
-    end
-end)
-
-createToggle(page4, "🛡️ Chống AFK (Anti-AFK)", "AntiAfk")
-player.Idled:Connect(function() 
-    if State.AntiAfk then 
-        pcall(function() 
-            VirtualUser:CaptureController()
-            VirtualUser:Button2Down(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
-            task.wait(0.5)
-            VirtualUser:Button2Up(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
-        end) 
-    end 
-end)
-
 local function hopServer(sortOrder)
     local api = "https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=" .. sortOrder .. "&limit=100"
-    local function getServers(cursor) 
+    local function getServers(cursor)
         local url = api .. (cursor and "&cursor=" .. cursor or "")
-        local success, res = pcall(function() return game:HttpGet(url) end) 
-        if success then return HttpService:JSONDecode(res) end 
+        local success, res = pcall(function() return game:HttpGet(url) end)
+        if success then return HttpService:JSONDecode(res) end
     end
     local nextCursor, targetServer = nil, nil
     repeat
@@ -1191,6 +1193,82 @@ local function rejoinServer()
         TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, player)
     end
 end
+
+createDivider(page4, "GIAO DIỆN & CÀI ĐẶT MENU")
+createToggle(page4, "💾 Lưu Cài Đặt Tự Động", "AutoSave", function(v)
+    if v then saveConfig(); MakeToast("Đã Bật", "Đã lưu cấu hình hiện tại!", Theme.AccentOn)
+    else pcall(function() if isfile and isfile(configFileName) then delfile(configFileName) end end); MakeToast("Đã Tắt", "Đã xóa cấu hình cũ!", Theme.AccentOff) end
+end)
+
+createToggle(page4, "🌈 Chế độ viền RGB", "RGB", function(v)
+    if not v then
+        titleLabel.TextColor3 = Theme.TextTitle; frameStroke.Color = Theme.Stroke; avatarStroke.Color = Theme.Brand; openStroke.Color = opened and Theme.Brand or Theme.AccentOff
+        for _, obj in pairs(RGBElements) do
+            if obj.Stroke and obj.Stroke.Parent then
+                if obj.Type == "Toggle" then obj.Stroke.Color = obj.State() and Color3.fromRGB(54, 140, 98) or Theme.Stroke
+                elseif obj.Type == "Button" then obj.Stroke.Color = obj.DefaultColor
+                elseif obj.Type == "Slider" or obj.Type == "Info" or obj.Type == "Container" then obj.Stroke.Color = Theme.Stroke end
+            end
+        end
+    end
+end)
+
+local miniHudFrame = Instance.new("Frame", gui)
+miniHudFrame.Size = UDim2.new(0, 128, 0, 26); miniHudFrame.Position = UDim2.new(0, 66, 0.26, 9)
+miniHudFrame.BackgroundColor3 = Theme.MainBg; miniHudFrame.BackgroundTransparency = 0.12
+miniHudFrame.Visible = State.MiniHUD; miniHudFrame.ZIndex = 10
+Instance.new("UICorner", miniHudFrame).CornerRadius = UDim.new(1, 0)
+local hudStroke = Instance.new("UIStroke", miniHudFrame); hudStroke.Color = Theme.Brand; hudStroke.Thickness = 1.2
+table.insert(RGBElements, {Type = "Button", Stroke = hudStroke, DefaultColor = Theme.Brand})
+
+local hudLabel = Instance.new("TextLabel", miniHudFrame)
+hudLabel.Size = UDim2.new(1, 0, 1, 0); hudLabel.BackgroundTransparency = 1; hudLabel.RichText = true
+hudLabel.Text = "⚡ 60 FPS | 🌐 0 ms"; hudLabel.TextColor3 = Theme.TextTitle
+hudLabel.Font = Enum.Font.GothamBold; hudLabel.TextSize = 10; hudLabel.ZIndex = 10
+
+do
+    local hudDrag, hudStart, hudPos
+    miniHudFrame.InputBegan:Connect(function(inp)
+        if inp.UserInputType == Enum.UserInputType.MouseButton1 or inp.UserInputType == Enum.UserInputType.Touch then
+            hudDrag = true; hudStart = inp.Position; hudPos = miniHudFrame.Position
+        end
+    end)
+    UIS.InputChanged:Connect(function(inp)
+        if hudDrag and (inp.UserInputType == Enum.UserInputType.MouseMovement or inp.UserInputType == Enum.UserInputType.Touch) then
+            miniHudFrame.Position = UDim2.new(hudPos.X.Scale, hudPos.X.Offset + (inp.Position.X - hudStart.X), hudPos.Y.Scale, hudPos.Y.Offset + (inp.Position.Y - hudStart.Y))
+        end
+    end)
+    UIS.InputEnded:Connect(function(inp)
+        if inp.UserInputType == Enum.UserInputType.MouseButton1 or inp.UserInputType == Enum.UserInputType.Touch then hudDrag = false end
+    end)
+end
+
+createToggle(page4, "📟 Đồng hồ FPS & Ping Mini ngoài màn hình", "MiniHUD", function(v) miniHudFrame.Visible = v end)
+createToggle(page4, "💫 Mở khóa ShiftLock Mobile", "ShiftLock", function(v) pcall(function() player.DevEnableMouseLock = v end) end)
+
+createDivider(page4, "TREO MÁY AN TOÀN (AFK GUARD)")
+createToggle(page4, "🛡️ Chống AFK (Anti-AFK)", "AntiAfk")
+player.Idled:Connect(function()
+    if State.AntiAfk then
+        pcall(function()
+            VirtualUser:CaptureController()
+            VirtualUser:Button2Down(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
+            task.wait(0.5)
+            VirtualUser:Button2Up(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
+        end)
+    end
+end)
+
+createToggle(page4, "🔌 Tự động vào lại khi văng game (Reconnect)", "AutoReconnect")
+pcall(function()
+    GuiService.ErrorMessageChanged:Connect(function(msg)
+        if msg and msg ~= "" and State.AutoReconnect then
+            MakeToast("🔌 Auto Reconnect", "Phát hiện mất kết nối! Đang vào lại...", Theme.Brand)
+            task.wait(2)
+            pcall(function() TeleportService:Teleport(game.PlaceId, player) end)
+        end
+    end)
+end)
 
 createDivider(page4, "ĐIỀU KHIỂN SERVER & MÔI TRƯỜNG")
 createDualButtons(
@@ -1223,56 +1301,133 @@ createDualButtons(
 )
 
 -- ==========================================
--- [TAB 5: NHẠC ID] & [TAB 6: TP SAVE]
+-- [TAB 5: NHẠC ID (NÂNG CẤP TẠM DỪNG & LẶP BÀI)]
 -- ==========================================
-local currentSound = nil; local currentMusicId = ""; local savedMusicList = {}
+local currentSound = nil; local currentMusicId = ""; local savedMusicList = {}; local isMusicPaused = false
 do
-    local musicControlFrame = Instance.new("Frame", page5); musicControlFrame.Size = UDim2.new(0.94, 0, 0, 56); musicControlFrame.BackgroundColor3 = Theme.ItemBg; musicControlFrame.ZIndex = 10; musicControlFrame.LayoutOrder = 1; Instance.new("UICorner", musicControlFrame).CornerRadius = UDim.new(0, 8)
-    local mStroke = Instance.new("UIStroke", musicControlFrame); mStroke.Color = Theme.Stroke; mStroke.Thickness = 1; table.insert(RGBElements, {Type = "Info", Stroke = mStroke})
-    local musicIcon = Instance.new("TextLabel", musicControlFrame); musicIcon.Size = UDim2.new(0.11, 0, 0, 28); musicIcon.BackgroundTransparency = 1; musicIcon.Text = "🎼"; musicIcon.TextSize = 14; musicIcon.ZIndex = 10
-    local musicIdBox = Instance.new("TextBox", musicControlFrame); musicIdBox.Size = UDim2.new(0.65, 0, 0, 28); musicIdBox.Position = UDim2.new(0.11, 0, 0, 0); musicIdBox.BackgroundTransparency = 1; musicIdBox.PlaceholderText = "Nhập ID Nhạc Roblox..."; musicIdBox.PlaceholderColor3 = Theme.TextDim; musicIdBox.Text = ""; musicIdBox.TextColor3 = Theme.TextTitle; musicIdBox.Font = Enum.Font.GothamSemibold; musicIdBox.TextSize = 10; musicIdBox.TextXAlignment = Enum.TextXAlignment.Left; musicIdBox.ClearTextOnFocus = false; musicIdBox.ZIndex = 10
-    
+    local musicControlFrame = Instance.new("Frame", page5)
+    musicControlFrame.Size = UDim2.new(0.94, 0, 0, 52); musicControlFrame.BackgroundColor3 = Theme.ItemBg
+    musicControlFrame.ZIndex = 10; musicControlFrame.LayoutOrder = 1
+    Instance.new("UICorner", musicControlFrame).CornerRadius = UDim.new(0, 8)
+    local mStroke = Instance.new("UIStroke", musicControlFrame); mStroke.Color = Theme.Stroke; mStroke.Thickness = 1
+    table.insert(RGBElements, {Type = "Info", Stroke = mStroke})
+
+    local musicIcon = Instance.new("TextLabel", musicControlFrame)
+    musicIcon.Size = UDim2.new(0.10, 0, 0, 26); musicIcon.BackgroundTransparency = 1
+    musicIcon.Text = "🎵"; musicIcon.TextSize = 13; musicIcon.Font = Enum.Font.GothamBold; musicIcon.ZIndex = 10
+
+    local musicIdBox = Instance.new("TextBox", musicControlFrame)
+    musicIdBox.Size = UDim2.new(0.66, 0, 0, 26); musicIdBox.Position = UDim2.new(0.10, 0, 0, 0)
+    musicIdBox.BackgroundTransparency = 1; musicIdBox.PlaceholderText = "Nhập ID Nhạc Roblox..."
+    musicIdBox.PlaceholderColor3 = Theme.TextDim; musicIdBox.Text = ""; musicIdBox.TextColor3 = Theme.TextTitle
+    musicIdBox.Font = Enum.Font.GothamSemibold; musicIdBox.TextSize = 10; musicIdBox.TextXAlignment = Enum.TextXAlignment.Left
+    musicIdBox.ClearTextOnFocus = false; musicIdBox.ZIndex = 10
+
     local saveIdBtn = Instance.new("TextButton", musicControlFrame)
-    saveIdBtn.Size = UDim2.new(0.21, 0, 0, 20); saveIdBtn.Position = UDim2.new(0.77, 0, 0, 4)
+    saveIdBtn.Size = UDim2.new(0.21, 0, 0, 20); saveIdBtn.Position = UDim2.new(0.77, 0, 0, 3)
     saveIdBtn.BackgroundColor3 = Color3.fromRGB(28, 48, 38); saveIdBtn.Text = "💾 Lưu"; saveIdBtn.TextColor3 = Theme.AccentOn
     saveIdBtn.Font = Enum.Font.GothamBold; saveIdBtn.TextSize = 9.5; saveIdBtn.ZIndex = 10
     Instance.new("UICorner", saveIdBtn).CornerRadius = UDim.new(0, 5)
     local saveIdStroke = Instance.new("UIStroke", saveIdBtn); saveIdStroke.Color = Theme.AccentOn; saveIdStroke.Thickness = 0.9; saveIdStroke.Transparency = 0.3
 
-    local divLine = Instance.new("Frame", musicControlFrame); divLine.Size = UDim2.new(0.94, 0, 0, 1); divLine.Position = UDim2.new(0.03, 0, 0, 28); divLine.BackgroundColor3 = Theme.Stroke; divLine.BorderSizePixel = 0; divLine.ZIndex = 10
-    local nowPlayingLabel = Instance.new("TextLabel", musicControlFrame); nowPlayingLabel.Size = UDim2.new(0.92, 0, 0, 26); nowPlayingLabel.Position = UDim2.new(0.04, 0, 0, 29); nowPlayingLabel.BackgroundTransparency = 1; nowPlayingLabel.RichText = true; nowPlayingLabel.Text = "<font color='#9AA4B8'>🎵 Chưa có nhạc phát</font>"; nowPlayingLabel.Font = Enum.Font.GothamSemibold; nowPlayingLabel.TextSize = 10; nowPlayingLabel.TextWrapped = true; nowPlayingLabel.ZIndex = 10
+    local divLine = Instance.new("Frame", musicControlFrame)
+    divLine.Size = UDim2.new(0.94, 0, 0, 1); divLine.Position = UDim2.new(0.03, 0, 0, 26)
+    divLine.BackgroundColor3 = Theme.Stroke; divLine.BorderSizePixel = 0; divLine.ZIndex = 10
+
+    local nowPlayingLabel = Instance.new("TextLabel", musicControlFrame)
+    nowPlayingLabel.Size = UDim2.new(0.92, 0, 0, 24); nowPlayingLabel.Position = UDim2.new(0.04, 0, 0, 27)
+    nowPlayingLabel.BackgroundTransparency = 1; nowPlayingLabel.RichText = true
+    nowPlayingLabel.Text = "<font color='#9AA4B8'>🎵 Chưa có nhạc phát</font>"
+    nowPlayingLabel.Font = Enum.Font.GothamSemibold; nowPlayingLabel.TextSize = 9.5
+    nowPlayingLabel.TextTruncate = Enum.TextTruncate.AtEnd; nowPlayingLabel.ZIndex = 10
 
     local function getSongName(id)
         local numId = tonumber(id); if not numId then return "ID sai!" end
         local s, info = pcall(function() return MarketplaceService:GetProductInfo(numId) end)
         return (s and info and info.Name) or "Ẩn danh"
     end
+
     local function playMusic(id)
         if currentSound then currentSound:Destroy() end
         local soundId = tostring(id):match("%d+"); if not soundId or soundId == "" then return end
-        currentMusicId = soundId; nowPlayingLabel.Text = "<font color='#D6DEEB'>⏳ Đang tải thông tin bài hát...</font>"
+        currentMusicId = soundId; isMusicPaused = false
+        nowPlayingLabel.Text = "<font color='#D6DEEB'>⏳ Đang tải bài hát...</font>"
         task.spawn(function()
             local name = getSongName(soundId)
-            if currentMusicId == soundId then nowPlayingLabel.Text = "<font color='#9AA4B8'>🎵 Đang phát:</font> <font color='#F0C868'>" .. name .. "</font>" end
+            if currentMusicId == soundId then
+                nowPlayingLabel.Text = "<font color='#9AA4B8'>🎵 Đang phát:</font> <font color='#F0C868'>" .. name .. "</font>"
+            end
         end)
-        currentSound = Instance.new("Sound"); currentSound.SoundId = "rbxassetid://" .. soundId; currentSound.Volume = State.MusicVolume; currentSound.Parent = workspace
+        currentSound = Instance.new("Sound")
+        currentSound.SoundId = "rbxassetid://" .. soundId
+        currentSound.Volume = State.MusicVolume
+        currentSound.Looped = State.MusicLoop
+        currentSound.Parent = workspace
         currentSound.Ended:Connect(function()
-            if #savedMusicList > 0 then
+            if not State.MusicLoop and #savedMusicList > 0 then
                 local cx = 0; for i, v in ipairs(savedMusicList) do if v.id == currentMusicId then cx = i; break end end
                 local nx = cx + 1; if nx > #savedMusicList then nx = 1 end; playMusic(savedMusicList[nx].id)
             end
         end)
         currentSound:Play()
     end
+
     local function stopMusic()
-        if currentSound then currentSound:Stop(); currentSound:Destroy(); currentSound = nil; currentMusicId = ""; nowPlayingLabel.Text = "<font color='#9AA4B8'>⏹ Đã dừng phát nhạc</font>" end
+        if currentSound then
+            currentSound:Stop(); currentSound:Destroy(); currentSound = nil; currentMusicId = ""; isMusicPaused = false
+            nowPlayingLabel.Text = "<font color='#9AA4B8'>⏹ Đã dừng phát nhạc</font>"
+        end
     end
 
-    local playControlFrame = createDualButtons(page5, "▶️ PHÁT NHẠC", Theme.AccentOn, function() playMusic(musicIdBox.Text) end, "⏹️ TẮT NHẠC", Theme.AccentOff, function() stopMusic() end); playControlFrame.LayoutOrder = 2
-    local volumeFrame = createSlider(page5, "ÂM LƯỢNG NHẠC 🔊", 0, 10, "MusicVolume", function(val) if currentSound then currentSound.Volume = val end end); volumeFrame.LayoutOrder = 3
+    -- Hàng nút điều khiển 4 chức năng gọn gàng: Phát | Tạm dừng | Lặp bài | Tắt
+    local ctrlRow = Instance.new("Frame", page5)
+    ctrlRow.Size = UDim2.new(0.94, 0, 0, 26); ctrlRow.BackgroundTransparency = 1; ctrlRow.LayoutOrder = 2
+
+    local function makeMusicCtrlBtn(posScale, sizeScale, txt, col)
+        local b = Instance.new("TextButton", ctrlRow)
+        b.Size = UDim2.new(sizeScale, -3, 1, 0); b.Position = UDim2.new(posScale, 0, 0, 0)
+        b.BackgroundColor3 = Theme.ItemBg; b.Text = txt; b.TextColor3 = col
+        b.Font = Enum.Font.GothamBold; b.TextSize = 9; b.AutoButtonColor = false; b.ZIndex = 10
+        Instance.new("UICorner", b).CornerRadius = UDim.new(0, 6)
+        local st = Instance.new("UIStroke", b); st.Color = col; st.Thickness = 1; st.Transparency = 0.25
+        table.insert(RGBElements, {Type = "Button", Stroke = st, DefaultColor = col})
+        return b, st
+    end
+
+    local btnPlay = makeMusicCtrlBtn(0, 0.25, "▶️ PHÁT", Theme.AccentOn)
+    local btnPause = makeMusicCtrlBtn(0.25, 0.25, "⏯️ DỪNG/TIẾP", Theme.Brand)
+    local btnLoop, stLoop = makeMusicCtrlBtn(0.50, 0.26, State.MusicLoop and "🔁 LẶP: BẬT" or "🔁 LẶP: TẮT", State.MusicLoop and Theme.AccentOn or Theme.TextDim)
+    local btnStop = makeMusicCtrlBtn(0.76, 0.24, "⏹️ TẮT", Theme.AccentOff)
+
+    btnPlay.MouseButton1Click:Connect(function() clickAnimate(btnPlay); playMusic(musicIdBox.Text) end)
+    btnPause.MouseButton1Click:Connect(function()
+        clickAnimate(btnPause)
+        if currentSound then
+            if isMusicPaused then
+                currentSound:Resume(); isMusicPaused = false
+                MakeToast("Tiếp tục phát", "Đã tiếp tục bài nhạc", Theme.AccentOn)
+            else
+                currentSound:Pause(); isMusicPaused = true
+                MakeToast("Tạm dừng", "Đã tạm dừng bài nhạc", Theme.Brand)
+            end
+        end
+    end)
+    btnLoop.MouseButton1Click:Connect(function()
+        clickAnimate(btnLoop)
+        State.MusicLoop = not State.MusicLoop
+        if currentSound then currentSound.Looped = State.MusicLoop end
+        btnLoop.Text = State.MusicLoop and "🔁 LẶP: BẬT" or "🔁 LẶP: TẮT"
+        btnLoop.TextColor3 = State.MusicLoop and Theme.AccentOn or Theme.TextDim
+        if not State.RGB then stLoop.Color = State.MusicLoop and Theme.AccentOn or Theme.TextDim end
+        if State.AutoSave then saveConfig() end
+    end)
+    btnStop.MouseButton1Click:Connect(function() clickAnimate(btnStop); stopMusic() end)
+
+    local volumeFrame = createSlider(page5, "🔊 Âm lượng nhạc", 0, 10, "MusicVolume", function(val) if currentSound then currentSound.Volume = val end end)
+    volumeFrame.LayoutOrder = 3
 
     local musicListCard = Instance.new("Frame", page5)
-    musicListCard.Size = UDim2.new(0.94, 0, 1, -156); musicListCard.BackgroundColor3 = Color3.fromRGB(20, 22, 31); musicListCard.LayoutOrder = 4; musicListCard.ZIndex = 10
+    musicListCard.Size = UDim2.new(0.94, 0, 1, -142); musicListCard.BackgroundColor3 = Color3.fromRGB(20, 22, 31); musicListCard.LayoutOrder = 4; musicListCard.ZIndex = 10
     Instance.new("UICorner", musicListCard).CornerRadius = UDim.new(0, 8)
     local mlStroke = Instance.new("UIStroke", musicListCard); mlStroke.Color = Theme.Stroke; mlStroke.Thickness = 1; table.insert(RGBElements, {Type = "Info", Stroke = mlStroke})
 
@@ -1303,7 +1458,7 @@ do
             local stroke = Instance.new("UIStroke", item); stroke.Color = Theme.Stroke; stroke.Thickness = 1; table.insert(RGBElements, {Type = "Info", Stroke = stroke})
             local nameBox = Instance.new("TextBox", item); nameBox.Size = UDim2.new(0.56, 0, 1, 0); nameBox.Position = UDim2.new(0.04, 0, 0, 0); nameBox.Text = data.name; nameBox.TextColor3 = Theme.TextTitle; nameBox.Font = Enum.Font.GothamSemibold; nameBox.TextSize = 9.5; nameBox.BackgroundTransparency = 1; nameBox.TextXAlignment = Enum.TextXAlignment.Left; nameBox.ClearTextOnFocus = false; nameBox.ZIndex = 10
             nameBox.FocusLost:Connect(function() if nameBox.Text ~= "" then data.name = nameBox.Text; saveMusicData() else nameBox.Text = data.name end end)
-            
+
             local playBtn = Instance.new("TextButton", item); playBtn.Size = UDim2.new(0.18, 0, 0.7, 0); playBtn.Position = UDim2.new(0.62, 0, 0.15, 0); playBtn.Text = "▶ Phát"; playBtn.BackgroundColor3 = Color3.fromRGB(28, 48, 62); playBtn.TextColor3 = Theme.Brand; playBtn.Font = Enum.Font.GothamBold; playBtn.TextSize = 9; playBtn.ZIndex = 10; Instance.new("UICorner", playBtn).CornerRadius = UDim.new(0, 5)
             local pSt = Instance.new("UIStroke", playBtn); pSt.Color = Theme.Brand; pSt.Thickness = 0.8; pSt.Transparency = 0.3
 
@@ -1329,12 +1484,25 @@ do
     renderSavedMusic()
 end
 
+-- ==========================================
+-- [TAB 6: TP SAVE (NÂNG CẤP ESP ĐIỂM LƯU + AUTO LOOP TP + CẬP NHẬT VỊ TRÍ)]
+-- ==========================================
+local savedTpList = {}
+local clearSavedTpESPs
 do
-    local tpFileName = "MenuVipProMax_SavedTPs.json"; local savedTpList = {}
+    local tpFileName = "MenuVipProMax_SavedTPs.json"
     pcall(function() if isfile and isfile(tpFileName) then local decoded = HttpService:JSONDecode(readfile(tpFileName)); if type(decoded) == "table" then savedTpList = decoded end end end)
     local function saveTpData() pcall(function() if writefile then local d = {}; for _, v in ipairs(savedTpList) do if not v.isTemp then table.insert(d, v) end end; writefile(tpFileName, HttpService:JSONEncode(d)) end end) end
     local pendingDeleteAll = false
     local renderSavedTps
+
+    clearSavedTpESPs = function()
+        for _, item in pairs(SavedTpESPs) do
+            if item.Anchor then item.Anchor:Destroy() end
+            if item.Billboard then item.Billboard:Destroy() end
+        end
+        SavedTpESPs = {}
+    end
 
     local tpControlFrame_New = createDualButtons(page6, "📍 LƯU VỊ TRÍ HIỆN TẠI", Theme.Brand, function()
         if player.Character then
@@ -1345,21 +1513,72 @@ do
                 table.insert(savedTpList, {name = "Lưu Vị Trí " .. (mx + 1), cframe = cf, isTemp = false}); saveTpData(); renderSavedTps()
             end
         end
-    end, "🗑️ XÓA TẤT CẢ", Theme.AccentOff, function() 
+    end, "🗑️ XÓA TẤT CẢ", Theme.AccentOff, function()
         if not pendingDeleteAll then pendingDeleteAll = true; MakeToast("⚠️ CẢNH BÁO", "Ấn lần nữa để xác nhận xóa sạch!", Theme.AccentOff); task.delay(3, function() pendingDeleteAll = false end)
-        else savedTpList = {}; saveTpData(); renderSavedTps(); MakeToast("Thành công", "Đã xóa toàn bộ!", Theme.Brand); pendingDeleteAll = false end
-    end); tpControlFrame_New.LayoutOrder = 1 
+        else savedTpList = {}; saveTpData(); clearSavedTpESPs(); renderSavedTps(); MakeToast("Thành công", "Đã xóa toàn bộ tọa độ!", Theme.Brand); pendingDeleteAll = false end
+    end); tpControlFrame_New.LayoutOrder = 1
+
+    -- Hàng tính năng nâng cấp cho TP Save: ESP Điểm Lưu & Auto Loop TP
+    local tpSubRow = Instance.new("Frame", page6)
+    tpSubRow.Size = UDim2.new(0.94, 0, 0, 26); tpSubRow.BackgroundTransparency = 1; tpSubRow.LayoutOrder = 2
+
+    local espTpBtn = Instance.new("TextButton", tpSubRow)
+    espTpBtn.Size = UDim2.new(0.486, 0, 1, 0); espTpBtn.AutoButtonColor = false; espTpBtn.ZIndex = 10
+    espTpBtn.Font = Enum.Font.GothamBold; espTpBtn.TextSize = 9.5
+    Instance.new("UICorner", espTpBtn).CornerRadius = UDim.new(0, 6)
+    local espTpStroke = Instance.new("UIStroke", espTpBtn); espTpStroke.Thickness = 1; espTpStroke.Transparency = 0.25
+    table.insert(RGBElements, {Type = "Toggle", Stroke = espTpStroke, State = function() return State.TpSaveESP end})
+
+    local loopTpBtn = Instance.new("TextButton", tpSubRow)
+    loopTpBtn.Size = UDim2.new(0.486, 0, 1, 0); loopTpBtn.Position = UDim2.new(0.514, 0, 0, 0)
+    loopTpBtn.AutoButtonColor = false; loopTpBtn.ZIndex = 10
+    loopTpBtn.Font = Enum.Font.GothamBold; loopTpBtn.TextSize = 9.5
+    Instance.new("UICorner", loopTpBtn).CornerRadius = UDim.new(0, 6)
+    local loopTpStroke = Instance.new("UIStroke", loopTpBtn); loopTpStroke.Thickness = 1; loopTpStroke.Transparency = 0.25
+    table.insert(RGBElements, {Type = "Toggle", Stroke = loopTpStroke, State = function() return State.TpSaveLoop end})
+
+    local function syncTpSubBtns()
+        espTpBtn.Text = State.TpSaveESP and "👁️ ESP ĐIỂM LƯU [BẬT]" or "👁️ ESP ĐIỂM LƯU [TẮT]"
+        espTpBtn.TextColor3 = State.TpSaveESP and Theme.AccentOn or Theme.TextDim
+        espTpBtn.BackgroundColor3 = State.TpSaveESP and Color3.fromRGB(26, 46, 38) or Theme.ItemBg
+        if not State.RGB then espTpStroke.Color = State.TpSaveESP and Theme.AccentOn or Theme.Stroke end
+
+        loopTpBtn.Text = State.TpSaveLoop and "🔁 AUTO TUẦN TRA [BẬT]" or "🔁 AUTO TUẦN TRA [TẮT]"
+        loopTpBtn.TextColor3 = State.TpSaveLoop and Theme.AccentOn or Theme.TextDim
+        loopTpBtn.BackgroundColor3 = State.TpSaveLoop and Color3.fromRGB(26, 46, 38) or Theme.ItemBg
+        if not State.RGB then loopTpStroke.Color = State.TpSaveLoop and Theme.AccentOn or Theme.Stroke end
+    end
+    syncTpSubBtns()
+
+    espTpBtn.MouseButton1Click:Connect(function()
+        clickAnimate(espTpBtn)
+        State.TpSaveESP = not State.TpSaveESP
+        if not State.TpSaveESP then clearSavedTpESPs() end
+        syncTpSubBtns()
+        if State.AutoSave then saveConfig() end
+        MakeToast(State.TpSaveESP and "Đã Bật" or "Đã Tắt", "Định vị ESP các tọa độ đã lưu", State.TpSaveESP and Theme.AccentOn or Theme.AccentOff)
+    end)
+
+    loopTpBtn.MouseButton1Click:Connect(function()
+        clickAnimate(loopTpBtn)
+        State.TpSaveLoop = not State.TpSaveLoop
+        syncTpSubBtns()
+        if State.AutoSave then saveConfig() end
+        MakeToast(State.TpSaveLoop and "Đã Bật" or "Đã Tắt", "Tự động dịch chuyển lần lượt qua các điểm lưu", State.TpSaveLoop and Theme.AccentOn or Theme.AccentOff)
+    end)
 
     local tpListCard = Instance.new("Frame", page6)
-    tpListCard.Size = UDim2.new(0.94, 0, 1, -46); tpListCard.BackgroundColor3 = Color3.fromRGB(20, 22, 31); tpListCard.LayoutOrder = 2; tpListCard.ZIndex = 10
+    tpListCard.Size = UDim2.new(0.94, 0, 1, -76); tpListCard.BackgroundColor3 = Color3.fromRGB(20, 22, 31); tpListCard.LayoutOrder = 3; tpListCard.ZIndex = 10
     Instance.new("UICorner", tpListCard).CornerRadius = UDim.new(0, 8)
     local tlStroke = Instance.new("UIStroke", tpListCard); tlStroke.Color = Theme.Stroke; tlStroke.Thickness = 1; table.insert(RGBElements, {Type = "Info", Stroke = tlStroke})
 
     local tlHeader = Instance.new("TextLabel", tpListCard)
-    tlHeader.Size = UDim2.new(1, -16, 0, 18); tlHeader.Position = UDim2.new(0, 10, 0, 3); mlHeader = tlHeader; tlHeader.BackgroundTransparency = 1
+    tlHeader.Size = UDim2.new(1, -16, 0, 18); tlHeader.Position = UDim2.new(0, 10, 0, 3); tlHeader.BackgroundTransparency = 1
     tlHeader.Text = "📍 DANH SÁCH TỌA ĐỘ ĐÃ LƯU"; tlHeader.TextColor3 = Theme.Brand; tlHeader.Font = Enum.Font.GothamBold; tlHeader.TextSize = 9; tlHeader.TextXAlignment = Enum.TextXAlignment.Left; tlHeader.ZIndex = 10
 
-    local savedTpContent = Instance.new("ScrollingFrame", tpListCard); savedTpContent.Size = UDim2.new(1, -10, 1, -24); savedTpContent.Position = UDim2.new(0, 5, 0, 22); savedTpContent.BackgroundTransparency = 1; savedTpContent.ScrollBarThickness = 3; savedTpContent.ScrollBarImageColor3 = Theme.Brand; savedTpContent.BorderSizePixel = 0; savedTpContent.ZIndex = 10
+    local savedTpContent = Instance.new("ScrollingFrame", tpListCard)
+    savedTpContent.Size = UDim2.new(1, -10, 1, -24); savedTpContent.Position = UDim2.new(0, 5, 0, 22)
+    savedTpContent.BackgroundTransparency = 1; savedTpContent.ScrollBarThickness = 3; savedTpContent.ScrollBarImageColor3 = Theme.Brand; savedTpContent.BorderSizePixel = 0; savedTpContent.ZIndex = 10
     local tpLayout = Instance.new("UIListLayout", savedTpContent); tpLayout.SortOrder = Enum.SortOrder.LayoutOrder; tpLayout.Padding = UDim.new(0, 4)
     tpLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function() savedTpContent.CanvasSize = UDim2.new(0, 0, 0, tpLayout.AbsoluteContentSize.Y + 10) end)
 
@@ -1375,25 +1594,70 @@ do
         for i, data in ipairs(savedTpList) do
             local item = Instance.new("Frame", savedTpContent); item.Size = UDim2.new(1, -4, 0, 32); item.BackgroundColor3 = Theme.ItemBg; item.ZIndex = 10; Instance.new("UICorner", item).CornerRadius = UDim.new(0, 6)
             local stroke = Instance.new("UIStroke", item); stroke.Color = Theme.Stroke; stroke.Thickness = 1; table.insert(RGBElements, {Type = "Info", Stroke = stroke})
-            
-            local nameBox = Instance.new("TextBox", item); nameBox.Size = UDim2.new(0.52, 0, 1, 0); nameBox.Position = UDim2.new(0.04, 0, 0, 0); nameBox.Text = data.name; nameBox.TextColor3 = Theme.TextTitle; nameBox.Font = Enum.Font.GothamSemibold; nameBox.TextSize = 10; nameBox.BackgroundTransparency = 1; nameBox.TextXAlignment = Enum.TextXAlignment.Left; nameBox.ClearTextOnFocus = false; nameBox.ZIndex = 10
+
+            local nameBox = Instance.new("TextBox", item); nameBox.Size = UDim2.new(0.46, 0, 1, 0); nameBox.Position = UDim2.new(0.03, 0, 0, 0); nameBox.Text = data.name; nameBox.TextColor3 = Theme.TextTitle; nameBox.Font = Enum.Font.GothamSemibold; nameBox.TextSize = 9.5; nameBox.BackgroundTransparency = 1; nameBox.TextXAlignment = Enum.TextXAlignment.Left; nameBox.ClearTextOnFocus = false; nameBox.ZIndex = 10
             nameBox.FocusLost:Connect(function() if nameBox.Text ~= "" then data.name = nameBox.Text; saveTpData() else nameBox.Text = data.name end end)
-            
-            local tpBtn = Instance.new("TextButton", item); tpBtn.Size = UDim2.new(0.22, 0, 0.68, 0); tpBtn.Position = UDim2.new(0.57, 0, 0.16, 0); tpBtn.Text = "⚡ TP"; tpBtn.BackgroundColor3 = Color3.fromRGB(26, 46, 62); tpBtn.TextColor3 = Theme.Brand; tpBtn.Font = Enum.Font.GothamBold; tpBtn.TextSize = 9.5; tpBtn.ZIndex = 10; Instance.new("UICorner", tpBtn).CornerRadius = UDim.new(0, 5)
+
+            local tpBtn = Instance.new("TextButton", item); tpBtn.Size = UDim2.new(0.18, 0, 0.68, 0); tpBtn.Position = UDim2.new(0.50, 0, 0.16, 0); tpBtn.Text = "⚡ TP"; tpBtn.BackgroundColor3 = Color3.fromRGB(26, 46, 62); tpBtn.TextColor3 = Theme.Brand; tpBtn.Font = Enum.Font.GothamBold; tpBtn.TextSize = 9; tpBtn.ZIndex = 10; Instance.new("UICorner", tpBtn).CornerRadius = UDim.new(0, 5)
             local tpSt = Instance.new("UIStroke", tpBtn); tpSt.Color = Theme.Brand; tpSt.Thickness = 0.9; tpSt.Transparency = 0.25
 
-            local delBtn = Instance.new("TextButton", item); delBtn.Size = UDim2.new(0.15, 0, 0.68, 0); delBtn.Position = UDim2.new(0.81, 0, 0.16, 0); delBtn.Text = "Xóa"; delBtn.BackgroundColor3 = Color3.fromRGB(48, 28, 34); delBtn.TextColor3 = Theme.AccentOff; delBtn.Font = Enum.Font.GothamBold; delBtn.TextSize = 9; delBtn.ZIndex = 10; Instance.new("UICorner", delBtn).CornerRadius = UDim.new(0, 5)
+            local updBtn = Instance.new("TextButton", item); updBtn.Size = UDim2.new(0.13, 0, 0.68, 0); updBtn.Position = UDim2.new(0.695, 0, 0.16, 0); updBtn.Text = "🔄"; updBtn.BackgroundColor3 = Color3.fromRGB(28, 46, 38); updBtn.TextColor3 = Theme.AccentOn; updBtn.Font = Enum.Font.GothamBold; updBtn.TextSize = 9.5; updBtn.ZIndex = 10; Instance.new("UICorner", updBtn).CornerRadius = UDim.new(0, 5)
+            local upSt = Instance.new("UIStroke", updBtn); upSt.Color = Theme.AccentOn; upSt.Thickness = 0.9; upSt.Transparency = 0.25
+
+            local delBtn = Instance.new("TextButton", item); delBtn.Size = UDim2.new(0.14, 0, 0.68, 0); delBtn.Position = UDim2.new(0.84, 0, 0.16, 0); delBtn.Text = "Xóa"; delBtn.BackgroundColor3 = Color3.fromRGB(48, 28, 34); delBtn.TextColor3 = Theme.AccentOff; delBtn.Font = Enum.Font.GothamBold; delBtn.TextSize = 9; delBtn.ZIndex = 10; Instance.new("UICorner", delBtn).CornerRadius = UDim.new(0, 5)
             local dlSt = Instance.new("UIStroke", delBtn); dlSt.Color = Theme.AccentOff; dlSt.Thickness = 0.9; dlSt.Transparency = 0.25
 
-            tpBtn.MouseButton1Click:Connect(function() clickAnimate(tpBtn); if player.Character then local r = getUniversalRoot(player.Character); if r then r.CFrame = CFrame.new(unpack(data.cframe)); MakeToast("Dịch chuyển", "Đến " .. data.name, Theme.Brand) end end end)
-            delBtn.MouseButton1Click:Connect(function() clickAnimate(delBtn); table.remove(savedTpList, i); saveTpData(); renderSavedTps() end)
+            tpBtn.MouseButton1Click:Connect(function()
+                clickAnimate(tpBtn)
+                if player.Character then
+                    local r = getUniversalRoot(player.Character)
+                    if r then
+                        r.CFrame = CFrame.new(unpack(data.cframe))
+                        if State.AirWalk then airWalkY = r.Position.Y - getFootOffset(player.Character) end
+                        MakeToast("Dịch chuyển", "Đến " .. data.name, Theme.Brand)
+                    end
+                end
+            end)
+            updBtn.MouseButton1Click:Connect(function()
+                clickAnimate(updBtn)
+                if player.Character then
+                    local r = getUniversalRoot(player.Character)
+                    if r then
+                        data.cframe = {r.CFrame:GetComponents()}
+                        saveTpData()
+                        MakeToast("Đã cập nhật", "Tọa độ mới cho: " .. data.name, Theme.AccentOn)
+                    end
+                end
+            end)
+            delBtn.MouseButton1Click:Connect(function()
+                clickAnimate(delBtn)
+                table.remove(savedTpList, i)
+                saveTpData(); clearSavedTpESPs(); renderSavedTps()
+            end)
         end
     end
     renderSavedTps()
+
+    -- Vòng lặp Auto Tuần Tra qua các điểm lưu
+    task.spawn(function()
+        local loopIdx = 1
+        while task.wait(1.6) do
+            if State.TpSaveLoop and #savedTpList > 0 and player.Character then
+                if loopIdx > #savedTpList then loopIdx = 1 end
+                local item = savedTpList[loopIdx]
+                local r = getUniversalRoot(player.Character)
+                if r and item and item.cframe then
+                    r.CFrame = CFrame.new(unpack(item.cframe))
+                    if State.AirWalk then airWalkY = r.Position.Y - getFootOffset(player.Character) end
+                end
+                loopIdx = loopIdx + 1
+            end
+        end
+    end)
 end
 
 -- ==========================================
--- [TAB 7: TP NGƯỜI CHƠI]
+-- [TAB 7: TP NGƯỜI CHƠI (BỐ CỤC GỌN + SỬA LỖI CHỮ IN HOA)]
 -- ==========================================
 local targetTpPlayer = nil
 local autoTpPlayerEnabled = false
@@ -1435,12 +1699,12 @@ local function teleportToSelectedPlayer(isManualClick)
     if not targetTpPlayer or not targetTpPlayer.Character then return false end
     local targetCF = getCharacterCFrame(targetTpPlayer.Character)
     local targetHum = targetTpPlayer.Character:FindFirstChildOfClass("Humanoid")
-    
+
     local myChar = player.Character
     if not myChar then return false end
     local myRoot = getUniversalRoot(myChar)
     local myHum = myChar:FindFirstChildOfClass("Humanoid")
-    
+
     if targetCF and myRoot and (not targetHum or targetHum.Health > 0) and (not myHum or myHum.Health > 0) then
         local mode = TpPositions[State.TpPositionIdx] or TpPositions[1]
         local targetPos = targetCF.Position
@@ -1454,7 +1718,7 @@ local function teleportToSelectedPlayer(isManualClick)
         local _, targetYaw, _ = targetCF:ToEulerAnglesYXZ()
         local baseCFrame = CFrame.new(targetPos) * CFrame.Angles(0, targetYaw, 0)
         local finalCFrame = baseCFrame * mode.GetOffset(State.TpDistance)
-        
+
         if mode.IsHorizontal then
             if myHum then myHum.PlatformStand = true end
             wasHorizontalTp = true
@@ -1464,7 +1728,7 @@ local function teleportToSelectedPlayer(isManualClick)
         elseif wasHorizontalTp then
             restoreNormalPosture()
         end
-        
+
         myRoot.CFrame = finalCFrame
         myRoot.AssemblyLinearVelocity = Vector3.zero
         myRoot.AssemblyAngularVelocity = Vector3.zero
@@ -1503,52 +1767,59 @@ local function resetCameraSubject()
 end
 
 do
+    -- Thẻ điều khiển TP Player được gom gọn 3 tầng trong 78px để nhường chỗ cho danh sách người chơi
     local tpControlCard = Instance.new("Frame", page7)
-    tpControlCard.Size = UDim2.new(0.94, 0, 0, 80); tpControlCard.BackgroundColor3 = Theme.ItemBg
+    tpControlCard.Size = UDim2.new(0.94, 0, 0, 78); tpControlCard.BackgroundColor3 = Theme.ItemBg
     tpControlCard.LayoutOrder = 1; tpControlCard.ZIndex = 10
     Instance.new("UICorner", tpControlCard).CornerRadius = UDim.new(0, 8)
     local tpCardStroke = Instance.new("UIStroke", tpControlCard); tpCardStroke.Color = Theme.Stroke; tpCardStroke.Thickness = 1
     table.insert(RGBElements, {Type = "Info", Stroke = tpCardStroke})
 
+    -- Tầng 1: Mục tiêu + Nút Xem góc nhìn
     local targetHeaderRow = Instance.new("Frame", tpControlCard)
-    targetHeaderRow.Size = UDim2.new(1, -12, 0, 24); targetHeaderRow.Position = UDim2.new(0, 6, 0, 4)
+    targetHeaderRow.Size = UDim2.new(1, -12, 0, 22); targetHeaderRow.Position = UDim2.new(0, 6, 0, 4)
     targetHeaderRow.BackgroundColor3 = Color3.fromRGB(18, 20, 28); targetHeaderRow.ZIndex = 10
     Instance.new("UICorner", targetHeaderRow).CornerRadius = UDim.new(0, 6)
 
     local selectedAvatarImg = Instance.new("ImageLabel", targetHeaderRow)
-    selectedAvatarImg.Size = UDim2.new(0, 18, 0, 18); selectedAvatarImg.Position = UDim2.new(0, 5, 0.5, -9)
+    selectedAvatarImg.Size = UDim2.new(0, 16, 0, 16); selectedAvatarImg.Position = UDim2.new(0, 5, 0.5, -8)
     selectedAvatarImg.BackgroundColor3 = Color3.fromRGB(35, 38, 50); selectedAvatarImg.Image = "rbxassetid://0"; selectedAvatarImg.ZIndex = 10
     Instance.new("UICorner", selectedAvatarImg).CornerRadius = UDim.new(1, 0)
     local selAvaStroke = Instance.new("UIStroke", selectedAvatarImg); selAvaStroke.Color = Theme.Brand; selAvaStroke.Thickness = 1
 
     local targetStatusLabel = Instance.new("TextLabel", targetHeaderRow)
-    targetStatusLabel.Size = UDim2.new(1, -108, 1, 0); targetStatusLabel.Position = UDim2.new(0, 28, 0, 0)
+    targetStatusLabel.Size = UDim2.new(1, -104, 1, 0); targetStatusLabel.Position = UDim2.new(0, 26, 0, 0)
     targetStatusLabel.BackgroundTransparency = 1; targetStatusLabel.RichText = true
     targetStatusLabel.Text = "🎯 <font color='#E05666'>Chưa chọn mục tiêu</font>"; targetStatusLabel.TextColor3 = Theme.TextTitle
-    targetStatusLabel.Font = Enum.Font.GothamBold; targetStatusLabel.TextSize = 10; targetStatusLabel.TextTruncate = Enum.TextTruncate.AtEnd
+    targetStatusLabel.Font = Enum.Font.GothamBold; targetStatusLabel.TextSize = 9.5; targetStatusLabel.TextTruncate = Enum.TextTruncate.AtEnd
     targetStatusLabel.TextXAlignment = Enum.TextXAlignment.Left; targetStatusLabel.ZIndex = 10
 
     local spectateBtn = Instance.new("TextButton", targetHeaderRow)
-    spectateBtn.Size = UDim2.new(0, 72, 0, 18); spectateBtn.Position = UDim2.new(1, -76, 0.5, -9)
+    spectateBtn.Size = UDim2.new(0, 72, 0, 17); spectateBtn.Position = UDim2.new(1, -75, 0.5, -8.5)
     spectateBtn.BackgroundColor3 = Color3.fromRGB(45, 28, 35); spectateBtn.Text = "👁️ XEM [TẮT]"
     spectateBtn.TextColor3 = Theme.AccentOff; spectateBtn.Font = Enum.Font.GothamBold; spectateBtn.TextSize = 8.5
     spectateBtn.AutoButtonColor = false; spectateBtn.ZIndex = 10
     Instance.new("UICorner", spectateBtn).CornerRadius = UDim.new(0, 5)
     local spectateStroke = Instance.new("UIStroke", spectateBtn); spectateStroke.Color = Theme.AccentOff; spectateStroke.Thickness = 0.9; spectateStroke.Transparency = 0.25
 
-    local tpPosBtn = Instance.new("TextButton", tpControlCard)
-    tpPosBtn.Size = UDim2.new(1, -12, 0, 22); tpPosBtn.Position = UDim2.new(0, 6, 0, 31)
+    -- Tầng 2: Cụm 3 nút ngang (Đổi hướng TP | TP 1 Lần | Auto TP)
+    local actionMidRow = Instance.new("Frame", tpControlCard)
+    actionMidRow.Size = UDim2.new(1, -12, 0, 22); actionMidRow.Position = UDim2.new(0, 6, 0, 29)
+    actionMidRow.BackgroundTransparency = 1; actionMidRow.ZIndex = 10
+
+    local tpPosBtn = Instance.new("TextButton", actionMidRow)
+    tpPosBtn.Size = UDim2.new(0.42, -3, 1, 0); tpPosBtn.Position = UDim2.new(0, 0, 0, 0)
     tpPosBtn.BackgroundColor3 = Color3.fromRGB(26, 44, 62); tpPosBtn.Text = ""; tpPosBtn.AutoButtonColor = false; tpPosBtn.ZIndex = 10
-    Instance.new("UICorner", tpPosBtn).CornerRadius = UDim.new(0, 6)
-    local tpPosStroke = Instance.new("UIStroke", tpPosBtn); tpPosStroke.Color = Theme.Brand; tpPosStroke.Thickness = 1; tpPosStroke.Transparency = 0.25
+    Instance.new("UICorner", tpPosBtn).CornerRadius = UDim.new(0, 5)
+    local tpPosStroke = Instance.new("UIStroke", tpPosBtn); tpPosStroke.Color = Theme.Brand; tpPosStroke.Thickness = 0.9; tpPosStroke.Transparency = 0.25
 
     local tpPosLabel = Instance.new("TextLabel", tpPosBtn)
     tpPosLabel.Size = UDim2.new(1, 0, 1, 0); tpPosLabel.BackgroundTransparency = 1; tpPosLabel.RichText = true
-    tpPosLabel.TextColor3 = Theme.TextTitle; tpPosLabel.Font = Enum.Font.GothamBold; tpPosLabel.TextSize = 10; tpPosLabel.ZIndex = 10
+    tpPosLabel.TextColor3 = Theme.TextTitle; tpPosLabel.Font = Enum.Font.GothamBold; tpPosLabel.TextSize = 8.5; tpPosLabel.ZIndex = 10
 
     local function updateTpPosText()
         local item = TpPositions[State.TpPositionIdx] or TpPositions[1]
-        tpPosLabel.Text = "📍 VỊ TRÍ TP: <font color='#F0C868'>" .. string.upper(item.Name) .. "</font>"
+        tpPosLabel.Text = "📍 <font color='#F0C868'>" .. item.Upper .. "</font>"
     end
     updateTpPosText()
 
@@ -1562,22 +1833,41 @@ do
         if State.AutoSave then saveConfig() end
     end)
 
+    local tpOnceBtn = Instance.new("TextButton", actionMidRow)
+    tpOnceBtn.Size = UDim2.new(0.27, -2, 1, 0); tpOnceBtn.Position = UDim2.new(0.42, 1, 0, 0)
+    tpOnceBtn.BackgroundColor3 = Color3.fromRGB(24, 40, 56); tpOnceBtn.Text = "⚡ TP 1 LẦN"
+    tpOnceBtn.TextColor3 = Theme.Brand; tpOnceBtn.Font = Enum.Font.GothamBold; tpOnceBtn.TextSize = 8.5
+    tpOnceBtn.AutoButtonColor = false; tpOnceBtn.ZIndex = 10
+    Instance.new("UICorner", tpOnceBtn).CornerRadius = UDim.new(0, 5)
+    local tpOnceStroke = Instance.new("UIStroke", tpOnceBtn); tpOnceStroke.Color = Theme.Brand; tpOnceStroke.Thickness = 0.9; tpOnceStroke.Transparency = 0.25
+    table.insert(RGBElements, {Type = "Button", Stroke = tpOnceStroke, DefaultColor = Theme.Brand})
+
+    local autoTpBtn = Instance.new("TextButton", actionMidRow)
+    autoTpBtn.Size = UDim2.new(0.31, -1, 1, 0); autoTpBtn.Position = UDim2.new(0.69, 2, 0, 0)
+    autoTpBtn.BackgroundColor3 = Color3.fromRGB(45, 28, 35); autoTpBtn.Text = "🔁 AUTO [TẮT]"
+    autoTpBtn.TextColor3 = Theme.AccentOff; autoTpBtn.Font = Enum.Font.GothamBold; autoTpBtn.TextSize = 8.5
+    autoTpBtn.AutoButtonColor = false; autoTpBtn.ZIndex = 10
+    Instance.new("UICorner", autoTpBtn).CornerRadius = UDim.new(0, 5)
+    local autoTpStroke = Instance.new("UIStroke", autoTpBtn); autoTpStroke.Color = Theme.AccentOff; autoTpStroke.Thickness = 0.9; autoTpStroke.Transparency = 0.25
+    table.insert(RGBElements, {Type = "Toggle", Stroke = autoTpStroke, State = function() return autoTpPlayerEnabled end})
+
+    -- Tầng 3: Thanh trượt khoảng cách
     local tpDistContainer = Instance.new("Frame", tpControlCard)
-    tpDistContainer.Size = UDim2.new(1, -12, 0, 22); tpDistContainer.Position = UDim2.new(0, 6, 0, 55)
+    tpDistContainer.Size = UDim2.new(1, -12, 0, 21); tpDistContainer.Position = UDim2.new(0, 6, 0, 54)
     tpDistContainer.BackgroundTransparency = 1; tpDistContainer.ZIndex = 10
 
     local tpDistTitle = Instance.new("TextLabel", tpDistContainer)
     tpDistTitle.Size = UDim2.new(0.7, 0, 0, 11); tpDistTitle.Position = UDim2.new(0, 2, 0, 0)
     tpDistTitle.BackgroundTransparency = 1; tpDistTitle.Text = "📏 Khoảng cách đứng (Studs):"
-    tpDistTitle.TextColor3 = Theme.TextDim; tpDistTitle.Font = Enum.Font.GothamSemibold; tpDistTitle.TextSize = 9.5; tpDistTitle.TextXAlignment = Enum.TextXAlignment.Left; tpDistTitle.ZIndex = 10
+    tpDistTitle.TextColor3 = Theme.TextDim; tpDistTitle.Font = Enum.Font.GothamSemibold; tpDistTitle.TextSize = 9; tpDistTitle.TextXAlignment = Enum.TextXAlignment.Left; tpDistTitle.ZIndex = 10
 
     local tpDistValLabel = Instance.new("TextLabel", tpDistContainer)
     tpDistValLabel.Size = UDim2.new(0.3, -4, 0, 11); tpDistValLabel.Position = UDim2.new(0.7, 0, 0, 0)
     tpDistValLabel.BackgroundTransparency = 1; tpDistValLabel.Text = tostring(State.TpDistance) .. " m"
-    tpDistValLabel.TextColor3 = Color3.fromRGB(240, 200, 104); tpDistValLabel.Font = Enum.Font.GothamBold; tpDistValLabel.TextSize = 10; tpDistValLabel.TextXAlignment = Enum.TextXAlignment.Right; tpDistValLabel.ZIndex = 10
+    tpDistValLabel.TextColor3 = Color3.fromRGB(240, 200, 104); tpDistValLabel.Font = Enum.Font.GothamBold; tpDistValLabel.TextSize = 9.5; tpDistValLabel.TextXAlignment = Enum.TextXAlignment.Right; tpDistValLabel.ZIndex = 10
 
     local tpDistTrack = Instance.new("Frame", tpDistContainer)
-    tpDistTrack.Size = UDim2.new(1, -4, 0, 5); tpDistTrack.Position = UDim2.new(0, 2, 0, 14)
+    tpDistTrack.Size = UDim2.new(1, -4, 0, 5); tpDistTrack.Position = UDim2.new(0, 2, 0, 13)
     tpDistTrack.BackgroundColor3 = Color3.fromRGB(16, 17, 24); tpDistTrack.ZIndex = 10
     Instance.new("UICorner", tpDistTrack).CornerRadius = UDim.new(1, 0)
 
@@ -1631,28 +1921,8 @@ do
         end
     end
 
-    local tpActionRow = Instance.new("Frame", page7)
-    tpActionRow.Size = UDim2.new(0.94, 0, 0, 26); tpActionRow.BackgroundTransparency = 1; tpActionRow.LayoutOrder = 2
-
-    local tpOnceBtn = Instance.new("TextButton", tpActionRow)
-    tpOnceBtn.Size = UDim2.new(0.486, 0, 1, 0); tpOnceBtn.BackgroundColor3 = Color3.fromRGB(24, 40, 56)
-    tpOnceBtn.Text = "⚡ TP 1 LẦN"; tpOnceBtn.TextColor3 = Theme.Brand; tpOnceBtn.Font = Enum.Font.GothamBold; tpOnceBtn.TextSize = 10
-    tpOnceBtn.AutoButtonColor = false; tpOnceBtn.ZIndex = 10
-    Instance.new("UICorner", tpOnceBtn).CornerRadius = UDim.new(0, 6)
-    local tpOnceStroke = Instance.new("UIStroke", tpOnceBtn); tpOnceStroke.Color = Theme.Brand; tpOnceStroke.Thickness = 1; tpOnceStroke.Transparency = 0.25
-    table.insert(RGBElements, {Type = "Button", Stroke = tpOnceStroke, DefaultColor = Theme.Brand})
-
-    local autoTpBtn = Instance.new("TextButton", tpActionRow)
-    autoTpBtn.Size = UDim2.new(0.486, 0, 1, 0); autoTpBtn.Position = UDim2.new(0.514, 0, 0, 0)
-    autoTpBtn.BackgroundColor3 = Color3.fromRGB(45, 28, 35); autoTpBtn.Text = "🔁 AUTO TP [TẮT]"
-    autoTpBtn.TextColor3 = Theme.AccentOff; autoTpBtn.Font = Enum.Font.GothamBold; autoTpBtn.TextSize = 10
-    autoTpBtn.AutoButtonColor = false; autoTpBtn.ZIndex = 10
-    Instance.new("UICorner", autoTpBtn).CornerRadius = UDim.new(0, 6)
-    local autoTpStroke = Instance.new("UIStroke", autoTpBtn); autoTpStroke.Color = Theme.AccentOff; autoTpStroke.Thickness = 1; autoTpStroke.Transparency = 0.25
-    table.insert(RGBElements, {Type = "Toggle", Stroke = autoTpStroke, State = function() return autoTpPlayerEnabled end})
-
     local function updateAutoTpBtnUI()
-        autoTpBtn.Text = autoTpPlayerEnabled and "🔁 AUTO TP [BẬT]" or "🔁 AUTO TP [TẮT]"
+        autoTpBtn.Text = autoTpPlayerEnabled and "🔁 AUTO [BẬT]" or "🔁 AUTO [TẮT]"
         autoTpBtn.TextColor3 = autoTpPlayerEnabled and Theme.AccentOn or Theme.AccentOff
         autoTpBtn.BackgroundColor3 = autoTpPlayerEnabled and Color3.fromRGB(28, 48, 38) or Color3.fromRGB(45, 28, 35)
         if not State.RGB then autoTpStroke.Color = autoTpPlayerEnabled and Theme.AccentOn or Theme.AccentOff end
@@ -1702,15 +1972,30 @@ do
         end
     end)
 
+    -- Khung danh sách người chơi mở rộng chiều cao + tích hợp sẵn thanh tìm kiếm
     playerListContainer = Instance.new("Frame", page7)
-    playerListContainer.Size = UDim2.new(0.94, 0, 1, -122); playerListContainer.BackgroundColor3 = Color3.fromRGB(20, 22, 31)
-    playerListContainer.LayoutOrder = 3; playerListContainer.ZIndex = 10
+    playerListContainer.Size = UDim2.new(0.94, 0, 1, -90); playerListContainer.BackgroundColor3 = Color3.fromRGB(20, 22, 31)
+    playerListContainer.LayoutOrder = 2; playerListContainer.ZIndex = 10
     Instance.new("UICorner", playerListContainer).CornerRadius = UDim.new(0, 8)
     local listContainerStroke = Instance.new("UIStroke", playerListContainer); listContainerStroke.Color = Theme.Stroke; listContainerStroke.Thickness = 1
     table.insert(RGBElements, {Type = "Info", Stroke = listContainerStroke})
 
+    local searchBar = Instance.new("Frame", playerListContainer)
+    searchBar.Size = UDim2.new(1, -8, 0, 22); searchBar.Position = UDim2.new(0, 4, 0, 4)
+    searchBar.BackgroundColor3 = Color3.fromRGB(16, 18, 26); searchBar.ZIndex = 11
+    Instance.new("UICorner", searchBar).CornerRadius = UDim.new(0, 6)
+    local sStroke = Instance.new("UIStroke", searchBar); sStroke.Color = Theme.Brand; sStroke.Thickness = 0.9; sStroke.Transparency = 0.35
+    table.insert(RGBElements, {Type = "Button", Stroke = sStroke, DefaultColor = Theme.Brand})
+
+    local searchBox = Instance.new("TextBox", searchBar)
+    searchBox.Size = UDim2.new(1, -16, 1, 0); searchBox.Position = UDim2.new(0, 8, 0, 0)
+    searchBox.BackgroundTransparency = 1; searchBox.PlaceholderText = "🔍 Nhập tên hoặc @username để lọc nhanh..."
+    searchBox.PlaceholderColor3 = Theme.TextDim; searchBox.Text = ""; searchBox.TextColor3 = Theme.TextTitle
+    searchBox.Font = Enum.Font.GothamSemibold; searchBox.TextSize = 9.5; searchBox.TextXAlignment = Enum.TextXAlignment.Left
+    searchBox.ClearTextOnFocus = false; searchBox.ZIndex = 11
+
     playerListScroll = Instance.new("ScrollingFrame", playerListContainer)
-    playerListScroll.Size = UDim2.new(1, -6, 1, -8); playerListScroll.Position = UDim2.new(0, 3, 0, 4)
+    playerListScroll.Size = UDim2.new(1, -6, 1, -30); playerListScroll.Position = UDim2.new(0, 3, 0, 28)
     playerListScroll.BackgroundTransparency = 1; playerListScroll.BorderSizePixel = 0
     playerListScroll.ScrollBarThickness = 3; playerListScroll.ScrollBarImageColor3 = Theme.Brand
     playerListScroll.ScrollingDirection = Enum.ScrollingDirection.Y; playerListScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
@@ -1722,6 +2007,26 @@ do
     local playerScrollPad = Instance.new("UIPadding", playerListScroll)
     playerScrollPad.PaddingTop = UDim.new(0, 2); playerScrollPad.PaddingBottom = UDim.new(0, 6); playerScrollPad.PaddingRight = UDim.new(0, 4)
 
+    local function filterPlayerCards()
+        local keyword = string.lower(searchBox.Text:gsub("^%s*(.-)%s*$", "%1"))
+        for _, item in ipairs(playerListScroll:GetChildren()) do
+            if item.Name == "PaddingFrame" then
+                if keyword == "" then
+                    item.Visible = true
+                else
+                    local matched = false
+                    for _, desc in ipairs(item:GetDescendants()) do
+                        if desc:IsA("TextLabel") and string.find(string.lower(desc.Text), keyword, 1, true) then
+                            matched = true; break
+                        end
+                    end
+                    item.Visible = matched
+                end
+            end
+        end
+    end
+    searchBox:GetPropertyChangedSignal("Text"):Connect(filterPlayerCards)
+
     local function updatePlayerList()
         playerDistLabels = {}
         local cleanRGB = {}; for _, obj in ipairs(RGBElements) do if obj.Stroke and obj.Stroke.Parent then table.insert(cleanRGB, obj) end end; RGBElements = cleanRGB
@@ -1732,49 +2037,49 @@ do
             if p ~= player then
                 local isSelected = (targetTpPlayer == p)
                 local pFrame = Instance.new("Frame", playerListScroll)
-                pFrame.Name = "PaddingFrame"; pFrame.Size = UDim2.new(1, -2, 0, 34); pFrame.BackgroundTransparency = 1; pFrame.ZIndex = 10
-                
+                pFrame.Name = "PaddingFrame"; pFrame.Size = UDim2.new(1, -2, 0, 32); pFrame.BackgroundTransparency = 1; pFrame.ZIndex = 10
+
                 local btn = Instance.new("TextButton", pFrame)
                 btn.Size = UDim2.new(1, 0, 1, 0); btn.BackgroundColor3 = isSelected and Theme.ItemActive or Theme.ItemBg
                 btn.Text = ""; btn.AutoButtonColor = false; btn.ZIndex = 10
                 Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 7)
-                
+
                 local stroke = Instance.new("UIStroke", btn); stroke.Color = isSelected and Theme.AccentOn or Theme.Stroke; stroke.Thickness = 1
                 table.insert(RGBElements, {Type = "Info", Stroke = stroke})
 
                 local targetAvatar = Instance.new("ImageLabel", btn)
-                targetAvatar.Size = UDim2.new(0, 24, 0, 24); targetAvatar.Position = UDim2.new(0, 6, 0.5, -12)
+                targetAvatar.Size = UDim2.new(0, 22, 0, 22); targetAvatar.Position = UDim2.new(0, 6, 0.5, -11)
                 targetAvatar.BackgroundColor3 = Color3.fromRGB(30, 34, 46); targetAvatar.ZIndex = 11
                 Instance.new("UICorner", targetAvatar).CornerRadius = UDim.new(1, 0)
-                
+
                 local targetStroke = Instance.new("UIStroke", targetAvatar)
                 targetStroke.Color = isSelected and Theme.AccentOn or Theme.Brand; targetStroke.Thickness = 1
                 targetStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
                 table.insert(RGBElements, {Type = "Info", Stroke = targetStroke})
-                
+
                 local nLabel = Instance.new("TextLabel", btn)
-                nLabel.Size = UDim2.new(1, -96, 0, 15); nLabel.Position = UDim2.new(0, 36, 0, 3)
+                nLabel.Size = UDim2.new(1, -110, 0, 14); nLabel.Position = UDim2.new(0, 34, 0, 3)
                 nLabel.BackgroundTransparency = 1; nLabel.Text = (isSelected and "✅ " or "") .. p.DisplayName
-                nLabel.TextColor3 = isSelected and Theme.AccentOn or Theme.TextTitle; nLabel.Font = Enum.Font.GothamBold; nLabel.TextSize = 10.5
+                nLabel.TextColor3 = isSelected and Theme.AccentOn or Theme.TextTitle; nLabel.Font = Enum.Font.GothamBold; nLabel.TextSize = 10
                 nLabel.TextTruncate = Enum.TextTruncate.AtEnd; nLabel.TextXAlignment = Enum.TextXAlignment.Left; nLabel.ZIndex = 11
-                
+
                 local subLabel = Instance.new("TextLabel", btn)
-                subLabel.Size = UDim2.new(1, -96, 0, 13); subLabel.Position = UDim2.new(0, 36, 0, 17)
+                subLabel.Size = UDim2.new(1, -110, 0, 12); subLabel.Position = UDim2.new(0, 34, 0, 16)
                 subLabel.BackgroundTransparency = 1; subLabel.Text = "@" .. p.Name
-                subLabel.TextColor3 = Theme.TextDim; subLabel.Font = Enum.Font.GothamSemibold; subLabel.TextSize = 9
+                subLabel.TextColor3 = Theme.TextDim; subLabel.Font = Enum.Font.GothamSemibold; subLabel.TextSize = 8.5
                 subLabel.TextTruncate = Enum.TextTruncate.AtEnd; subLabel.TextXAlignment = Enum.TextXAlignment.Left; subLabel.ZIndex = 11
 
                 local distPill = Instance.new("TextLabel", btn)
-                distPill.Size = UDim2.new(0, 50, 0, 18); distPill.Position = UDim2.new(1, -56, 0.5, -9)
-                distPill.BackgroundColor3 = Color3.fromRGB(18, 20, 29); distPill.Text = "-- m"
-                distPill.TextColor3 = Theme.Brand; distPill.Font = Enum.Font.GothamBold; distPill.TextSize = 9; distPill.ZIndex = 11
+                distPill.Size = UDim2.new(0, 68, 0, 18); distPill.Position = UDim2.new(1, -74, 0.5, -9)
+                distPill.BackgroundColor3 = Color3.fromRGB(18, 20, 29); distPill.RichText = true; distPill.Text = "-- m"
+                distPill.TextColor3 = Theme.Brand; distPill.Font = Enum.Font.GothamBold; distPill.TextSize = 8.5; distPill.ZIndex = 11
                 Instance.new("UICorner", distPill).CornerRadius = UDim.new(0, 5)
                 playerDistLabels[p] = distPill
-                
+
                 task.spawn(function()
                     pcall(function() targetAvatar.Image = Players:GetUserThumbnailAsync(p.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size420x420) end)
                 end)
-                
+
                 btn.MouseButton1Click:Connect(function()
                     clickAnimate(btn)
                     targetTpPlayer = p
@@ -1784,6 +2089,7 @@ do
                 end)
             end
         end
+        filterPlayerCards()
     end
     updatePlayerList()
 
@@ -1794,8 +2100,16 @@ do
                 for p, lbl in pairs(playerDistLabels) do
                     if p and p.Parent and lbl and lbl.Parent then
                         local tCF = getCharacterCFrame(p.Character)
+                        local tHum = p.Character and p.Character:FindFirstChildOfClass("Humanoid")
+                        local hpPct = (tHum and tHum.MaxHealth > 0) and math.floor((tHum.Health / tHum.MaxHealth) * 100) or nil
                         if myRoot and tCF then
-                            lbl.Text = tostring(math.floor((myRoot.Position - tCF.Position).Magnitude)) .. " m"
+                            local d = math.floor((myRoot.Position - tCF.Position).Magnitude)
+                            if hpPct then
+                                local hpCol = hpPct > 50 and "#38CC88" or (hpPct > 20 and "#E5B85B" or "#E05666")
+                                lbl.Text = string.format("%dm • <font color='%s'>%d%%</font>", d, hpCol, hpPct)
+                            else
+                                lbl.Text = tostring(d) .. " m"
+                            end
                         else
                             lbl.Text = "-- m"
                         end
@@ -1819,19 +2133,45 @@ do
 end
 
 -- ==========================================
--- [TAB 8: AUTO SKILL (LƯỚI KEYCAP 2 CỘT)]
+-- [TAB 8: AUTO SKILL (NÂNG CẤP BẬT/TẮT NHANH & PHÍM Q, R)]
 -- ==========================================
-createDivider(page8, "TỐC ĐỘ KÍCH HOẠT CHIÊU")
+createDivider(page8, "ĐIỀU KHIỂN NHANH & TỐC ĐỘ SPAM")
+local allSkillVars = {
+    "AutoSkillZ", "AutoSkillX", "AutoSkillC", "AutoSkillV",
+    "AutoSkillE", "AutoSkillF", "AutoSkillQ", "AutoSkillR",
+    "AutoSkill1", "AutoSkill2", "AutoSkill3", "AutoSkill4", "AutoSkill5", "AutoSkill6"
+}
+
+createDualButtons(
+    page8, "✅ BẬT TẤT CẢ PHÍM", Theme.AccentOn,
+    function()
+        for _, vName in ipairs(allSkillVars) do
+            State[vName] = true
+            fireSync(vName, true, false)
+        end
+        if State.AutoSave then saveConfig() end
+    end,
+    "🛑 TẮT TẤT CẢ PHÍM", Theme.AccentOff,
+    function()
+        for _, vName in ipairs(allSkillVars) do
+            State[vName] = false
+            fireSync(vName, false, false)
+        end
+        if State.AutoSave then saveConfig() end
+    end
+)
+
+createToggle(page8, "🖱️ Auto Click Vũ Khí (Đánh thường)", "AutoClick")
 createSlider(page8, "⏱️ Chu kỳ nhấn phím (x0.1 giây)", 1, 50, "AutoSkillDelay")
 
 local function createKeycapGrid(parent, keysList)
     local gridContainer = Instance.new("Frame", parent)
     local rows = math.ceil(#keysList / 2)
-    gridContainer.Size = UDim2.new(0.94, 0, 0, rows * 34 + (rows - 1) * 5)
+    gridContainer.Size = UDim2.new(0.94, 0, 0, rows * 33 + (rows - 1) * 5)
     gridContainer.BackgroundTransparency = 1; gridContainer.ZIndex = 10
 
     local grid = Instance.new("UIGridLayout", gridContainer)
-    grid.CellSize = UDim2.new(0.488, 0, 0, 34); grid.CellPadding = UDim2.new(0.024, 0, 0, 5); grid.SortOrder = Enum.SortOrder.LayoutOrder
+    grid.CellSize = UDim2.new(0.488, 0, 0, 33); grid.CellPadding = UDim2.new(0.024, 0, 0, 5); grid.SortOrder = Enum.SortOrder.LayoutOrder
 
     for idx, item in ipairs(keysList) do
         local cell = Instance.new("TextButton", gridContainer)
@@ -1840,7 +2180,7 @@ local function createKeycapGrid(parent, keysList)
         local cStroke = Instance.new("UIStroke", cell); cStroke.Thickness = 1
 
         local keycap = Instance.new("TextLabel", cell)
-        keycap.Size = UDim2.new(0, 24, 0, 22); keycap.Position = UDim2.new(0, 6, 0.5, -11)
+        keycap.Size = UDim2.new(0, 24, 0, 21); keycap.Position = UDim2.new(0, 6, 0.5, -10.5)
         keycap.BackgroundColor3 = Color3.fromRGB(16, 18, 26); keycap.Text = item.Key
         keycap.Font = Enum.Font.GothamBlack; keycap.TextSize = 10.5; keycap.ZIndex = 11
         Instance.new("UICorner", keycap).CornerRadius = UDim.new(0, 5)
@@ -1877,13 +2217,14 @@ local function createKeycapGrid(parent, keysList)
         end
 
         syncKeyVisual(State[item.Var] and true or false, true)
+        registerSync(item.Var, syncKeyVisual)
         table.insert(RGBElements, {Type = "Toggle", Stroke = cStroke, State = function() return State[item.Var] end})
 
         cell.MouseButton1Click:Connect(function()
             clickAnimate(cell)
             State[item.Var] = not State[item.Var]
             local nowOn = State[item.Var]
-            syncKeyVisual(nowOn, false)
+            fireSync(item.Var, nowOn, false)
             MakeToast(nowOn and "Đã Bật Auto Skill" or "Đã Tắt Auto Skill", "Tự động kích hoạt Phím [" .. item.Key .. "]", nowOn and Theme.AccentOn or Theme.AccentOff)
             if State.AutoSave then saveConfig() end
         end)
@@ -1894,7 +2235,8 @@ createDivider(page8, "BẢNG PHÍM CHỮ (2 CỘT)")
 createKeycapGrid(page8, {
     {Key = "Z", Var = "AutoSkillZ"}, {Key = "X", Var = "AutoSkillX"},
     {Key = "C", Var = "AutoSkillC"}, {Key = "V", Var = "AutoSkillV"},
-    {Key = "E", Var = "AutoSkillE"}, {Key = "F", Var = "AutoSkillF"}
+    {Key = "E", Var = "AutoSkillE"}, {Key = "F", Var = "AutoSkillF"},
+    {Key = "Q", Var = "AutoSkillQ"}, {Key = "R", Var = "AutoSkillR"}
 })
 
 createDivider(page8, "BẢNG PHÍM SỐ (2 CỘT)")
@@ -1915,44 +2257,47 @@ task.spawn(function()
         if State.AutoSkillV then table.insert(keysToPress, Enum.KeyCode.V) end
         if State.AutoSkillE then table.insert(keysToPress, Enum.KeyCode.E) end
         if State.AutoSkillF then table.insert(keysToPress, Enum.KeyCode.F) end
+        if State.AutoSkillQ then table.insert(keysToPress, Enum.KeyCode.Q) end
+        if State.AutoSkillR then table.insert(keysToPress, Enum.KeyCode.R) end
         if State.AutoSkill1 then table.insert(keysToPress, Enum.KeyCode.One) end
         if State.AutoSkill2 then table.insert(keysToPress, Enum.KeyCode.Two) end
         if State.AutoSkill3 then table.insert(keysToPress, Enum.KeyCode.Three) end
         if State.AutoSkill4 then table.insert(keysToPress, Enum.KeyCode.Four) end
         if State.AutoSkill5 then table.insert(keysToPress, Enum.KeyCode.Five) end
         if State.AutoSkill6 then table.insert(keysToPress, Enum.KeyCode.Six) end
-        
+
         if #keysToPress > 0 then
             for _, keyEnum in ipairs(keysToPress) do
                 task.spawn(function()
                     pcall(function()
                         Vim:SendKeyEvent(true, keyEnum, false, game)
-                        task.wait(0.02) 
+                        task.wait(0.02)
                         Vim:SendKeyEvent(false, keyEnum, false, game)
                     end)
                 end)
-                task.wait(0.04) 
+                task.wait(0.04)
             end
         end
     end
 end)
 
 -- ==========================================
--- [TAB 9: CẤU HÌNH & GIẢM LAG CHUYÊN SÂU]
+-- [TAB 9: CẤU HÌNH & GIẢM LAG CHUYÊN SÂU (HỢP NHẤT TOÀN BỘ)]
 -- ==========================================
 do
     local Cache = {
         Particles = {}, PostEffects = {}, Shadows = {}, Players = {}, Pets = {},
+        Popups = {}, Sounds = {}, Anims = {}, DarkParts = {}, LightingOrig = nil,
         Toggles = {}, PartCount = 0,
-        Tickets = {LowGfx = 0, Particle = 0, Pet = 0, Player = 0, Shadow = 0}
+        Tickets = {LowGfx = 0, Particle = 0, Pet = 0, Player = 0, Shadow = 0, Popup = 0, Sound = 0, Anim = 0, Dark = 0}
     }
 
     local function createTab9Toggle(parent, text, varName, callback)
-        local frameItem, applyVis = createToggle(parent, text, varName, callback)
+        local frameItem = createToggle(parent, text, varName, callback)
         Cache.Toggles[varName] = function(targetState)
             if State[varName] ~= targetState then
                 State[varName] = targetState
-                if applyVis then applyVis(targetState, false) end
+                fireSync(varName, targetState, false)
                 if callback then task.spawn(callback, targetState) end
             end
         end
@@ -2044,7 +2389,7 @@ do
 
     local function applyObjectOptimizations(obj)
         if not obj or not obj.Parent then return end
-        if obj.Name == "VipAirWalk" or obj.Name == "VipSpectateProxy" or string.find(obj.Name, "^ESPAnchor_") then return end
+        if obj.Name == "VipAirWalk" or obj.Name == "VipSpectateProxy" or string.find(obj.Name, "^ESPAnchor_") or string.find(obj.Name, "^TpSaveAnchor_") then return end
 
         if State.LowGfx then
             if obj:IsA("BasePart") and obj.Material ~= Enum.Material.SmoothPlastic then
@@ -2098,12 +2443,6 @@ do
         end
     end
 
-    workspace.DescendantAdded:Connect(function(obj)
-        if State.LowGfx or State.DisableParticles or State.NoShadows or State.HidePlayers or State.HidePetsAccessories then
-            task.defer(function() pcall(applyObjectOptimizations, obj) end)
-        end
-    end)
-
     local function restoreParticlesIfBothOff(ticketCheckFn)
         if State.LowGfx or State.DisableParticles then return end
         task.spawn(function()
@@ -2125,7 +2464,7 @@ do
             for i, obj in ipairs(descendants) do
                 if i % 400 == 0 then task.wait() end
                 pcall(function()
-                    if obj and obj.Parent and obj.Name ~= "VipAirWalk" and obj.Name ~= "VipSpectateProxy" and not string.find(obj.Name, "^ESPAnchor_") then
+                    if obj and obj.Parent and obj.Name ~= "VipAirWalk" and obj.Name ~= "VipSpectateProxy" and not string.find(obj.Name, "^ESPAnchor_") and not string.find(obj.Name, "^TpSaveAnchor_") then
                         if (not player.Character or not obj:IsDescendantOf(player.Character)) and (not obj.Parent:FindFirstChild("Humanoid")) then
                             if obj:IsA("ParticleEmitter") or obj:IsA("Trail") or (obj:IsA("Decal") and obj.Name == "Blood") then
                                 obj:Destroy(); count = count + 1
@@ -2142,16 +2481,30 @@ do
     end
 
     createDivider(page9, "TỐI ƯU HIỆU SUẤT TỐI ĐA")
-    createButton(page9, "🥔 SIÊU KHOAI TÂY (1-Click Ultra Boost)", Color3.fromRGB(230, 185, 70), function()
-        pcall(function() settings().Rendering.QualityLevel = Enum.QualityLevel.Level01 end)
-        local boostKeys = {"LowGfx", "DisableParticles", "DisablePostEffects", "NoFog", "NoShadows", "OptimizeTerrain", "HidePetsAccessories"}
-        for _, key in ipairs(boostKeys) do
-            if Cache.Toggles[key] then Cache.Toggles[key](true) end
+    local allBoostKeys = {"LowGfx", "DisableParticles", "DisablePostEffects", "NoFog", "NoShadows", "OptimizeTerrain", "HidePetsAccessories", "HidePopups"}
+    createDualButtons(
+        page9, "🥔 SIÊU KHOAI TÂY", Color3.fromRGB(230, 185, 70),
+        function()
+            pcall(function() settings().Rendering.QualityLevel = Enum.QualityLevel.Level01 end)
+            for _, key in ipairs(allBoostKeys) do
+                if Cache.Toggles[key] then Cache.Toggles[key](true) end
+            end
+            if State.AutoSave then saveConfig() end
+            cleanDebrisAndRAM(true)
+            MakeToast("🥔 Siêu Khoai Tây", "Đã bật toàn bộ cấu hình giảm lag mạnh nhất!", Theme.AccentOn)
+        end,
+        "🔄 KHÔI PHỤC GỐC", Theme.Brand,
+        function()
+            for _, key in ipairs(allBoostKeys) do
+                if Cache.Toggles[key] then Cache.Toggles[key](false) end
+            end
+            if Cache.Toggles["DarkMap"] then Cache.Toggles["DarkMap"](false) end
+            if Cache.Toggles["DisableAnims"] then Cache.Toggles["DisableAnims"](false) end
+            if Cache.Toggles["HidePlayers"] then Cache.Toggles["HidePlayers"](false) end
+            if State.AutoSave then saveConfig() end
+            MakeToast("Khôi Phục Đồ Họa", "Đã trả lại đồ họa mặc định của game!", Theme.Brand)
         end
-        if State.AutoSave then saveConfig() end
-        cleanDebrisAndRAM(true)
-        MakeToast("🥔 Siêu Khoai Tây", "Đã bật toàn bộ cấu hình giảm lag mạnh nhất!", Theme.AccentOn)
-    end)
+    )
 
     createSlider(page9, "Giới hạn FPS (Chống nóng máy)", 10, 120, "FpsCapValue", function(val) pcall(function() setfpscap(val) end) end)
 
@@ -2348,451 +2701,33 @@ do
         end
     end)
 
-    createTab9Toggle(page9, "🔄 Tự động dọn rác & Giải phóng RAM (30s)", "AutoClearRAM")
-    task.spawn(function()
-        while task.wait(30) do
-            if State.AutoClearRAM then cleanDebrisAndRAM(true) end
-        end
-    end)
-
-    createButton(page9, "🧹 Dọn rác bản đồ & Giải phóng RAM ngay", Theme.AccentOff, function() cleanDebrisAndRAM(false) end)
-end
-
--- ==========================================
--- [HỆ THỐNG AUTO COLLECT & PROXIMITY]
--- ==========================================
-task.spawn(function()
-    for _, obj in ipairs(workspace:GetDescendants()) do
-        if obj:IsA("ProximityPrompt") then table.insert(cachedPrompts, obj) end
-    end
-end)
-workspace.DescendantAdded:Connect(function(obj)
-    if obj:IsA("ProximityPrompt") then table.insert(cachedPrompts, obj) end
-end)
-
-local originalPrompts = {}
-task.spawn(function()
-    while task.wait(1) do
-        if State.Instant then
-            for i = #cachedPrompts, 1, -1 do
-                local prompt = cachedPrompts[i]
-                if prompt.Parent then
-                    if not originalPrompts[prompt] then
-                        originalPrompts[prompt] = {HoldDuration = prompt.HoldDuration, MaxActivationDistance = prompt.MaxActivationDistance}
-                    end
-                    prompt.HoldDuration = 0; prompt.MaxActivationDistance = 25 
-                else
-                    table.remove(cachedPrompts, i)
-                end
-            end
-        elseif next(originalPrompts) then
-            for prompt, data in pairs(originalPrompts) do
-                if prompt and prompt.Parent then
-                    prompt.HoldDuration = data.HoldDuration
-                    prompt.MaxActivationDistance = data.MaxActivationDistance
-                end
-            end
-            originalPrompts = {}
-        end
-    end
-end)
-
-task.spawn(function()
-    while task.wait(0.5) do
-        pcall(function()
-            if State.AutoCollect and player.Character then
-                local root = getUniversalRoot(player.Character)
-                if root then
-                    local rootPos = root.Position
-                    for _, prompt in ipairs(cachedPrompts) do
-                        if prompt.Parent and prompt.Parent:IsA("BasePart") and prompt.Enabled and (prompt.Parent.Position - rootPos).Magnitude <= 50 then
-                            if fireproximityprompt then fireproximityprompt(prompt) end
-                        end
-                    end
-                    local overlapParams = OverlapParams.new()
-                    overlapParams.FilterDescendantsInstances = {player.Character}
-                    overlapParams.FilterType = Enum.RaycastFilterType.Exclude
-                    local partsNearby = workspace:GetPartBoundsInRadius(rootPos, 50, overlapParams)
-                    for _, part in ipairs(partsNearby) do
-                        if part.Name == "Handle" and part.Parent and part.Parent:IsA("Tool") then
-                            part.CanCollide = false
-                            if firetouchinterest then
-                                firetouchinterest(root, part, 0); task.wait(0.01); firetouchinterest(root, part, 1)
-                            else
-                                part.CFrame = root.CFrame
-                            end
-                        end
-                    end
-                end
-            end
-        end)
-    end
-end)
-
--- ==========================================
--- [ESP GỌN ĐẸP + XUYÊN STREAMING]
--- ==========================================
-local function clearSingleESP(p)
-    if ActiveESPs[p] then
-        if ActiveESPs[p].Billboard then ActiveESPs[p].Billboard:Destroy() end
-        if ActiveESPs[p].Highlight then ActiveESPs[p].Highlight:Destroy() end
-        if ActiveESPs[p].Anchor then ActiveESPs[p].Anchor:Destroy() end
-        ActiveESPs[p] = nil
-    end
-end
-
-local function updateESP_Hitbox()
-    if State.Hitbox then
-        for _, p in pairs(Players:GetPlayers()) do
-            if p ~= player and p.Character then
-                local hrp = getUniversalRoot(p.Character)
-                if hrp then
-                    if not originalHitboxSizes[p] then originalHitboxSizes[p] = hrp.Size end
-                    hrp.Size = Vector3.new(State.HitboxSize, State.HitboxSize, State.HitboxSize)
-                    hrp.Transparency = 0.5; hrp.CanCollide = false; hrp.Massless = true
-                end
-            end
-        end
-    elseif next(originalHitboxSizes) then
-        for p, size in pairs(originalHitboxSizes) do 
-            if p and p.Character then 
-                local hrp = getUniversalRoot(p.Character)
-                if hrp then hrp.Size = size; hrp.Transparency = 1; hrp.Massless = false end 
-            end 
-        end
-        originalHitboxSizes = {}
-    end
-
-    if not State.ESP then
-        for p, _ in pairs(ActiveESPs) do clearSingleESP(p) end
-        return
-    end
-
-    local myRoot = getUniversalRoot(player.Character)
-    local myPos = myRoot and myRoot.Position or (workspace.CurrentCamera and workspace.CurrentCamera.CFrame.Position)
-
-    for _, p in ipairs(Players:GetPlayers()) do
-        if p ~= player then
-            pcall(function()
-                local tChar = p.Character
-                if not tChar then clearSingleESP(p); return end
-
-                local espPart = getUniversalRoot(tChar)
-                local targetCF = getCharacterCFrame(tChar)
-                if not targetCF then clearSingleESP(p); return end
-                local targetPos = targetCF.Position
-
-                if not ActiveESPs[p] then ActiveESPs[p] = {} end
-                local data = ActiveESPs[p]
-
-                if not espPart then
-                    if not data.Anchor or not data.Anchor.Parent then
-                        local anchor = Instance.new("Part")
-                        anchor.Name = "ESPAnchor_" .. p.Name; anchor.Size = Vector3.new(1, 1, 1)
-                        anchor.Transparency = 1; anchor.Anchored = true; anchor.CanCollide = false
-                        anchor.CanQuery = false; anchor.CanTouch = false; anchor.Parent = workspace
-                        data.Anchor = anchor
-                    end
-                    data.Anchor.Position = targetPos
-                    espPart = data.Anchor
-                elseif data.Anchor then
-                    data.Anchor:Destroy(); data.Anchor = nil
-                end
-
-                if not data.Billboard or not data.Billboard.Parent then
-                    local bgui = Instance.new("BillboardGui")
-                    bgui.Name = "MobileESP_" .. p.Name; bgui.Size = UDim2.new(0, 200, 0, 50)
-                    bgui.StudsOffset = Vector3.new(0, 3.5, 0); bgui.AlwaysOnTop = true
-                    bgui.MaxDistance = math.huge; bgui.LightInfluence = 0; bgui.Parent = guiParent
-
-                    local tLabel = Instance.new("TextLabel", bgui)
-                    tLabel.Name = "NameLabel"; tLabel.Size = UDim2.new(1, 0, 1, 0)
-                    tLabel.BackgroundTransparency = 1; tLabel.TextColor3 = Color3.fromRGB(255, 75, 85)
-                    tLabel.TextStrokeTransparency = 0.15; tLabel.TextStrokeColor3 = Color3.new(0, 0, 0)
-                    tLabel.Font = Enum.Font.GothamBold; tLabel.TextSize = 12; tLabel.RichText = true
-                    data.Billboard = bgui
-                end
-                data.Billboard.Adornee = espPart
-
-                if not data.Highlight or not data.Highlight.Parent then
-                    local hl = Instance.new("Highlight")
-                    hl.Name = "ESPHighlight_" .. p.Name; hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-                    hl.FillColor = Color3.fromRGB(255, 65, 75); hl.FillTransparency = 0.65
-                    hl.OutlineColor = Color3.new(1, 1, 1); hl.OutlineTransparency = 0.1; hl.Parent = guiParent
-                    data.Highlight = hl
-                end
-                data.Highlight.Adornee = tChar
-
-                if myPos then
-                    local dist = math.floor((myPos - targetPos).Magnitude)
-                    data.Billboard.NameLabel.Text = p.DisplayName .. '\n<font color="#78D2FF">[' .. dist .. 'm]</font>'
-                else
-                    data.Billboard.NameLabel.Text = p.DisplayName
-                end
-            end)
-        end
-    end
-    
-    for p, _ in pairs(ActiveESPs) do
-        if not Players:FindFirstChild(p.Name) then clearSingleESP(p) end
-    end
-end
-
-task.spawn(function()
-    while task.wait(0.1) do updateESP_Hitbox() end
-end)
-
--- ==========================================
--- VÒNG LẶP VẬT LÝ & CHUYỂN ĐỘNG
--- ==========================================
-RunService.Stepped:Connect(function()
-    local char = player.Character
-    if char and (State.Noclip or (autoTpPlayerEnabled and wasHorizontalTp)) then
-        for _, p in ipairs(char:GetDescendants()) do
-            if p:IsA("BasePart") and p.CanCollide then p.CanCollide = false end
-        end
-    end
-end)
-
-RunService.Heartbeat:Connect(function()
-    if autoTpPlayerEnabled and targetTpPlayer then
-        teleportToSelectedPlayer(false)
-    end
-
-    if spectatePlayerEnabled and targetTpPlayer and targetTpPlayer.Character then
-        local cam = workspace.CurrentCamera
-        local tChar = targetTpPlayer.Character
-        local targetHum = tChar:FindFirstChildOfClass("Humanoid")
-        local targetRoot = getUniversalRoot(tChar)
-        local targetCF = getCharacterCFrame(tChar)
-
-        if cam and targetCF then
-            if targetRoot and targetHum then
-                pcall(function() player.ReplicationFocus = targetRoot end)
-                if cam.CameraSubject ~= targetHum then cam.CameraSubject = targetHum end
-            else
-                if not spectateProxyPart or not spectateProxyPart.Parent then
-                    spectateProxyPart = Instance.new("Part")
-                    spectateProxyPart.Name = "VipSpectateProxy"; spectateProxyPart.Size = Vector3.new(1, 1, 1)
-                    spectateProxyPart.Transparency = 1; spectateProxyPart.Anchored = true
-                    spectateProxyPart.CanCollide = false; spectateProxyPart.CanQuery = false
-                    spectateProxyPart.CanTouch = false; spectateProxyPart.Parent = workspace
-                end
-                spectateProxyPart.CFrame = targetCF
-                pcall(function() player.ReplicationFocus = spectateProxyPart end)
-                if cam.CameraSubject ~= spectateProxyPart then cam.CameraSubject = spectateProxyPart end
-                if tick() - lastSpectateStreamTick > 0.5 then
-                    lastSpectateStreamTick = tick()
-                    local streamPos = targetCF.Position
-                    task.spawn(function() pcall(function() player:RequestStreamAroundAsync(streamPos, 3) end) end)
-                end
-            end
-        end
-    end
-    
-    local char = player.Character
-    if not char then return end
-    local root = getUniversalRoot(char)
-    local hum = char:FindFirstChildOfClass("Humanoid")
-    
-    if hum and root then
-        if State.LockPosition then root.Anchored = true end
-        if State.Jump then hum.UseJumpPower = true; hum.JumpPower = State.JumpValue end
-
-        if not State.Fly and not autoTpPlayerEnabled then
-            if State.Speed then
-                hum.WalkSpeed = State.SpeedValue
-                if hum.MoveDirection.Magnitude > 0 then
-                    local curVel = root.AssemblyLinearVelocity
-                    local targetVel = hum.MoveDirection * State.SpeedValue
-                    root.AssemblyLinearVelocity = Vector3.new(targetVel.X, curVel.Y, targetVel.Z)
-                end
-            end
-
-            if State.AutoDash and hum.MoveDirection.Magnitude > 0 then
-                local dashSpeedStuds = State.DashSpeed * 8
-                local curVel = root.AssemblyLinearVelocity
-                local dashVel = hum.MoveDirection * dashSpeedStuds
-                root.AssemblyLinearVelocity = Vector3.new(dashVel.X, curVel.Y, dashVel.Z)
-            end
-        end
-
-        if State.SpinBot then 
-            root.CFrame = root.CFrame * CFrame.Angles(0, math.rad(State.SpinSpeed), 0) 
-        end
-        
-        if State.Noclip and hum.MoveDirection.Magnitude == 0 then
-            root.AssemblyLinearVelocity = Vector3.new(0, root.AssemblyLinearVelocity.Y, 0)
-        end
-        
-        if State.Fly then
-            hum.PlatformStand = true
-            local bv = root:FindFirstChild("FlyBodyVelocity")
-            if not bv then
-                bv = Instance.new("BodyVelocity")
-                bv.Name = "FlyBodyVelocity"; bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
-                bv.Velocity = Vector3.zero; bv.Parent = root
-            end
-            
-            local bg = root:FindFirstChild("FlyBodyGyro")
-            if not bg then
-                bg = Instance.new("BodyGyro")
-                bg.Name = "FlyBodyGyro"; bg.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
-                bg.P = 10000; bg.D = 100; bg.Parent = root
-            end
-            
-            local cam = workspace.CurrentCamera
-            bg.CFrame = cam.CFrame
-            
-            local moveDir = hum.MoveDirection
-            if moveDir.Magnitude > 0 then
-                local camLook = cam.CFrame.LookVector
-                local camRight = cam.CFrame.RightVector
-                local flatLook = Vector3.new(camLook.X, 0, camLook.Z)
-                local flatRight = Vector3.new(camRight.X, 0, camRight.Z)
-                local forwardUnit = flatLook.Magnitude > 0.001 and flatLook.Unit or Vector3.zero
-                local rightUnit = flatRight.Magnitude > 0.001 and flatRight.Unit or Vector3.zero
-                local dotForward = moveDir:Dot(forwardUnit)
-                local dotRight = moveDir:Dot(rightUnit)
-                local flyDir = (camLook * dotForward) + (rightUnit * dotRight)
-                bv.Velocity = flyDir.Magnitude > 0.001 and (flyDir.Unit * State.FlySpeed) or Vector3.zero
-            else
-                bv.Velocity = Vector3.zero
-            end
-        else
-            if root:FindFirstChild("FlyBodyVelocity") then root.FlyBodyVelocity:Destroy() end
-            if root:FindFirstChild("FlyBodyGyro") then root.FlyBodyGyro:Destroy() end
-            if not State.AntiStun and not (autoTpPlayerEnabled and wasHorizontalTp) then
-                hum.PlatformStand = false
-            end
-        end
-
-        if State.AntiStun then 
-            hum:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
-            hum:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, false)
-            local currentState = hum:GetState()
-            if currentState == Enum.HumanoidStateType.FallingDown or currentState == Enum.HumanoidStateType.Ragdoll then 
-                hum:ChangeState(Enum.HumanoidStateType.GettingUp)
-            end
-            if not State.Speed and not State.AutoDash then
-                local currentVel = root.AssemblyLinearVelocity
-                local horizontalVel = Vector3.new(currentVel.X, 0, currentVel.Z)
-                if horizontalVel.Magnitude > 75 then
-                    root.AssemblyLinearVelocity = Vector3.new(0, currentVel.Y, 0) 
-                end
-            end
-        end
-
-        local light = root:FindFirstChild("PlayerPointLight")
-        if State.PlayerLight then 
-            if not light then light = Instance.new("PointLight", root); light.Name = "PlayerPointLight"; light.Shadows = false end 
-            light.Brightness = State.LightBrightness; light.Range = State.LightRange
-            light.Color = PlayerLightColors[State.LightColorIdx].Value
-        elseif light then
-            light:Destroy()
-        end
-    end
-    
-    if State.Reach then
-        local tool = char:FindFirstChildOfClass("Tool")
-        if tool then
-            local handle = tool:FindFirstChild("Handle")
-            if handle then
-                if not originalToolSizes[tool] then originalToolSizes[tool] = handle.Size end
-                handle.Size = Vector3.new(State.ReachSize, State.ReachSize, State.ReachSize)
-                handle.Massless = true; handle.CanCollide = false; handle.Transparency = 0.8
-            end
-        end
-    elseif next(originalToolSizes) then
-        for t, origSize in pairs(originalToolSizes) do
-            if t and t.Parent and t:FindFirstChild("Handle") then
-                t.Handle.Size = origSize; t.Handle.Massless = false; t.Handle.Transparency = 0
-            end
-        end
-        originalToolSizes = {}
-    end
-end)
-
--- ==========================================
--- [GÓI MỞ RỘNG: SIMULATOR BOOST + TIỆN ÍCH + TÌM KIẾM TP]
--- ==========================================
-do
-    local ExtCache = {
-        Popups = {}, Sounds = {}, Anims = {}, DarkParts = {},
-        LightingOrig = nil,
-        Tickets = {Popup = 0, Sound = 0, Anim = 0, Dark = 0}
-    }
-
-    pcall(function()
-        if playerListContainer and playerListScroll then
-            local searchBar = Instance.new("Frame", playerListContainer)
-            searchBar.Size = UDim2.new(1, -8, 0, 22); searchBar.Position = UDim2.new(0, 4, 0, 4)
-            searchBar.BackgroundColor3 = Color3.fromRGB(16, 18, 26); searchBar.ZIndex = 11
-            Instance.new("UICorner", searchBar).CornerRadius = UDim.new(0, 6)
-            local sStroke = Instance.new("UIStroke", searchBar); sStroke.Color = Theme.Brand; sStroke.Thickness = 0.9; sStroke.Transparency = 0.35
-            table.insert(RGBElements, {Type = "Button", Stroke = sStroke, DefaultColor = Theme.Brand})
-
-            local searchBox = Instance.new("TextBox", searchBar)
-            searchBox.Size = UDim2.new(1, -16, 1, 0); searchBox.Position = UDim2.new(0, 8, 0, 0)
-            searchBox.BackgroundTransparency = 1; searchBox.PlaceholderText = "🔍 Nhập tên hoặc @username để lọc nhanh..."
-            searchBox.PlaceholderColor3 = Theme.TextDim; searchBox.Text = ""; searchBox.TextColor3 = Theme.TextTitle
-            searchBox.Font = Enum.Font.GothamSemibold; searchBox.TextSize = 9.5; searchBox.TextXAlignment = Enum.TextXAlignment.Left
-            searchBox.ClearTextOnFocus = false; searchBox.ZIndex = 11
-
-            playerListScroll.Size = UDim2.new(1, -6, 1, -32)
-            playerListScroll.Position = UDim2.new(0, 3, 0, 28)
-
-            local function filterPlayerCards()
-                local keyword = string.lower(searchBox.Text:gsub("^%s*(.-)%s*$", "%1"))
-                for _, item in ipairs(playerListScroll:GetChildren()) do
-                    if item.Name == "PaddingFrame" then
-                        if keyword == "" then
-                            item.Visible = true
-                        else
-                            local matched = false
-                            for _, desc in ipairs(item:GetDescendants()) do
-                                if desc:IsA("TextLabel") and string.find(string.lower(desc.Text), keyword, 1, true) then
-                                    matched = true; break
-                                end
-                            end
-                            item.Visible = matched
-                        end
-                    end
-                end
-            end
-
-            searchBox:GetPropertyChangedSignal("Text"):Connect(filterPlayerCards)
-            playerListScroll.ChildAdded:Connect(function() task.defer(filterPlayerCards) end)
-        end
-    end)
-
-    createDivider(page9, "TỐI ƯU CHUYÊN SÂU SIMULATOR")
+    createDivider(page9, "TỐI ƯU CHUYÊN SÂU SIMULATOR & TREO MÁY")
 
     local function processPopupObj(obj)
         if not State.HidePopups or not obj or not obj.Parent then return end
-        if obj:IsA("BillboardGui") and not string.find(obj.Name, "^MobileESP_") then
+        if obj:IsA("BillboardGui") and not string.find(obj.Name, "^MobileESP_") and not string.find(obj.Name, "^TpSaveESP_") then
             if obj.Enabled then
-                if ExtCache.Popups[obj] == nil then ExtCache.Popups[obj] = obj.Enabled end
+                if Cache.Popups[obj] == nil then Cache.Popups[obj] = obj.Enabled end
                 obj.Enabled = false
             end
         elseif obj:IsA("TextLabel") and obj:IsDescendantOf(player:FindFirstChild("PlayerGui")) and not obj:IsDescendantOf(gui) then
             local txt = obj.Text or ""
             if string.find(txt, "^%+[%d%.]+") or string.find(string.lower(obj.Name), "popup") or string.find(string.lower(obj.Name), "damage") then
                 if obj.Visible then
-                    if ExtCache.Popups[obj] == nil then ExtCache.Popups[obj] = obj.Visible end
+                    if Cache.Popups[obj] == nil then Cache.Popups[obj] = obj.Visible end
                     obj.Visible = false
                 end
             end
         end
     end
 
-    createToggle(page9, "🚫 Ẩn chữ bay & Popup (+Chỉ số/Damage)", "HidePopups", function(v)
-        ExtCache.Tickets.Popup = ExtCache.Tickets.Popup + 1
-        local myTicket = ExtCache.Tickets.Popup
+    createTab9Toggle(page9, "🚫 Ẩn chữ bay & Popup (+Chỉ số/Damage)", "HidePopups", function(v)
+        Cache.Tickets.Popup = Cache.Tickets.Popup + 1
+        local myTicket = Cache.Tickets.Popup
         if v then
             task.spawn(function()
                 for i, obj in ipairs(workspace:GetDescendants()) do
-                    if myTicket ~= ExtCache.Tickets.Popup then return end
+                    if myTicket ~= Cache.Tickets.Popup then return end
                     pcall(processPopupObj, obj)
                     if i % 350 == 0 then task.wait() end
                 end
@@ -2800,8 +2735,8 @@ do
         else
             task.spawn(function()
                 local c = 0
-                for obj, orig in pairs(ExtCache.Popups) do
-                    if myTicket ~= ExtCache.Tickets.Popup then return end
+                for obj, orig in pairs(Cache.Popups) do
+                    if myTicket ~= Cache.Tickets.Popup then return end
                     pcall(function()
                         if obj and obj.Parent then
                             if obj:IsA("BillboardGui") then obj.Enabled = orig else obj.Visible = orig end
@@ -2809,7 +2744,7 @@ do
                     end)
                     c = c + 1; if c % 350 == 0 then task.wait() end
                 end
-                if myTicket == ExtCache.Tickets.Popup then ExtCache.Popups = {} end
+                if myTicket == Cache.Tickets.Popup then Cache.Popups = {} end
             end)
         end
     end)
@@ -2817,20 +2752,20 @@ do
     local function processSoundObj(obj)
         if not State.MuteSFX or not obj or not obj.Parent then return end
         if obj:IsA("Sound") and obj ~= currentSound and obj.Volume > 0 then
-            if ExtCache.Sounds[obj] == nil then ExtCache.Sounds[obj] = obj.Volume end
+            if Cache.Sounds[obj] == nil then Cache.Sounds[obj] = obj.Volume end
             obj.Volume = 0
         end
     end
 
-    createToggle(page9, "🔇 Tắt tiếng động Game (Giữ nhạc Menu)", "MuteSFX", function(v)
-        ExtCache.Tickets.Sound = ExtCache.Tickets.Sound + 1
-        local myTicket = ExtCache.Tickets.Sound
+    createTab9Toggle(page9, "🔇 Tắt tiếng động Game (Giữ nhạc Menu)", "MuteSFX", function(v)
+        Cache.Tickets.Sound = Cache.Tickets.Sound + 1
+        local myTicket = Cache.Tickets.Sound
         if v then
             task.spawn(function()
                 for _, container in ipairs({workspace, SoundService, player:FindFirstChild("PlayerGui")}) do
                     if container then
                         for i, obj in ipairs(container:GetDescendants()) do
-                            if myTicket ~= ExtCache.Tickets.Sound then return end
+                            if myTicket ~= Cache.Tickets.Sound then return end
                             pcall(processSoundObj, obj)
                             if i % 350 == 0 then task.wait() end
                         end
@@ -2840,12 +2775,12 @@ do
         else
             task.spawn(function()
                 local c = 0
-                for s, vol in pairs(ExtCache.Sounds) do
-                    if myTicket ~= ExtCache.Tickets.Sound then return end
+                for s, vol in pairs(Cache.Sounds) do
+                    if myTicket ~= Cache.Tickets.Sound then return end
                     pcall(function() if s and s.Parent then s.Volume = vol end end)
                     c = c + 1; if c % 350 == 0 then task.wait() end
                 end
-                if myTicket == ExtCache.Tickets.Sound then ExtCache.Sounds = {} end
+                if myTicket == Cache.Tickets.Sound then Cache.Sounds = {} end
             end)
         end
     end)
@@ -2855,50 +2790,50 @@ do
         if obj:IsA("Animator") then
             for _, track in ipairs(obj:GetPlayingAnimationTracks()) do pcall(function() track:Stop(0) end) end
         elseif obj:IsA("BaseScript") and obj.Name == "Animate" and obj.Disabled == false then
-            ExtCache.Anims[obj] = false; obj.Disabled = true
+            Cache.Anims[obj] = false; obj.Disabled = true
         end
     end
 
-    createToggle(page9, "🎭 Tắt hoạt ảnh Nhân vật & Quái (Giảm CPU)", "DisableAnims", function(v)
-        ExtCache.Tickets.Anim = ExtCache.Tickets.Anim + 1
-        local myTicket = ExtCache.Tickets.Anim
+    createTab9Toggle(page9, "🎭 Tắt hoạt ảnh Nhân vật & Quái (Giảm CPU)", "DisableAnims", function(v)
+        Cache.Tickets.Anim = Cache.Tickets.Anim + 1
+        local myTicket = Cache.Tickets.Anim
         if v then
             task.spawn(function()
                 for i, obj in ipairs(workspace:GetDescendants()) do
-                    if myTicket ~= ExtCache.Tickets.Anim then return end
+                    if myTicket ~= Cache.Tickets.Anim then return end
                     pcall(stopAnimator, obj)
                     if i % 350 == 0 then task.wait() end
                 end
             end)
         else
-            for scr, state in pairs(ExtCache.Anims) do
+            for scr, state in pairs(Cache.Anims) do
                 pcall(function() if scr and scr.Parent then scr.Disabled = state end end)
             end
-            ExtCache.Anims = {}
+            Cache.Anims = {}
         end
     end)
 
     local darkColor = Color3.fromRGB(38, 40, 48)
     local function processDarkPart(obj)
         if not State.DarkMap or not obj or not obj.Parent then return end
-        if obj:IsA("BasePart") and obj.Name ~= "VipAirWalk" and obj.Name ~= "VipSpectateProxy" then
+        if obj:IsA("BasePart") and obj.Name ~= "VipAirWalk" and obj.Name ~= "VipSpectateProxy" and not string.find(obj.Name, "^TpSaveAnchor_") then
             for _, p in ipairs(Players:GetPlayers()) do
                 if p.Character and obj:IsDescendantOf(p.Character) then return end
             end
             if obj.Color ~= darkColor then
-                if ExtCache.DarkParts[obj] == nil then ExtCache.DarkParts[obj] = obj.Color end
+                if Cache.DarkParts[obj] == nil then Cache.DarkParts[obj] = obj.Color end
                 obj.Color = darkColor
             end
         end
     end
 
-    createToggle(page9, "🌑 Bản đồ Tối Dịu Mắt (Chống chói & Nhẹ máy)", "DarkMap", function(v)
-        ExtCache.Tickets.Dark = ExtCache.Tickets.Dark + 1
-        local myTicket = ExtCache.Tickets.Dark
+    createTab9Toggle(page9, "🌑 Bản đồ Tối Dịu Mắt (Chống chói & Nhẹ máy)", "DarkMap", function(v)
+        Cache.Tickets.Dark = Cache.Tickets.Dark + 1
+        local myTicket = Cache.Tickets.Dark
         if v then
             pcall(function()
-                if not ExtCache.LightingOrig then
-                    ExtCache.LightingOrig = {Brightness = Lighting.Brightness, OutdoorAmbient = Lighting.OutdoorAmbient, Ambient = Lighting.Ambient}
+                if not Cache.LightingOrig then
+                    Cache.LightingOrig = {Brightness = Lighting.Brightness, OutdoorAmbient = Lighting.OutdoorAmbient, Ambient = Lighting.Ambient}
                 end
                 Lighting.Brightness = 0.8
                 Lighting.OutdoorAmbient = Color3.fromRGB(65, 70, 85)
@@ -2906,35 +2841,36 @@ do
             end)
             task.spawn(function()
                 for i, obj in ipairs(workspace:GetDescendants()) do
-                    if myTicket ~= ExtCache.Tickets.Dark then return end
+                    if myTicket ~= Cache.Tickets.Dark then return end
                     pcall(processDarkPart, obj)
                     if i % 350 == 0 then task.wait() end
                 end
             end)
         else
             pcall(function()
-                if ExtCache.LightingOrig then
-                    Lighting.Brightness = ExtCache.LightingOrig.Brightness
-                    Lighting.OutdoorAmbient = ExtCache.LightingOrig.OutdoorAmbient
-                    Lighting.Ambient = ExtCache.LightingOrig.Ambient
-                    ExtCache.LightingOrig = nil
+                if Cache.LightingOrig then
+                    Lighting.Brightness = Cache.LightingOrig.Brightness
+                    Lighting.OutdoorAmbient = Cache.LightingOrig.OutdoorAmbient
+                    Lighting.Ambient = Cache.LightingOrig.Ambient
+                    Cache.LightingOrig = nil
                 end
             end)
             task.spawn(function()
                 local c = 0
-                for part, col in pairs(ExtCache.DarkParts) do
-                    if myTicket ~= ExtCache.Tickets.Dark then return end
+                for part, col in pairs(Cache.DarkParts) do
+                    if myTicket ~= Cache.Tickets.Dark then return end
                     pcall(function() if part and part.Parent then part.Color = col end end)
                     c = c + 1; if c % 350 == 0 then task.wait() end
                 end
-                if myTicket == ExtCache.Tickets.Dark then ExtCache.DarkParts = {} end
+                if myTicket == Cache.Tickets.Dark then Cache.DarkParts = {} end
             end)
         end
     end)
 
     workspace.DescendantAdded:Connect(function(obj)
-        if State.HidePopups or State.MuteSFX or State.DisableAnims or State.DarkMap then
+        if State.LowGfx or State.DisableParticles or State.NoShadows or State.HidePlayers or State.HidePetsAccessories or State.HidePopups or State.MuteSFX or State.DisableAnims or State.DarkMap then
             task.defer(function()
+                pcall(applyObjectOptimizations, obj)
                 pcall(processPopupObj, obj); pcall(processSoundObj, obj)
                 pcall(stopAnimator, obj); pcall(processDarkPart, obj)
             end)
@@ -2948,107 +2884,18 @@ do
         end)
     end)
 
-    createDivider(page4, "TIỆN ÍCH TREO MÁY & HỖ TRỢ")
-
-    local miniHudFrame = Instance.new("Frame", gui)
-    miniHudFrame.Size = UDim2.new(0, 128, 0, 26); miniHudFrame.Position = UDim2.new(0, 66, 0.26, 9)
-    miniHudFrame.BackgroundColor3 = Theme.MainBg; miniHudFrame.BackgroundTransparency = 0.12
-    miniHudFrame.Visible = State.MiniHUD; miniHudFrame.ZIndex = 10
-    Instance.new("UICorner", miniHudFrame).CornerRadius = UDim.new(1, 0)
-    local hudStroke = Instance.new("UIStroke", miniHudFrame); hudStroke.Color = Theme.Brand; hudStroke.Thickness = 1.2
-    table.insert(RGBElements, {Type = "Button", Stroke = hudStroke, DefaultColor = Theme.Brand})
-
-    local hudLabel = Instance.new("TextLabel", miniHudFrame)
-    hudLabel.Size = UDim2.new(1, 0, 1, 0); hudLabel.BackgroundTransparency = 1; hudLabel.RichText = true
-    hudLabel.Text = "⚡ 60 FPS | 🌐 0 ms"; hudLabel.TextColor3 = Theme.TextTitle
-    hudLabel.Font = Enum.Font.GothamBold; hudLabel.TextSize = 10; hudLabel.ZIndex = 10
-
-    local hudDrag, hudStart, hudPos
-    miniHudFrame.InputBegan:Connect(function(inp)
-        if inp.UserInputType == Enum.UserInputType.MouseButton1 or inp.UserInputType == Enum.UserInputType.Touch then
-            hudDrag = true; hudStart = inp.Position; hudPos = miniHudFrame.Position
-        end
-    end)
-    UIS.InputChanged:Connect(function(inp)
-        if hudDrag and (inp.UserInputType == Enum.UserInputType.MouseMovement or inp.UserInputType == Enum.UserInputType.Touch) then
-            miniHudFrame.Position = UDim2.new(hudPos.X.Scale, hudPos.X.Offset + (inp.Position.X - hudStart.X), hudPos.Y.Scale, hudPos.Y.Offset + (inp.Position.Y - hudStart.Y))
-        end
-    end)
-    UIS.InputEnded:Connect(function(inp)
-        if inp.UserInputType == Enum.UserInputType.MouseButton1 or inp.UserInputType == Enum.UserInputType.Touch then hudDrag = false end
-    end)
-
-    createToggle(page4, "📟 Đồng hồ FPS & Ping Mini ngoài màn hình", "MiniHUD", function(v) miniHudFrame.Visible = v end)
-
+    createTab9Toggle(page9, "🔄 Tự động dọn rác & Giải phóng RAM (30s)", "AutoClearRAM")
     task.spawn(function()
-        while task.wait(0.6) do
-            if State.MiniHUD and miniHudFrame.Visible then
-                local pingNum = 0
-                pcall(function()
-                    if Stats and Stats:FindFirstChild("Network") and Stats.Network:FindFirstChild("ServerStatsItem") then
-                        local raw = Stats.Network.ServerStatsItem["Data Ping"]:GetValueString()
-                        pingNum = tonumber(raw and raw:match("%d+")) or math.floor(player:GetNetworkPing() * 1000)
-                    else
-                        pingNum = math.floor(player:GetNetworkPing() * 1000)
-                    end
-                end)
-                local fCol = fps >= 45 and "#38CC88" or (fps >= 25 and "#E5B85B" or "#E05666")
-                hudLabel.Text = string.format("⚡ <font color='%s'>%d FPS</font> | 🌐 <font color='#58B6F2'>%d ms</font>", fCol, fps, pingNum)
-            end
+        while task.wait(30) do
+            if State.AutoClearRAM then cleanDebrisAndRAM(true) end
         end
     end)
 
-    createToggle(page4, "🔌 Tự động vào lại khi văng game (Reconnect)", "AutoReconnect")
-    pcall(function()
-        GuiService.ErrorMessageChanged:Connect(function(msg)
-            if msg and msg ~= "" and State.AutoReconnect then
-                MakeToast("🔌 Auto Reconnect", "Phát hiện mất kết nối! Đang vào lại...", Theme.Brand)
-                task.wait(2)
-                pcall(function() TeleportService:Teleport(game.PlaceId, player) end)
-            end
-        end)
-    end)
-
-    createToggle(page4, "🧲 Hút Tiền, Ngọc & Vật phẩm rơi (Magnet)", "MagnetOrbs")
-    local magnetKeywords = {"coin", "gem", "orb", "diamond", "cash", "money", "yen", "token", "drop", "star", "crystal", "gold", "silver", "emerald"}
-    local function isMagnetItem(part)
-        if not part:IsA("BasePart") or (part.Anchored and part.Size.Magnitude > 8) then return false end
-        local name = string.lower(part.Name)
-        local pName = part.Parent and string.lower(part.Parent.Name) or ""
-        for _, kw in ipairs(magnetKeywords) do
-            if string.find(name, kw, 1, true) or string.find(pName, kw, 1, true) then return true end
-        end
-        return false
-    end
-
-    task.spawn(function()
-        while task.wait(0.35) do
-            if State.MagnetOrbs and player.Character then
-                pcall(function()
-                    local root = getUniversalRoot(player.Character)
-                    if not root then return end
-                    local overlap = OverlapParams.new()
-                    overlap.FilterDescendantsInstances = {player.Character}
-                    overlap.FilterType = Enum.RaycastFilterType.Exclude
-                    local nearby = workspace:GetPartBoundsInRadius(root.Position, 85, overlap)
-                    for _, part in ipairs(nearby) do
-                        if isMagnetItem(part) then
-                            part.CanCollide = false
-                            if firetouchinterest then
-                                firetouchinterest(root, part, 0)
-                                firetouchinterest(root, part, 1)
-                            end
-                            part.CFrame = root.CFrame
-                        end
-                    end
-                end)
-            end
-        end
-    end)
+    createButton(page9, "🧹 Dọn rác bản đồ & Giải phóng RAM ngay", Theme.AccentOff, function() cleanDebrisAndRAM(false) end)
 end
 
 -- ==========================================
--- [TAB 1: DASHBOARD BENTO + QUẢN LÝ SERVER]
+-- [TAB 1: DASHBOARD BENTO + QUẢN LÝ SERVER (SỬA LỖI UTF-8 & CÂN ĐỐI KHUNG)]
 -- ==========================================
 do
     local savedServersFile = "MenuVipProMax_SavedServers.json"
@@ -3137,15 +2984,16 @@ do
         line.BackgroundColor3 = Theme.Stroke; line.BorderSizePixel = 0; line.ZIndex = 10
 
         local body = Instance.new("TextLabel", card)
-        body.Size = UDim2.new(1, -20, 1, -28); body.Position = UDim2.new(0, 10, 0, 25)
+        body.Size = UDim2.new(1, -20, 1, -28); body.Position = UDim2.new(0, 10, 0, 24)
         body.BackgroundTransparency = 1; body.RichText = true; body.Text = "Đang tải..."
-        body.TextColor3 = Color3.fromRGB(205, 214, 228); body.Font = Enum.Font.Gotham; body.TextSize = 10
-        body.LineHeight = 1.18; body.TextXAlignment = Enum.TextXAlignment.Left; body.TextYAlignment = Enum.TextYAlignment.Top; body.ZIndex = 10
+        body.TextColor3 = Color3.fromRGB(205, 214, 228); body.Font = Enum.Font.Gotham; body.TextSize = 9.5
+        body.LineHeight = 1.15; body.TextXAlignment = Enum.TextXAlignment.Left; body.TextYAlignment = Enum.TextYAlignment.Top; body.ZIndex = 10
 
         return card, body
     end
 
-    local charCard, charBody = makeCard("👤", "THÔNG TIN NHÂN VẬT", 112, 1)
+    -- Thu gọn chiều cao charCard từ 112 -> 94 để vừa khít 5 dòng và thanh máu không bị hở khoảng trống
+    local charCard, charBody = makeCard("👤", "THÔNG TIN NHÂN VẬT", 94, 1)
     local copyCoordBtn = makeSoftMiniBtn(
         charCard, "📍 Copy Tọa Độ",
         UDim2.new(1, -84, 0, 3), UDim2.new(0, 76, 0, 16),
@@ -3173,7 +3021,22 @@ do
     hpBarFill.Size = UDim2.new(1, 0, 1, 0); hpBarFill.BackgroundColor3 = Theme.AccentOn; hpBarFill.BorderSizePixel = 0; hpBarFill.ZIndex = 11
     Instance.new("UICorner", hpBarFill).CornerRadius = UDim.new(1, 0)
 
-    local svCard, svBody = makeCard("🌐", "THÔNG TIN MÁY CHỦ", 96, 2)
+    local svCard, svBody = makeCard("🌐", "THÔNG TIN MÁY CHỦ", 84, 2)
+    local copyPlaceBtn = makeSoftMiniBtn(
+        svCard, "📋 PlaceId",
+        UDim2.new(1, -138, 0, 3), UDim2.new(0, 56, 0, 16),
+        Color3.fromRGB(175, 215, 240), Color3.fromRGB(28, 38, 48), Color3.fromRGB(80, 130, 165)
+    )
+    copyPlaceBtn.MouseButton1Click:Connect(function()
+        clickAnimate(copyPlaceBtn)
+        pcall(function()
+            if setclipboard then
+                setclipboard(tostring(game.PlaceId))
+                MakeToast("Đã Copy PlaceId", tostring(game.PlaceId), Theme.Brand)
+            end
+        end)
+    end)
+
     local resetCharBtn = makeSoftMiniBtn(
         svCard, "🔄 Reset NV",
         UDim2.new(1, -78, 0, 3), UDim2.new(0, 70, 0, 16),
@@ -3187,10 +3050,10 @@ do
         end)
     end)
 
-    local _, sysBody = makeCard("⚙️", "TRẠNG THÁI & HỆ THỐNG", 86, 3)
+    local _, sysBody = makeCard("⚙️", "TRẠNG THÁI & HỆ THỐNG", 72, 3)
 
     local idToolCard = Instance.new("Frame", page1)
-    idToolCard.Size = UDim2.new(0.94, 0, 0, 88); idToolCard.BackgroundColor3 = Theme.ItemBg
+    idToolCard.Size = UDim2.new(0.94, 0, 0, 86); idToolCard.BackgroundColor3 = Theme.ItemBg
     idToolCard.LayoutOrder = 4; idToolCard.ZIndex = 10
     Instance.new("UICorner", idToolCard).CornerRadius = UDim.new(0, 8)
     local itStroke = Instance.new("UIStroke", idToolCard); itStroke.Color = Theme.Stroke; itStroke.Thickness = 1
@@ -3203,7 +3066,7 @@ do
     idHeader.TextXAlignment = Enum.TextXAlignment.Left; idHeader.ZIndex = 10
 
     local inputBg = Instance.new("Frame", idToolCard)
-    inputBg.Size = UDim2.new(1, -16, 0, 26); inputBg.Position = UDim2.new(0, 8, 0, 22)
+    inputBg.Size = UDim2.new(1, -16, 0, 25); inputBg.Position = UDim2.new(0, 8, 0, 22)
     inputBg.BackgroundColor3 = Color3.fromRGB(18, 20, 28); inputBg.ZIndex = 10
     Instance.new("UICorner", inputBg).CornerRadius = UDim.new(0, 6)
     local ibStroke = Instance.new("UIStroke", inputBg); ibStroke.Color = Theme.Stroke; ibStroke.Thickness = 1
@@ -3240,17 +3103,17 @@ do
 
     local btnCopyIdDown = makeSoftMiniBtn(
         idToolCard, "📜 Copy ID SV",
-        UDim2.new(0, 8, 0, 54), UDim2.new(0.31, -4, 0, 24),
+        UDim2.new(0, 8, 0, 53), UDim2.new(0.31, -4, 0, 24),
         Color3.fromRGB(165, 220, 185), Color3.fromRGB(28, 42, 35), Color3.fromRGB(75, 145, 105)
     )
     local btnSaveSv = makeSoftMiniBtn(
         idToolCard, "📌 Lưu ID SV Này",
-        UDim2.new(0.345, 2, 0, 54), UDim2.new(0.31, -4, 0, 24),
+        UDim2.new(0.345, 2, 0, 53), UDim2.new(0.31, -4, 0, 24),
         Color3.fromRGB(175, 215, 240), Color3.fromRGB(28, 38, 48), Color3.fromRGB(75, 125, 160)
     )
     local btnCopyScript = makeSoftMiniBtn(
         idToolCard, "📤 Copy Lệnh Join",
-        UDim2.new(0.69, 0, 0, 54), UDim2.new(0.31, -8, 0, 24),
+        UDim2.new(0.69, 0, 0, 53), UDim2.new(0.31, -8, 0, 24),
         Color3.fromRGB(225, 205, 155), Color3.fromRGB(42, 38, 28), Color3.fromRGB(145, 125, 70)
     )
 
@@ -3482,11 +3345,9 @@ do
 
         svBody.Text = string.format(
             "<font color='#78B4DC'>• Tựa game:</font> <font color='#D8B870'>%s</font>\n" ..
-            "<font color='#78B4DC'>• FPS:</font> <font color='%s'>%d</font>   |   <font color='#78B4DC'>Ping:</font> <font color='%s'>%d ms</font>\n" ..
-            "<font color='#78B4DC'>• Người chơi:</font> %d / %d   |   <font color='#78B4DC'>PlaceId:</font> %d\n" ..
+            "<font color='#78B4DC'>• PlaceId:</font> %d   |   <font color='#78B4DC'>Người chơi:</font> %d / %d\n" ..
             "<font color='#78B4DC'>• ID Server:</font> <font color='#909AA8'>%s</font>",
-            string.sub(gameName, 1, 24), fpsHex, fps, pingHex, pingNum,
-            #Players:GetPlayers(), Players.MaxPlayers, game.PlaceId, shortJob
+            utf8SafeTruncate(gameName, 26), game.PlaceId, #Players:GetPlayers(), Players.MaxPlayers, shortJob
         )
 
         local execTime = math.floor(workspace.DistributedGameTime)
@@ -3495,10 +3356,9 @@ do
         local s = execTime % 60
 
         sysBody.Text = string.format(
-            "<font color='#78B4DC'>• Executor:</font> <font color='#38CC88'>%s</font>   |   <font color='#78B4DC'>Đang bật:</font> <font color='#D8B870'>%d tính năng</font>\n" ..
-            "<font color='#78B4DC'>• Treo máy:</font> %02d:%02d:%02d   |   <font color='#78B4DC'>Giờ:</font> %s\n" ..
-            "<font color='#78B4DC'>• Phiên bản:</font> <font color='#E09F67'>VIP PRO MAX V1.15.0</font>",
-            execName, activeCount, h, m, s, os.date("%H:%M:%S")
+            "<font color='#78B4DC'>• Executor:</font> <font color='#38CC88'>%s</font>   |   <font color='#78B4DC'>Phiên bản:</font> <font color='#E09F67'>V1.16.0</font>\n" ..
+            "<font color='#78B4DC'>• Treo máy:</font> %02d:%02d:%02d   |   <font color='#78B4DC'>Giờ hệ thống:</font> %s",
+            execName, h, m, s, os.date("%H:%M:%S")
         )
     end
 
@@ -3509,3 +3369,469 @@ do
         end
     end)
 end
+
+-- ==========================================
+-- [HỆ THỐNG AUTO CLICK, AUTO COLLECT, MAGNET & MINI HUD]
+-- ==========================================
+task.spawn(function()
+    while task.wait(0.1) do
+        if State.AutoClick and player.Character then
+            pcall(function()
+                local tool = player.Character:FindFirstChildOfClass("Tool")
+                if tool then tool:Activate() end
+            end)
+        end
+    end
+end)
+
+task.spawn(function()
+    while task.wait(0.6) do
+        if State.MiniHUD and miniHudFrame.Visible then
+            local pingNum = 0
+            pcall(function()
+                if Stats and Stats:FindFirstChild("Network") and Stats.Network:FindFirstChild("ServerStatsItem") then
+                    local raw = Stats.Network.ServerStatsItem["Data Ping"]:GetValueString()
+                    pingNum = tonumber(raw and raw:match("%d+")) or math.floor(player:GetNetworkPing() * 1000)
+                else
+                    pingNum = math.floor(player:GetNetworkPing() * 1000)
+                end
+            end)
+            local fCol = fps >= 45 and "#38CC88" or (fps >= 25 and "#E5B85B" or "#E05666")
+            hudLabel.Text = string.format("⚡ <font color='%s'>%d FPS</font> | 🌐 <font color='#58B6F2'>%d ms</font>", fCol, fps, pingNum)
+        end
+    end
+end)
+
+task.spawn(function()
+    for _, obj in ipairs(workspace:GetDescendants()) do
+        if obj:IsA("ProximityPrompt") then table.insert(cachedPrompts, obj) end
+    end
+end)
+workspace.DescendantAdded:Connect(function(obj)
+    if obj:IsA("ProximityPrompt") then table.insert(cachedPrompts, obj) end
+end)
+
+local originalPrompts = {}
+task.spawn(function()
+    while task.wait(1) do
+        if State.Instant then
+            for i = #cachedPrompts, 1, -1 do
+                local prompt = cachedPrompts[i]
+                if prompt.Parent then
+                    if not originalPrompts[prompt] then
+                        originalPrompts[prompt] = {HoldDuration = prompt.HoldDuration, MaxActivationDistance = prompt.MaxActivationDistance}
+                    end
+                    prompt.HoldDuration = 0; prompt.MaxActivationDistance = 25
+                else
+                    table.remove(cachedPrompts, i)
+                end
+            end
+        elseif next(originalPrompts) then
+            for prompt, data in pairs(originalPrompts) do
+                if prompt and prompt.Parent then
+                    prompt.HoldDuration = data.HoldDuration
+                    prompt.MaxActivationDistance = data.MaxActivationDistance
+                end
+            end
+            originalPrompts = {}
+        end
+    end
+end)
+
+task.spawn(function()
+    while task.wait(0.5) do
+        pcall(function()
+            if State.AutoCollect and player.Character then
+                local root = getUniversalRoot(player.Character)
+                if root then
+                    local rootPos = root.Position
+                    for _, prompt in ipairs(cachedPrompts) do
+                        if prompt.Parent and prompt.Parent:IsA("BasePart") and prompt.Enabled and (prompt.Parent.Position - rootPos).Magnitude <= 50 then
+                            if fireproximityprompt then fireproximityprompt(prompt) end
+                        end
+                    end
+                    local overlapParams = OverlapParams.new()
+                    overlapParams.FilterDescendantsInstances = {player.Character}
+                    overlapParams.FilterType = Enum.RaycastFilterType.Exclude
+                    local partsNearby = workspace:GetPartBoundsInRadius(rootPos, 50, overlapParams)
+                    for _, part in ipairs(partsNearby) do
+                        if part.Name == "Handle" and part.Parent and part.Parent:IsA("Tool") then
+                            part.CanCollide = false
+                            if firetouchinterest then
+                                firetouchinterest(root, part, 0); task.wait(0.01); firetouchinterest(root, part, 1)
+                            else
+                                part.CFrame = root.CFrame
+                            end
+                        end
+                    end
+                end
+            end
+        end)
+    end
+end)
+
+local magnetKeywords = {"coin", "gem", "orb", "diamond", "cash", "money", "yen", "token", "drop", "star", "crystal", "gold", "silver", "emerald"}
+local function isMagnetItem(part)
+    if not part:IsA("BasePart") or (part.Anchored and part.Size.Magnitude > 8) then return false end
+    local name = string.lower(part.Name)
+    local pName = part.Parent and string.lower(part.Parent.Name) or ""
+    for _, kw in ipairs(magnetKeywords) do
+        if string.find(name, kw, 1, true) or string.find(pName, kw, 1, true) then return true end
+    end
+    return false
+end
+
+task.spawn(function()
+    while task.wait(0.35) do
+        if State.MagnetOrbs and player.Character then
+            pcall(function()
+                local root = getUniversalRoot(player.Character)
+                if not root then return end
+                local overlap = OverlapParams.new()
+                overlap.FilterDescendantsInstances = {player.Character}
+                overlap.FilterType = Enum.RaycastFilterType.Exclude
+                local nearby = workspace:GetPartBoundsInRadius(root.Position, 85, overlap)
+                for _, part in ipairs(nearby) do
+                    if isMagnetItem(part) then
+                        part.CanCollide = false
+                        if firetouchinterest then
+                            firetouchinterest(root, part, 0)
+                            firetouchinterest(root, part, 1)
+                        end
+                        part.CFrame = root.CFrame
+                    end
+                end
+            end)
+        end
+    end
+end)
+
+-- ==========================================
+-- [ESP NGƯỜI CHƠI + ESP ĐIỂM LƯU TP SAVE + HITBOX]
+-- ==========================================
+local function clearSingleESP(p)
+    if ActiveESPs[p] then
+        if ActiveESPs[p].Billboard then ActiveESPs[p].Billboard:Destroy() end
+        if ActiveESPs[p].Highlight then ActiveESPs[p].Highlight:Destroy() end
+        if ActiveESPs[p].Anchor then ActiveESPs[p].Anchor:Destroy() end
+        ActiveESPs[p] = nil
+    end
+end
+
+local function updateESP_Hitbox()
+    if State.Hitbox then
+        for _, p in pairs(Players:GetPlayers()) do
+            if p ~= player and p.Character then
+                local hrp = getUniversalRoot(p.Character)
+                if hrp then
+                    if not originalHitboxSizes[p] then originalHitboxSizes[p] = hrp.Size end
+                    hrp.Size = Vector3.new(State.HitboxSize, State.HitboxSize, State.HitboxSize)
+                    hrp.Transparency = 0.5; hrp.CanCollide = false; hrp.Massless = true
+                end
+            end
+        end
+    elseif next(originalHitboxSizes) then
+        for p, size in pairs(originalHitboxSizes) do
+            if p and p.Character then
+                local hrp = getUniversalRoot(p.Character)
+                if hrp then hrp.Size = size; hrp.Transparency = 1; hrp.Massless = false end
+            end
+        end
+        originalHitboxSizes = {}
+    end
+
+    local myRoot = getUniversalRoot(player.Character)
+    local myPos = myRoot and myRoot.Position or (workspace.CurrentCamera and workspace.CurrentCamera.CFrame.Position)
+
+    -- Cập nhật ESP Điểm Lưu (TP Save Waypoints)
+    if State.TpSaveESP and #savedTpList > 0 then
+        for idx, item in ipairs(savedTpList) do
+            if item.cframe then
+                local cf = CFrame.new(unpack(item.cframe))
+                local pos = cf.Position
+                if not SavedTpESPs[idx] then
+                    local anchor = Instance.new("Part")
+                    anchor.Name = "TpSaveAnchor_" .. idx; anchor.Size = Vector3.new(1.2, 1.2, 1.2)
+                    anchor.Shape = Enum.PartType.Ball; anchor.Material = Enum.Material.Neon
+                    anchor.Color = Theme.Brand; anchor.Transparency = 0.25
+                    anchor.Anchored = true; anchor.CanCollide = false; anchor.CanQuery = false; anchor.CanTouch = false
+                    anchor.Parent = workspace
+
+                    local bgui = Instance.new("BillboardGui")
+                    bgui.Name = "TpSaveESP_" .. idx; bgui.Size = UDim2.new(0, 180, 0, 40)
+                    bgui.StudsOffset = Vector3.new(0, 2.5, 0); bgui.AlwaysOnTop = true
+                    bgui.MaxDistance = math.huge; bgui.LightInfluence = 0; bgui.Adornee = anchor; bgui.Parent = guiParent
+
+                    local lbl = Instance.new("TextLabel", bgui)
+                    lbl.Name = "WaypointLabel"; lbl.Size = UDim2.new(1, 0, 1, 0)
+                    lbl.BackgroundTransparency = 1; lbl.TextColor3 = Color3.fromRGB(88, 210, 255)
+                    lbl.TextStrokeTransparency = 0.15; lbl.TextStrokeColor3 = Color3.new(0, 0, 0)
+                    lbl.Font = Enum.Font.GothamBold; lbl.TextSize = 11; lbl.RichText = true
+
+                    SavedTpESPs[idx] = {Anchor = anchor, Billboard = bgui, Label = lbl}
+                end
+                local espObj = SavedTpESPs[idx]
+                if espObj and espObj.Anchor and espObj.Label then
+                    espObj.Anchor.Position = pos
+                    local dist = myPos and math.floor((myPos - pos).Magnitude) or 0
+                    espObj.Label.Text = "📍 " .. item.name .. '\n<font color="#F0C868">[' .. dist .. 'm]</font>'
+                end
+            end
+        end
+        for idx, obj in pairs(SavedTpESPs) do
+            if idx > #savedTpList then
+                if obj.Anchor then obj.Anchor:Destroy() end
+                if obj.Billboard then obj.Billboard:Destroy() end
+                SavedTpESPs[idx] = nil
+            end
+        end
+    elseif next(SavedTpESPs) then
+        if clearSavedTpESPs then clearSavedTpESPs() end
+    end
+
+    if not State.ESP then
+        for p, _ in pairs(ActiveESPs) do clearSingleESP(p) end
+        return
+    end
+
+    for _, p in ipairs(Players:GetPlayers()) do
+        if p ~= player then
+            pcall(function()
+                local tChar = p.Character
+                if not tChar then clearSingleESP(p); return end
+
+                local espPart = getUniversalRoot(tChar)
+                local targetCF = getCharacterCFrame(tChar)
+                if not targetCF then clearSingleESP(p); return end
+                local targetPos = targetCF.Position
+
+                if not ActiveESPs[p] then ActiveESPs[p] = {} end
+                local data = ActiveESPs[p]
+
+                if not espPart then
+                    if not data.Anchor or not data.Anchor.Parent then
+                        local anchor = Instance.new("Part")
+                        anchor.Name = "ESPAnchor_" .. p.Name; anchor.Size = Vector3.new(1, 1, 1)
+                        anchor.Transparency = 1; anchor.Anchored = true; anchor.CanCollide = false
+                        anchor.CanQuery = false; anchor.CanTouch = false; anchor.Parent = workspace
+                        data.Anchor = anchor
+                    end
+                    data.Anchor.Position = targetPos
+                    espPart = data.Anchor
+                elseif data.Anchor then
+                    data.Anchor:Destroy(); data.Anchor = nil
+                end
+
+                if not data.Billboard or not data.Billboard.Parent then
+                    local bgui = Instance.new("BillboardGui")
+                    bgui.Name = "MobileESP_" .. p.Name; bgui.Size = UDim2.new(0, 200, 0, 50)
+                    bgui.StudsOffset = Vector3.new(0, 3.5, 0); bgui.AlwaysOnTop = true
+                    bgui.MaxDistance = math.huge; bgui.LightInfluence = 0; bgui.Parent = guiParent
+
+                    local tLabel = Instance.new("TextLabel", bgui)
+                    tLabel.Name = "NameLabel"; tLabel.Size = UDim2.new(1, 0, 1, 0)
+                    tLabel.BackgroundTransparency = 1; tLabel.TextColor3 = Color3.fromRGB(255, 75, 85)
+                    tLabel.TextStrokeTransparency = 0.15; tLabel.TextStrokeColor3 = Color3.new(0, 0, 0)
+                    tLabel.Font = Enum.Font.GothamBold; tLabel.TextSize = 12; tLabel.RichText = true
+                    data.Billboard = bgui
+                end
+                data.Billboard.Adornee = espPart
+
+                if not data.Highlight or not data.Highlight.Parent then
+                    local hl = Instance.new("Highlight")
+                    hl.Name = "ESPHighlight_" .. p.Name; hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+                    hl.FillColor = Color3.fromRGB(255, 65, 75); hl.FillTransparency = 0.65
+                    hl.OutlineColor = Color3.new(1, 1, 1); hl.OutlineTransparency = 0.1; hl.Parent = guiParent
+                    data.Highlight = hl
+                end
+                data.Highlight.Adornee = tChar
+
+                if myPos then
+                    local dist = math.floor((myPos - targetPos).Magnitude)
+                    data.Billboard.NameLabel.Text = p.DisplayName .. '\n<font color="#78D2FF">[' .. dist .. 'm]</font>'
+                else
+                    data.Billboard.NameLabel.Text = p.DisplayName
+                end
+            end)
+        end
+    end
+
+    for p, _ in pairs(ActiveESPs) do
+        if not Players:FindFirstChild(p.Name) then clearSingleESP(p) end
+    end
+end
+
+task.spawn(function()
+    while task.wait(0.1) do updateESP_Hitbox() end
+end)
+
+-- ==========================================
+-- VÒNG LẶP VẬT LÝ & CHUYỂN ĐỘNG
+-- ==========================================
+RunService.Stepped:Connect(function()
+    local char = player.Character
+    if char and (State.Noclip or (autoTpPlayerEnabled and wasHorizontalTp)) then
+        for _, p in ipairs(char:GetDescendants()) do
+            if p:IsA("BasePart") and p.CanCollide then p.CanCollide = false end
+        end
+    end
+end)
+
+RunService.Heartbeat:Connect(function()
+    if autoTpPlayerEnabled and targetTpPlayer then
+        teleportToSelectedPlayer(false)
+    end
+
+    if spectatePlayerEnabled and targetTpPlayer and targetTpPlayer.Character then
+        local cam = workspace.CurrentCamera
+        local tChar = targetTpPlayer.Character
+        local targetHum = tChar:FindFirstChildOfClass("Humanoid")
+        local targetRoot = getUniversalRoot(tChar)
+        local targetCF = getCharacterCFrame(tChar)
+
+        if cam and targetCF then
+            if targetRoot and targetHum then
+                pcall(function() player.ReplicationFocus = targetRoot end)
+                if cam.CameraSubject ~= targetHum then cam.CameraSubject = targetHum end
+            else
+                if not spectateProxyPart or not spectateProxyPart.Parent then
+                    spectateProxyPart = Instance.new("Part")
+                    spectateProxyPart.Name = "VipSpectateProxy"; spectateProxyPart.Size = Vector3.new(1, 1, 1)
+                    spectateProxyPart.Transparency = 1; spectateProxyPart.Anchored = true
+                    spectateProxyPart.CanCollide = false; spectateProxyPart.CanQuery = false
+                    spectateProxyPart.CanTouch = false; spectateProxyPart.Parent = workspace
+                end
+                spectateProxyPart.CFrame = targetCF
+                pcall(function() player.ReplicationFocus = spectateProxyPart end)
+                if cam.CameraSubject ~= spectateProxyPart then cam.CameraSubject = spectateProxyPart end
+                if tick() - lastSpectateStreamTick > 0.5 then
+                    lastSpectateStreamTick = tick()
+                    local streamPos = targetCF.Position
+                    task.spawn(function() pcall(function() player:RequestStreamAroundAsync(streamPos, 3) end) end)
+                end
+            end
+        end
+    end
+
+    local char = player.Character
+    if not char then return end
+    local root = getUniversalRoot(char)
+    local hum = char:FindFirstChildOfClass("Humanoid")
+
+    if hum and root then
+        if State.LockPosition then root.Anchored = true end
+        if State.Jump then hum.UseJumpPower = true; hum.JumpPower = State.JumpValue end
+
+        if not State.Fly and not autoTpPlayerEnabled then
+            if State.Speed then
+                hum.WalkSpeed = State.SpeedValue
+                if hum.MoveDirection.Magnitude > 0 then
+                    local curVel = root.AssemblyLinearVelocity
+                    local targetVel = hum.MoveDirection * State.SpeedValue
+                    root.AssemblyLinearVelocity = Vector3.new(targetVel.X, curVel.Y, targetVel.Z)
+                end
+            end
+
+            if State.AutoDash and hum.MoveDirection.Magnitude > 0 then
+                local dashSpeedStuds = State.DashSpeed * 8
+                local curVel = root.AssemblyLinearVelocity
+                local dashVel = hum.MoveDirection * dashSpeedStuds
+                root.AssemblyLinearVelocity = Vector3.new(dashVel.X, curVel.Y, dashVel.Z)
+            end
+        end
+
+        if State.SpinBot then
+            root.CFrame = root.CFrame * CFrame.Angles(0, math.rad(State.SpinSpeed), 0)
+        end
+
+        if State.Noclip and hum.MoveDirection.Magnitude == 0 then
+            root.AssemblyLinearVelocity = Vector3.new(0, root.AssemblyLinearVelocity.Y, 0)
+        end
+
+        if State.Fly then
+            hum.PlatformStand = true
+            local bv = root:FindFirstChild("FlyBodyVelocity")
+            if not bv then
+                bv = Instance.new("BodyVelocity")
+                bv.Name = "FlyBodyVelocity"; bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+                bv.Velocity = Vector3.zero; bv.Parent = root
+            end
+
+            local bg = root:FindFirstChild("FlyBodyGyro")
+            if not bg then
+                bg = Instance.new("BodyGyro")
+                bg.Name = "FlyBodyGyro"; bg.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
+                bg.P = 10000; bg.D = 100; bg.Parent = root
+            end
+
+            local cam = workspace.CurrentCamera
+            bg.CFrame = cam.CFrame
+
+            local moveDir = hum.MoveDirection
+            if moveDir.Magnitude > 0 then
+                local camLook = cam.CFrame.LookVector
+                local camRight = cam.CFrame.RightVector
+                local flatLook = Vector3.new(camLook.X, 0, camLook.Z)
+                local flatRight = Vector3.new(camRight.X, 0, camRight.Z)
+                local forwardUnit = flatLook.Magnitude > 0.001 and flatLook.Unit or Vector3.zero
+                local rightUnit = flatRight.Magnitude > 0.001 and flatRight.Unit or Vector3.zero
+                local dotForward = moveDir:Dot(forwardUnit)
+                local dotRight = moveDir:Dot(rightUnit)
+                local flyDir = (camLook * dotForward) + (rightUnit * dotRight)
+                bv.Velocity = flyDir.Magnitude > 0.001 and (flyDir.Unit * State.FlySpeed) or Vector3.zero
+            else
+                bv.Velocity = Vector3.zero
+            end
+        else
+            if root:FindFirstChild("FlyBodyVelocity") then root.FlyBodyVelocity:Destroy() end
+            if root:FindFirstChild("FlyBodyGyro") then root.FlyBodyGyro:Destroy() end
+            if not State.AntiStun and not (autoTpPlayerEnabled and wasHorizontalTp) then
+                hum.PlatformStand = false
+            end
+        end
+
+        if State.AntiStun then
+            hum:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
+            hum:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, false)
+            local currentState = hum:GetState()
+            if currentState == Enum.HumanoidStateType.FallingDown or currentState == Enum.HumanoidStateType.Ragdoll then
+                hum:ChangeState(Enum.HumanoidStateType.GettingUp)
+            end
+            if not State.Speed and not State.AutoDash then
+                local currentVel = root.AssemblyLinearVelocity
+                local horizontalVel = Vector3.new(currentVel.X, 0, currentVel.Z)
+                if horizontalVel.Magnitude > 75 then
+                    root.AssemblyLinearVelocity = Vector3.new(0, currentVel.Y, 0)
+                end
+            end
+        end
+
+        local light = root:FindFirstChild("PlayerPointLight")
+        if State.PlayerLight then
+            if not light then light = Instance.new("PointLight", root); light.Name = "PlayerPointLight"; light.Shadows = false end
+            light.Brightness = State.LightBrightness; light.Range = State.LightRange
+            light.Color = PlayerLightColors[State.LightColorIdx].Value
+        elseif light then
+            light:Destroy()
+        end
+    end
+
+    if State.Reach then
+        local tool = char:FindFirstChildOfClass("Tool")
+        if tool then
+            local handle = tool:FindFirstChild("Handle")
+            if handle then
+                if not originalToolSizes[tool] then originalToolSizes[tool] = handle.Size end
+                handle.Size = Vector3.new(State.ReachSize, State.ReachSize, State.ReachSize)
+                handle.Massless = true; handle.CanCollide = false; handle.Transparency = 0.8
+            end
+        end
+    elseif next(originalToolSizes) then
+        for t, origSize in pairs(originalToolSizes) do
+            if t and t.Parent and t:FindFirstChild("Handle") then
+                t.Handle.Size = origSize; t.Handle.Massless = false; t.Handle.Transparency = 0
+            end
+        end
+        originalToolSizes = {}
+    end
+end)
