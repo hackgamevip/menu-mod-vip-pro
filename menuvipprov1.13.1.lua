@@ -26,7 +26,7 @@ local State = {
     SpinBot = false, SpinSpeed = 50, Hitbox = false, HitboxSize = 15, AutoClick = false, RGB = false,
     Reach = false, ReachSize = 15, AutoDash = false, DashSpeed = 10, AutoSave = false, Astral = false,
     ShiftLock = false, SpeedValue = 60, JumpValue = 120, LightRange = 60, LightBrightness = 3,
-    MusicVolume = 5, MusicLoop = false, LightColorIdx = 1, ThemeIdx = 1, NoFog = false,
+    MusicVolume = 5, MusicLoop = false, MusicSpeedIdx = 2, LightColorIdx = 1, ThemeIdx = 1, NoFog = false,
     FpsCapValue = 60, Disable3D = false, AfkModeScreen = false, RemoveTextures = false,
     HidePlayers = false, OptimizeTerrain = false, NoShadows = false,
     DisableParticles = false, DisablePostEffects = false, HidePetsAccessories = false, AutoClearRAM = false,
@@ -173,6 +173,14 @@ pcall(function()
     end
 end)
 if not TpPositions[State.TpPositionIdx] then State.TpPositionIdx = 1 end
+local MusicSpeedPresets = {
+    {Name = "0.8x (Slowed)", Short = "0.8x Slowed", Speed = 0.8},
+    {Name = "1.0x (Chuẩn)", Short = "1.0x Chuẩn", Speed = 1.0},
+    {Name = "1.15x (Fast)", Short = "1.15x Fast", Speed = 1.15},
+    {Name = "1.25x (Nightcore)", Short = "1.25x Nightcore", Speed = 1.25},
+    {Name = "1.5x (Remix)", Short = "1.5x Remix", Speed = 1.5}
+}
+if not MusicSpeedPresets[State.MusicSpeedIdx] then State.MusicSpeedIdx = 2 end
 if not PlayerLightColors[State.LightColorIdx] then State.LightColorIdx = 1 end
 if not ThemePresets[State.ThemeIdx] then State.ThemeIdx = 1 end
 do local p = ThemePresets[State.ThemeIdx]; Theme.Brand = p.Brand; Theme.BrandSoft = p.Soft; Theme.AccentOn = p.On; Theme.ItemActive = p.ActiveBg end
@@ -269,7 +277,7 @@ screenOverlay.BackgroundColor3 = Color3.new(0, 0, 0); screenOverlay.ZIndex = 0; 
 
 -- Đặt mặc định ở Y = 0.12 để tránh đè lên nút "Chỉ mục / Nhiệm vụ" bên trái màn hình game
 local openBtn = Instance.new("TextButton", gui)
-openBtn.Size = UDim2.new(0, 44, 0, 44); openBtn.Position = UDim2.new(0, 14, 0.12, 0)
+openBtn.Size = UDim2.new(0, 44, 0, 44); openBtn.Position = UDim2.new(0, 14, 0.05, 0)
 openBtn.Text = "🇻🇳"; openBtn.BackgroundColor3 = Theme.HeaderBg; openBtn.BackgroundTransparency = 0.08
 openBtn.TextColor3 = Color3.fromRGB(255, 255, 255); openBtn.Font = Enum.Font.GothamBold; openBtn.TextSize = 20; openBtn.ZIndex = 10
 Instance.new("UICorner", openBtn).CornerRadius = UDim.new(0, 14)
@@ -487,6 +495,34 @@ do
     local tab4, ind4 = createTab("🛠️", "TIỆN ÍCH")
     local tab9, ind9 = createTab("🚀", "CẤU HÌNH")
 
+    -- Tự động giãn đều chiều cao & khoảng cách 9 Tab bên Sidebar khi kéo phóng to/thu nhỏ Menu
+    local function updateSidebarProportions()
+        local availH = math.max(254, frame.Size.Y.Offset - 38)
+        local padY = math.clamp(math.floor((availH - 254) * 0.045) + 4, 4, 10)
+        tabPad.PaddingTop = UDim.new(0, padY)
+        tabPad.PaddingBottom = UDim.new(0, padY)
+        local spacing = math.clamp(2.5 + ((availH - 254) * 0.025), 2.5, 6.5)
+        tabLayout.Padding = UDim.new(0, spacing)
+        local totalUsable = availH - (padY * 2) - (spacing * 8) - 2
+        local btnH = math.clamp(math.floor(totalUsable / 9), 23, 36)
+        local boxSz = math.clamp(btnH - 6, 17, 22)
+        local indH = math.clamp(btnH - 10, 13, 18)
+        local txtSz = math.clamp(9.2 + ((btnH - 23) * 0.1), 9.2, 10.5)
+        for _, item in ipairs(allTabs) do
+            item.Btn.Size = UDim2.new(1, 0, 0, btnH)
+            item.IconBox.Size = UDim2.new(0, boxSz, 0, boxSz)
+            item.IconBox.Position = UDim2.new(0, 7, 0.5, -boxSz / 2)
+            item.Txt.Position = UDim2.new(0, 11 + boxSz, 0, 0)
+            item.Txt.Size = UDim2.new(1, -(13 + boxSz), 1, 0)
+            item.Txt.TextSize = txtSz
+            item.Ind.Position = UDim2.new(0, 2, 0.5, -indH / 2)
+            if item.Ind.Visible then
+                item.Ind.Size = UDim2.new(0, 3, 0, indH)
+            end
+        end
+    end
+    frame:GetPropertyChangedSignal("Size"):Connect(updateSidebarProportions)
+
     local pageContainer = Instance.new("Frame", frame)
     pageContainer.Size = UDim2.new(1, -114, 1, -38); pageContainer.Position = UDim2.new(0, 114, 0, 38)
     pageContainer.BackgroundTransparency = 1; pageContainer.ZIndex = 10
@@ -539,8 +575,10 @@ do
             item.Ind.Visible = isSel
         end
         pg.Visible = true
+        local targetIndH = math.clamp(tb.Size.Y.Offset - 10, 13, 18)
+        ind.Position = UDim2.new(0, 2, 0.5, -targetIndH / 2)
         ind.Size = UDim2.new(0, 3, 0, 0)
-        TweenService:Create(ind, TweenInfo.new(0.22, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = UDim2.new(0, 3, 0, 13)}):Play()
+        TweenService:Create(ind, TweenInfo.new(0.22, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = UDim2.new(0, 3, 0, targetIndH)}):Play()
 
         if pg == page9 and onTab9Shown then
             task.spawn(onTab9Shown)
@@ -1514,7 +1552,7 @@ createToggle(page4, "🌈 Chế độ viền RGB", "RGB", function(v)
 end)
 
 local miniHudFrame = Instance.new("Frame", gui)
-miniHudFrame.Size = UDim2.new(0, 128, 0, 26); miniHudFrame.Position = UDim2.new(0, 65, 0.12, 9)
+miniHudFrame.Size = UDim2.new(0, 128, 0, 26); miniHudFrame.Position = UDim2.new(0, 65, 0.05, 9)
 miniHudFrame.BackgroundColor3 = Theme.MainBg; miniHudFrame.BackgroundTransparency = 0.12
 miniHudFrame.Visible = State.MiniHUD; miniHudFrame.ZIndex = 10
 Instance.new("UICorner", miniHudFrame).CornerRadius = UDim.new(1, 0)
@@ -1601,45 +1639,151 @@ createDualButtons(
 )
 
 -- ==========================================
--- [TAB 5: NHẠC ID (NÂNG CẤP TẠM DỪNG & LẶP BÀI)]
+-- [TAB 5: NHẠC ID (THANH THỜI GIAN TUA NHẠC + TỐC ĐỘ SLOWED/NIGHTCORE + CHỮ DỊU MẮT)]
 -- ==========================================
 local currentSound = nil; local currentMusicId = ""; local savedMusicList = {}; local isMusicPaused = false
 do
     local musicControlFrame = Instance.new("Frame", page5)
-    musicControlFrame.Size = UDim2.new(0.94, 0, 0, 52); musicControlFrame.BackgroundColor3 = Theme.ItemBg
+    musicControlFrame.Size = UDim2.new(0.94, 0, 0, 68); musicControlFrame.BackgroundColor3 = Theme.ItemBg
     musicControlFrame.ZIndex = 10; musicControlFrame.LayoutOrder = 1
     Instance.new("UICorner", musicControlFrame).CornerRadius = UDim.new(0, 8)
     local mStroke = Instance.new("UIStroke", musicControlFrame); mStroke.Color = Theme.Stroke; mStroke.Thickness = 1
     table.insert(RGBElements, {Type = "Info", Stroke = mStroke})
 
     local musicIcon = Instance.new("TextLabel", musicControlFrame)
-    musicIcon.Size = UDim2.new(0.10, 0, 0, 26); musicIcon.BackgroundTransparency = 1
-    musicIcon.Text = "🎵"; musicIcon.TextSize = 13; musicIcon.Font = Enum.Font.GothamBold; musicIcon.ZIndex = 10
+    musicIcon.Size = UDim2.new(0, 26, 0, 26); musicIcon.Position = UDim2.new(0, 4, 0, 0)
+    musicIcon.BackgroundTransparency = 1; musicIcon.Text = "🎵"; musicIcon.TextSize = 12.5
+    musicIcon.Font = Enum.Font.GothamSemibold; musicIcon.ZIndex = 10
 
     local musicIdBox = Instance.new("TextBox", musicControlFrame)
-    musicIdBox.Size = UDim2.new(0.66, 0, 0, 26); musicIdBox.Position = UDim2.new(0.10, 0, 0, 0)
+    musicIdBox.Size = UDim2.new(1, -148, 0, 26); musicIdBox.Position = UDim2.new(0, 30, 0, 0)
     musicIdBox.BackgroundTransparency = 1; musicIdBox.PlaceholderText = "Nhập ID Nhạc Roblox..."
     musicIdBox.PlaceholderColor3 = Theme.TextDim; musicIdBox.Text = ""; musicIdBox.TextColor3 = Theme.TextTitle
-    musicIdBox.Font = Enum.Font.GothamSemibold; musicIdBox.TextSize = 10; musicIdBox.TextXAlignment = Enum.TextXAlignment.Left
+    musicIdBox.Font = Enum.Font.GothamSemibold; musicIdBox.TextSize = 9.8; musicIdBox.TextXAlignment = Enum.TextXAlignment.Left
     musicIdBox.ClearTextOnFocus = false; musicIdBox.ZIndex = 10
 
+    local pasteIdBtn = Instance.new("TextButton", musicControlFrame)
+    pasteIdBtn.Size = UDim2.new(0, 52, 0, 20); pasteIdBtn.Position = UDim2.new(1, -112, 0, 3)
+    pasteIdBtn.BackgroundColor3 = Color3.fromRGB(19, 24, 34); pasteIdBtn.Text = "📋 Dán"
+    pasteIdBtn.TextColor3 = getSoftBrandColor(Theme.Brand)
+    pasteIdBtn.Font = Enum.Font.GothamSemibold; pasteIdBtn.TextSize = 9; pasteIdBtn.AutoButtonColor = false; pasteIdBtn.ZIndex = 10
+    Instance.new("UICorner", pasteIdBtn).CornerRadius = UDim.new(0, 5)
+    local pasteIdStroke = Instance.new("UIStroke", pasteIdBtn); pasteIdStroke.Color = Theme.Brand; pasteIdStroke.Thickness = 0.8; pasteIdStroke.Transparency = 0.45
+    table.insert(RGBElements, {Type = "Button", Stroke = pasteIdStroke, DefaultColor = Theme.Brand, UseBrand = true})
+    registerBrandUpdater(function(newBrand)
+        if pasteIdBtn and pasteIdBtn.Parent then pasteIdBtn.TextColor3 = getSoftBrandColor(newBrand) end
+    end)
+
     local saveIdBtn = Instance.new("TextButton", musicControlFrame)
-    saveIdBtn.Size = UDim2.new(0.21, 0, 0, 20); saveIdBtn.Position = UDim2.new(0.77, 0, 0, 3)
-    saveIdBtn.BackgroundColor3 = Color3.fromRGB(28, 48, 38); saveIdBtn.Text = "💾 Lưu"; saveIdBtn.TextColor3 = Theme.AccentOn
-    saveIdBtn.Font = Enum.Font.GothamBold; saveIdBtn.TextSize = 9.5; saveIdBtn.ZIndex = 10
+    saveIdBtn.Size = UDim2.new(0, 52, 0, 20); saveIdBtn.Position = UDim2.new(1, -56, 0, 3)
+    saveIdBtn.BackgroundColor3 = Color3.fromRGB(18, 30, 25); saveIdBtn.Text = "💾 Lưu"
+    saveIdBtn.TextColor3 = Color3.fromRGB(88, 194, 140)
+    saveIdBtn.Font = Enum.Font.GothamSemibold; saveIdBtn.TextSize = 9; saveIdBtn.AutoButtonColor = false; saveIdBtn.ZIndex = 10
     Instance.new("UICorner", saveIdBtn).CornerRadius = UDim.new(0, 5)
-    local saveIdStroke = Instance.new("UIStroke", saveIdBtn); saveIdStroke.Color = Theme.AccentOn; saveIdStroke.Thickness = 0.9; saveIdStroke.Transparency = 0.3
+    local saveIdStroke = Instance.new("UIStroke", saveIdBtn); saveIdStroke.Color = Color3.fromRGB(70, 165, 115); saveIdStroke.Thickness = 0.8; saveIdStroke.Transparency = 0.45
 
     local divLine = Instance.new("Frame", musicControlFrame)
-    divLine.Size = UDim2.new(0.94, 0, 0, 1); divLine.Position = UDim2.new(0.03, 0, 0, 26)
-    divLine.BackgroundColor3 = Theme.Stroke; divLine.BorderSizePixel = 0; divLine.ZIndex = 10
+    divLine.Size = UDim2.new(1, -16, 0, 1); divLine.Position = UDim2.new(0, 8, 0, 26)
+    divLine.BackgroundColor3 = Theme.Stroke; divLine.BackgroundTransparency = 0.35; divLine.BorderSizePixel = 0; divLine.ZIndex = 10
 
     local nowPlayingLabel = Instance.new("TextLabel", musicControlFrame)
-    nowPlayingLabel.Size = UDim2.new(0.92, 0, 0, 24); nowPlayingLabel.Position = UDim2.new(0.04, 0, 0, 27)
+    nowPlayingLabel.Size = UDim2.new(1, -92, 0, 18); nowPlayingLabel.Position = UDim2.new(0, 10, 0, 29)
     nowPlayingLabel.BackgroundTransparency = 1; nowPlayingLabel.RichText = true
     nowPlayingLabel.Text = "<font color='#9AA4B8'>🎵 Chưa có nhạc phát</font>"
-    nowPlayingLabel.Font = Enum.Font.GothamSemibold; nowPlayingLabel.TextSize = 9.5
+    nowPlayingLabel.Font = Enum.Font.GothamSemibold; nowPlayingLabel.TextSize = 9.3
+    nowPlayingLabel.TextXAlignment = Enum.TextXAlignment.Left
     nowPlayingLabel.TextTruncate = Enum.TextTruncate.AtEnd; nowPlayingLabel.ZIndex = 10
+
+    local musicTimeLabel = Instance.new("TextLabel", musicControlFrame)
+    musicTimeLabel.Size = UDim2.new(0, 76, 0, 18); musicTimeLabel.Position = UDim2.new(1, -84, 0, 29)
+    musicTimeLabel.BackgroundTransparency = 1; musicTimeLabel.Text = "00:00 / 00:00"
+    musicTimeLabel.TextColor3 = getSoftBrandColor(Theme.Brand); musicTimeLabel.Font = Enum.Font.GothamSemibold; musicTimeLabel.TextSize = 8.8
+    musicTimeLabel.TextXAlignment = Enum.TextXAlignment.Right; musicTimeLabel.ZIndex = 10
+    registerBrandUpdater(function(newBrand)
+        if musicTimeLabel and musicTimeLabel.Parent then musicTimeLabel.TextColor3 = getSoftBrandColor(newBrand) end
+    end)
+
+    -- Thanh thời gian bài hát (Seek Bar) hỗ trợ chạm & kéo để tua nhạc
+    local seekContainer = Instance.new("Frame", musicControlFrame)
+    seekContainer.Size = UDim2.new(1, -20, 0, 16); seekContainer.Position = UDim2.new(0, 10, 0, 49)
+    seekContainer.BackgroundTransparency = 1; seekContainer.ZIndex = 11
+
+    local seekTrack = Instance.new("Frame", seekContainer)
+    seekTrack.Size = UDim2.new(1, 0, 0, 5); seekTrack.Position = UDim2.new(0, 0, 0.5, -2.5)
+    seekTrack.BackgroundColor3 = Color3.fromRGB(15, 17, 24); seekTrack.BorderSizePixel = 0; seekTrack.ZIndex = 11
+    Instance.new("UICorner", seekTrack).CornerRadius = UDim.new(1, 0)
+
+    local seekFill = Instance.new("Frame", seekTrack)
+    seekFill.Size = UDim2.new(0, 0, 1, 0); seekFill.BackgroundColor3 = Theme.Brand; seekFill.BorderSizePixel = 0; seekFill.ZIndex = 12
+    Instance.new("UICorner", seekFill).CornerRadius = UDim.new(1, 0)
+
+    local seekKnob = Instance.new("Frame", seekTrack)
+    seekKnob.Size = UDim2.new(0, 10, 0, 10); seekKnob.AnchorPoint = Vector2.new(0.5, 0.5)
+    seekKnob.Position = UDim2.new(0, 0, 0.5, 0); seekKnob.BackgroundColor3 = Color3.fromRGB(235, 242, 255); seekKnob.ZIndex = 13
+    Instance.new("UICorner", seekKnob).CornerRadius = UDim.new(1, 0)
+    local seekKnobStroke = Instance.new("UIStroke", seekKnob); seekKnobStroke.Color = Theme.Brand; seekKnobStroke.Thickness = 1.2
+
+    registerBrandUpdater(function(newBrand)
+        if seekFill and seekFill.Parent then seekFill.BackgroundColor3 = newBrand end
+        if seekKnobStroke and seekKnobStroke.Parent then seekKnobStroke.Color = newBrand end
+    end)
+
+    local function formatTime(sec)
+        sec = math.max(0, math.floor(tonumber(sec) or 0))
+        return string.format("%02d:%02d", math.floor(sec / 60), sec % 60)
+    end
+
+    local seekDragInput = nil
+    local function scrubMusicToInput(input)
+        local pos = math.clamp((input.Position.X - seekTrack.AbsolutePosition.X) / math.max(1, seekTrack.AbsoluteSize.X), 0, 1)
+        seekFill.Size = UDim2.new(pos, 0, 1, 0)
+        seekKnob.Position = UDim2.new(pos, 0, 0.5, 0)
+        if currentSound and currentSound.TimeLength > 0 then
+            local targetSec = pos * currentSound.TimeLength
+            pcall(function() currentSound.TimePosition = targetSec end)
+            musicTimeLabel.Text = formatTime(targetSec) .. " / " .. formatTime(currentSound.TimeLength)
+        end
+    end
+
+    seekContainer.InputBegan:Connect(function(input)
+        if not seekDragInput and (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
+            seekDragInput = input
+            scrubMusicToInput(input)
+        end
+    end)
+    UIS.InputChanged:Connect(function(input)
+        if isDragUpdateInput(input, seekDragInput) then
+            scrubMusicToInput(input)
+        end
+    end)
+    UIS.InputEnded:Connect(function(input)
+        if input == seekDragInput then
+            seekDragInput = nil
+        end
+    end)
+
+    task.spawn(function()
+        while task.wait(0.2) do
+            if page5.Visible and not seekDragInput then
+                if currentSound and currentSound.Parent and currentSound.TimeLength > 0 then
+                    local cur = currentSound.TimePosition
+                    local len = currentSound.TimeLength
+                    local ratio = math.clamp(cur / len, 0, 1)
+                    seekFill.Size = UDim2.new(ratio, 0, 1, 0)
+                    seekKnob.Position = UDim2.new(ratio, 0, 0.5, 0)
+                    musicTimeLabel.Text = formatTime(cur) .. " / " .. formatTime(len)
+                else
+                    seekFill.Size = UDim2.new(0, 0, 1, 0)
+                    seekKnob.Position = UDim2.new(0, 0, 0.5, 0)
+                    musicTimeLabel.Text = "00:00 / 00:00"
+                end
+            end
+        end
+    end)
+
+    local function getCurrentSpeedPreset()
+        return MusicSpeedPresets[State.MusicSpeedIdx] or MusicSpeedPresets[2]
+    end
 
     local function getSongName(id)
         local numId = tonumber(id); if not numId then return "ID sai!" end
@@ -1651,16 +1795,17 @@ do
         if currentSound then currentSound:Destroy() end
         local soundId = tostring(id):match("%d+"); if not soundId or soundId == "" then return end
         currentMusicId = soundId; isMusicPaused = false
-        nowPlayingLabel.Text = "<font color='#D6DEEB'>⏳ Đang tải bài hát...</font>"
+        nowPlayingLabel.Text = "<font color='#C2CCDC'>⏳ Đang tải bài hát...</font>"
         task.spawn(function()
             local name = getSongName(soundId)
             if currentMusicId == soundId then
-                nowPlayingLabel.Text = "<font color='#9AA4B8'>🎵 Đang phát:</font> <font color='#F0C868'>" .. name .. "</font>"
+                nowPlayingLabel.Text = "<font color='#9AA4B8'>🎵 Đang phát:</font> <font color='#D8B868'>" .. name .. "</font>"
             end
         end)
         currentSound = Instance.new("Sound")
         currentSound.SoundId = "rbxassetid://" .. soundId
         currentSound.Volume = State.MusicVolume
+        currentSound.PlaybackSpeed = getCurrentSpeedPreset().Speed
         currentSound.Looped = State.MusicLoop
         currentSound.Parent = workspace
         currentSound.Ended:Connect(function()
@@ -1676,33 +1821,58 @@ do
         if currentSound then
             currentSound:Stop(); currentSound:Destroy(); currentSound = nil; currentMusicId = ""; isMusicPaused = false
             nowPlayingLabel.Text = "<font color='#9AA4B8'>⏹ Đã dừng phát nhạc</font>"
+            seekFill.Size = UDim2.new(0, 0, 1, 0)
+            seekKnob.Position = UDim2.new(0, 0, 0.5, 0)
+            musicTimeLabel.Text = "00:00 / 00:00"
         end
     end
 
+    pasteIdBtn.MouseButton1Click:Connect(function()
+        clickAnimate(pasteIdBtn)
+        local pasted = nil
+        pcall(function()
+            if getclipboard then pasted = getclipboard() end
+        end)
+        if pasted and tostring(pasted):match("%d+") then
+            musicIdBox.Text = tostring(pasted):match("%d+")
+            MakeToast("Đã Dán ID", "ID Nhạc: " .. musicIdBox.Text, Theme.Brand)
+        else
+            musicIdBox:CaptureFocus()
+            MakeToast("Nhập ID Nhạc", "Hãy dán hoặc gõ mã số ID Nhạc vào ô!", Theme.Brand)
+        end
+    end)
+
+    -- Hàng 4 nút điều khiển làm dịu màu chữ, nền tối sâu tách biệt rõ ràng
     local ctrlRow = Instance.new("Frame", page5)
     ctrlRow.Size = UDim2.new(0.94, 0, 0, 26); ctrlRow.BackgroundTransparency = 1; ctrlRow.LayoutOrder = 2
 
-    local function makeMusicCtrlBtn(posScale, sizeScale, txt, col)
-        local isBrandColor = (col == Theme.Brand)
+    local function makeMusicCtrlBtn(posScale, sizeScale, txt, textCol, bgCol, strokeCol, isBrand)
         local b = Instance.new("TextButton", ctrlRow)
         b.Size = UDim2.new(sizeScale, -3, 1, 0); b.Position = UDim2.new(posScale, 0, 0, 0)
-        b.BackgroundColor3 = Theme.ItemBg; b.Text = txt; b.TextColor3 = col
-        b.Font = Enum.Font.GothamBold; b.TextSize = 9; b.AutoButtonColor = false; b.ZIndex = 10
+        b.BackgroundColor3 = bgCol; b.Text = txt; b.TextColor3 = isBrand and getSoftBrandColor(textCol) or textCol
+        b.Font = Enum.Font.GothamSemibold; b.TextSize = 9; b.AutoButtonColor = false; b.ZIndex = 10
         Instance.new("UICorner", b).CornerRadius = UDim.new(0, 6)
-        local st = Instance.new("UIStroke", b); st.Color = col; st.Thickness = 1; st.Transparency = 0.25
-        table.insert(RGBElements, {Type = "Button", Stroke = st, DefaultColor = col, UseBrand = isBrandColor})
-        if isBrandColor then
+        local st = Instance.new("UIStroke", b); st.Color = strokeCol; st.Thickness = 0.9; st.Transparency = 0.42
+        table.insert(RGBElements, {Type = "Button", Stroke = st, DefaultColor = strokeCol, UseBrand = isBrand})
+        if isBrand then
             registerBrandUpdater(function(newBrand)
-                if b and b.Parent then b.TextColor3 = newBrand end
+                if b and b.Parent then b.TextColor3 = getSoftBrandColor(newBrand) end
             end)
         end
         return b, st
     end
 
-    local btnPlay = makeMusicCtrlBtn(0, 0.25, "▶️ PHÁT", Theme.AccentOn)
-    local btnPause = makeMusicCtrlBtn(0.25, 0.25, "⏯️ DỪNG/TIẾP", Theme.Brand)
-    local btnLoop, stLoop = makeMusicCtrlBtn(0.50, 0.26, State.MusicLoop and "🔁 LẶP: BẬT" or "🔁 LẶP: TẮT", State.MusicLoop and Theme.AccentOn or Theme.TextDim)
-    local btnStop = makeMusicCtrlBtn(0.76, 0.24, "⏹️ TẮT", Theme.AccentOff)
+    local btnPlay = makeMusicCtrlBtn(0, 0.24, "▶️ PHÁT", Color3.fromRGB(86, 194, 139), Color3.fromRGB(18, 30, 25), Color3.fromRGB(70, 165, 115), false)
+    local btnPause = makeMusicCtrlBtn(0.245, 0.26, "⏯️ DỪNG/TIẾP", Theme.Brand, Color3.fromRGB(19, 23, 34), Theme.Brand, true)
+    local btnLoop, stLoop = makeMusicCtrlBtn(
+        0.51, 0.255,
+        State.MusicLoop and "🔁 LẶP: BẬT" or "🔁 LẶP: TẮT",
+        State.MusicLoop and Color3.fromRGB(86, 194, 139) or Color3.fromRGB(152, 164, 186),
+        State.MusicLoop and Color3.fromRGB(18, 30, 25) or Color3.fromRGB(19, 21, 30),
+        State.MusicLoop and Color3.fromRGB(70, 165, 115) or Theme.Stroke,
+        false
+    )
+    local btnStop = makeMusicCtrlBtn(0.77, 0.23, "⏹️ TẮT", Color3.fromRGB(185, 115, 126), Color3.fromRGB(24, 20, 28), Color3.fromRGB(165, 85, 98), false)
 
     btnPlay.MouseButton1Click:Connect(function() clickAnimate(btnPlay); playMusic(musicIdBox.Text) end)
     btnPause.MouseButton1Click:Connect(function()
@@ -1722,32 +1892,139 @@ do
         State.MusicLoop = not State.MusicLoop
         if currentSound then currentSound.Looped = State.MusicLoop end
         btnLoop.Text = State.MusicLoop and "🔁 LẶP: BẬT" or "🔁 LẶP: TẮT"
-        btnLoop.TextColor3 = State.MusicLoop and Theme.AccentOn or Theme.TextDim
-        if not State.RGB then stLoop.Color = State.MusicLoop and Theme.AccentOn or Theme.TextDim end
+        btnLoop.TextColor3 = State.MusicLoop and Color3.fromRGB(86, 194, 139) or Color3.fromRGB(152, 164, 186)
+        btnLoop.BackgroundColor3 = State.MusicLoop and Color3.fromRGB(18, 30, 25) or Color3.fromRGB(19, 21, 30)
+        if not State.RGB then stLoop.Color = State.MusicLoop and Color3.fromRGB(70, 165, 115) or Theme.Stroke end
         if State.AutoSave then saveConfig() end
     end)
     btnStop.MouseButton1Click:Connect(function() clickAnimate(btnStop); stopMusic() end)
 
-    local volumeFrame = createSlider(page5, "🔊 Âm lượng nhạc", 0, 10, "MusicVolume", function(val) if currentSound then currentSound.Volume = val end end)
-    volumeFrame.LayoutOrder = 3
+    -- Hàng kết hợp Âm lượng (Trái) & Chỉnh tốc độ Slowed / Nightcore (Phải)
+    local volSpeedRow = Instance.new("Frame", page5)
+    volSpeedRow.Size = UDim2.new(0.94, 0, 0, 36); volSpeedRow.BackgroundTransparency = 1; volSpeedRow.LayoutOrder = 3
+
+    local volBox = Instance.new("Frame", volSpeedRow)
+    volBox.Size = UDim2.new(0.60, -3, 1, 0); volBox.BackgroundColor3 = Theme.ItemBg; volBox.ZIndex = 10
+    Instance.new("UICorner", volBox).CornerRadius = UDim.new(0, 8)
+    local volStroke = Instance.new("UIStroke", volBox); volStroke.Color = Theme.Stroke; volStroke.Thickness = 1
+    table.insert(RGBElements, {Type = "Slider", Stroke = volStroke})
+
+    local volTitle = Instance.new("TextLabel", volBox)
+    volTitle.Size = UDim2.new(0.72, 0, 0, 15); volTitle.Position = UDim2.new(0, 10, 0, 3)
+    volTitle.BackgroundTransparency = 1; volTitle.Text = "🔊 Âm lượng nhạc"
+    volTitle.TextColor3 = Theme.TextTitle; volTitle.Font = Enum.Font.GothamSemibold; volTitle.TextSize = 9.5
+    volTitle.TextXAlignment = Enum.TextXAlignment.Left; volTitle.ZIndex = 11
+
+    local volValLbl = Instance.new("TextLabel", volBox)
+    volValLbl.Size = UDim2.new(0, 32, 0, 15); volValLbl.Position = UDim2.new(1, -40, 0, 3)
+    volValLbl.BackgroundTransparency = 1; volValLbl.Text = tostring(State.MusicVolume)
+    volValLbl.TextColor3 = getSoftBrandColor(Theme.Brand); volValLbl.Font = Enum.Font.GothamBold; volValLbl.TextSize = 9.5
+    volValLbl.TextXAlignment = Enum.TextXAlignment.Right; volValLbl.ZIndex = 11
+
+    local volTrack = Instance.new("Frame", volBox)
+    volTrack.Size = UDim2.new(1, -20, 0, 5); volTrack.Position = UDim2.new(0, 10, 0, 23)
+    volTrack.BackgroundColor3 = Color3.fromRGB(15, 17, 24); volTrack.ZIndex = 11
+    Instance.new("UICorner", volTrack).CornerRadius = UDim.new(1, 0)
+
+    local initVolPos = math.clamp(State.MusicVolume / 10, 0, 1)
+    local volFill = Instance.new("Frame", volTrack)
+    volFill.Size = UDim2.new(initVolPos, 0, 1, 0); volFill.BackgroundColor3 = Theme.Brand; volFill.ZIndex = 12
+    Instance.new("UICorner", volFill).CornerRadius = UDim.new(1, 0)
+
+    local volKnob = Instance.new("Frame", volTrack)
+    volKnob.Size = UDim2.new(0, 10, 0, 10); volKnob.AnchorPoint = Vector2.new(0.5, 0.5)
+    volKnob.Position = UDim2.new(initVolPos, 0, 0.5, 0); volKnob.BackgroundColor3 = Color3.fromRGB(240, 248, 255); volKnob.ZIndex = 13
+    Instance.new("UICorner", volKnob).CornerRadius = UDim.new(1, 0)
+    local volKnobStroke = Instance.new("UIStroke", volKnob); volKnobStroke.Color = Theme.Brand; volKnobStroke.Thickness = 1.2
+
+    registerBrandUpdater(function(newBrand)
+        if volValLbl and volValLbl.Parent then volValLbl.TextColor3 = getSoftBrandColor(newBrand) end
+        if volFill and volFill.Parent then volFill.BackgroundColor3 = newBrand end
+        if volKnobStroke and volKnobStroke.Parent then volKnobStroke.Color = newBrand end
+    end)
+
+    local volDragInput = nil
+    local function updateVolSlider(input)
+        local pos = math.clamp((input.Position.X - volTrack.AbsolutePosition.X) / math.max(1, volTrack.AbsoluteSize.X), 0, 1)
+        local value = math.floor(10 * pos)
+        volValLbl.Text = tostring(value)
+        TweenService:Create(volFill, TweenInfo.new(0.08), {Size = UDim2.new(pos, 0, 1, 0)}):Play()
+        TweenService:Create(volKnob, TweenInfo.new(0.08), {Position = UDim2.new(pos, 0, 0.5, 0)}):Play()
+        State.MusicVolume = value
+        if currentSound then currentSound.Volume = value end
+        if State.AutoSave then saveConfig() end
+    end
+    volBox.InputBegan:Connect(function(input)
+        if not volDragInput and (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
+            volDragInput = input; updateVolSlider(input)
+        end
+    end)
+    UIS.InputChanged:Connect(function(input)
+        if isDragUpdateInput(input, volDragInput) then updateVolSlider(input) end
+    end)
+    UIS.InputEnded:Connect(function(input)
+        if input == volDragInput then volDragInput = nil end
+    end)
+
+    local speedBtn = Instance.new("TextButton", volSpeedRow)
+    speedBtn.Size = UDim2.new(0.40, -3, 1, 0); speedBtn.Position = UDim2.new(0.60, 6, 0, 0)
+    speedBtn.BackgroundColor3 = Theme.ItemBg; speedBtn.Text = ""; speedBtn.AutoButtonColor = false; speedBtn.ZIndex = 10
+    Instance.new("UICorner", speedBtn).CornerRadius = UDim.new(0, 8)
+    local speedStroke = Instance.new("UIStroke", speedBtn); speedStroke.Color = Theme.Brand; speedStroke.Thickness = 1; speedStroke.Transparency = 0.38
+    table.insert(RGBElements, {Type = "Button", Stroke = speedStroke, DefaultColor = Theme.Brand, UseBrand = true})
+
+    local speedTopLbl = Instance.new("TextLabel", speedBtn)
+    speedTopLbl.Size = UDim2.new(1, -12, 0, 14); speedTopLbl.Position = UDim2.new(0, 6, 0, 4)
+    speedTopLbl.BackgroundTransparency = 1; speedTopLbl.Text = "⚡ TỐC ĐỘ NHẠC"
+    speedTopLbl.TextColor3 = Theme.TextDim; speedTopLbl.Font = Enum.Font.GothamSemibold; speedTopLbl.TextSize = 8
+    speedTopLbl.ZIndex = 11
+
+    local speedValLbl = Instance.new("TextLabel", speedBtn)
+    speedValLbl.Size = UDim2.new(1, -10, 0, 16); speedValLbl.Position = UDim2.new(0, 5, 0, 17)
+    speedValLbl.BackgroundTransparency = 1; speedValLbl.Text = getCurrentSpeedPreset().Short
+    speedValLbl.TextColor3 = getSoftBrandColor(Theme.Brand); speedValLbl.Font = Enum.Font.GothamSemibold; speedValLbl.TextSize = 9.5
+    speedValLbl.TextTruncate = Enum.TextTruncate.AtEnd; speedValLbl.ZIndex = 11
+
+    registerBrandUpdater(function(newBrand)
+        if speedValLbl and speedValLbl.Parent then speedValLbl.TextColor3 = getSoftBrandColor(newBrand) end
+    end)
+
+    speedBtn.MouseButton1Click:Connect(function()
+        clickAnimate(speedBtn)
+        State.MusicSpeedIdx = (State.MusicSpeedIdx % #MusicSpeedPresets) + 1
+        local preset = getCurrentSpeedPreset()
+        speedValLbl.Text = preset.Short
+        if currentSound then currentSound.PlaybackSpeed = preset.Speed end
+        MakeToast("Tốc Độ Nhạc", "Đã chuyển sang " .. preset.Name, Theme.Brand)
+        if State.AutoSave then saveConfig() end
+    end)
 
     local musicListCard = Instance.new("Frame", page5)
-    musicListCard.Size = UDim2.new(0.94, 0, 1, -142); musicListCard.BackgroundColor3 = Color3.fromRGB(20, 22, 31); musicListCard.LayoutOrder = 4; musicListCard.ZIndex = 10
+    musicListCard.Size = UDim2.new(0.94, 0, 1, -154); musicListCard.BackgroundColor3 = Color3.fromRGB(20, 22, 31); musicListCard.LayoutOrder = 4; musicListCard.ZIndex = 10
     Instance.new("UICorner", musicListCard).CornerRadius = UDim.new(0, 8)
     local mlStroke = Instance.new("UIStroke", musicListCard); mlStroke.Color = Theme.Stroke; mlStroke.Thickness = 1; table.insert(RGBElements, {Type = "Info", Stroke = mlStroke})
 
     local mlHeader = Instance.new("TextLabel", musicListCard)
-    mlHeader.Size = UDim2.new(1, -16, 0, 18); mlHeader.Position = UDim2.new(0, 10, 0, 3); mlHeader.BackgroundTransparency = 1
-    mlHeader.Text = "🎵 DANH SÁCH NHẠC ĐÃ LƯU"; mlHeader.TextColor3 = Theme.Brand; mlHeader.Font = Enum.Font.GothamBold; mlHeader.TextSize = 9; mlHeader.TextXAlignment = Enum.TextXAlignment.Left; mlHeader.ZIndex = 10
+    mlHeader.Size = UDim2.new(1, -16, 0, 18); mlHeader.Position = UDim2.new(0, 10, 0, 4); mlHeader.BackgroundTransparency = 1
+    mlHeader.Text = "🎵 DANH SÁCH NHẠC ĐÃ LƯU"; mlHeader.TextColor3 = getSoftBrandColor(Theme.Brand); mlHeader.Font = Enum.Font.GothamSemibold; mlHeader.TextSize = 9; mlHeader.TextXAlignment = Enum.TextXAlignment.Left; mlHeader.ZIndex = 10
+
+    local emptyMusicState = Instance.new("TextLabel", musicListCard)
+    emptyMusicState.Size = UDim2.new(1, -24, 1, -26); emptyMusicState.Position = UDim2.new(0, 12, 0, 22)
+    emptyMusicState.BackgroundTransparency = 1; emptyMusicState.RichText = true
+    emptyMusicState.Text = "🎶 Chưa có bài nhạc nào được lưu.
+<font color='#7E889E'>Nhập ID Nhạc ở trên rồi bấm '💾 Lưu' để thêm vào danh sách!</font>"
+    emptyMusicState.TextColor3 = Theme.TextDim; emptyMusicState.Font = Enum.Font.GothamSemibold; emptyMusicState.TextSize = 9.5
+    emptyMusicState.LineHeight = 1.25; emptyMusicState.TextWrapped = true
+    emptyMusicState.TextXAlignment = Enum.TextXAlignment.Center; emptyMusicState.TextYAlignment = Enum.TextYAlignment.Center; emptyMusicState.ZIndex = 11
 
     local savedMusicContent = Instance.new("ScrollingFrame", musicListCard)
-    savedMusicContent.Size = UDim2.new(1, -10, 1, -24); savedMusicContent.Position = UDim2.new(0, 5, 0, 22)
+    savedMusicContent.Size = UDim2.new(1, -10, 1, -26); savedMusicContent.Position = UDim2.new(0, 5, 0, 24)
     savedMusicContent.BackgroundTransparency = 1; savedMusicContent.ScrollBarThickness = 3; savedMusicContent.ScrollBarImageColor3 = Theme.Brand; savedMusicContent.BorderSizePixel = 0; savedMusicContent.ZIndex = 10
     local sLayout = Instance.new("UIListLayout", savedMusicContent); sLayout.SortOrder = Enum.SortOrder.LayoutOrder; sLayout.Padding = UDim.new(0, 4)
     sLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function() savedMusicContent.CanvasSize = UDim2.new(0, 0, 0, sLayout.AbsoluteContentSize.Y + 8) end)
 
     registerBrandUpdater(function(newBrand)
-        if mlHeader and mlHeader.Parent then mlHeader.TextColor3 = newBrand end
+        if mlHeader and mlHeader.Parent then mlHeader.TextColor3 = getSoftBrandColor(newBrand) end
         if savedMusicContent and savedMusicContent.Parent then savedMusicContent.ScrollBarImageColor3 = newBrand end
     end)
 
@@ -1758,23 +2035,21 @@ do
         for _, child in pairs(savedMusicContent:GetChildren()) do if child:IsA("Frame") then child:Destroy() end end
         cleanRGBElements()
         mlHeader.Text = "🎵 DANH SÁCH NHẠC ĐÃ LƯU (" .. #savedMusicList .. ")"
-        if #savedMusicList == 0 then
-            local empty = Instance.new("Frame", savedMusicContent); empty.Size = UDim2.new(1, 0, 0, 38); empty.BackgroundTransparency = 1
-            local lbl = Instance.new("TextLabel", empty); lbl.Size = UDim2.new(1, 0, 1, 0); lbl.BackgroundTransparency = 1
-            lbl.Text = "Chưa có bài nhạc nào được lưu.\nNhập ID Nhạc bên trên và bấm '💾 Lưu' để thêm!"; lbl.TextColor3 = Theme.TextDim; lbl.Font = Enum.Font.Gotham; lbl.TextSize = 9; lbl.ZIndex = 10
-            return
-        end
+        emptyMusicState.Visible = (#savedMusicList == 0)
+        if #savedMusicList == 0 then return end
+
         for i, data in ipairs(savedMusicList) do
             local item = Instance.new("Frame", savedMusicContent); item.Size = UDim2.new(1, -4, 0, 30); item.BackgroundColor3 = Theme.ItemBg; item.ZIndex = 10; Instance.new("UICorner", item).CornerRadius = UDim.new(0, 6)
             local stroke = Instance.new("UIStroke", item); stroke.Color = Theme.Stroke; stroke.Thickness = 1; table.insert(RGBElements, {Type = "Info", Stroke = stroke})
             local nameBox = Instance.new("TextBox", item); nameBox.Size = UDim2.new(0.56, 0, 1, 0); nameBox.Position = UDim2.new(0.04, 0, 0, 0); nameBox.Text = data.name; nameBox.TextColor3 = Theme.TextTitle; nameBox.Font = Enum.Font.GothamSemibold; nameBox.TextSize = 9.5; nameBox.BackgroundTransparency = 1; nameBox.TextXAlignment = Enum.TextXAlignment.Left; nameBox.ClearTextOnFocus = false; nameBox.ZIndex = 10
             nameBox.FocusLost:Connect(function() if nameBox.Text ~= "" then data.name = nameBox.Text; saveMusicData() else nameBox.Text = data.name end end)
 
-            local playBtn = Instance.new("TextButton", item); playBtn.Size = UDim2.new(0.18, 0, 0.7, 0); playBtn.Position = UDim2.new(0.62, 0, 0.15, 0); playBtn.Text = "▶ Phát"; playBtn.BackgroundColor3 = Color3.fromRGB(28, 48, 62); playBtn.TextColor3 = Theme.Brand; playBtn.Font = Enum.Font.GothamBold; playBtn.TextSize = 9; playBtn.ZIndex = 10; Instance.new("UICorner", playBtn).CornerRadius = UDim.new(0, 5)
-            local pSt = Instance.new("UIStroke", playBtn); pSt.Color = Theme.Brand; pSt.Thickness = 0.8; pSt.Transparency = 0.3
+            local playBtn = Instance.new("TextButton", item); playBtn.Size = UDim2.new(0.18, 0, 0.7, 0); playBtn.Position = UDim2.new(0.62, 0, 0.15, 0); playBtn.Text = "▶ Phát"; playBtn.BackgroundColor3 = Color3.fromRGB(20, 26, 36); playBtn.TextColor3 = getSoftBrandColor(Theme.Brand); playBtn.Font = Enum.Font.GothamSemibold; playBtn.TextSize = 9; playBtn.ZIndex = 10; Instance.new("UICorner", playBtn).CornerRadius = UDim.new(0, 5)
+            local pSt = Instance.new("UIStroke", playBtn); pSt.Color = Theme.Brand; pSt.Thickness = 0.8; pSt.Transparency = 0.4
+            table.insert(RGBElements, {Type = "Button", Stroke = pSt, DefaultColor = Theme.Brand, UseBrand = true})
 
-            local delBtn = Instance.new("TextButton", item); delBtn.Size = UDim2.new(0.15, 0, 0.7, 0); delBtn.Position = UDim2.new(0.82, 0, 0.15, 0); delBtn.Text = "Xóa"; delBtn.BackgroundColor3 = Color3.fromRGB(48, 28, 34); delBtn.TextColor3 = Theme.AccentOff; delBtn.Font = Enum.Font.GothamBold; delBtn.TextSize = 9; delBtn.ZIndex = 10; Instance.new("UICorner", delBtn).CornerRadius = UDim.new(0, 5)
-            local dSt = Instance.new("UIStroke", delBtn); dSt.Color = Theme.AccentOff; dSt.Thickness = 0.8; dSt.Transparency = 0.3
+            local delBtn = Instance.new("TextButton", item); delBtn.Size = UDim2.new(0.15, 0, 0.7, 0); delBtn.Position = UDim2.new(0.82, 0, 0.15, 0); delBtn.Text = "Xóa"; delBtn.BackgroundColor3 = Color3.fromRGB(30, 20, 26); delBtn.TextColor3 = Color3.fromRGB(185, 115, 126); delBtn.Font = Enum.Font.GothamSemibold; delBtn.TextSize = 9; delBtn.ZIndex = 10; Instance.new("UICorner", delBtn).CornerRadius = UDim.new(0, 5)
+            local dSt = Instance.new("UIStroke", delBtn); dSt.Color = Color3.fromRGB(165, 85, 98); dSt.Thickness = 0.8; dSt.Transparency = 0.42
 
             playBtn.MouseButton1Click:Connect(function() clickAnimate(playBtn); musicIdBox.Text = data.id; playMusic(data.id) end)
             delBtn.MouseButton1Click:Connect(function() clickAnimate(delBtn); table.remove(savedMusicList, i); saveMusicData(); renderSavedMusic() end)
