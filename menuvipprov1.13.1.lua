@@ -108,6 +108,11 @@ local function registerBrandUpdater(fn)
     table.insert(BrandCallbacks, fn)
 end
 
+local function getSoftBrandColor(c)
+    local base = c or Theme.Brand
+    return base:Lerp(Color3.fromRGB(195, 205, 222), 0.26)
+end
+
 local function isDragUpdateInput(input, activeInput)
     if not activeInput then return false end
     if input == activeInput then return true end
@@ -370,13 +375,13 @@ do
     headerStatText.RichText = true; headerStatText.Text = "<font color='#38CC88'>60 FPS</font> • <font color='#58B6F2'>0ms</font>"
     headerStatText.TextColor3 = Theme.TextTitle; headerStatText.Font = Enum.Font.GothamBold; headerStatText.TextSize = 9; headerStatText.ZIndex = 13
 
-    -- Huy hiệu V1.17 viết hoa rõ nét, khung rộng 48px và viền mảnh 0.8 để chữ không bị dính trên Mobile
+    -- Huy hiệu V1.17 nền tối dịu mắt, chữ thanh rõ nét không bị chói sáng trên Mobile
     local verBadge = Instance.new("TextLabel", header)
     verBadge.Size = UDim2.new(0, 48, 0, 20); verBadge.Position = UDim2.new(1, -83, 0.5, -10)
-    verBadge.BackgroundColor3 = Theme.BrandSoft; verBadge.Text = "V1.17"; verBadge.TextColor3 = Theme.Brand
-    verBadge.Font = Enum.Font.GothamBold; verBadge.TextSize = 10; verBadge.ZIndex = 12
+    verBadge.BackgroundColor3 = Color3.fromRGB(18, 21, 30); verBadge.Text = "V1.17"; verBadge.TextColor3 = getSoftBrandColor(Theme.Brand)
+    verBadge.Font = Enum.Font.GothamSemibold; verBadge.TextSize = 9.5; verBadge.ZIndex = 12
     Instance.new("UICorner", verBadge).CornerRadius = UDim.new(0, 7)
-    local verStroke = Instance.new("UIStroke", verBadge); verStroke.Color = Theme.Brand; verStroke.Thickness = 0.8; verStroke.Transparency = 0.3
+    local verStroke = Instance.new("UIStroke", verBadge); verStroke.Color = Theme.Brand; verStroke.Thickness = 0.8; verStroke.Transparency = 0.45
 
     local minBtn = Instance.new("TextButton", header)
     minBtn.Size = UDim2.new(0, 24, 0, 22); minBtn.Position = UDim2.new(1, -29, 0.5, -11)
@@ -555,8 +560,8 @@ do
             avatarStroke.Color = Theme.Brand
             openStroke.Color = opened and Theme.Brand or Theme.AccentOff
         end
-        verBadge.BackgroundColor3 = Theme.BrandSoft
-        verBadge.TextColor3 = Theme.Brand
+        verBadge.BackgroundColor3 = Color3.fromRGB(18, 21, 30)
+        verBadge.TextColor3 = getSoftBrandColor(Theme.Brand)
         verStroke.Color = Theme.Brand
         onlineDot.BackgroundColor3 = Theme.AccentOn
         hLineGrad.Color = ColorSequence.new({
@@ -602,16 +607,104 @@ do
     tab9.MouseButton1Click:Connect(function() clickAnimate(tab9); showTab(page9, tab9, ind9) end)
     showTab(page1, tab1, ind1)
 
+    local currentMenuScale = 1
+
+    -- Góc kéo phóng to / thu nhỏ Menu (Drag-to-Resize)
+    local resizeHandle = Instance.new("TextButton", frame)
+    resizeHandle.Name = "ResizeGrip"
+    resizeHandle.Size = UDim2.new(0, 22, 0, 22)
+    resizeHandle.Position = UDim2.new(1, -22, 1, -22)
+    resizeHandle.BackgroundTransparency = 1
+    resizeHandle.Text = "◢"
+    resizeHandle.TextColor3 = getSoftBrandColor(Theme.Brand)
+    resizeHandle.TextTransparency = 0.25
+    resizeHandle.Font = Enum.Font.GothamBold
+    resizeHandle.TextSize = 12
+    resizeHandle.AutoButtonColor = false
+    resizeHandle.ZIndex = 25
+
+    registerBrandUpdater(function(newBrand)
+        if resizeHandle and resizeHandle.Parent then
+            resizeHandle.TextColor3 = getSoftBrandColor(newBrand)
+        end
+    end)
+
+    do
+        local resizingInput = nil
+        local resizeStartPos = nil
+        local startWidth, startHeight, startScale = 440, 292, 1
+        local anchorAbsPos = nil
+        local lastTapTick = 0
+
+        resizeHandle.InputBegan:Connect(function(input)
+            if not resizingInput and (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
+                local now = tick()
+                if now - lastTapTick < 0.32 then
+                    lastTapTick = 0
+                    currentMenuScale = 1
+                    frameScale.Scale = 1
+                    frame.Size = UDim2.new(0, 440, 0, 292)
+                    MakeToast("Kích thước Menu", "Đã khôi phục kích thước mặc định (100%)", Theme.Brand)
+                    return
+                end
+                lastTapTick = now
+
+                resizingInput = input
+                resizeStartPos = input.Position
+                startWidth = frame.Size.X.Offset
+                startHeight = frame.Size.Y.Offset
+                startScale = currentMenuScale
+                anchorAbsPos = frame.AbsolutePosition
+                TweenService:Create(resizeHandle, TweenInfo.new(0.12), {TextTransparency = 0}):Play()
+            end
+        end)
+
+        UIS.InputChanged:Connect(function(input)
+            if isDragUpdateInput(input, resizingInput) then
+                local delta = input.Position - resizeStartPos
+                local targetVisualW = math.clamp((startWidth * startScale) + delta.X, 310, 680)
+                local targetVisualH = math.clamp((startHeight * startScale) + delta.Y, 206, 460)
+
+                if targetVisualW < 440 or targetVisualH < 270 then
+                    local scaleW = targetVisualW / 440
+                    local scaleH = targetVisualH / 292
+                    currentMenuScale = math.clamp(math.min(scaleW, scaleH), 0.70, 1.0)
+                    frameScale.Scale = currentMenuScale
+                    local unscaledW = math.clamp(math.floor(targetVisualW / currentMenuScale), 440, 680)
+                    local unscaledH = math.clamp(math.floor(targetVisualH / currentMenuScale), 280, 460)
+                    frame.Size = UDim2.new(0, unscaledW, 0, unscaledH)
+                else
+                    currentMenuScale = 1
+                    frameScale.Scale = 1
+                    frame.Size = UDim2.new(0, math.floor(targetVisualW), 0, math.floor(targetVisualH))
+                end
+
+                if anchorAbsPos and frame.Parent and frame.Parent:IsA("GuiBase2d") then
+                    local parentAbs = frame.Parent.AbsolutePosition
+                    frame.Position = UDim2.new(0, anchorAbsPos.X - parentAbs.X, 0, anchorAbsPos.Y - parentAbs.Y)
+                    OPEN_POS = frame.Position
+                end
+            end
+        end)
+
+        UIS.InputEnded:Connect(function(input)
+            if input == resizingInput then
+                resizingInput = nil
+                TweenService:Create(resizeHandle, TweenInfo.new(0.2), {TextTransparency = 0.25}):Play()
+            end
+        end)
+    end
+
     local function toggleMenuWindow()
         opened = not opened
         if not State.RGB then
             TweenService:Create(openStroke, TweenInfo.new(0.3), {Color = opened and Theme.Brand or Theme.AccentOff}):Play()
         end
         if opened then
-            frameScale.Scale = 0.88
-            TweenService:Create(frameScale, TweenInfo.new(0.32, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Scale = 1}):Play()
+            frameScale.Scale = currentMenuScale * 0.88
+            TweenService:Create(frameScale, TweenInfo.new(0.32, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Scale = currentMenuScale}):Play()
         else
-            TweenService:Create(frameScale, TweenInfo.new(0.24, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Scale = 0.88}):Play()
+            TweenService:Create(frameScale, TweenInfo.new(0.24, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Scale = currentMenuScale * 0.88}):Play()
         end
         frame:TweenPosition(opened and OPEN_POS or CLOSE_POS, "Out", "Back", 0.36, true)
     end
@@ -769,10 +862,10 @@ local function createButton(parent, text, color, callback)
     local rgbEntry = {Type = "Button", Stroke = stroke, DefaultColor = color, UseBrand = isBrandColor}
     table.insert(RGBElements, rgbEntry)
     local title = Instance.new("TextLabel", btn)
-    title.Size = UDim2.new(1, 0, 1, 0); title.BackgroundTransparency = 1; title.Text = text; title.TextColor3 = color; title.Font = Enum.Font.GothamBold; title.TextSize = 10.5; title.ZIndex = 10
+    title.Size = UDim2.new(1, 0, 1, 0); title.BackgroundTransparency = 1; title.Text = text; title.TextColor3 = isBrandColor and getSoftBrandColor(color) or color; title.Font = Enum.Font.GothamSemibold; title.TextSize = 10.2; title.ZIndex = 10
     if isBrandColor then
         registerBrandUpdater(function(newBrand)
-            if title and title.Parent then title.TextColor3 = newBrand end
+            if title and title.Parent then title.TextColor3 = getSoftBrandColor(newBrand) end
         end)
     end
     btn.MouseButton1Click:Connect(function()
@@ -796,10 +889,10 @@ local function createDualButtons(parent, text1, color1, cb1, text2, color2, cb2)
         local stroke = Instance.new("UIStroke", btn); stroke.Color = col; stroke.Thickness = 1.1; stroke.Transparency = 0.25; stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
         table.insert(RGBElements, {Type = "Button", Stroke = stroke, DefaultColor = col, UseBrand = isBrandColor})
         local title = Instance.new("TextLabel", btn)
-        title.Size = UDim2.new(1, -6, 1, 0); title.Position = UDim2.new(0, 3, 0, 0); title.BackgroundTransparency = 1; title.Text = txt; title.TextColor3 = col; title.Font = Enum.Font.GothamBold; title.TextSize = 9.5; title.TextTruncate = Enum.TextTruncate.AtEnd; title.ZIndex = 10
+        title.Size = UDim2.new(1, -6, 1, 0); title.Position = UDim2.new(0, 3, 0, 0); title.BackgroundTransparency = 1; title.Text = txt; title.TextColor3 = isBrandColor and getSoftBrandColor(col) or col; title.Font = Enum.Font.GothamSemibold; title.TextSize = 9.5; title.TextTruncate = Enum.TextTruncate.AtEnd; title.ZIndex = 10
         if isBrandColor then
             registerBrandUpdater(function(newBrand)
-                if title and title.Parent then title.TextColor3 = newBrand end
+                if title and title.Parent then title.TextColor3 = getSoftBrandColor(newBrand) end
             end)
         end
         btn.MouseButton1Click:Connect(function()
@@ -1222,7 +1315,7 @@ createButton(page2, "⚡ NHẬN GẬY CLICK TP", Theme.Brand, function()
 end)
 
 createDualButtons(
-    page2, "🔭 MỞ KHÓA ZOOM CAM", Color3.fromRGB(225, 175, 75),
+    page2, "🔭 MỞ KHÓA ZOOM CAM", Theme.Brand,
     function()
         pcall(function()
             player.CameraMaxZoomDistance = 10000
@@ -1231,7 +1324,7 @@ createDualButtons(
             workspace.CurrentCamera.FieldOfView = 105
         end)
     end,
-    "👥 TẠO PHÂN THÂN", Color3.fromRGB(175, 130, 235),
+    "👥 TẠO PHÂN THÂN", Theme.Brand,
     function()
         local char = player.Character
         if char then
@@ -1479,17 +1572,17 @@ end)
 
 createDivider(page4, "ĐIỀU KHIỂN SERVER & MÔI TRƯỜNG")
 createDualButtons(
-    page4, "☀️ TRỜI SÁNG", Color3.fromRGB(225, 185, 75),
+    page4, "☀️ TRỜI SÁNG", Theme.Brand,
     function() pcall(function() Lighting.ClockTime = 12; Lighting.Brightness = 2 end) end,
-    "🌙 TRỜI TỐI", Color3.fromRGB(135, 150, 230),
+    "🌙 TRỜI TỐI", Theme.Brand,
     function() pcall(function() Lighting.ClockTime = 0; Lighting.Brightness = 1 end) end
 )
-createDualButtons(page4, "🔄 VÀO LẠI SV", Theme.AccentOn, rejoinServer, "🎲 ĐỔI SV NGẪU NHIÊN", Theme.Brand, function() hopServer("Desc") end)
-createDualButtons(page4, "📉 ĐỔI SV ÍT NGƯỜI", Color3.fromRGB(90, 170, 225), function() hopServer("Asc") end, "📈 ĐỔI SV ĐÔNG NGƯỜI", Color3.fromRGB(220, 105, 95), function() hopServer("Desc") end)
+createDualButtons(page4, "🔄 VÀO LẠI SV", Theme.Brand, rejoinServer, "🎲 ĐỔI SV NGẪU NHIÊN", Theme.Brand, function() hopServer("Desc") end)
+createDualButtons(page4, "📉 ĐỔI SV ÍT NGƯỜI", Theme.Brand, function() hopServer("Asc") end, "📈 ĐỔI SV ĐÔNG NGƯỜI", Theme.Brand, function() hopServer("Desc") end)
 
 createDivider(page4, "CÔNG CỤ SCRIPT NGOÀI")
 createDualButtons(
-    page4, "💻 LỆNH ADMIN", Theme.AccentOn,
+    page4, "💻 LỆNH ADMIN", Theme.Brand,
     function() pcall(function() loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))() end) end,
     "📁 MENU TP SAVE", Theme.Brand,
     function() pcall(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/haudeptrai2k6/menu-hack-vip13/refs/heads/main/menu-save.lua"))() end) end
@@ -1503,7 +1596,7 @@ createDualButtons(
 createDualButtons(
     page4, "🕊️ FLY V3", Theme.Brand,
     function() pcall(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/haudeptrai2k6/menu-hack-vip/refs/heads/main/menu-fly.lua"))() end) end,
-    "🎯 TP PLAYS", Theme.AccentOn,
+    "🎯 TP PLAYS", Theme.Brand,
     function() pcall(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/haudeptrai2k6/hack.lua/refs/heads/main/menu-tp-play.lua"))() end) end
 )
 
@@ -1767,32 +1860,18 @@ do
             return
         end
         for i, data in ipairs(savedTpList) do
-            local item = Instance.new("Frame", savedTpContent); item.Size = UDim2.new(1, -4, 0, 32); item.BackgroundColor3 = data.patrol and Theme.ItemActive or Theme.ItemBg; item.ZIndex = 10; Instance.new("UICorner", item).CornerRadius = UDim.new(0, 6)
-            local stroke = Instance.new("UIStroke", item); stroke.Color = data.patrol and Theme.AccentOn or Theme.Stroke; stroke.Thickness = 1; table.insert(RGBElements, {Type = "Info", Stroke = stroke})
+            local item = Instance.new("Frame", savedTpContent); item.Size = UDim2.new(1, -4, 0, 32); item.BackgroundColor3 = Theme.ItemBg; item.ZIndex = 10; Instance.new("UICorner", item).CornerRadius = UDim.new(0, 6)
+            local stroke = Instance.new("UIStroke", item); stroke.Color = Theme.Stroke; stroke.Thickness = 1; table.insert(RGBElements, {Type = "Info", Stroke = stroke})
 
-            local nameBox = Instance.new("TextBox", item); nameBox.Size = UDim2.new(0.41, 0, 1, 0); nameBox.Position = UDim2.new(0.03, 0, 0, 0); nameBox.Text = data.name; nameBox.TextColor3 = Theme.TextTitle; nameBox.Font = Enum.Font.GothamSemibold; nameBox.TextSize = 9.5; nameBox.BackgroundTransparency = 1; nameBox.TextXAlignment = Enum.TextXAlignment.Left; nameBox.ClearTextOnFocus = false; nameBox.ZIndex = 10
+            local nameBox = Instance.new("TextBox", item); nameBox.Size = UDim2.new(0.56, 0, 1, 0); nameBox.Position = UDim2.new(0.03, 0, 0, 0); nameBox.Text = data.name; nameBox.TextColor3 = Theme.TextTitle; nameBox.Font = Enum.Font.GothamSemibold; nameBox.TextSize = 9.5; nameBox.BackgroundTransparency = 1; nameBox.TextXAlignment = Enum.TextXAlignment.Left; nameBox.ClearTextOnFocus = false; nameBox.ZIndex = 10
             nameBox.FocusLost:Connect(function() if nameBox.Text ~= "" then data.name = nameBox.Text; saveTpData() else nameBox.Text = data.name end end)
 
-            local tpBtn = Instance.new("TextButton", item); tpBtn.Size = UDim2.new(0.16, 0, 0.68, 0); tpBtn.Position = UDim2.new(0.45, 0, 0.16, 0); tpBtn.Text = "⚡ TP"; tpBtn.BackgroundColor3 = Color3.fromRGB(26, 46, 62); tpBtn.TextColor3 = Theme.Brand; tpBtn.Font = Enum.Font.GothamBold; tpBtn.TextSize = 8.8; tpBtn.ZIndex = 10; Instance.new("UICorner", tpBtn).CornerRadius = UDim.new(0, 5)
-            local tpSt = Instance.new("UIStroke", tpBtn); tpSt.Color = Theme.Brand; tpSt.Thickness = 0.9; tpSt.Transparency = 0.25
+            local tpBtn = Instance.new("TextButton", item); tpBtn.Size = UDim2.new(0.18, 0, 0.68, 0); tpBtn.Position = UDim2.new(0.61, 0, 0.16, 0); tpBtn.Text = "⚡ TP"; tpBtn.BackgroundColor3 = Color3.fromRGB(20, 26, 36); tpBtn.TextColor3 = getSoftBrandColor(Theme.Brand); tpBtn.Font = Enum.Font.GothamSemibold; tpBtn.TextSize = 9; tpBtn.ZIndex = 10; Instance.new("UICorner", tpBtn).CornerRadius = UDim.new(0, 5)
+            local tpSt = Instance.new("UIStroke", tpBtn); tpSt.Color = Theme.Brand; tpSt.Thickness = 0.9; tpSt.Transparency = 0.35
+            table.insert(RGBElements, {Type = "Button", Stroke = tpSt, DefaultColor = Theme.Brand, UseBrand = true})
 
-            local patrolBtn = Instance.new("TextButton", item); patrolBtn.Size = UDim2.new(0.22, 0, 0.68, 0); patrolBtn.Position = UDim2.new(0.625, 0, 0.16, 0)
-            patrolBtn.Font = Enum.Font.GothamBold; patrolBtn.TextSize = 8.3; patrolBtn.ZIndex = 10; Instance.new("UICorner", patrolBtn).CornerRadius = UDim.new(0, 5)
-            local ptSt = Instance.new("UIStroke", patrolBtn); ptSt.Thickness = 0.9; ptSt.Transparency = 0.25
-
-            local function syncPatrolVisual()
-                local on = data.patrol and true or false
-                patrolBtn.Text = on and "🔁 Tuần [BẬT]" or "🔁 Tuần tra"
-                patrolBtn.BackgroundColor3 = on and Color3.fromRGB(26, 48, 38) or Color3.fromRGB(26, 30, 42)
-                patrolBtn.TextColor3 = on and Theme.AccentOn or Theme.TextDim
-                ptSt.Color = on and Theme.AccentOn or Theme.Stroke
-                item.BackgroundColor3 = on and Theme.ItemActive or Theme.ItemBg
-                if not State.RGB then stroke.Color = on and Theme.AccentOn or Theme.Stroke end
-            end
-            syncPatrolVisual()
-
-            local delBtn = Instance.new("TextButton", item); delBtn.Size = UDim2.new(0.125, 0, 0.68, 0); delBtn.Position = UDim2.new(0.86, 0, 0.16, 0); delBtn.Text = "Xóa"; delBtn.BackgroundColor3 = Color3.fromRGB(48, 28, 34); delBtn.TextColor3 = Theme.AccentOff; delBtn.Font = Enum.Font.GothamBold; delBtn.TextSize = 8.8; delBtn.ZIndex = 10; Instance.new("UICorner", delBtn).CornerRadius = UDim.new(0, 5)
-            local dlSt = Instance.new("UIStroke", delBtn); dlSt.Color = Theme.AccentOff; dlSt.Thickness = 0.9; dlSt.Transparency = 0.25
+            local delBtn = Instance.new("TextButton", item); delBtn.Size = UDim2.new(0.16, 0, 0.68, 0); delBtn.Position = UDim2.new(0.81, 0, 0.16, 0); delBtn.Text = "Xóa"; delBtn.BackgroundColor3 = Color3.fromRGB(32, 20, 26); delBtn.TextColor3 = Color3.fromRGB(190, 115, 128); delBtn.Font = Enum.Font.GothamSemibold; delBtn.TextSize = 9; delBtn.ZIndex = 10; Instance.new("UICorner", delBtn).CornerRadius = UDim.new(0, 5)
+            local dlSt = Instance.new("UIStroke", delBtn); dlSt.Color = Theme.AccentOff; dlSt.Thickness = 0.9; dlSt.Transparency = 0.4
 
             tpBtn.MouseButton1Click:Connect(function()
                 clickAnimate(tpBtn)
@@ -1805,13 +1884,6 @@ do
                     end
                 end
             end)
-            patrolBtn.MouseButton1Click:Connect(function()
-                clickAnimate(patrolBtn)
-                data.patrol = not data.patrol
-                syncPatrolVisual()
-                saveTpData()
-                MakeToast(data.patrol and "Bật Auto Tuần Tra" or "Tắt Auto Tuần Tra", data.name, data.patrol and Theme.AccentOn or Theme.AccentOff)
-            end)
             delBtn.MouseButton1Click:Connect(function()
                 clickAnimate(delBtn)
                 table.remove(savedTpList, i)
@@ -1820,28 +1892,6 @@ do
         end
     end
     renderSavedTps()
-
-    task.spawn(function()
-        local loopIdx = 1
-        while task.wait(1.4) do
-            if #savedTpList > 0 and player.Character then
-                local activeList = {}
-                for _, item in ipairs(savedTpList) do
-                    if item.patrol and item.cframe then table.insert(activeList, item) end
-                end
-                if #activeList > 0 then
-                    if loopIdx > #activeList then loopIdx = 1 end
-                    local targetItem = activeList[loopIdx]
-                    local r = getUniversalRoot(player.Character)
-                    if r and targetItem then
-                        r.CFrame = CFrame.new(unpack(targetItem.cframe))
-                        if State.AirWalk then airWalkY = r.Position.Y - getFootOffset(player.Character) end
-                    end
-                    loopIdx = loopIdx + 1
-                end
-            end
-        end
-    end)
 end
 
 -- ==========================================
@@ -1965,52 +2015,54 @@ end
 
 do
     local tpControlCard = Instance.new("Frame", page7)
-    tpControlCard.Size = UDim2.new(0.94, 0, 0, 80); tpControlCard.BackgroundColor3 = Theme.ItemBg
+    tpControlCard.Size = UDim2.new(0.94, 0, 0, 88); tpControlCard.BackgroundColor3 = Theme.ItemBg
     tpControlCard.LayoutOrder = 1; tpControlCard.ZIndex = 10
     Instance.new("UICorner", tpControlCard).CornerRadius = UDim.new(0, 8)
     local tpCardStroke = Instance.new("UIStroke", tpControlCard); tpCardStroke.Color = Theme.Stroke; tpCardStroke.Thickness = 1
     table.insert(RGBElements, {Type = "Info", Stroke = tpCardStroke})
 
+    -- Mở rộng khung hiển thị mục tiêu (cao 32px, avatar 24x24, chữ to rõ hơn)
     local targetHeaderRow = Instance.new("Frame", tpControlCard)
-    targetHeaderRow.Size = UDim2.new(1, -12, 0, 24); targetHeaderRow.Position = UDim2.new(0, 6, 0, 4)
-    targetHeaderRow.BackgroundColor3 = Color3.fromRGB(18, 20, 28); targetHeaderRow.ZIndex = 10
-    Instance.new("UICorner", targetHeaderRow).CornerRadius = UDim.new(0, 6)
+    targetHeaderRow.Size = UDim2.new(1, -12, 0, 32); targetHeaderRow.Position = UDim2.new(0, 6, 0, 4)
+    targetHeaderRow.BackgroundColor3 = Color3.fromRGB(16, 18, 26); targetHeaderRow.ZIndex = 10
+    Instance.new("UICorner", targetHeaderRow).CornerRadius = UDim.new(0, 7)
+    local thrStroke = Instance.new("UIStroke", targetHeaderRow); thrStroke.Color = Theme.Stroke; thrStroke.Thickness = 0.8; thrStroke.Transparency = 0.35
 
     local selectedAvatarImg = Instance.new("ImageLabel", targetHeaderRow)
-    selectedAvatarImg.Size = UDim2.new(0, 18, 0, 18); selectedAvatarImg.Position = UDim2.new(0, 5, 0.5, -9)
-    selectedAvatarImg.BackgroundColor3 = Color3.fromRGB(35, 38, 50); selectedAvatarImg.Image = "rbxassetid://0"; selectedAvatarImg.ZIndex = 10
+    selectedAvatarImg.Size = UDim2.new(0, 24, 0, 24); selectedAvatarImg.Position = UDim2.new(0, 6, 0.5, -12)
+    selectedAvatarImg.BackgroundColor3 = Color3.fromRGB(30, 34, 46); selectedAvatarImg.Image = "rbxassetid://0"; selectedAvatarImg.ZIndex = 10
     Instance.new("UICorner", selectedAvatarImg).CornerRadius = UDim.new(1, 0)
-    local selAvaStroke = Instance.new("UIStroke", selectedAvatarImg); selAvaStroke.Color = Theme.Brand; selAvaStroke.Thickness = 1
+    local selAvaStroke = Instance.new("UIStroke", selectedAvatarImg); selAvaStroke.Color = Theme.Brand; selAvaStroke.Thickness = 1.2
 
     local targetStatusLabel = Instance.new("TextLabel", targetHeaderRow)
-    targetStatusLabel.Size = UDim2.new(1, -108, 1, 0); targetStatusLabel.Position = UDim2.new(0, 28, 0, 0)
+    targetStatusLabel.Size = UDim2.new(1, -114, 1, 0); targetStatusLabel.Position = UDim2.new(0, 35, 0, 0)
     targetStatusLabel.BackgroundTransparency = 1; targetStatusLabel.RichText = true
-    targetStatusLabel.Text = "🎯 <font color='#E05666'>Chưa chọn mục tiêu</font>"; targetStatusLabel.TextColor3 = Theme.TextTitle
-    targetStatusLabel.Font = Enum.Font.GothamBold; targetStatusLabel.TextSize = 10; targetStatusLabel.TextTruncate = Enum.TextTruncate.AtEnd
+    targetStatusLabel.Text = "🎯 <font color='#C97A86'>Chưa chọn mục tiêu</font>"; targetStatusLabel.TextColor3 = Theme.TextTitle
+    targetStatusLabel.Font = Enum.Font.GothamBold; targetStatusLabel.TextSize = 11; targetStatusLabel.TextTruncate = Enum.TextTruncate.AtEnd
     targetStatusLabel.TextXAlignment = Enum.TextXAlignment.Left; targetStatusLabel.ZIndex = 10
 
     local spectateBtn = Instance.new("TextButton", targetHeaderRow)
-    spectateBtn.Size = UDim2.new(0, 72, 0, 18); spectateBtn.Position = UDim2.new(1, -76, 0.5, -9)
-    spectateBtn.BackgroundColor3 = Color3.fromRGB(45, 28, 35); spectateBtn.Text = "👁️ XEM [TẮT]"
-    spectateBtn.TextColor3 = Theme.AccentOff; spectateBtn.Font = Enum.Font.GothamBold; spectateBtn.TextSize = 8.5
+    spectateBtn.Size = UDim2.new(0, 72, 0, 22); spectateBtn.Position = UDim2.new(1, -76, 0.5, -11)
+    spectateBtn.BackgroundColor3 = Color3.fromRGB(22, 20, 28); spectateBtn.Text = "👁️ XEM [TẮT]"
+    spectateBtn.TextColor3 = Color3.fromRGB(185, 115, 126); spectateBtn.Font = Enum.Font.GothamSemibold; spectateBtn.TextSize = 8.5
     spectateBtn.AutoButtonColor = false; spectateBtn.ZIndex = 10
     Instance.new("UICorner", spectateBtn).CornerRadius = UDim.new(0, 5)
-    local spectateStroke = Instance.new("UIStroke", spectateBtn); spectateStroke.Color = Theme.AccentOff; spectateStroke.Thickness = 0.9; spectateStroke.Transparency = 0.25
+    local spectateStroke = Instance.new("UIStroke", spectateBtn); spectateStroke.Color = Color3.fromRGB(165, 85, 98); spectateStroke.Thickness = 0.9; spectateStroke.Transparency = 0.45
 
     local tpPosBtn = Instance.new("TextButton", tpControlCard)
-    tpPosBtn.Size = UDim2.new(1, -12, 0, 22); tpPosBtn.Position = UDim2.new(0, 6, 0, 31)
-    tpPosBtn.BackgroundColor3 = Color3.fromRGB(26, 44, 62); tpPosBtn.Text = ""; tpPosBtn.AutoButtonColor = false; tpPosBtn.ZIndex = 10
+    tpPosBtn.Size = UDim2.new(1, -12, 0, 22); tpPosBtn.Position = UDim2.new(0, 6, 0, 39)
+    tpPosBtn.BackgroundColor3 = Color3.fromRGB(20, 26, 38); tpPosBtn.Text = ""; tpPosBtn.AutoButtonColor = false; tpPosBtn.ZIndex = 10
     Instance.new("UICorner", tpPosBtn).CornerRadius = UDim.new(0, 6)
-    local tpPosStroke = Instance.new("UIStroke", tpPosBtn); tpPosStroke.Color = Theme.Brand; tpPosStroke.Thickness = 1; tpPosStroke.Transparency = 0.25
+    local tpPosStroke = Instance.new("UIStroke", tpPosBtn); tpPosStroke.Color = Theme.Brand; tpPosStroke.Thickness = 1; tpPosStroke.Transparency = 0.35
     table.insert(RGBElements, {Type = "Button", Stroke = tpPosStroke, DefaultColor = Theme.Brand, UseBrand = true})
 
     local tpPosLabel = Instance.new("TextLabel", tpPosBtn)
     tpPosLabel.Size = UDim2.new(1, 0, 1, 0); tpPosLabel.BackgroundTransparency = 1; tpPosLabel.RichText = true
-    tpPosLabel.TextColor3 = Theme.TextTitle; tpPosLabel.Font = Enum.Font.GothamBold; tpPosLabel.TextSize = 10; tpPosLabel.ZIndex = 10
+    tpPosLabel.TextColor3 = Color3.fromRGB(210, 218, 232); tpPosLabel.Font = Enum.Font.GothamSemibold; tpPosLabel.TextSize = 10; tpPosLabel.ZIndex = 10
 
     local function updateTpPosText()
         local item = TpPositions[State.TpPositionIdx] or TpPositions[1]
-        tpPosLabel.Text = "📍 VỊ TRÍ TP: <font color='#F0C868'>" .. item.Upper .. "</font>"
+        tpPosLabel.Text = "📍 VỊ TRÍ TP: <font color='#D8B868'>" .. item.Upper .. "</font>"
     end
     updateTpPosText()
 
@@ -2025,7 +2077,7 @@ do
     end)
 
     local tpDistContainer = Instance.new("Frame", tpControlCard)
-    tpDistContainer.Size = UDim2.new(1, -12, 0, 22); tpDistContainer.Position = UDim2.new(0, 6, 0, 55)
+    tpDistContainer.Size = UDim2.new(1, -12, 0, 22); tpDistContainer.Position = UDim2.new(0, 6, 0, 63)
     tpDistContainer.BackgroundTransparency = 1; tpDistContainer.ZIndex = 10
 
     local tpDistTitle = Instance.new("TextLabel", tpDistContainer)
@@ -2085,14 +2137,14 @@ do
 
     local function updateTargetLabel()
         if targetTpPlayer then
-            targetStatusLabel.Text = string.format("🎯 <font color='#38CC88'>%s</font> <font color='#F0C868'>(@%s)</font>", targetTpPlayer.DisplayName, targetTpPlayer.Name)
-            selAvaStroke.Color = Theme.AccentOn
+            targetStatusLabel.Text = string.format("🎯 <font color='#56C28B'>%s</font> <font color='#C8AF68'>(@%s)</font>", targetTpPlayer.DisplayName, targetTpPlayer.Name)
+            selAvaStroke.Color = Color3.fromRGB(86, 194, 139)
             task.spawn(function()
                 pcall(function() selectedAvatarImg.Image = Players:GetUserThumbnailAsync(targetTpPlayer.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size420x420) end)
             end)
         else
-            targetStatusLabel.Text = "🎯 <font color='#E05666'>Chưa chọn mục tiêu</font>"
-            selAvaStroke.Color = Theme.AccentOff
+            targetStatusLabel.Text = "🎯 <font color='#C97A86'>Chưa chọn mục tiêu</font>"
+            selAvaStroke.Color = Color3.fromRGB(185, 115, 126)
             selectedAvatarImg.Image = "rbxassetid://0"
         end
     end
@@ -2101,37 +2153,37 @@ do
     tpActionRow.Size = UDim2.new(0.94, 0, 0, 26); tpActionRow.BackgroundTransparency = 1; tpActionRow.LayoutOrder = 2
 
     local tpOnceBtn = Instance.new("TextButton", tpActionRow)
-    tpOnceBtn.Size = UDim2.new(0.486, 0, 1, 0); tpOnceBtn.BackgroundColor3 = Color3.fromRGB(24, 40, 56)
-    tpOnceBtn.Text = "⚡ TP 1 LẦN"; tpOnceBtn.TextColor3 = Theme.Brand; tpOnceBtn.Font = Enum.Font.GothamBold; tpOnceBtn.TextSize = 10
+    tpOnceBtn.Size = UDim2.new(0.486, 0, 1, 0); tpOnceBtn.BackgroundColor3 = Color3.fromRGB(19, 24, 34)
+    tpOnceBtn.Text = "⚡ TP 1 LẦN"; tpOnceBtn.TextColor3 = getSoftBrandColor(Theme.Brand); tpOnceBtn.Font = Enum.Font.GothamSemibold; tpOnceBtn.TextSize = 9.5
     tpOnceBtn.AutoButtonColor = false; tpOnceBtn.ZIndex = 10
     Instance.new("UICorner", tpOnceBtn).CornerRadius = UDim.new(0, 6)
-    local tpOnceStroke = Instance.new("UIStroke", tpOnceBtn); tpOnceStroke.Color = Theme.Brand; tpOnceStroke.Thickness = 1; tpOnceStroke.Transparency = 0.25
+    local tpOnceStroke = Instance.new("UIStroke", tpOnceBtn); tpOnceStroke.Color = Theme.Brand; tpOnceStroke.Thickness = 1; tpOnceStroke.Transparency = 0.4
     table.insert(RGBElements, {Type = "Button", Stroke = tpOnceStroke, DefaultColor = Theme.Brand, UseBrand = true})
     registerBrandUpdater(function(newBrand)
-        if tpOnceBtn and tpOnceBtn.Parent then tpOnceBtn.TextColor3 = newBrand end
+        if tpOnceBtn and tpOnceBtn.Parent then tpOnceBtn.TextColor3 = getSoftBrandColor(newBrand) end
     end)
 
     local autoTpBtn = Instance.new("TextButton", tpActionRow)
     autoTpBtn.Size = UDim2.new(0.486, 0, 1, 0); autoTpBtn.Position = UDim2.new(0.514, 0, 0, 0)
-    autoTpBtn.BackgroundColor3 = Color3.fromRGB(45, 28, 35); autoTpBtn.Text = "🔁 AUTO TP [TẮT]"
-    autoTpBtn.TextColor3 = Theme.AccentOff; autoTpBtn.Font = Enum.Font.GothamBold; autoTpBtn.TextSize = 10
+    autoTpBtn.BackgroundColor3 = Color3.fromRGB(22, 20, 28); autoTpBtn.Text = "🔁 AUTO TP [TẮT]"
+    autoTpBtn.TextColor3 = Color3.fromRGB(185, 115, 126); autoTpBtn.Font = Enum.Font.GothamSemibold; autoTpBtn.TextSize = 9.5
     autoTpBtn.AutoButtonColor = false; autoTpBtn.ZIndex = 10
     Instance.new("UICorner", autoTpBtn).CornerRadius = UDim.new(0, 6)
-    local autoTpStroke = Instance.new("UIStroke", autoTpBtn); autoTpStroke.Color = Theme.AccentOff; autoTpStroke.Thickness = 1; autoTpStroke.Transparency = 0.25
+    local autoTpStroke = Instance.new("UIStroke", autoTpBtn); autoTpStroke.Color = Color3.fromRGB(165, 85, 98); autoTpStroke.Thickness = 1; autoTpStroke.Transparency = 0.45
     table.insert(RGBElements, {Type = "Toggle", Stroke = autoTpStroke, State = function() return autoTpPlayerEnabled end})
 
     local function updateAutoTpBtnUI()
         autoTpBtn.Text = autoTpPlayerEnabled and "🔁 AUTO TP [BẬT]" or "🔁 AUTO TP [TẮT]"
-        autoTpBtn.TextColor3 = autoTpPlayerEnabled and Theme.AccentOn or Theme.AccentOff
-        autoTpBtn.BackgroundColor3 = autoTpPlayerEnabled and Color3.fromRGB(28, 48, 38) or Color3.fromRGB(45, 28, 35)
-        if not State.RGB then autoTpStroke.Color = autoTpPlayerEnabled and Theme.AccentOn or Theme.AccentOff end
+        autoTpBtn.TextColor3 = autoTpPlayerEnabled and Color3.fromRGB(86, 194, 139) or Color3.fromRGB(185, 115, 126)
+        autoTpBtn.BackgroundColor3 = autoTpPlayerEnabled and Color3.fromRGB(18, 32, 26) or Color3.fromRGB(22, 20, 28)
+        if not State.RGB then autoTpStroke.Color = autoTpPlayerEnabled and Color3.fromRGB(70, 165, 115) or Color3.fromRGB(165, 85, 98) end
     end
 
     local function updateSpectateBtnUI()
         spectateBtn.Text = spectatePlayerEnabled and "👁️ XEM [BẬT]" or "👁️ XEM [TẮT]"
-        spectateBtn.TextColor3 = spectatePlayerEnabled and Theme.AccentOn or Theme.AccentOff
-        spectateBtn.BackgroundColor3 = spectatePlayerEnabled and Color3.fromRGB(28, 48, 38) or Color3.fromRGB(45, 28, 35)
-        spectateStroke.Color = spectatePlayerEnabled and Theme.AccentOn or Theme.AccentOff
+        spectateBtn.TextColor3 = spectatePlayerEnabled and Color3.fromRGB(86, 194, 139) or Color3.fromRGB(185, 115, 126)
+        spectateBtn.BackgroundColor3 = spectatePlayerEnabled and Color3.fromRGB(18, 32, 26) or Color3.fromRGB(22, 20, 28)
+        spectateStroke.Color = spectatePlayerEnabled and Color3.fromRGB(70, 165, 115) or Color3.fromRGB(165, 85, 98)
     end
 
     tpOnceBtn.MouseButton1Click:Connect(function()
@@ -2172,7 +2224,7 @@ do
     end)
 
     playerListContainer = Instance.new("Frame", page7)
-    playerListContainer.Size = UDim2.new(0.94, 0, 1, -122); playerListContainer.BackgroundColor3 = Color3.fromRGB(20, 22, 31)
+    playerListContainer.Size = UDim2.new(0.94, 0, 1, -130); playerListContainer.BackgroundColor3 = Color3.fromRGB(20, 22, 31)
     playerListContainer.LayoutOrder = 3; playerListContainer.ZIndex = 10
     Instance.new("UICorner", playerListContainer).CornerRadius = UDim.new(0, 8)
     local listContainerStroke = Instance.new("UIStroke", playerListContainer); listContainerStroke.Color = Theme.Stroke; listContainerStroke.Thickness = 1
@@ -3802,7 +3854,7 @@ local function updateESP_Hitbox()
                     local anchor = Instance.new("Part")
                     anchor.Name = "TpSaveAnchor_" .. idx; anchor.Size = Vector3.new(1.2, 1.2, 1.2)
                     anchor.Shape = Enum.PartType.Ball; anchor.Material = Enum.Material.Neon
-                    anchor.Color = Theme.Brand; anchor.Transparency = 0.25
+                    anchor.Color = Color3.fromRGB(64, 235, 150); anchor.Transparency = 0.25
                     anchor.Anchored = true; anchor.CanCollide = false; anchor.CanQuery = false; anchor.CanTouch = false
                     anchor.Parent = workspace
 
@@ -3813,7 +3865,7 @@ local function updateESP_Hitbox()
 
                     local lbl = Instance.new("TextLabel", bgui)
                     lbl.Name = "WaypointLabel"; lbl.Size = UDim2.new(1, 0, 1, 0)
-                    lbl.BackgroundTransparency = 1; lbl.TextColor3 = Color3.fromRGB(88, 210, 255)
+                    lbl.BackgroundTransparency = 1; lbl.TextColor3 = Color3.fromRGB(72, 245, 160)
                     lbl.TextStrokeTransparency = 0.15; lbl.TextStrokeColor3 = Color3.new(0, 0, 0)
                     lbl.Font = Enum.Font.GothamBold; lbl.TextSize = 11; lbl.RichText = true
 
@@ -3823,7 +3875,7 @@ local function updateESP_Hitbox()
                 if espObj and espObj.Anchor and espObj.Label then
                     espObj.Anchor.Position = pos
                     local dist = myPos and math.floor((myPos - pos).Magnitude) or 0
-                    espObj.Label.Text = "📍 " .. item.name .. '\n<font color="#F0C868">[' .. dist .. 'm]</font>'
+                    espObj.Label.Text = "📍 " .. item.name .. '\n<font color="#FFE066">[' .. dist .. 'm]</font>'
                 end
             end
         end
