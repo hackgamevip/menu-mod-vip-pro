@@ -611,7 +611,7 @@ local function createDivider(parent, text)
     local pill = Instance.new("TextLabel", dFrame)
     pill.AutomaticSize = Enum.AutomaticSize.X; pill.Size = UDim2.new(0, 0, 0, 17)
     pill.AnchorPoint = Vector2.new(0.5, 0.5); pill.Position = UDim2.new(0.5, 0, 0.5, 0)
-    pill.BackgroundColor3 = Color3.fromRGB(16, 19, 29); pill.Text = "  ✦ " .. text .. " ✦  "
+    pill.BackgroundColor3 = Color3.fromRGB(16, 19, 29); pill.Text = "  " .. text .. "  "
     pill.TextColor3 = Theme.Brand; pill.Font = Enum.Font.GothamBold; pill.TextSize = 8.8; pill.ZIndex = 11
     Instance.new("UICorner", pill).CornerRadius = UDim.new(1, 0)
     local pStroke = Instance.new("UIStroke", pill); pStroke.Color = Theme.Brand; pStroke.Thickness = 0.9; pStroke.Transparency = 0.45
@@ -1017,7 +1017,6 @@ end)
 -- ==========================================
 -- [TAB 2: TÍNH NĂNG (SẮP XẾP THEO NHÓM RÕ RÀNG)]
 -- ==========================================
-createDivider(page2, "SINH TỒN & DI CHUYỂN ĐẶC BIỆT")
 createToggle(page2, "🛡️ Chống ngã & Chống văng xa", "AntiStun")
 createToggle(page2, "🔒 Khóa vị trí nhân vật (Anchor)", "LockPosition", function(v)
     if not v and player.Character then
@@ -1097,12 +1096,10 @@ createToggle(page2, "🚷 Đi xuyên tường (Noclip)", "Noclip", function(v)
     end
 end)
 
-createDivider(page2, "TƯƠNG TÁC & TỰ ĐỘNG NHẶT ĐỒ")
 createToggle(page2, "⚡ Lấy đồ nhanh (Instant Prompt)", "Instant")
 createToggle(page2, "🧲 Auto nhặt đồ & Tool xung quanh", "AutoCollect")
 createToggle(page2, "💎 Hút Tiền, Ngọc & Vật phẩm rơi (Magnet)", "MagnetOrbs")
 
-createDivider(page2, "THỊ GIÁC & CÔNG CỤ THẾ GIỚI")
 createToggle(page2, "🔴 Định vị người chơi (ESP)", "ESP")
 
 local xrayTick = 0
@@ -1129,7 +1126,7 @@ createToggle(page2, "👀 Nhìn xuyên bản đồ (Xray)", "XRay", function(v)
     end)
 end)
 
-createButton(page2, "🪄 NHẬN GẬY CLICK TP", Theme.Brand, function()
+createButton(page2, "⚡ NHẬN GẬY CLICK TP", Theme.Brand, function()
     local backpack = player:FindFirstChildOfClass("Backpack")
     if not backpack then return end
     if backpack:FindFirstChild("⚡ Click TP") or (player.Character and player.Character:FindFirstChild("⚡ Click TP")) then
@@ -1185,7 +1182,6 @@ do
 local defaultWalkSpeed = 16
 local defaultJumpPower = 50
 
-createDivider(page3, "DI CHUYỂN & TỐC ĐỘ")
 createCombinedToggleSlider(page3, "🕊️ Bay trên bầu trời (Fly)", "Fly", "Tốc độ bay", 10, 1000, "FlySpeed", function(v)
     local char = player.Character
     if char then
@@ -1240,13 +1236,11 @@ end)
 
 createCombinedToggleSlider(page3, "💨 Lướt liên tục (Auto Dash)", "AutoDash", "Tốc độ lướt", 1, 50, "DashSpeed")
 
-createDivider(page3, "CHIẾN ĐẤU & PHẠM VI (COMBAT)")
 createToggle(page3, "🖱️ Auto Click Vũ Khí", "AutoClick")
 createCombinedToggleSlider(page3, "⚔️ Đánh xa (Reach Vũ Khí)", "Reach", "Kích thước vũ khí", 0, 300, "ReachSize")
 createCombinedToggleSlider(page3, "🎯 Mở rộng Hitbox", "Hitbox", "Kích thước Hitbox", 0, 100, "HitboxSize")
 createCombinedToggleSlider(page3, "🌪️ Xoay vòng tròn (SpinBot)", "SpinBot", "Tốc độ xoay", 0, 100, "SpinSpeed")
 
-createDivider(page3, "ĐÈN CHIẾU SÁNG NHÂN VẬT")
 createCombinedToggleSlider(page3, "💡 Ánh sáng quanh người", "PlayerLight", "Phạm vi sáng (Max 60)", 0, 60, "LightRange", function(v)
     if not v and player.Character then
         local root = getUniversalRoot(player.Character)
@@ -1645,57 +1639,8 @@ do
         else savedTpList = {}; saveTpData(); clearSavedTpESPs(); renderSavedTps(); MakeToast("Thành công", "Đã xóa toàn bộ tọa độ!", Theme.Brand); pendingDeleteAll = false end
     end); tpControlFrame_New.LayoutOrder = 1
 
-    -- Hàng tính năng nâng cấp cho TP Save: ESP Điểm Lưu & Auto Loop TP
-    local tpSubRow = Instance.new("Frame", page6)
-    tpSubRow.Size = UDim2.new(0.94, 0, 0, 26); tpSubRow.BackgroundTransparency = 1; tpSubRow.LayoutOrder = 2
-
-    local espTpBtn = Instance.new("TextButton", tpSubRow)
-    espTpBtn.Size = UDim2.new(0.486, 0, 1, 0); espTpBtn.AutoButtonColor = false; espTpBtn.ZIndex = 10
-    espTpBtn.Font = Enum.Font.GothamBold; espTpBtn.TextSize = 9.5
-    Instance.new("UICorner", espTpBtn).CornerRadius = UDim.new(0, 6)
-    local espTpStroke = Instance.new("UIStroke", espTpBtn); espTpStroke.Thickness = 1; espTpStroke.Transparency = 0.25
-    table.insert(RGBElements, {Type = "Toggle", Stroke = espTpStroke, State = function() return State.TpSaveESP end})
-
-    local loopTpBtn = Instance.new("TextButton", tpSubRow)
-    loopTpBtn.Size = UDim2.new(0.486, 0, 1, 0); loopTpBtn.Position = UDim2.new(0.514, 0, 0, 0)
-    loopTpBtn.AutoButtonColor = false; loopTpBtn.ZIndex = 10
-    loopTpBtn.Font = Enum.Font.GothamBold; loopTpBtn.TextSize = 9.5
-    Instance.new("UICorner", loopTpBtn).CornerRadius = UDim.new(0, 6)
-    local loopTpStroke = Instance.new("UIStroke", loopTpBtn); loopTpStroke.Thickness = 1; loopTpStroke.Transparency = 0.25
-    table.insert(RGBElements, {Type = "Toggle", Stroke = loopTpStroke, State = function() return State.TpSaveLoop end})
-
-    local function syncTpSubBtns()
-        espTpBtn.Text = State.TpSaveESP and "👁️ ESP ĐIỂM LƯU [BẬT]" or "👁️ ESP ĐIỂM LƯU [TẮT]"
-        espTpBtn.TextColor3 = State.TpSaveESP and Theme.AccentOn or Theme.TextDim
-        espTpBtn.BackgroundColor3 = State.TpSaveESP and Color3.fromRGB(26, 46, 38) or Theme.ItemBg
-        if not State.RGB then espTpStroke.Color = State.TpSaveESP and Theme.AccentOn or Theme.Stroke end
-
-        loopTpBtn.Text = State.TpSaveLoop and "🔁 AUTO TUẦN TRA [BẬT]" or "🔁 AUTO TUẦN TRA [TẮT]"
-        loopTpBtn.TextColor3 = State.TpSaveLoop and Theme.AccentOn or Theme.TextDim
-        loopTpBtn.BackgroundColor3 = State.TpSaveLoop and Color3.fromRGB(26, 46, 38) or Theme.ItemBg
-        if not State.RGB then loopTpStroke.Color = State.TpSaveLoop and Theme.AccentOn or Theme.Stroke end
-    end
-    syncTpSubBtns()
-
-    espTpBtn.MouseButton1Click:Connect(function()
-        clickAnimate(espTpBtn)
-        State.TpSaveESP = not State.TpSaveESP
-        if not State.TpSaveESP then clearSavedTpESPs() end
-        syncTpSubBtns()
-        if State.AutoSave then saveConfig() end
-        MakeToast(State.TpSaveESP and "Đã Bật" or "Đã Tắt", "Định vị ESP các tọa độ đã lưu", State.TpSaveESP and Theme.AccentOn or Theme.AccentOff)
-    end)
-
-    loopTpBtn.MouseButton1Click:Connect(function()
-        clickAnimate(loopTpBtn)
-        State.TpSaveLoop = not State.TpSaveLoop
-        syncTpSubBtns()
-        if State.AutoSave then saveConfig() end
-        MakeToast(State.TpSaveLoop and "Đã Bật" or "Đã Tắt", "Tự động dịch chuyển lần lượt qua các điểm lưu", State.TpSaveLoop and Theme.AccentOn or Theme.AccentOff)
-    end)
-
     local tpListCard = Instance.new("Frame", page6)
-    tpListCard.Size = UDim2.new(0.94, 0, 1, -76); tpListCard.BackgroundColor3 = Color3.fromRGB(20, 22, 31); tpListCard.LayoutOrder = 3; tpListCard.ZIndex = 10
+    tpListCard.Size = UDim2.new(0.94, 0, 1, -46); tpListCard.BackgroundColor3 = Color3.fromRGB(20, 22, 31); tpListCard.LayoutOrder = 2; tpListCard.ZIndex = 10
     Instance.new("UICorner", tpListCard).CornerRadius = UDim.new(0, 8)
     local tlStroke = Instance.new("UIStroke", tpListCard); tlStroke.Color = Theme.Stroke; tlStroke.Thickness = 1; table.insert(RGBElements, {Type = "Info", Stroke = tlStroke})
 
@@ -1715,23 +1660,35 @@ do
         if #savedTpList == 0 then
             local empty = Instance.new("Frame", savedTpContent); empty.Size = UDim2.new(1, 0, 0, 42); empty.BackgroundTransparency = 1
             local lbl = Instance.new("TextLabel", empty); lbl.Size = UDim2.new(1, 0, 1, 0); lbl.BackgroundTransparency = 1
-            lbl.Text = "Chưa có vị trí nào được lưu.\nBấm '📍 LƯU VỊ TRÍ HIỆN TẠI' để đánh dấu tọa độ!"; lbl.TextColor3 = Theme.TextDim; lbl.Font = Enum.Font.Gotham; lbl.TextSize = 9; lbl.ZIndex = 10
+            lbl.Text = "Chưa có vị trí nào được lưu.\nBấm '📍 LƯU VỊ TRÍ HIỆN TẠI' để lưu & tự hiện ESP!"; lbl.TextColor3 = Theme.TextDim; lbl.Font = Enum.Font.Gotham; lbl.TextSize = 9; lbl.ZIndex = 10
             return
         end
         for i, data in ipairs(savedTpList) do
-            local item = Instance.new("Frame", savedTpContent); item.Size = UDim2.new(1, -4, 0, 32); item.BackgroundColor3 = Theme.ItemBg; item.ZIndex = 10; Instance.new("UICorner", item).CornerRadius = UDim.new(0, 6)
-            local stroke = Instance.new("UIStroke", item); stroke.Color = Theme.Stroke; stroke.Thickness = 1; table.insert(RGBElements, {Type = "Info", Stroke = stroke})
+            local item = Instance.new("Frame", savedTpContent); item.Size = UDim2.new(1, -4, 0, 32); item.BackgroundColor3 = data.patrol and Theme.ItemActive or Theme.ItemBg; item.ZIndex = 10; Instance.new("UICorner", item).CornerRadius = UDim.new(0, 6)
+            local stroke = Instance.new("UIStroke", item); stroke.Color = data.patrol and Theme.AccentOn or Theme.Stroke; stroke.Thickness = 1; table.insert(RGBElements, {Type = "Info", Stroke = stroke})
 
-            local nameBox = Instance.new("TextBox", item); nameBox.Size = UDim2.new(0.46, 0, 1, 0); nameBox.Position = UDim2.new(0.03, 0, 0, 0); nameBox.Text = data.name; nameBox.TextColor3 = Theme.TextTitle; nameBox.Font = Enum.Font.GothamSemibold; nameBox.TextSize = 9.5; nameBox.BackgroundTransparency = 1; nameBox.TextXAlignment = Enum.TextXAlignment.Left; nameBox.ClearTextOnFocus = false; nameBox.ZIndex = 10
+            local nameBox = Instance.new("TextBox", item); nameBox.Size = UDim2.new(0.41, 0, 1, 0); nameBox.Position = UDim2.new(0.03, 0, 0, 0); nameBox.Text = data.name; nameBox.TextColor3 = Theme.TextTitle; nameBox.Font = Enum.Font.GothamSemibold; nameBox.TextSize = 9.5; nameBox.BackgroundTransparency = 1; nameBox.TextXAlignment = Enum.TextXAlignment.Left; nameBox.ClearTextOnFocus = false; nameBox.ZIndex = 10
             nameBox.FocusLost:Connect(function() if nameBox.Text ~= "" then data.name = nameBox.Text; saveTpData() else nameBox.Text = data.name end end)
 
-            local tpBtn = Instance.new("TextButton", item); tpBtn.Size = UDim2.new(0.18, 0, 0.68, 0); tpBtn.Position = UDim2.new(0.50, 0, 0.16, 0); tpBtn.Text = "⚡ TP"; tpBtn.BackgroundColor3 = Color3.fromRGB(26, 46, 62); tpBtn.TextColor3 = Theme.Brand; tpBtn.Font = Enum.Font.GothamBold; tpBtn.TextSize = 9; tpBtn.ZIndex = 10; Instance.new("UICorner", tpBtn).CornerRadius = UDim.new(0, 5)
+            local tpBtn = Instance.new("TextButton", item); tpBtn.Size = UDim2.new(0.16, 0, 0.68, 0); tpBtn.Position = UDim2.new(0.45, 0, 0.16, 0); tpBtn.Text = "⚡ TP"; tpBtn.BackgroundColor3 = Color3.fromRGB(26, 46, 62); tpBtn.TextColor3 = Theme.Brand; tpBtn.Font = Enum.Font.GothamBold; tpBtn.TextSize = 8.8; tpBtn.ZIndex = 10; Instance.new("UICorner", tpBtn).CornerRadius = UDim.new(0, 5)
             local tpSt = Instance.new("UIStroke", tpBtn); tpSt.Color = Theme.Brand; tpSt.Thickness = 0.9; tpSt.Transparency = 0.25
 
-            local updBtn = Instance.new("TextButton", item); updBtn.Size = UDim2.new(0.13, 0, 0.68, 0); updBtn.Position = UDim2.new(0.695, 0, 0.16, 0); updBtn.Text = "🔄"; updBtn.BackgroundColor3 = Color3.fromRGB(28, 46, 38); updBtn.TextColor3 = Theme.AccentOn; updBtn.Font = Enum.Font.GothamBold; updBtn.TextSize = 9.5; updBtn.ZIndex = 10; Instance.new("UICorner", updBtn).CornerRadius = UDim.new(0, 5)
-            local upSt = Instance.new("UIStroke", updBtn); upSt.Color = Theme.AccentOn; upSt.Thickness = 0.9; upSt.Transparency = 0.25
+            local patrolBtn = Instance.new("TextButton", item); patrolBtn.Size = UDim2.new(0.22, 0, 0.68, 0); patrolBtn.Position = UDim2.new(0.625, 0, 0.16, 0)
+            patrolBtn.Font = Enum.Font.GothamBold; patrolBtn.TextSize = 8.3; patrolBtn.ZIndex = 10; Instance.new("UICorner", patrolBtn).CornerRadius = UDim.new(0, 5)
+            local ptSt = Instance.new("UIStroke", patrolBtn); ptSt.Thickness = 0.9; ptSt.Transparency = 0.25
 
-            local delBtn = Instance.new("TextButton", item); delBtn.Size = UDim2.new(0.14, 0, 0.68, 0); delBtn.Position = UDim2.new(0.84, 0, 0.16, 0); delBtn.Text = "Xóa"; delBtn.BackgroundColor3 = Color3.fromRGB(48, 28, 34); delBtn.TextColor3 = Theme.AccentOff; delBtn.Font = Enum.Font.GothamBold; delBtn.TextSize = 9; delBtn.ZIndex = 10; Instance.new("UICorner", delBtn).CornerRadius = UDim.new(0, 5)
+            local function syncPatrolVisual()
+                local on = data.patrol and true or false
+                patrolBtn.Text = on and "🔁 Tuần [BẬT]" or "🔁 Tuần tra"
+                patrolBtn.BackgroundColor3 = on and Color3.fromRGB(26, 48, 38) or Color3.fromRGB(26, 30, 42)
+                patrolBtn.TextColor3 = on and Theme.AccentOn or Theme.TextDim
+                ptSt.Color = on and Theme.AccentOn or Theme.Stroke
+                item.BackgroundColor3 = on and Theme.ItemActive or Theme.ItemBg
+                if not State.RGB then stroke.Color = on and Theme.AccentOn or Theme.Stroke end
+            end
+            syncPatrolVisual()
+
+            local delBtn = Instance.new("TextButton", item); delBtn.Size = UDim2.new(0.125, 0, 0.68, 0); delBtn.Position = UDim2.new(0.86, 0, 0.16, 0); delBtn.Text = "Xóa"; delBtn.BackgroundColor3 = Color3.fromRGB(48, 28, 34); delBtn.TextColor3 = Theme.AccentOff; delBtn.Font = Enum.Font.GothamBold; delBtn.TextSize = 8.8; delBtn.ZIndex = 10; Instance.new("UICorner", delBtn).CornerRadius = UDim.new(0, 5)
             local dlSt = Instance.new("UIStroke", delBtn); dlSt.Color = Theme.AccentOff; dlSt.Thickness = 0.9; dlSt.Transparency = 0.25
 
             tpBtn.MouseButton1Click:Connect(function()
@@ -1745,16 +1702,12 @@ do
                     end
                 end
             end)
-            updBtn.MouseButton1Click:Connect(function()
-                clickAnimate(updBtn)
-                if player.Character then
-                    local r = getUniversalRoot(player.Character)
-                    if r then
-                        data.cframe = {r.CFrame:GetComponents()}
-                        saveTpData()
-                        MakeToast("Đã cập nhật", "Tọa độ mới cho: " .. data.name, Theme.AccentOn)
-                    end
-                end
+            patrolBtn.MouseButton1Click:Connect(function()
+                clickAnimate(patrolBtn)
+                data.patrol = not data.patrol
+                syncPatrolVisual()
+                saveTpData()
+                MakeToast(data.patrol and "Bật Auto Tuần Tra" or "Tắt Auto Tuần Tra", data.name, data.patrol and Theme.AccentOn or Theme.AccentOff)
             end)
             delBtn.MouseButton1Click:Connect(function()
                 clickAnimate(delBtn)
@@ -1765,19 +1718,25 @@ do
     end
     renderSavedTps()
 
-    -- Vòng lặp Auto Tuần Tra qua các điểm lưu
+    -- Vòng lặp Auto Tuần Tra qua các điểm lưu được bật "🔁 Tuần tra"
     task.spawn(function()
         local loopIdx = 1
-        while task.wait(1.6) do
-            if State.TpSaveLoop and #savedTpList > 0 and player.Character then
-                if loopIdx > #savedTpList then loopIdx = 1 end
-                local item = savedTpList[loopIdx]
-                local r = getUniversalRoot(player.Character)
-                if r and item and item.cframe then
-                    r.CFrame = CFrame.new(unpack(item.cframe))
-                    if State.AirWalk then airWalkY = r.Position.Y - getFootOffset(player.Character) end
+        while task.wait(1.4) do
+            if #savedTpList > 0 and player.Character then
+                local activeList = {}
+                for _, item in ipairs(savedTpList) do
+                    if item.patrol and item.cframe then table.insert(activeList, item) end
                 end
-                loopIdx = loopIdx + 1
+                if #activeList > 0 then
+                    if loopIdx > #activeList then loopIdx = 1 end
+                    local targetItem = activeList[loopIdx]
+                    local r = getUniversalRoot(player.Character)
+                    if r and targetItem then
+                        r.CFrame = CFrame.new(unpack(targetItem.cframe))
+                        if State.AirWalk then airWalkY = r.Position.Y - getFootOffset(player.Character) end
+                    end
+                    loopIdx = loopIdx + 1
+                end
             end
         end
     end)
@@ -1894,59 +1853,52 @@ local function resetCameraSubject()
 end
 
 do
-    -- Thẻ điều khiển TP Player được gom gọn 3 tầng trong 78px để nhường chỗ cho danh sách người chơi
     local tpControlCard = Instance.new("Frame", page7)
-    tpControlCard.Size = UDim2.new(0.94, 0, 0, 78); tpControlCard.BackgroundColor3 = Theme.ItemBg
+    tpControlCard.Size = UDim2.new(0.94, 0, 0, 80); tpControlCard.BackgroundColor3 = Theme.ItemBg
     tpControlCard.LayoutOrder = 1; tpControlCard.ZIndex = 10
     Instance.new("UICorner", tpControlCard).CornerRadius = UDim.new(0, 8)
     local tpCardStroke = Instance.new("UIStroke", tpControlCard); tpCardStroke.Color = Theme.Stroke; tpCardStroke.Thickness = 1
     table.insert(RGBElements, {Type = "Info", Stroke = tpCardStroke})
 
-    -- Tầng 1: Mục tiêu + Nút Xem góc nhìn
     local targetHeaderRow = Instance.new("Frame", tpControlCard)
-    targetHeaderRow.Size = UDim2.new(1, -12, 0, 22); targetHeaderRow.Position = UDim2.new(0, 6, 0, 4)
+    targetHeaderRow.Size = UDim2.new(1, -12, 0, 24); targetHeaderRow.Position = UDim2.new(0, 6, 0, 4)
     targetHeaderRow.BackgroundColor3 = Color3.fromRGB(18, 20, 28); targetHeaderRow.ZIndex = 10
     Instance.new("UICorner", targetHeaderRow).CornerRadius = UDim.new(0, 6)
 
     local selectedAvatarImg = Instance.new("ImageLabel", targetHeaderRow)
-    selectedAvatarImg.Size = UDim2.new(0, 16, 0, 16); selectedAvatarImg.Position = UDim2.new(0, 5, 0.5, -8)
+    selectedAvatarImg.Size = UDim2.new(0, 18, 0, 18); selectedAvatarImg.Position = UDim2.new(0, 5, 0.5, -9)
     selectedAvatarImg.BackgroundColor3 = Color3.fromRGB(35, 38, 50); selectedAvatarImg.Image = "rbxassetid://0"; selectedAvatarImg.ZIndex = 10
     Instance.new("UICorner", selectedAvatarImg).CornerRadius = UDim.new(1, 0)
     local selAvaStroke = Instance.new("UIStroke", selectedAvatarImg); selAvaStroke.Color = Theme.Brand; selAvaStroke.Thickness = 1
 
     local targetStatusLabel = Instance.new("TextLabel", targetHeaderRow)
-    targetStatusLabel.Size = UDim2.new(1, -104, 1, 0); targetStatusLabel.Position = UDim2.new(0, 26, 0, 0)
+    targetStatusLabel.Size = UDim2.new(1, -108, 1, 0); targetStatusLabel.Position = UDim2.new(0, 28, 0, 0)
     targetStatusLabel.BackgroundTransparency = 1; targetStatusLabel.RichText = true
     targetStatusLabel.Text = "🎯 <font color='#E05666'>Chưa chọn mục tiêu</font>"; targetStatusLabel.TextColor3 = Theme.TextTitle
-    targetStatusLabel.Font = Enum.Font.GothamBold; targetStatusLabel.TextSize = 9.5; targetStatusLabel.TextTruncate = Enum.TextTruncate.AtEnd
+    targetStatusLabel.Font = Enum.Font.GothamBold; targetStatusLabel.TextSize = 10; targetStatusLabel.TextTruncate = Enum.TextTruncate.AtEnd
     targetStatusLabel.TextXAlignment = Enum.TextXAlignment.Left; targetStatusLabel.ZIndex = 10
 
     local spectateBtn = Instance.new("TextButton", targetHeaderRow)
-    spectateBtn.Size = UDim2.new(0, 72, 0, 17); spectateBtn.Position = UDim2.new(1, -75, 0.5, -8.5)
+    spectateBtn.Size = UDim2.new(0, 72, 0, 18); spectateBtn.Position = UDim2.new(1, -76, 0.5, -9)
     spectateBtn.BackgroundColor3 = Color3.fromRGB(45, 28, 35); spectateBtn.Text = "👁️ XEM [TẮT]"
     spectateBtn.TextColor3 = Theme.AccentOff; spectateBtn.Font = Enum.Font.GothamBold; spectateBtn.TextSize = 8.5
     spectateBtn.AutoButtonColor = false; spectateBtn.ZIndex = 10
     Instance.new("UICorner", spectateBtn).CornerRadius = UDim.new(0, 5)
     local spectateStroke = Instance.new("UIStroke", spectateBtn); spectateStroke.Color = Theme.AccentOff; spectateStroke.Thickness = 0.9; spectateStroke.Transparency = 0.25
 
-    -- Tầng 2: Cụm 3 nút ngang (Đổi hướng TP | TP 1 Lần | Auto TP)
-    local actionMidRow = Instance.new("Frame", tpControlCard)
-    actionMidRow.Size = UDim2.new(1, -12, 0, 22); actionMidRow.Position = UDim2.new(0, 6, 0, 29)
-    actionMidRow.BackgroundTransparency = 1; actionMidRow.ZIndex = 10
-
-    local tpPosBtn = Instance.new("TextButton", actionMidRow)
-    tpPosBtn.Size = UDim2.new(0.42, -3, 1, 0); tpPosBtn.Position = UDim2.new(0, 0, 0, 0)
+    local tpPosBtn = Instance.new("TextButton", tpControlCard)
+    tpPosBtn.Size = UDim2.new(1, -12, 0, 22); tpPosBtn.Position = UDim2.new(0, 6, 0, 31)
     tpPosBtn.BackgroundColor3 = Color3.fromRGB(26, 44, 62); tpPosBtn.Text = ""; tpPosBtn.AutoButtonColor = false; tpPosBtn.ZIndex = 10
-    Instance.new("UICorner", tpPosBtn).CornerRadius = UDim.new(0, 5)
-    local tpPosStroke = Instance.new("UIStroke", tpPosBtn); tpPosStroke.Color = Theme.Brand; tpPosStroke.Thickness = 0.9; tpPosStroke.Transparency = 0.25
+    Instance.new("UICorner", tpPosBtn).CornerRadius = UDim.new(0, 6)
+    local tpPosStroke = Instance.new("UIStroke", tpPosBtn); tpPosStroke.Color = Theme.Brand; tpPosStroke.Thickness = 1; tpPosStroke.Transparency = 0.25
 
     local tpPosLabel = Instance.new("TextLabel", tpPosBtn)
     tpPosLabel.Size = UDim2.new(1, 0, 1, 0); tpPosLabel.BackgroundTransparency = 1; tpPosLabel.RichText = true
-    tpPosLabel.TextColor3 = Theme.TextTitle; tpPosLabel.Font = Enum.Font.GothamBold; tpPosLabel.TextSize = 8.5; tpPosLabel.ZIndex = 10
+    tpPosLabel.TextColor3 = Theme.TextTitle; tpPosLabel.Font = Enum.Font.GothamBold; tpPosLabel.TextSize = 10; tpPosLabel.ZIndex = 10
 
     local function updateTpPosText()
         local item = TpPositions[State.TpPositionIdx] or TpPositions[1]
-        tpPosLabel.Text = "📍 <font color='#F0C868'>" .. item.Upper .. "</font>"
+        tpPosLabel.Text = "📍 VỊ TRÍ TP: <font color='#F0C868'>" .. item.Upper .. "</font>"
     end
     updateTpPosText()
 
@@ -1960,41 +1912,22 @@ do
         if State.AutoSave then saveConfig() end
     end)
 
-    local tpOnceBtn = Instance.new("TextButton", actionMidRow)
-    tpOnceBtn.Size = UDim2.new(0.27, -2, 1, 0); tpOnceBtn.Position = UDim2.new(0.42, 1, 0, 0)
-    tpOnceBtn.BackgroundColor3 = Color3.fromRGB(24, 40, 56); tpOnceBtn.Text = "⚡ TP 1 LẦN"
-    tpOnceBtn.TextColor3 = Theme.Brand; tpOnceBtn.Font = Enum.Font.GothamBold; tpOnceBtn.TextSize = 8.5
-    tpOnceBtn.AutoButtonColor = false; tpOnceBtn.ZIndex = 10
-    Instance.new("UICorner", tpOnceBtn).CornerRadius = UDim.new(0, 5)
-    local tpOnceStroke = Instance.new("UIStroke", tpOnceBtn); tpOnceStroke.Color = Theme.Brand; tpOnceStroke.Thickness = 0.9; tpOnceStroke.Transparency = 0.25
-    table.insert(RGBElements, {Type = "Button", Stroke = tpOnceStroke, DefaultColor = Theme.Brand})
-
-    local autoTpBtn = Instance.new("TextButton", actionMidRow)
-    autoTpBtn.Size = UDim2.new(0.31, -1, 1, 0); autoTpBtn.Position = UDim2.new(0.69, 2, 0, 0)
-    autoTpBtn.BackgroundColor3 = Color3.fromRGB(45, 28, 35); autoTpBtn.Text = "🔁 AUTO [TẮT]"
-    autoTpBtn.TextColor3 = Theme.AccentOff; autoTpBtn.Font = Enum.Font.GothamBold; autoTpBtn.TextSize = 8.5
-    autoTpBtn.AutoButtonColor = false; autoTpBtn.ZIndex = 10
-    Instance.new("UICorner", autoTpBtn).CornerRadius = UDim.new(0, 5)
-    local autoTpStroke = Instance.new("UIStroke", autoTpBtn); autoTpStroke.Color = Theme.AccentOff; autoTpStroke.Thickness = 0.9; autoTpStroke.Transparency = 0.25
-    table.insert(RGBElements, {Type = "Toggle", Stroke = autoTpStroke, State = function() return autoTpPlayerEnabled end})
-
-    -- Tầng 3: Thanh trượt khoảng cách
     local tpDistContainer = Instance.new("Frame", tpControlCard)
-    tpDistContainer.Size = UDim2.new(1, -12, 0, 21); tpDistContainer.Position = UDim2.new(0, 6, 0, 54)
+    tpDistContainer.Size = UDim2.new(1, -12, 0, 22); tpDistContainer.Position = UDim2.new(0, 6, 0, 55)
     tpDistContainer.BackgroundTransparency = 1; tpDistContainer.ZIndex = 10
 
     local tpDistTitle = Instance.new("TextLabel", tpDistContainer)
     tpDistTitle.Size = UDim2.new(0.7, 0, 0, 11); tpDistTitle.Position = UDim2.new(0, 2, 0, 0)
     tpDistTitle.BackgroundTransparency = 1; tpDistTitle.Text = "📏 Khoảng cách đứng (Studs):"
-    tpDistTitle.TextColor3 = Theme.TextDim; tpDistTitle.Font = Enum.Font.GothamSemibold; tpDistTitle.TextSize = 9; tpDistTitle.TextXAlignment = Enum.TextXAlignment.Left; tpDistTitle.ZIndex = 10
+    tpDistTitle.TextColor3 = Theme.TextDim; tpDistTitle.Font = Enum.Font.GothamSemibold; tpDistTitle.TextSize = 9.5; tpDistTitle.TextXAlignment = Enum.TextXAlignment.Left; tpDistTitle.ZIndex = 10
 
     local tpDistValLabel = Instance.new("TextLabel", tpDistContainer)
     tpDistValLabel.Size = UDim2.new(0.3, -4, 0, 11); tpDistValLabel.Position = UDim2.new(0.7, 0, 0, 0)
     tpDistValLabel.BackgroundTransparency = 1; tpDistValLabel.Text = tostring(State.TpDistance) .. " m"
-    tpDistValLabel.TextColor3 = Color3.fromRGB(240, 200, 104); tpDistValLabel.Font = Enum.Font.GothamBold; tpDistValLabel.TextSize = 9.5; tpDistValLabel.TextXAlignment = Enum.TextXAlignment.Right; tpDistValLabel.ZIndex = 10
+    tpDistValLabel.TextColor3 = Color3.fromRGB(240, 200, 104); tpDistValLabel.Font = Enum.Font.GothamBold; tpDistValLabel.TextSize = 10; tpDistValLabel.TextXAlignment = Enum.TextXAlignment.Right; tpDistValLabel.ZIndex = 10
 
     local tpDistTrack = Instance.new("Frame", tpDistContainer)
-    tpDistTrack.Size = UDim2.new(1, -4, 0, 5); tpDistTrack.Position = UDim2.new(0, 2, 0, 13)
+    tpDistTrack.Size = UDim2.new(1, -4, 0, 5); tpDistTrack.Position = UDim2.new(0, 2, 0, 14)
     tpDistTrack.BackgroundColor3 = Color3.fromRGB(16, 17, 24); tpDistTrack.ZIndex = 10
     Instance.new("UICorner", tpDistTrack).CornerRadius = UDim.new(1, 0)
 
@@ -2048,8 +1981,28 @@ do
         end
     end
 
+    local tpActionRow = Instance.new("Frame", page7)
+    tpActionRow.Size = UDim2.new(0.94, 0, 0, 26); tpActionRow.BackgroundTransparency = 1; tpActionRow.LayoutOrder = 2
+
+    local tpOnceBtn = Instance.new("TextButton", tpActionRow)
+    tpOnceBtn.Size = UDim2.new(0.486, 0, 1, 0); tpOnceBtn.BackgroundColor3 = Color3.fromRGB(24, 40, 56)
+    tpOnceBtn.Text = "⚡ TP 1 LẦN"; tpOnceBtn.TextColor3 = Theme.Brand; tpOnceBtn.Font = Enum.Font.GothamBold; tpOnceBtn.TextSize = 10
+    tpOnceBtn.AutoButtonColor = false; tpOnceBtn.ZIndex = 10
+    Instance.new("UICorner", tpOnceBtn).CornerRadius = UDim.new(0, 6)
+    local tpOnceStroke = Instance.new("UIStroke", tpOnceBtn); tpOnceStroke.Color = Theme.Brand; tpOnceStroke.Thickness = 1; tpOnceStroke.Transparency = 0.25
+    table.insert(RGBElements, {Type = "Button", Stroke = tpOnceStroke, DefaultColor = Theme.Brand})
+
+    local autoTpBtn = Instance.new("TextButton", tpActionRow)
+    autoTpBtn.Size = UDim2.new(0.486, 0, 1, 0); autoTpBtn.Position = UDim2.new(0.514, 0, 0, 0)
+    autoTpBtn.BackgroundColor3 = Color3.fromRGB(45, 28, 35); autoTpBtn.Text = "🔁 AUTO TP [TẮT]"
+    autoTpBtn.TextColor3 = Theme.AccentOff; autoTpBtn.Font = Enum.Font.GothamBold; autoTpBtn.TextSize = 10
+    autoTpBtn.AutoButtonColor = false; autoTpBtn.ZIndex = 10
+    Instance.new("UICorner", autoTpBtn).CornerRadius = UDim.new(0, 6)
+    local autoTpStroke = Instance.new("UIStroke", autoTpBtn); autoTpStroke.Color = Theme.AccentOff; autoTpStroke.Thickness = 1; autoTpStroke.Transparency = 0.25
+    table.insert(RGBElements, {Type = "Toggle", Stroke = autoTpStroke, State = function() return autoTpPlayerEnabled end})
+
     local function updateAutoTpBtnUI()
-        autoTpBtn.Text = autoTpPlayerEnabled and "🔁 AUTO [BẬT]" or "🔁 AUTO [TẮT]"
+        autoTpBtn.Text = autoTpPlayerEnabled and "🔁 AUTO TP [BẬT]" or "🔁 AUTO TP [TẮT]"
         autoTpBtn.TextColor3 = autoTpPlayerEnabled and Theme.AccentOn or Theme.AccentOff
         autoTpBtn.BackgroundColor3 = autoTpPlayerEnabled and Color3.fromRGB(28, 48, 38) or Color3.fromRGB(45, 28, 35)
         if not State.RGB then autoTpStroke.Color = autoTpPlayerEnabled and Theme.AccentOn or Theme.AccentOff end
@@ -2099,10 +2052,9 @@ do
         end
     end)
 
-    -- Khung danh sách người chơi mở rộng chiều cao + tích hợp sẵn thanh tìm kiếm
     playerListContainer = Instance.new("Frame", page7)
-    playerListContainer.Size = UDim2.new(0.94, 0, 1, -90); playerListContainer.BackgroundColor3 = Color3.fromRGB(20, 22, 31)
-    playerListContainer.LayoutOrder = 2; playerListContainer.ZIndex = 10
+    playerListContainer.Size = UDim2.new(0.94, 0, 1, -122); playerListContainer.BackgroundColor3 = Color3.fromRGB(20, 22, 31)
+    playerListContainer.LayoutOrder = 3; playerListContainer.ZIndex = 10
     Instance.new("UICorner", playerListContainer).CornerRadius = UDim.new(0, 8)
     local listContainerStroke = Instance.new("UIStroke", playerListContainer); listContainerStroke.Color = Theme.Stroke; listContainerStroke.Thickness = 1
     table.insert(RGBElements, {Type = "Info", Stroke = listContainerStroke})
@@ -3679,7 +3631,7 @@ local function updateESP_Hitbox()
     local myPos = myRoot and myRoot.Position or (workspace.CurrentCamera and workspace.CurrentCamera.CFrame.Position)
 
     -- Cập nhật ESP Điểm Lưu (TP Save Waypoints)
-    if State.TpSaveESP and #savedTpList > 0 then
+    if #savedTpList > 0 then
         for idx, item in ipairs(savedTpList) do
             if item.cframe then
                 local cf = CFrame.new(unpack(item.cframe))
