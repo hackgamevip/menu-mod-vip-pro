@@ -276,6 +276,11 @@ addSoftGradient(frame, Color3.fromRGB(20, 23, 33), Color3.fromRGB(14, 16, 23), 1
 local frameStroke = Instance.new("UIStroke", frame); frameStroke.Color = Theme.Stroke; frameStroke.Thickness = 1.5
 table.insert(RGBElements, {Type = "Frame", Stroke = frameStroke})
 
+local avatarStroke, titleLabel, headerStatText
+local page1, page2, page3, page4, page5, page6, page7, page8, page9
+onTab9Shown = nil
+opened = true
+do
 -- HEADER
 local header = Instance.new("Frame", frame)
 header.Size = UDim2.new(1, 0, 0, 36); header.BackgroundColor3 = Color3.fromRGB(255, 255, 255); header.BackgroundTransparency = 0; header.BorderSizePixel = 0; header.ZIndex = 11
@@ -292,7 +297,7 @@ local avatarImg = Instance.new("ImageLabel", header)
 avatarImg.Size = UDim2.new(0, 24, 0, 24); avatarImg.Position = UDim2.new(0, 10, 0.5, -12); avatarImg.BackgroundColor3 = Theme.ItemBg; avatarImg.ZIndex = 12
 pcall(function() avatarImg.Image = Players:GetUserThumbnailAsync(player.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size420x420) end)
 Instance.new("UICorner", avatarImg).CornerRadius = UDim.new(1, 0)
-local avatarStroke = Instance.new("UIStroke", avatarImg); avatarStroke.Color = Theme.Brand; avatarStroke.Thickness = 1.2
+avatarStroke = Instance.new("UIStroke", avatarImg); avatarStroke.Color = Theme.Brand; avatarStroke.Thickness = 1.2
 
 local onlineDot = Instance.new("Frame", avatarImg)
 onlineDot.Size = UDim2.new(0, 7, 0, 7); onlineDot.Position = UDim2.new(1, -6, 1, -6)
@@ -300,7 +305,7 @@ onlineDot.BackgroundColor3 = Theme.AccentOn; onlineDot.ZIndex = 13
 Instance.new("UICorner", onlineDot).CornerRadius = UDim.new(1, 0)
 local dotStroke = Instance.new("UIStroke", onlineDot); dotStroke.Color = Theme.HeaderBg; dotStroke.Thickness = 1.2
 
-local titleLabel = Instance.new("TextLabel", header)
+titleLabel = Instance.new("TextLabel", header)
 titleLabel.Size = UDim2.new(0, 170, 0, 16); titleLabel.Position = UDim2.new(0, 42, 0, 4); titleLabel.BackgroundTransparency = 1
 titleLabel.Text = "MENU VIP PRO MAX"
 titleLabel.TextColor3 = Theme.TextTitle; titleLabel.Font = Enum.Font.GothamBlack; titleLabel.TextSize = 12; titleLabel.TextXAlignment = Enum.TextXAlignment.Left; titleLabel.ZIndex = 12
@@ -316,7 +321,7 @@ headerStatPill.BackgroundColor3 = Color3.fromRGB(16, 18, 26); headerStatPill.ZIn
 Instance.new("UICorner", headerStatPill).CornerRadius = UDim.new(1, 0)
 local hspStroke = Instance.new("UIStroke", headerStatPill); hspStroke.Color = Theme.Stroke; hspStroke.Thickness = 1
 
-local headerStatText = Instance.new("TextLabel", headerStatPill)
+headerStatText = Instance.new("TextLabel", headerStatPill)
 headerStatText.Size = UDim2.new(1, 0, 1, 0); headerStatText.BackgroundTransparency = 1
 headerStatText.RichText = true; headerStatText.Text = "<font color='#38CC88'>60 FPS</font> • <font color='#58B6F2'>0ms</font>"
 headerStatText.TextColor3 = Theme.TextTitle; headerStatText.Font = Enum.Font.GothamBold; headerStatText.TextSize = 9; headerStatText.ZIndex = 13
@@ -442,17 +447,17 @@ local function createPage()
     return pg
 end
 
-local page1, page2, page3, page4, page8, page9 = createPage(), createPage(), createPage(), createPage(), createPage(), createPage()
+page1, page2, page3, page4, page8, page9 = createPage(), createPage(), createPage(), createPage(), createPage(), createPage()
 
-local page5 = Instance.new("Frame", pageContainer)
+page5 = Instance.new("Frame", pageContainer)
 page5.Size = UDim2.new(1, 0, 1, 0); page5.BackgroundTransparency = 1; page5.Visible = false; page5.ZIndex = 10
 local l5 = Instance.new("UIListLayout", page5); l5.HorizontalAlignment = Enum.HorizontalAlignment.Center; l5.Padding = UDim.new(0, 5); l5.SortOrder = Enum.SortOrder.LayoutOrder; Instance.new("UIPadding", page5).PaddingTop = UDim.new(0, 6)
 
-local page6 = Instance.new("Frame", pageContainer)
+page6 = Instance.new("Frame", pageContainer)
 page6.Size = UDim2.new(1, 0, 1, 0); page6.BackgroundTransparency = 1; page6.Visible = false; page6.ZIndex = 10
 local l6 = Instance.new("UIListLayout", page6); l6.HorizontalAlignment = Enum.HorizontalAlignment.Center; l6.Padding = UDim.new(0, 5); l6.SortOrder = Enum.SortOrder.LayoutOrder; Instance.new("UIPadding", page6).PaddingTop = UDim.new(0, 6)
 
-local page7 = Instance.new("Frame", pageContainer)
+page7 = Instance.new("Frame", pageContainer)
 page7.Size = UDim2.new(1, 0, 1, 0); page7.BackgroundTransparency = 1; page7.Visible = false; page7.ZIndex = 10
 local l7 = Instance.new("UIListLayout", page7); l7.HorizontalAlignment = Enum.HorizontalAlignment.Center; l7.Padding = UDim.new(0, 5); l7.SortOrder = Enum.SortOrder.LayoutOrder
 Instance.new("UIPadding", page7).PaddingTop = UDim.new(0, 6)
@@ -504,6 +509,7 @@ end
 
 openBtn.MouseButton1Click:Connect(function() clickAnimate(openBtn); toggleMenuWindow() end)
 minBtn.MouseButton1Click:Connect(function() clickAnimate(minBtn); toggleMenuWindow() end)
+end
 
 -- ==========================================
 -- COMPONENTS HỆ THỐNG
@@ -1086,6 +1092,7 @@ createDualButtons(
 -- ==========================================
 -- [TAB 3: NHÂN VẬT (DI CHUYỂN, CHIẾN ĐẤU & ÁNH SÁNG)]
 -- ==========================================
+do
 local defaultWalkSpeed = 16
 local defaultJumpPower = 50
 
@@ -1162,6 +1169,7 @@ createCombinedToggleSlider(page3, "💡 Ánh sáng quanh người", "PlayerLight
 end)
 createSlider(page3, "• Độ sáng đèn", 0, 5, "LightBrightness")
 createCycleBtn(page3, "🎨 Đổi màu sáng:", PlayerLightColors, "LightColorIdx")
+end
 
 -- ==========================================
 -- [TAB 4 (SIDEBAR #8): TIỆN ÍCH (GỌN GÀNG & ĐẦY ĐỦ)]
@@ -2135,6 +2143,7 @@ end
 -- ==========================================
 -- [TAB 8: AUTO SKILL (NÂNG CẤP BẬT/TẮT NHANH & PHÍM Q, R)]
 -- ==========================================
+do
 createDivider(page8, "ĐIỀU KHIỂN NHANH & TỐC ĐỘ SPAM")
 local allSkillVars = {
     "AutoSkillZ", "AutoSkillX", "AutoSkillC", "AutoSkillV",
@@ -2280,6 +2289,7 @@ task.spawn(function()
         end
     end
 end)
+end
 
 -- ==========================================
 -- [TAB 9: CẤU HÌNH & GIẢM LAG CHUYÊN SÂU (HỢP NHẤT TOÀN BỘ)]
