@@ -57,11 +57,11 @@ local Theme = {
 }
 
 local ThemePresets = {
-    {Name = "🌌 Cyber Blue", Brand = Color3.fromRGB(78, 190, 255), Soft = Color3.fromRGB(28, 52, 82), On = Color3.fromRGB(46, 218, 142), ActiveBg = Color3.fromRGB(22, 44, 42)},
-    {Name = "💜 Neon Purple", Brand = Color3.fromRGB(186, 118, 255), Soft = Color3.fromRGB(52, 32, 82), On = Color3.fromRGB(198, 115, 255), ActiveBg = Color3.fromRGB(38, 26, 56)},
-    {Name = "💚 Emerald Matrix", Brand = Color3.fromRGB(52, 228, 152), Soft = Color3.fromRGB(22, 62, 46), On = Color3.fromRGB(52, 228, 152), ActiveBg = Color3.fromRGB(20, 46, 36)},
-    {Name = "🌸 Crimson Rose", Brand = Color3.fromRGB(255, 102, 148), Soft = Color3.fromRGB(74, 28, 48), On = Color3.fromRGB(255, 108, 152), ActiveBg = Color3.fromRGB(48, 24, 36)},
-    {Name = "✨ Luxury Gold", Brand = Color3.fromRGB(255, 198, 78), Soft = Color3.fromRGB(72, 54, 24), On = Color3.fromRGB(245, 192, 68), ActiveBg = Color3.fromRGB(46, 38, 22)}
+    {Name = "🌌 Cyber Blue", Brand = Color3.fromRGB(88, 182, 242), Soft = Color3.fromRGB(32, 52, 76), On = Color3.fromRGB(56, 204, 136), ActiveBg = Color3.fromRGB(24, 42, 40)},
+    {Name = "💜 Neon Purple", Brand = Color3.fromRGB(182, 120, 255), Soft = Color3.fromRGB(48, 32, 78), On = Color3.fromRGB(56, 204, 136), ActiveBg = Color3.fromRGB(24, 42, 40)},
+    {Name = "💚 Emerald Matrix", Brand = Color3.fromRGB(56, 218, 148), Soft = Color3.fromRGB(24, 58, 44), On = Color3.fromRGB(56, 204, 136), ActiveBg = Color3.fromRGB(24, 42, 40)},
+    {Name = "🌸 Crimson Rose", Brand = Color3.fromRGB(255, 105, 148), Soft = Color3.fromRGB(70, 28, 46), On = Color3.fromRGB(56, 204, 136), ActiveBg = Color3.fromRGB(24, 42, 40)},
+    {Name = "✨ Luxury Gold", Brand = Color3.fromRGB(245, 192, 78), Soft = Color3.fromRGB(68, 52, 24), On = Color3.fromRGB(56, 204, 136), ActiveBg = Color3.fromRGB(24, 42, 40)}
 }
 
 local PlayerLightColors = {
@@ -239,13 +239,12 @@ screenOverlay.Size = UDim2.new(2, 0, 2, 0); screenOverlay.Position = UDim2.new(-
 screenOverlay.BackgroundColor3 = Color3.new(0, 0, 0); screenOverlay.ZIndex = 0; screenOverlay.Visible = false
 
 local openBtn = Instance.new("TextButton", gui)
-openBtn.Size = UDim2.new(0, 46, 0, 46); openBtn.Position = UDim2.new(0, 15, 0.26, 0)
-openBtn.Text = "🇻🇳"; openBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255); openBtn.BackgroundTransparency = 0.05
-openBtn.TextColor3 = Theme.Brand; openBtn.Font = Enum.Font.GothamBold; openBtn.TextSize = 21; openBtn.ZIndex = 10
+openBtn.Size = UDim2.new(0, 44, 0, 44); openBtn.Position = UDim2.new(0, 15, 0.26, 0)
+openBtn.Text = "🇻🇳"; openBtn.BackgroundColor3 = Theme.HeaderBg; openBtn.BackgroundTransparency = 0.08
+openBtn.TextColor3 = Color3.fromRGB(255, 255, 255); openBtn.Font = Enum.Font.GothamBold; openBtn.TextSize = 20; openBtn.ZIndex = 10
 Instance.new("UICorner", openBtn).CornerRadius = UDim.new(0, 14)
-addSoftGradient(openBtn, Color3.fromRGB(28, 34, 52), Color3.fromRGB(16, 19, 30), 135)
 local openStroke = Instance.new("UIStroke", openBtn)
-openStroke.Color = Theme.Brand; openStroke.Thickness = 1.8; openStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+openStroke.Color = Theme.Brand; openStroke.Thickness = 1.6; openStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 
 local function clickAnimate(obj)
     local scale = obj:FindFirstChildOfClass("UIScale") or Instance.new("UIScale", obj)
@@ -285,13 +284,6 @@ frame.BackgroundTransparency = 0.02
 frame.ZIndex = 10
 Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 14)
 addSoftGradient(frame, Color3.fromRGB(22, 26, 40), Color3.fromRGB(12, 14, 22), 135)
-
--- Viền Aura bóng đổ (Shadow Glow) giúp menu nổi khối 3D trên nền game
-local shadowAura = Instance.new("Frame", frame)
-shadowAura.Size = UDim2.new(1, 10, 1, 10); shadowAura.Position = UDim2.new(0, -5, 0, -5)
-shadowAura.BackgroundColor3 = Color3.fromRGB(5, 7, 12); shadowAura.BackgroundTransparency = 0.55
-shadowAura.BorderSizePixel = 0; shadowAura.ZIndex = 9
-Instance.new("UICorner", shadowAura).CornerRadius = UDim.new(0, 18)
 
 local frameStroke = Instance.new("UIStroke", frame); frameStroke.Color = Theme.Brand; frameStroke.Thickness = 1.5; frameStroke.Transparency = 0.2
 table.insert(RGBElements, {Type = "Frame", Stroke = frameStroke})
@@ -354,9 +346,9 @@ do
     headerStatText.TextColor3 = Theme.TextTitle; headerStatText.Font = Enum.Font.GothamBold; headerStatText.TextSize = 9; headerStatText.ZIndex = 13
 
     local verBadge = Instance.new("TextLabel", header)
-    verBadge.Size = UDim2.new(0, 46, 0, 22); verBadge.Position = UDim2.new(1, -80, 0.5, -11)
-    verBadge.BackgroundColor3 = Theme.BrandSoft; verBadge.Text = "V1.17"; verBadge.TextColor3 = Theme.Brand
-    verBadge.Font = Enum.Font.GothamBlack; verBadge.TextSize = 9.5; verBadge.ZIndex = 12
+    verBadge.Size = UDim2.new(0, 44, 0, 20); verBadge.Position = UDim2.new(1, -78, 0.5, -10)
+    verBadge.BackgroundColor3 = Theme.BrandSoft; verBadge.Text = "v1.17"; verBadge.TextColor3 = Theme.Brand
+    verBadge.Font = Enum.Font.GothamBold; verBadge.TextSize = 9.5; verBadge.ZIndex = 12
     Instance.new("UICorner", verBadge).CornerRadius = UDim.new(0, 7)
     local verStroke = Instance.new("UIStroke", verBadge); verStroke.Color = Theme.Brand; verStroke.Thickness = 1; verStroke.Transparency = 0.25
 
@@ -791,9 +783,8 @@ local function createSlider(parent, text, min, max, varName, callback)
 
     local initPos = math.clamp((State[varName] - min) / (max - min), 0, 1)
     local fill = Instance.new("Frame", track)
-    fill.Size = UDim2.new(initPos, 0, 1, 0); fill.BackgroundColor3 = Color3.fromRGB(255, 255, 255); fill.ZIndex = 11
+    fill.Size = UDim2.new(initPos, 0, 1, 0); fill.BackgroundColor3 = Theme.Brand; fill.ZIndex = 11
     Instance.new("UICorner", fill).CornerRadius = UDim.new(1, 0)
-    addSoftGradient(fill, Theme.Brand, Theme.AccentOn, 0)
 
     local knob = Instance.new("Frame", track)
     knob.Size = UDim2.new(0, 11, 0, 11); knob.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -896,9 +887,8 @@ local function createCombinedToggleSlider(parent, toggleText, toggleVar, sliderT
 
     local initPos = math.clamp((State[sliderVar] - min) / (max - min), 0, 1)
     local fill = Instance.new("Frame", track)
-    fill.Size = UDim2.new(initPos, 0, 1, 0); fill.BackgroundColor3 = Color3.fromRGB(255, 255, 255); fill.ZIndex = 13
+    fill.Size = UDim2.new(initPos, 0, 1, 0); fill.BackgroundColor3 = Theme.Brand; fill.ZIndex = 13
     Instance.new("UICorner", fill).CornerRadius = UDim.new(1, 0)
-    addSoftGradient(fill, Theme.Brand, Theme.AccentOn, 0)
 
     local knob = Instance.new("Frame", track)
     knob.Size = UDim2.new(0, 11, 0, 11); knob.AnchorPoint = Vector2.new(0.5, 0.5)
