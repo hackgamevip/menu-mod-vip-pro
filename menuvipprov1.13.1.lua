@@ -276,14 +276,178 @@ local screenOverlay = Instance.new("Frame", gui)
 screenOverlay.Size = UDim2.new(2, 0, 2, 0); screenOverlay.Position = UDim2.new(-0.5, 0, -0.5, 0)
 screenOverlay.BackgroundColor3 = Color3.new(0, 0, 0); screenOverlay.ZIndex = 0; screenOverlay.Visible = false
 
--- Đặt mặc định ở Y = 0.12 để tránh đè lên nút "Chỉ mục / Nhiệm vụ" bên trái màn hình game
+-- Nút đóng/mở Menu hình Huy Hiệu Rồng 3D Glossy viền trắng (Mở: Rồng Lửa Đỏ Cam | Đóng: Rồng Tím Hắc Ám)
 local openBtn = Instance.new("TextButton", gui)
-openBtn.Size = UDim2.new(0, 44, 0, 44); openBtn.Position = UDim2.new(0, 14, 0.05, 0)
-openBtn.Text = "🇻🇳"; openBtn.BackgroundColor3 = Theme.HeaderBg; openBtn.BackgroundTransparency = 0.08
-openBtn.TextColor3 = Color3.fromRGB(255, 255, 255); openBtn.Font = Enum.Font.GothamBold; openBtn.TextSize = 20; openBtn.ZIndex = 10
-Instance.new("UICorner", openBtn).CornerRadius = UDim.new(0, 14)
+openBtn.Size = UDim2.new(0, 48, 0, 48); openBtn.Position = UDim2.new(0, 14, 0.05, 0)
+openBtn.Text = ""; openBtn.BackgroundColor3 = Color3.fromRGB(16, 10, 18); openBtn.BackgroundTransparency = 0
+openBtn.AutoButtonColor = false; openBtn.ZIndex = 10
+Instance.new("UICorner", openBtn).CornerRadius = UDim.new(1, 0)
 local openStroke = Instance.new("UIStroke", openBtn)
-openStroke.Color = Theme.Brand; openStroke.Thickness = 1.6; openStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+openStroke.Color = Color3.fromRGB(236, 242, 250); openStroke.Thickness = 2; openStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+
+local syncDragonButtonState
+do
+    local innerSphere = Instance.new("Frame", openBtn)
+    innerSphere.Size = UDim2.new(1, -6, 1, -6); innerSphere.Position = UDim2.new(0, 3, 0, 3)
+    innerSphere.BackgroundColor3 = Color3.fromRGB(255, 255, 255); innerSphere.BorderSizePixel = 0; innerSphere.ZIndex = 11
+    Instance.new("UICorner", innerSphere).CornerRadius = UDim.new(1, 0)
+
+    local sphereGrad = Instance.new("UIGradient", innerSphere)
+    sphereGrad.Rotation = 125
+
+    local sphereRim = Instance.new("UIStroke", innerSphere)
+    sphereRim.Thickness = 1; sphereRim.Transparency = 0.25
+
+    -- 2 vệt bóng kính góc trên phải giống mẫu 1000085170.png
+    local shineDot = Instance.new("Frame", innerSphere)
+    shineDot.Size = UDim2.new(0, 4, 0, 4); shineDot.Position = UDim2.new(0.56, 0, 0.10, 0)
+    shineDot.BorderSizePixel = 0; shineDot.BackgroundTransparency = 0.35; shineDot.ZIndex = 16
+    Instance.new("UICorner", shineDot).CornerRadius = UDim.new(1, 0)
+
+    local shineOval = Instance.new("Frame", innerSphere)
+    shineOval.Size = UDim2.new(0, 8, 0, 4); shineOval.Position = UDim2.new(0.66, 0, 0.14, 0); shineOval.Rotation = 28
+    shineOval.BorderSizePixel = 0; shineOval.BackgroundTransparency = 0.3; shineOval.ZIndex = 16
+    Instance.new("UICorner", shineOval).CornerRadius = UDim.new(1, 0)
+
+    local artHolder = Instance.new("Frame", innerSphere)
+    artHolder.Size = UDim2.new(1, 0, 1, 0); artHolder.BackgroundTransparency = 1; artHolder.ZIndex = 12
+
+    local bodyGrads = {}
+    local function addDragonSeg(xScale, yScale, w, h, rot, radiusScale, zIdx)
+        local seg = Instance.new("Frame", artHolder)
+        seg.Size = UDim2.new(0, w, 0, h)
+        seg.AnchorPoint = Vector2.new(0.5, 0.5)
+        seg.Position = UDim2.new(xScale, 0, yScale, 0)
+        if rot then seg.Rotation = rot end
+        seg.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        seg.BorderSizePixel = 0
+        seg.ZIndex = zIdx or 14
+        Instance.new("UICorner", seg).CornerRadius = UDim.new(radiusScale or 0.45, 0)
+        local g = Instance.new("UIGradient", seg)
+        g.Rotation = 90
+        table.insert(bodyGrads, g)
+        return seg
+    end
+
+    -- Thân rồng uốn hình chữ C (từ cổ xuống bụng và vút lên đuôi nhọn bên phải)
+    addDragonSeg(0.36, 0.34, 8, 7, -25, 0.5, 14)
+    addDragonSeg(0.28, 0.44, 8.5, 8, -50, 0.5, 14)
+    addDragonSeg(0.25, 0.56, 8.5, 8, -80, 0.5, 14)
+    addDragonSeg(0.29, 0.68, 8.5, 7.5, -115, 0.5, 14)
+    addDragonSeg(0.38, 0.77, 9, 7, -145, 0.5, 14)
+    addDragonSeg(0.50, 0.81, 9, 6.5, -175, 0.5, 14)
+    addDragonSeg(0.62, 0.79, 8.5, 5.5, 155, 0.5, 14)
+    addDragonSeg(0.72, 0.72, 7.5, 4.2, 130, 0.5, 14)
+    addDragonSeg(0.78, 0.63, 6, 2.8, 110, 0.5, 14)
+
+    -- 5 gai bờm sắc nhọn dọc sống lưng bên trái
+    addDragonSeg(0.28, 0.27, 9, 3.2, 15, 0.45, 13)
+    addDragonSeg(0.20, 0.36, 10, 3.4, -8, 0.45, 13)
+    addDragonSeg(0.16, 0.48, 10, 3.4, -30, 0.45, 13)
+    addDragonSeg(0.17, 0.61, 9.5, 3.2, -52, 0.45, 13)
+    addDragonSeg(0.23, 0.73, 8.5, 3.0, -72, 0.45, 13)
+
+    -- 2 sừng dài vuốt ngược lên đỉnh đầu
+    addDragonSeg(0.39, 0.19, 12, 3.2, 32, 0.45, 14)
+    addDragonSeg(0.29, 0.13, 6, 2.2, 40, 0.5, 14)
+    addDragonSeg(0.49, 0.19, 9.5, 2.6, 40, 0.45, 13)
+
+    -- Đầu rồng, hàm trên, mũi quặp và hàm dưới há rộng
+    addDragonSeg(0.50, 0.29, 11, 5.8, 12, 0.4, 15)
+    addDragonSeg(0.63, 0.34, 10.5, 4.6, 22, 0.4, 15)
+    addDragonSeg(0.74, 0.38, 4.2, 3.8, 48, 0.35, 15)
+    addDragonSeg(0.42, 0.39, 6.5, 2.8, -18, 0.45, 14)
+    addDragonSeg(0.58, 0.46, 9.5, 3.2, 36, 0.4, 14)
+    addDragonSeg(0.51, 0.49, 5, 2.2, -25, 0.45, 14)
+
+    -- Răng nanh trên & dưới
+    local fang1 = Instance.new("Frame", artHolder)
+    fang1.Size = UDim2.new(0, 2, 0, 3); fang1.AnchorPoint = Vector2.new(0.5, 0.5); fang1.Position = UDim2.new(0.69, 0, 0.41, 0)
+    fang1.Rotation = 15; fang1.BackgroundColor3 = Color3.fromRGB(255, 245, 220); fang1.BorderSizePixel = 0; fang1.ZIndex = 14
+    Instance.new("UICorner", fang1).CornerRadius = UDim.new(0.4, 0)
+
+    local fang2 = Instance.new("Frame", artHolder)
+    fang2.Size = UDim2.new(0, 1.8, 0, 2.6); fang2.AnchorPoint = Vector2.new(0.5, 0.5); fang2.Position = UDim2.new(0.64, 0, 0.47, 0)
+    fang2.Rotation = -15; fang2.BackgroundColor3 = Color3.fromRGB(255, 245, 220); fang2.BorderSizePixel = 0; fang2.ZIndex = 14
+    Instance.new("UICorner", fang2).CornerRadius = UDim.new(0.4, 0)
+
+    -- Mắt rồng phát sáng
+    local eyeSocket = Instance.new("Frame", artHolder)
+    eyeSocket.Size = UDim2.new(0, 5.2, 0, 2.5); eyeSocket.AnchorPoint = Vector2.new(0.5, 0.5)
+    eyeSocket.Position = UDim2.new(0.57, 0, 0.31, 0); eyeSocket.Rotation = 22
+    eyeSocket.BackgroundColor3 = Color3.fromRGB(20, 6, 12); eyeSocket.BorderSizePixel = 0; eyeSocket.ZIndex = 16
+    Instance.new("UICorner", eyeSocket).CornerRadius = UDim.new(1, 0)
+
+    local eyeGlow = Instance.new("Frame", eyeSocket)
+    eyeGlow.Size = UDim2.new(0, 3.4, 0, 1.5); eyeGlow.AnchorPoint = Vector2.new(0.5, 0.5)
+    eyeGlow.Position = UDim2.new(0.55, 0, 0.5, 0); eyeGlow.BorderSizePixel = 0; eyeGlow.ZIndex = 17
+    Instance.new("UICorner", eyeGlow).CornerRadius = UDim.new(1, 0)
+
+    -- Luồng lửa phun ra từ miệng rồng (chỉ hiện khi Menu đang MỞ)
+    local fireHolder = Instance.new("Frame", artHolder)
+    fireHolder.Size = UDim2.new(1, 0, 1, 0); fireHolder.BackgroundTransparency = 1; fireHolder.ZIndex = 13
+
+    local function addFlameTongue(xS, yS, w, h, rot, col1, col2, zI)
+        local fl = Instance.new("Frame", fireHolder)
+        fl.Size = UDim2.new(0, w, 0, h); fl.AnchorPoint = Vector2.new(0.5, 0.5)
+        fl.Position = UDim2.new(xS, 0, yS, 0); fl.Rotation = rot
+        fl.BackgroundColor3 = Color3.fromRGB(255, 255, 255); fl.BorderSizePixel = 0; fl.ZIndex = zI
+        Instance.new("UICorner", fl).CornerRadius = UDim.new(0.5, 0)
+        addSoftGradient(fl, col1, col2, 45)
+    end
+    addFlameTongue(0.71, 0.51, 13, 5.5, 32, Color3.fromRGB(255, 120, 20), Color3.fromRGB(220, 35, 10), 13)
+    addFlameTongue(0.78, 0.58, 12, 6.5, 42, Color3.fromRGB(255, 95, 15), Color3.fromRGB(195, 20, 10), 13)
+    addFlameTongue(0.74, 0.47, 10, 4.0, 18, Color3.fromRGB(255, 180, 30), Color3.fromRGB(245, 75, 15), 14)
+    addFlameTongue(0.69, 0.50, 9.5, 3.8, 34, Color3.fromRGB(255, 245, 130), Color3.fromRGB(255, 165, 25), 15)
+    addFlameTongue(0.77, 0.55, 8.5, 4.2, 38, Color3.fromRGB(255, 235, 95), Color3.fromRGB(255, 130, 20), 15)
+
+    syncDragonButtonState = function(isOpen)
+        fireHolder.Visible = isOpen
+        if isOpen then
+            -- Trạng thái MỞ: Rồng Lửa Đỏ Cam (giống hình trái trong 1000085170.png)
+            sphereGrad.Color = ColorSequence.new({
+                ColorSequenceKeypoint.new(0, Color3.fromRGB(138, 22, 14)),
+                ColorSequenceKeypoint.new(0.55, Color3.fromRGB(64, 10, 10)),
+                ColorSequenceKeypoint.new(1, Color3.fromRGB(22, 4, 6))
+            })
+            sphereRim.Color = Color3.fromRGB(225, 75, 35)
+            shineDot.BackgroundColor3 = Color3.fromRGB(245, 110, 85)
+            shineOval.BackgroundColor3 = Color3.fromRGB(245, 110, 85)
+            eyeGlow.BackgroundColor3 = Color3.fromRGB(255, 245, 150)
+            fang1.BackgroundColor3 = Color3.fromRGB(255, 235, 180)
+            fang2.BackgroundColor3 = Color3.fromRGB(255, 235, 180)
+            local dragonFireSeq = ColorSequence.new({
+                ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 210, 55)),
+                ColorSequenceKeypoint.new(0.55, Color3.fromRGB(250, 125, 22)),
+                ColorSequenceKeypoint.new(1, Color3.fromRGB(205, 42, 12))
+            })
+            for _, g in ipairs(bodyGrads) do g.Color = dragonFireSeq end
+        else
+            -- Trạng thái ĐÓNG: Rồng Tím Hắc Ám (giống hình phải trong 1000085170.png)
+            sphereGrad.Color = ColorSequence.new({
+                ColorSequenceKeypoint.new(0, Color3.fromRGB(86, 28, 155)),
+                ColorSequenceKeypoint.new(0.55, Color3.fromRGB(36, 12, 74)),
+                ColorSequenceKeypoint.new(1, Color3.fromRGB(12, 4, 28))
+            })
+            sphereRim.Color = Color3.fromRGB(155, 85, 240)
+            shineDot.BackgroundColor3 = Color3.fromRGB(165, 115, 240)
+            shineOval.BackgroundColor3 = Color3.fromRGB(165, 115, 240)
+            eyeGlow.BackgroundColor3 = Color3.fromRGB(255, 75, 245)
+            fang1.BackgroundColor3 = Color3.fromRGB(235, 215, 255)
+            fang2.BackgroundColor3 = Color3.fromRGB(235, 215, 255)
+            local dragonPurpleSeq = ColorSequence.new({
+                ColorSequenceKeypoint.new(0, Color3.fromRGB(225, 190, 255)),
+                ColorSequenceKeypoint.new(0.55, Color3.fromRGB(162, 105, 245)),
+                ColorSequenceKeypoint.new(1, Color3.fromRGB(98, 48, 185))
+            })
+            for _, g in ipairs(bodyGrads) do g.Color = dragonPurpleSeq end
+        end
+        if not State.RGB then
+            openStroke.Color = Color3.fromRGB(236, 242, 250)
+        end
+    end
+    syncDragonButtonState(true)
+end
 
 local function clickAnimate(obj)
     local scale = obj:FindFirstChildOfClass("UIScale") or Instance.new("UIScale", obj)
@@ -365,7 +529,7 @@ do
 
     titleLabel = Instance.new("TextLabel", header)
     titleLabel.Size = UDim2.new(0, 175, 0, 16); titleLabel.Position = UDim2.new(0, 43, 0, 5); titleLabel.BackgroundTransparency = 1
-    titleLabel.Text = "✨ MENU VIP PRO MAX"
+    titleLabel.Text = "🇻🇳 MENU VIP PRO MAX"
     titleLabel.TextColor3 = Theme.TextTitle; titleLabel.Font = Enum.Font.GothamBlack; titleLabel.TextSize = 11.5; titleLabel.TextXAlignment = Enum.TextXAlignment.Left; titleLabel.ZIndex = 12
 
     local subTitleLabel = Instance.new("TextLabel", header)
@@ -597,7 +761,7 @@ do
             titleLabel.TextColor3 = Theme.TextTitle
             frameStroke.Color = Theme.Brand
             avatarStroke.Color = Theme.Brand
-            openStroke.Color = opened and Theme.Brand or Theme.AccentOff
+            openStroke.Color = Color3.fromRGB(236, 242, 250)
         end
         verBadge.BackgroundColor3 = Color3.fromRGB(18, 21, 30)
         verBadge.TextColor3 = getSoftBrandColor(Theme.Brand)
@@ -736,8 +900,9 @@ do
 
     local function toggleMenuWindow()
         opened = not opened
+        if syncDragonButtonState then syncDragonButtonState(opened) end
         if not State.RGB then
-            TweenService:Create(openStroke, TweenInfo.new(0.3), {Color = opened and Theme.Brand or Theme.AccentOff}):Play()
+            openStroke.Color = Color3.fromRGB(236, 242, 250)
         end
         if opened then
             frameScale.Scale = currentMenuScale * 0.88
@@ -1533,7 +1698,7 @@ createToggle(page4, "🌈 Chế độ viền RGB", "RGB", function(v)
         titleLabel.TextColor3 = Theme.TextTitle
         frameStroke.Color = Theme.Brand
         avatarStroke.Color = Theme.Brand
-        openStroke.Color = opened and Theme.Brand or Theme.AccentOff
+        openStroke.Color = Color3.fromRGB(236, 242, 250)
         cleanRGBElements()
         for _, obj in pairs(RGBElements) do
             if obj.Stroke and obj.Stroke.Parent then
@@ -1994,13 +2159,15 @@ do
                 nowPlayingLabel.Text = "<font color='#9AA4B8'>🎵 Đang phát:</font> <font color='#D8B868'>" .. name .. "</font>"
             end
         end)
-        currentSound = Instance.new("Sound")
-        currentSound.SoundId = "rbxassetid://" .. soundId
-        currentSound.Volume = State.MusicVolume
-        currentSound.PlaybackSpeed = getCurrentSpeedPreset().Speed
-        currentSound.Looped = State.MusicLoop
-        currentSound.Parent = workspace
-        currentSound.Ended:Connect(function()
+        local soundObj = Instance.new("Sound")
+        soundObj.Name = "MenuVipMusic"
+        soundObj.SoundId = "rbxassetid://" .. soundId
+        soundObj.Volume = State.MusicVolume
+        soundObj.PlaybackSpeed = getCurrentSpeedPreset().Speed
+        soundObj.Looped = State.MusicLoop
+        soundObj.Parent = SoundService
+        currentSound = soundObj
+        soundObj.Ended:Connect(function()
             if not State.MusicLoop then
                 if #savedMusicList > 0 then
                     local cx = 0; for i, v in ipairs(savedMusicList) do if v.id == currentMusicId then cx = i; break end end
@@ -2011,8 +2178,18 @@ do
                 end
             end
         end)
-        currentSound:Play()
+        soundObj:Play()
         if syncPlayPauseBtnVisual then syncPlayPauseBtnVisual() end
+
+        task.delay(3.5, function()
+            if currentSound == soundObj and currentMusicId == soundId then
+                if not soundObj.IsLoaded or soundObj.TimeLength <= 0 then
+                    stopMusic()
+                    nowPlayingLabel.Text = "<font color='#E05666'>⚠️ Không phát được (ID Private hoặc bị khóa)</font>"
+                    MakeToast("⚠️ ID Private / Bị Khóa", "Bài nhạc này là ID Private nên không phát được ở game này!", Theme.AccentOff)
+                end
+            end
+        end)
     end
 
     noteBadge.MouseButton1Click:Connect(function()
