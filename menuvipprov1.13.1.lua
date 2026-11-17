@@ -1639,25 +1639,27 @@ createDualButtons(
 )
 
 -- ==========================================
--- [TAB 5: NHẠC ID (GIAO DIỆN NÚT TRÒN & PILL 3D GLOSSY THEO MẪU)]
+-- [TAB 5: NHẠC ID (GIAO DIỆN NÚT TRÒN 3D GLOSSY + ICON LƯU / LẶP / ĐỒNG HỒ TỐC ĐỘ)]
 -- ==========================================
 local currentSound = nil; local currentMusicId = ""; local savedMusicList = {}; local isMusicPaused = false
 do
     local GlossPalette = {
-        RimWhite = Color3.fromRGB(232, 240, 248),
+        RimWhite = Color3.fromRGB(234, 240, 248),
         RimActive = Color3.fromRGB(92, 235, 168),
-        OuterBevel = Color3.fromRGB(26, 40, 52),
-        InnerTop = Color3.fromRGB(64, 92, 114),
+        OuterBevel = Color3.fromRGB(24, 38, 50),
+        InnerTop = Color3.fromRGB(62, 90, 112),
+        InnerMid = Color3.fromRGB(48, 71, 89),
         InnerBottom = Color3.fromRGB(34, 52, 68),
         InnerActiveTop = Color3.fromRGB(46, 112, 92),
+        InnerActiveMid = Color3.fromRGB(35, 88, 73),
         InnerActiveBottom = Color3.fromRGB(24, 64, 54),
         InnerStroke = Color3.fromRGB(88, 120, 145),
-        IconWhite = Color3.fromRGB(242, 246, 252),
-        IconShadow = Color3.fromRGB(178, 190, 204),
-        Shine = Color3.fromRGB(175, 212, 238)
+        IconWhite = Color3.fromRGB(244, 248, 252),
+        IconShadow = Color3.fromRGB(182, 194, 208),
+        Shine = Color3.fromRGB(165, 208, 235)
     }
 
-    -- Hàm tạo nút tròn 3D Glossy viền trắng + bóng kính (giống hệt ảnh mẫu)
+    -- Hàm tạo nút tròn 3D Glossy viền trắng + vệt bóng kính góc trên phải giống ảnh mẫu 1000085139.png
     local function createGlossyCircleBtn(parent, diameter, posUDim, anchorPt)
         local outer = Instance.new("TextButton", parent)
         outer.Size = UDim2.new(0, diameter, 0, diameter)
@@ -1672,7 +1674,7 @@ do
         local rimStroke = Instance.new("UIStroke", outer)
         rimStroke.Color = GlossPalette.RimWhite
         rimStroke.Thickness = 1.6
-        rimStroke.Transparency = 0.06
+        rimStroke.Transparency = 0.05
         rimStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 
         local pad = math.max(3, math.floor(diameter * 0.11))
@@ -1691,26 +1693,26 @@ do
         innerStroke.Thickness = 0.9
         innerStroke.Transparency = 0.35
 
-        -- 2 vệt bóng kính (Specular highlight) góc trên trái giống ảnh mẫu
-        local shine1 = Instance.new("Frame", inner)
-        shine1.Size = UDim2.new(0, math.max(4, math.floor(diameter * 0.16)), 0, math.max(2, math.floor(diameter * 0.08)))
-        shine1.Position = UDim2.new(0.22, 0, 0.13, 0)
-        shine1.Rotation = -28
-        shine1.BackgroundColor3 = GlossPalette.Shine
-        shine1.BackgroundTransparency = 0.38
-        shine1.BorderSizePixel = 0
-        shine1.ZIndex = 13
-        Instance.new("UICorner", shine1).CornerRadius = UDim.new(1, 0)
+        -- 2 vệt bóng kính góc trên phải (giống mẫu 1000085139.png)
+        local sDot = math.max(2, math.floor(diameter * 0.08))
+        local shineDot = Instance.new("Frame", inner)
+        shineDot.Size = UDim2.new(0, sDot, 0, sDot)
+        shineDot.Position = UDim2.new(0.56, 0, 0.11, 0)
+        shineDot.BackgroundColor3 = GlossPalette.Shine
+        shineDot.BackgroundTransparency = 0.45
+        shineDot.BorderSizePixel = 0
+        shineDot.ZIndex = 13
+        Instance.new("UICorner", shineDot).CornerRadius = UDim.new(1, 0)
 
-        local shine2 = Instance.new("Frame", inner)
-        local s2 = math.max(2, math.floor(diameter * 0.08))
-        shine2.Size = UDim2.new(0, s2, 0, s2)
-        shine2.Position = UDim2.new(0.42, 0, 0.10, 0)
-        shine2.BackgroundColor3 = GlossPalette.Shine
-        shine2.BackgroundTransparency = 0.48
-        shine2.BorderSizePixel = 0
-        shine2.ZIndex = 13
-        Instance.new("UICorner", shine2).CornerRadius = UDim.new(1, 0)
+        local shineOval = Instance.new("Frame", inner)
+        shineOval.Size = UDim2.new(0, math.max(4, math.floor(diameter * 0.16)), 0, sDot)
+        shineOval.Position = UDim2.new(0.66, 0, 0.15, 0)
+        shineOval.Rotation = 28
+        shineOval.BackgroundColor3 = GlossPalette.Shine
+        shineOval.BackgroundTransparency = 0.38
+        shineOval.BorderSizePixel = 0
+        shineOval.ZIndex = 13
+        Instance.new("UICorner", shineOval).CornerRadius = UDim.new(1, 0)
 
         local iconHolder = Instance.new("Frame", inner)
         iconHolder.Name = "IconHolder"
@@ -1721,7 +1723,7 @@ do
         return outer, iconHolder, rimStroke, innerGrad
     end
 
-    -- Hàm tạo thanh Pill dài 3D Glossy viền trắng + bóng kính (giống 2 thanh dài góc dưới phải ảnh mẫu)
+    -- Hàm tạo thanh Pill dài 3D Glossy viền trắng
     local function createGlossyPillFrame(parent, sizeUDim, posUDim, order)
         local outer = Instance.new("Frame", parent)
         outer.Size = sizeUDim
@@ -1752,33 +1754,14 @@ do
         innerStroke.Thickness = 0.9
         innerStroke.Transparency = 0.38
 
-        local shineL = Instance.new("Frame", inner)
-        shineL.Size = UDim2.new(0, 7, 0, 3)
-        shineL.Position = UDim2.new(0, 10, 0, 4)
-        shineL.Rotation = -18
-        shineL.BackgroundColor3 = GlossPalette.Shine
-        shineL.BackgroundTransparency = 0.42
-        shineL.BorderSizePixel = 0
-        shineL.ZIndex = 12
-        Instance.new("UICorner", shineL).CornerRadius = UDim.new(1, 0)
-
-        local shineR = Instance.new("Frame", inner)
-        shineR.Size = UDim2.new(0, 7, 0, 3)
-        shineR.Position = UDim2.new(1, -18, 0, 4)
-        shineR.Rotation = 18
-        shineR.BackgroundColor3 = GlossPalette.Shine
-        shineR.BackgroundTransparency = 0.42
-        shineR.BorderSizePixel = 0
-        shineR.ZIndex = 12
-        Instance.new("UICorner", shineR).CornerRadius = UDim.new(1, 0)
-
         return outer, inner, rimStroke
     end
 
-    -- Bộ vẽ biểu tượng vector trắng nổi khối 3D (Play, Stop, Pause, Menu, Gear, Loop, Cross, Check, MusicNote)
+    -- Bộ vẽ biểu tượng vector trắng nổi khối 3D (bao gồm 3 icon mới: Floppy, DoubleLoop, Stopwatch)
     local function drawGlossyIcon(holder, iconType, scale)
         local sc = scale or 1
-        local function makeWhitePart(w, h, xOff, yOff, rot, radiusScale)
+        local extraRefs = {}
+        local function makeWhitePart(w, h, xOff, yOff, rot, radiusScale, zIdx)
             local f = Instance.new("Frame", holder)
             f.Size = UDim2.new(0, w * sc, 0, h * sc)
             f.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -1786,77 +1769,113 @@ do
             if rot then f.Rotation = rot end
             f.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
             f.BorderSizePixel = 0
-            f.ZIndex = 15
+            f.ZIndex = zIdx or 15
             Instance.new("UICorner", f).CornerRadius = UDim.new(radiusScale or 0.45, 0)
             addSoftGradient(f, GlossPalette.IconWhite, GlossPalette.IconShadow, 90)
             return f
         end
 
+        local function makeDarkCutout(w, h, xOff, yOff, rot, radiusScale, zIdx)
+            local f = Instance.new("Frame", holder)
+            f.Size = UDim2.new(0, w * sc, 0, h * sc)
+            f.AnchorPoint = Vector2.new(0.5, 0.5)
+            f.Position = UDim2.new(0.5, xOff * sc, 0.5, yOff * sc)
+            if rot then f.Rotation = rot end
+            f.BackgroundColor3 = GlossPalette.OuterBevel
+            f.BorderSizePixel = 0
+            f.ZIndex = zIdx or 16
+            Instance.new("UICorner", f).CornerRadius = UDim.new(radiusScale or 0.3, 0)
+            return f
+        end
+
         if iconType == "Play" then
-            -- Tam giác Play trắng bo tròn mượt mà (ghép từ 5 cột bo góc)
             makeWhitePart(3.2, 13, -3.6, 0, 0, 1)
             makeWhitePart(3.2, 10.5, -1.6, 0, 0, 1)
             makeWhitePart(3.2, 8, 0.4, 0, 0, 1)
             makeWhitePart(3.2, 5.5, 2.4, 0, 0, 1)
             makeWhitePart(2.8, 3.2, 4.2, 0, 0, 1)
         elseif iconType == "Stop" then
-            -- Nút vuông bo tròn trắng (Hàng 1 Cột 2)
-            makeWhitePart(12, 12, 0, 0, 0, 0.28)
+            makeWhitePart(11.5, 11.5, 0, 0, 0, 0.28)
         elseif iconType == "Pause" then
-            -- 2 thanh dọc trắng song song (Hàng 1 Cột 3)
-            makeWhitePart(4.2, 13, -3.4, 0, 0, 0.35)
-            makeWhitePart(4.2, 13, 3.4, 0, 0, 0.35)
-        elseif iconType == "Menu" then
-            -- 3 thanh ngang trắng (Hàng 1 Cột 4)
-            makeWhitePart(13, 3.0, 0, -4.4, 0, 0.5)
-            makeWhitePart(13, 3.0, 0, 0, 0, 0.5)
-            makeWhitePart(13, 3.0, 0, 4.4, 0, 0.5)
+            makeWhitePart(4.0, 12.5, -3.3, 0, 0, 0.35)
+            makeWhitePart(4.0, 12.5, 3.3, 0, 0, 0.35)
         elseif iconType == "Cross" then
-            -- Dấu X trắng bo tròn (Hàng 2 Cột 3)
-            makeWhitePart(14, 3.6, 0, 0, 45, 0.5)
-            makeWhitePart(14, 3.6, 0, 0, -45, 0.5)
-        elseif iconType == "Check" then
-            -- Dấu tích V trắng bo tròn (Hàng 2 Cột 4)
-            makeWhitePart(6.5, 3.6, -3.2, 2.0, 45, 0.5)
-            makeWhitePart(12.5, 3.6, 2.2, -0.5, -45, 0.5)
-        elseif iconType == "Loop" then
-            -- Mũi tên xoay vòng trắng (Hàng 2 Cột 2)
+            makeWhitePart(13.5, 3.4, 0, 0, 45, 0.5)
+            makeWhitePart(13.5, 3.4, 0, 0, -45, 0.5)
+        elseif iconType == "MusicNote" then
+            makeWhitePart(6.6, 4.8, -1.8, 3.6, -22, 1)
+            makeWhitePart(2.5, 11.2, 0.8, -1.0, 8, 0.4)
+            makeWhitePart(6.0, 2.7, 3.1, -4.5, 24, 0.5)
+        elseif iconType == "Floppy" then
+            -- Icon 1 trong ảnh 1000085139.png: Đĩa mềm Lưu (Floppy Disk)
+            makeWhitePart(13.5, 13.5, 0, 0, 0, 0.22, 15)
+            -- Khe trượt phía trên (khung tối + chốt trắng bên phải)
+            makeDarkCutout(7.6, 4.8, -0.4, -4.2, 0, 0.25, 16)
+            makeWhitePart(2.5, 3.4, 1.3, -4.2, 0, 0.3, 17)
+            -- Nhãn trắng phía dưới có 2 vạch ngang
+            makeDarkCutout(10.2, 6.2, 0, 3.6, 0, 0.22, 16)
+            makeWhitePart(8.4, 5.0, 0, 3.8, 0, 0.2, 17)
+            makeDarkCutout(5.4, 1.1, 0, 2.9, 0, 0.5, 18)
+            makeDarkCutout(5.4, 1.1, 0, 4.6, 0, 0.5, 18)
+        elseif iconType == "DoubleLoop" then
+            -- Icon 2 trong ảnh 1000085139.png: 2 mũi tên xoay vòng (Lặp lại)
             local ring = Instance.new("Frame", holder)
-            ring.Size = UDim2.new(0, 12 * sc, 0, 12 * sc)
+            ring.Size = UDim2.new(0, 12.6 * sc, 0, 12.6 * sc)
             ring.AnchorPoint = Vector2.new(0.5, 0.5)
-            ring.Position = UDim2.new(0.5, 0.5 * sc, 0.5, 0.5 * sc)
+            ring.Position = UDim2.new(0.5, 0, 0.5, 0)
             ring.BackgroundTransparency = 1
             ring.ZIndex = 15
             Instance.new("UICorner", ring).CornerRadius = UDim.new(1, 0)
             local rSt = Instance.new("UIStroke", ring)
             rSt.Color = GlossPalette.IconWhite
-            rSt.Thickness = 2.4 * sc
-            makeWhitePart(5.2, 2.5, -4.2, -2.5, -35, 0.5)
-            makeWhitePart(5.2, 2.5, -2.2, -2.5, 55, 0.5)
-        elseif iconType == "Gear" then
-            -- Bánh răng trắng (Hàng 2 Cột 1)
-            makeWhitePart(14, 3.2, 0, 0, 0, 0.4)
-            makeWhitePart(14, 3.2, 0, 0, 45, 0.4)
-            makeWhitePart(14, 3.2, 0, 0, 90, 0.4)
-            makeWhitePart(14, 3.2, 0, 0, 135, 0.4)
-            makeWhitePart(10, 10, 0, 0, 0, 1)
-            local hole = Instance.new("Frame", holder)
-            hole.Size = UDim2.new(0, 4.6 * sc, 0, 4.6 * sc)
-            hole.AnchorPoint = Vector2.new(0.5, 0.5)
-            hole.Position = UDim2.new(0.5, 0, 0.5, 0)
-            hole.BackgroundColor3 = GlossPalette.InnerBottom
-            hole.BorderSizePixel = 0
-            hole.ZIndex = 16
-            Instance.new("UICorner", hole).CornerRadius = UDim.new(1, 0)
-        elseif iconType == "MusicNote" then
-            -- Nốt nhạc trắng (Hàng 3 & 4 Cột 1)
-            makeWhitePart(6.8, 5.0, -1.8, 3.8, -22, 1)
-            makeWhitePart(2.6, 11.5, 0.8, -1.0, 8, 0.4)
-            makeWhitePart(6.2, 2.8, 3.2, -4.6, 24, 0.5)
+            rSt.Thickness = 2.5 * sc
+
+            -- 2 khe cắt chéo tạo thành 2 cung mũi tên tách rời trên & dưới
+            local gapL = makeDarkCutout(4.4, 3.4, -5.8, 0.8, -15, 0.3, 16)
+            local gapR = makeDarkCutout(4.4, 3.4, 5.8, -0.8, -15, 0.3, 16)
+            gapL.BackgroundColor3 = GlossPalette.InnerMid
+            gapR.BackgroundColor3 = GlossPalette.InnerMid
+            extraRefs.GapL = gapL
+            extraRefs.GapR = gapR
+
+            -- Đầu mũi tên cung trên (bên phải hướng xuống)
+            makeWhitePart(5.2, 2.4, 4.8, -2.4, 50, 0.45, 17)
+            makeWhitePart(5.2, 2.4, 3.4, -1.6, -40, 0.45, 17)
+            -- Đầu mũi tên cung dưới (bên trái hướng lên)
+            makeWhitePart(5.2, 2.4, -4.8, 2.4, 50, 0.45, 17)
+            makeWhitePart(5.2, 2.4, -3.4, 1.6, -40, 0.45, 17)
+        elseif iconType == "Stopwatch" then
+            -- Icon 3 trong ảnh 1000085139.png: Đồng hồ bấm giờ (Tốc độ nhạc)
+            -- Nút bấm trên đỉnh đồng hồ
+            makeWhitePart(5.4, 2.1, 0, -7.2, 0, 0.45, 16)
+            makeWhitePart(2.4, 2.2, 0, -5.8, 0, 0.2, 15)
+
+            -- Vòng tròn mặt đồng hồ
+            local dial = Instance.new("Frame", holder)
+            dial.Size = UDim2.new(0, 12.2 * sc, 0, 12.2 * sc)
+            dial.AnchorPoint = Vector2.new(0.5, 0.5)
+            dial.Position = UDim2.new(0.5, 0, 0.5, 1.3 * sc)
+            dial.BackgroundTransparency = 1
+            dial.ZIndex = 15
+            Instance.new("UICorner", dial).CornerRadius = UDim.new(1, 0)
+            local dSt = Instance.new("UIStroke", dial)
+            dSt.Color = GlossPalette.IconWhite
+            dSt.Thickness = 2.3 * sc
+
+            -- 4 chấm khắc giờ (12h, 3h, 6h, 9h)
+            makeDarkCutout(1.6, 1.6, 0, -4.5, 0, 1, 16)
+            makeDarkCutout(1.6, 1.6, 0, 7.1, 0, 1, 16)
+            makeDarkCutout(1.6, 1.6, -5.8, 1.3, 0, 1, 16)
+            makeDarkCutout(1.6, 1.6, 5.8, 1.3, 0, 1, 16)
+
+            -- Kim đồng hồ chữ L ở tâm
+            makeWhitePart(2.1, 4.4, -0.5, 0.1, 0, 0.45, 17)
+            makeWhitePart(3.8, 2.1, 0.8, 1.3, 0, 0.45, 17)
         end
+        return extraRefs
     end
 
-    -- 1. KHUNG PILL NHẬP ID NHẠC & THỜI GIAN TUA NHẠC
+    -- 1. KHUNG TRÊN CÙNG: NÚT NỐT NHẠC + PILL NHẬP ID + NÚT LƯU ĐĨA MỀM + THANH TUA NHẠC
     local topMusicCard = Instance.new("Frame", page5)
     topMusicCard.Size = UDim2.new(0.94, 0, 0, 68)
     topMusicCard.BackgroundColor3 = Theme.ItemBg
@@ -1865,13 +1884,12 @@ do
     local tmStroke = Instance.new("UIStroke", topMusicCard); tmStroke.Color = Theme.Stroke; tmStroke.Thickness = 1
     table.insert(RGBElements, {Type = "Info", Stroke = tmStroke})
 
-    -- Nút tròn Nốt Nhạc bên trái + Thanh Pill nhập ID ở giữa + Nút tròn Dán & Lưu (Dấu tích V) bên phải
     local noteBadge, noteHolder = createGlossyCircleBtn(topMusicCard, 28, UDim2.new(0, 6, 0, 4))
     drawGlossyIcon(noteHolder, "MusicNote", 0.85)
 
-    local inputPillOuter, inputPillInner = createGlossyPillFrame(topMusicCard, UDim2.new(1, -108, 0, 28), UDim2.new(0, 38, 0, 4))
+    local inputPillOuter, inputPillInner = createGlossyPillFrame(topMusicCard, UDim2.new(1, -76, 0, 28), UDim2.new(0, 38, 0, 4))
     local musicIdBox = Instance.new("TextBox", inputPillInner)
-    musicIdBox.Size = UDim2.new(1, -18, 1, 0); musicIdBox.Position = UDim2.new(0, 10, 0, 0)
+    musicIdBox.Size = UDim2.new(1, -20, 1, 0); musicIdBox.Position = UDim2.new(0, 10, 0, 0)
     musicIdBox.BackgroundTransparency = 1; musicIdBox.PlaceholderText = "Nhập hoặc dán ID Nhạc..."
     musicIdBox.PlaceholderColor3 = Color3.fromRGB(168, 184, 204); musicIdBox.Text = ""
     musicIdBox.TextColor3 = GlossPalette.IconWhite
@@ -1879,13 +1897,9 @@ do
     musicIdBox.TextXAlignment = Enum.TextXAlignment.Left
     musicIdBox.ClearTextOnFocus = false; musicIdBox.ZIndex = 13
 
-    -- Nút tròn Dán nhanh (Biểu tượng 3 gạch Menu/Clipboard)
-    local pasteIdBtn, pasteHolder = createGlossyCircleBtn(topMusicCard, 28, UDim2.new(1, -64, 0, 4))
-    drawGlossyIcon(pasteHolder, "Menu", 0.82)
-
-    -- Nút tròn Lưu ID (Biểu tượng dấu tích V giống Hàng 2 Cột 4)
-    local saveIdBtn, saveHolder, saveRim = createGlossyCircleBtn(topMusicCard, 28, UDim2.new(1, -33, 0, 4))
-    drawGlossyIcon(saveHolder, "Check", 0.85)
+    -- Nút tròn Lưu ID hình Đĩa mềm (Floppy Disk giống ảnh 1000085139.png)
+    local saveIdBtn, saveHolder = createGlossyCircleBtn(topMusicCard, 28, UDim2.new(1, -34, 0, 4))
+    drawGlossyIcon(saveHolder, "Floppy", 0.86)
 
     local nowPlayingLabel = Instance.new("TextLabel", topMusicCard)
     nowPlayingLabel.Size = UDim2.new(1, -96, 0, 16); nowPlayingLabel.Position = UDim2.new(0, 10, 0, 34)
@@ -2023,8 +2037,9 @@ do
         end
     end
 
-    pasteIdBtn.MouseButton1Click:Connect(function()
-        clickAnimate(pasteIdBtn)
+    -- Bấm vào nút Nốt Nhạc bên trái để dán nhanh ID từ Clipboard (tiện lợi mà không tốn thêm nút)
+    noteBadge.MouseButton1Click:Connect(function()
+        clickAnimate(noteBadge)
         local pasted = nil
         pcall(function() if getclipboard then pasted = getclipboard() end end)
         if pasted and tostring(pasted):match("%d+") then
@@ -2032,51 +2047,55 @@ do
             MakeToast("Đã Dán ID", "ID Nhạc: " .. musicIdBox.Text, Theme.Brand)
         else
             musicIdBox:CaptureFocus()
-            MakeToast("Nhập ID Nhạc", "Hãy dán hoặc gõ mã số ID Nhạc vào ô!", Theme.Brand)
         end
     end)
 
     -- 2. HÀNG ĐIỀU KHIỂN TRUNG TÂM: 5 NÚT TRÒN 3D GLOSSY + THANH PILL ÂM LƯỢNG
     local dockRow = Instance.new("Frame", page5)
-    dockRow.Size = UDim2.new(0.94, 0, 0, 42); dockRow.BackgroundTransparency = 1; dockRow.LayoutOrder = 2
+    dockRow.Size = UDim2.new(0.94, 0, 0, 45); dockRow.BackgroundTransparency = 1; dockRow.LayoutOrder = 2
 
-    -- Cụm 5 nút tròn 3D bên trái: Play (▶), Pause (||), Stop (■), Loop (↺), Speed (⚙)
+    -- Cụm 5 nút tròn 3D bên trái: Play (▶), Pause (||), Stop (■), DoubleLoop (🔄), Stopwatch (⏱️)
     local btnDock = Instance.new("Frame", dockRow)
-    btnDock.Size = UDim2.new(0, 184, 1, 0); btnDock.Position = UDim2.new(0, 0, 0, 0)
+    btnDock.Size = UDim2.new(0, 186, 1, 0); btnDock.Position = UDim2.new(0, 0, 0, 0)
     btnDock.BackgroundTransparency = 1
 
     local function makeDockItem(idx, iconName, labelTxt)
         local slot = Instance.new("Frame", btnDock)
-        slot.Size = UDim2.new(0, 35, 1, 0)
+        slot.Size = UDim2.new(0, 36, 1, 0)
         slot.Position = UDim2.new(0, (idx - 1) * 37, 0, 0)
         slot.BackgroundTransparency = 1
 
         local circleBtn, holder, rimSt, inGrad = createGlossyCircleBtn(slot, 30, UDim2.new(0.5, 0, 0, 0), Vector2.new(0.5, 0))
-        drawGlossyIcon(holder, iconName, 0.88)
+        local refs = drawGlossyIcon(holder, iconName, 0.88)
 
         local subLbl = Instance.new("TextLabel", slot)
-        subLbl.Size = UDim2.new(1, 6, 0, 10); subLbl.Position = UDim2.new(0.5, 0, 1, -10); subLbl.AnchorPoint = Vector2.new(0.5, 0)
+        subLbl.Size = UDim2.new(1, 10, 0, 12); subLbl.Position = UDim2.new(0.5, 0, 0, 31); subLbl.AnchorPoint = Vector2.new(0.5, 0)
         subLbl.BackgroundTransparency = 1; subLbl.Text = labelTxt
-        subLbl.TextColor3 = Theme.TextDim; subLbl.Font = Enum.Font.GothamSemibold; subLbl.TextSize = 7.5; subLbl.ZIndex = 12
+        subLbl.TextColor3 = Color3.fromRGB(162, 174, 196); subLbl.Font = Enum.Font.GothamSemibold; subLbl.TextSize = 8; subLbl.ZIndex = 12
 
-        return circleBtn, subLbl, rimSt, inGrad
+        return circleBtn, subLbl, rimSt, inGrad, refs
     end
 
     local btnPlay, lblPlay = makeDockItem(1, "Play", "Phát")
-    local btnPause, lblPause = makeDockItem(2, "Pause", "Tạm dừng")
+    local btnPause, lblPause = makeDockItem(2, "Pause", "Dừng")
     local btnStop, lblStop = makeDockItem(3, "Stop", "Tắt")
-    local btnLoop, lblLoop, rimLoop, gradLoop = makeDockItem(4, "Loop", State.MusicLoop and "Lặp: Bật" or "Lặp: Tắt")
-    local btnSpeed, lblSpeed = makeDockItem(5, "Gear", getCurrentSpeedPreset().Short:match("^[%d%.]+x") or "1.0x")
+    local btnLoop, lblLoop, rimLoop, gradLoop, loopRefs = makeDockItem(4, "DoubleLoop", State.MusicLoop and "Lặp: Bật" or "Lặp: Tắt")
+    local btnSpeed, lblSpeed = makeDockItem(5, "Stopwatch", getCurrentSpeedPreset().Short:match("^[%d%.]+x") or "1.0x")
 
     local function syncLoopVisual()
         local on = State.MusicLoop
         lblLoop.Text = on and "Lặp: Bật" or "Lặp: Tắt"
-        lblLoop.TextColor3 = on and GlossPalette.RimActive or Theme.TextDim
+        lblLoop.TextColor3 = on and GlossPalette.RimActive or Color3.fromRGB(162, 174, 196)
         rimLoop.Color = on and GlossPalette.RimActive or GlossPalette.RimWhite
         gradLoop.Color = ColorSequence.new({
             ColorSequenceKeypoint.new(0, on and GlossPalette.InnerActiveTop or GlossPalette.InnerTop),
             ColorSequenceKeypoint.new(1, on and GlossPalette.InnerActiveBottom or GlossPalette.InnerBottom)
         })
+        if loopRefs and loopRefs.GapL and loopRefs.GapR then
+            local midCol = on and GlossPalette.InnerActiveMid or GlossPalette.InnerMid
+            loopRefs.GapL.BackgroundColor3 = midCol
+            loopRefs.GapR.BackgroundColor3 = midCol
+        end
     end
     syncLoopVisual()
 
@@ -2085,15 +2104,15 @@ do
         clickAnimate(btnPause)
         if currentSound then
             if isMusicPaused then
-                currentSound:Resume(); isMusicPaused = false; lblPause.Text = "Tạm dừng"
+                currentSound:Resume(); isMusicPaused = false; lblPause.Text = "Dừng"
                 MakeToast("Tiếp tục phát", "Đã tiếp tục bài nhạc", Theme.AccentOn)
             else
-                currentSound:Pause(); isMusicPaused = true; lblPause.Text = "Tiếp tục"
+                currentSound:Pause(); isMusicPaused = true; lblPause.Text = "Tiếp"
                 MakeToast("Tạm dừng", "Đã tạm dừng bài nhạc", Theme.Brand)
             end
         end
     end)
-    btnStop.MouseButton1Click:Connect(function() clickAnimate(btnStop); lblPause.Text = "Tạm dừng"; stopMusic() end)
+    btnStop.MouseButton1Click:Connect(function() clickAnimate(btnStop); lblPause.Text = "Dừng"; stopMusic() end)
     btnLoop.MouseButton1Click:Connect(function()
         clickAnimate(btnLoop)
         State.MusicLoop = not State.MusicLoop
@@ -2111,16 +2130,16 @@ do
         if State.AutoSave then saveConfig() end
     end)
 
-    -- Thanh Pill 3D chỉnh Âm lượng bên phải cụm nút tròn
-    local volPillOuter, volPillInner = createGlossyPillFrame(dockRow, UDim2.new(1, -190, 0, 32), UDim2.new(0, 190, 0, 1))
+    -- Thanh Pill 3D chỉnh Âm lượng bên phải cụm 5 nút tròn
+    local volPillOuter, volPillInner = createGlossyPillFrame(dockRow, UDim2.new(1, -190, 0, 32), UDim2.new(0, 190, 0, 0))
     local volTitle = Instance.new("TextLabel", volPillInner)
-    volTitle.Size = UDim2.new(1, -18, 0, 12); volTitle.Position = UDim2.new(0, 10, 0, 2)
-    volTitle.BackgroundTransparency = 1; volTitle.Text = "🔊 Âm lượng: " .. tostring(State.MusicVolume)
+    volTitle.Size = UDim2.new(1, -20, 0, 12); volTitle.Position = UDim2.new(0, 10, 0, 2)
+    volTitle.BackgroundTransparency = 1; volTitle.Text = "Âm lượng: " .. tostring(State.MusicVolume)
     volTitle.TextColor3 = GlossPalette.IconWhite; volTitle.Font = Enum.Font.GothamSemibold; volTitle.TextSize = 8.5
-    volTitle.TextXAlignment = Enum.TextXAlignment.Left; volTitle.ZIndex = 13
+    volTitle.TextXAlignment = Enum.TextXAlignment.Center; volTitle.ZIndex = 13
 
     local volTrack = Instance.new("Frame", volPillInner)
-    volTrack.Size = UDim2.new(1, -20, 0, 5); volTrack.Position = UDim2.new(0, 10, 0, 17)
+    volTrack.Size = UDim2.new(1, -22, 0, 5); volTrack.Position = UDim2.new(0, 11, 0, 17)
     volTrack.BackgroundColor3 = Color3.fromRGB(18, 28, 38); volTrack.BorderSizePixel = 0; volTrack.ZIndex = 13
     Instance.new("UICorner", volTrack).CornerRadius = UDim.new(1, 0)
 
@@ -2138,7 +2157,7 @@ do
     local function updateVolSlider(input)
         local pos = math.clamp((input.Position.X - volTrack.AbsolutePosition.X) / math.max(1, volTrack.AbsoluteSize.X), 0, 1)
         local value = math.floor(10 * pos)
-        volTitle.Text = "🔊 Âm lượng: " .. tostring(value)
+        volTitle.Text = "Âm lượng: " .. tostring(value)
         TweenService:Create(volFill, TweenInfo.new(0.08), {Size = UDim2.new(pos, 0, 1, 0)}):Play()
         TweenService:Create(volKnob, TweenInfo.new(0.08), {Position = UDim2.new(pos, 0, 0.5, 0)}):Play()
         State.MusicVolume = value
@@ -2157,9 +2176,9 @@ do
         if input == volDragInput then volDragInput = nil end
     end)
 
-    -- 3. KHUNG DANH SÁCH NHẠC ĐÃ LƯU (MỖI BÀI LÀ 1 THANH PILL 3D + NÚT TRÒN PLAY & XÓA)
+    -- 3. KHUNG DANH SÁCH NHẠC ĐÃ LƯU
     local musicListCard = Instance.new("Frame", page5)
-    musicListCard.Size = UDim2.new(0.94, 0, 1, -126); musicListCard.BackgroundColor3 = Color3.fromRGB(20, 22, 31); musicListCard.LayoutOrder = 3; musicListCard.ZIndex = 10
+    musicListCard.Size = UDim2.new(0.94, 0, 1, -130); musicListCard.BackgroundColor3 = Color3.fromRGB(20, 22, 31); musicListCard.LayoutOrder = 3; musicListCard.ZIndex = 10
     Instance.new("UICorner", musicListCard).CornerRadius = UDim.new(0, 8)
     local mlStroke = Instance.new("UIStroke", musicListCard); mlStroke.Color = Theme.Stroke; mlStroke.Thickness = 1; table.insert(RGBElements, {Type = "Info", Stroke = mlStroke})
 
@@ -2170,7 +2189,7 @@ do
     local emptyMusicState = Instance.new("TextLabel", musicListCard)
     emptyMusicState.Size = UDim2.new(1, -24, 1, -26); emptyMusicState.Position = UDim2.new(0, 12, 0, 22)
     emptyMusicState.BackgroundTransparency = 1; emptyMusicState.RichText = true
-    emptyMusicState.Text = "🎶 Chưa có bài nhạc nào được lưu.\n<font color='#7E889E'>Nhập ID Nhạc ở trên rồi bấm nút dấu tích (✔) để thêm!</font>"
+    emptyMusicState.Text = "🎶 Chưa có bài nhạc nào được lưu.\n<font color='#7E889E'>Nhập ID Nhạc ở trên rồi bấm nút Lưu đĩa mềm bên phải để thêm!</font>"
     emptyMusicState.TextColor3 = Theme.TextDim; emptyMusicState.Font = Enum.Font.GothamSemibold; emptyMusicState.TextSize = 9.5
     emptyMusicState.LineHeight = 1.25; emptyMusicState.TextWrapped = true
     emptyMusicState.TextXAlignment = Enum.TextXAlignment.Center; emptyMusicState.TextYAlignment = Enum.TextYAlignment.Center; emptyMusicState.ZIndex = 11
@@ -2235,7 +2254,7 @@ do
                 MakeToast("Đã lưu bài nhạc", name, Theme.AccentOn)
             end)
         else
-            MakeToast("Chưa có ID", "Hãy nhập ID Nhạc trước khi bấm nút Lưu (✔)!", Theme.AccentOff)
+            MakeToast("Chưa có ID", "Hãy nhập ID Nhạc trước khi bấm nút Lưu!", Theme.AccentOff)
         end
     end)
     renderSavedMusic()
