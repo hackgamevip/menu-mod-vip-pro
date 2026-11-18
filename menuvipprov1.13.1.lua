@@ -1,5 +1,5 @@
 -- ==========================================
--- MENU VIP PRO MAX V1.23.0 (LUXURY CYBER-GLASS & BENTO SIDEBAR EDITION)
+-- MENU VIP PRO MAX V1.24.0 (LUXURY CYBER-GLASS & BENTO SIDEBAR EDITION)
 -- ==========================================
 repeat task.wait() until game:IsLoaded()
 
@@ -568,10 +568,10 @@ do
     headerStatText.RichText = true; headerStatText.Text = "<font color='#38CC88'>60 FPS</font> • <font color='#58B6F2'>0ms</font>"
     headerStatText.TextColor3 = Theme.TextTitle; headerStatText.Font = Enum.Font.GothamBold; headerStatText.TextSize = 9; headerStatText.ZIndex = 13
 
-    -- Huy hiệu V1.23 nền tối sâu, chữ sáng rõ nét trên Mobile
+    -- Huy hiệu V1.24 nền tối sâu, chữ sáng rõ nét trên Mobile
     local verBadge = Instance.new("TextLabel", header)
     verBadge.Size = UDim2.new(0, 48, 0, 21); verBadge.Position = UDim2.new(1, -83, 0.5, -10.5)
-    verBadge.BackgroundColor3 = Color3.fromRGB(18, 22, 36); verBadge.Text = "V1.23"; verBadge.TextColor3 = getSoftBrandColor(Theme.Brand)
+    verBadge.BackgroundColor3 = Color3.fromRGB(18, 22, 36); verBadge.Text = "V1.24"; verBadge.TextColor3 = getSoftBrandColor(Theme.Brand)
     verBadge.Font = Enum.Font.GothamBold; verBadge.TextSize = 9.5; verBadge.ZIndex = 12
     Instance.new("UICorner", verBadge).CornerRadius = UDim.new(0, 7)
     local verStroke = Instance.new("UIStroke", verBadge); verStroke.Color = Theme.Brand; verStroke.Thickness = 1.0; verStroke.Transparency = 0.25
@@ -1080,7 +1080,7 @@ do
     minBtn.MouseButton1Click:Connect(function() clickAnimate(minBtn); toggleMenuWindow() end)
 end
 -- ==========================================
--- COMPONENTS HỆ THỐNG 3D CYBER-GLASS NEON V1.23
+-- COMPONENTS HỆ THỐNG 3D CYBER-GLASS NEON V1.24
 -- ==========================================
 local function splitLeadingIcon(rawText)
     local str = tostring(rawText or "")
@@ -1148,13 +1148,111 @@ local function createDivider(parent, text)
     return dFrame
 end
 
+-- Hàm dựng Biểu tượng 4 Mũi Tên Đóng/Mở 3D Băng Giá (theo đúng mẫu ảnh 1000085269.jpg: Trái = Mở ra ↖↗↙↘, Phải = Đóng lại ↘↙↗↖)
+local function createFourCornerArrowIcon(parent, sizePx, posUDim, anchorPt)
+    local box = Instance.new("Frame", parent)
+    box.Size = UDim2.new(0, sizePx, 0, sizePx)
+    box.Position = posUDim
+    if anchorPt then box.AnchorPoint = anchorPt end
+    box.BackgroundColor3 = Color3.fromRGB(11, 15, 28)
+    box.BorderSizePixel = 0
+    box.ZIndex = 12
+    Instance.new("UICorner", box).CornerRadius = UDim.new(0, 6)
+
+    local boxStroke = Instance.new("UIStroke", box)
+    boxStroke.Color = Color3.fromRGB(58, 195, 255)
+    boxStroke.Thickness = 1.0
+    boxStroke.Transparency = 0.2
+
+    local sc = sizePx / 22
+    local expandLayer = Instance.new("Frame", box)
+    expandLayer.Size = UDim2.new(1, 0, 1, 0)
+    expandLayer.BackgroundTransparency = 1
+    expandLayer.ZIndex = 13
+
+    local collapseLayer = Instance.new("Frame", box)
+    collapseLayer.Size = UDim2.new(1, 0, 1, 0)
+    collapseLayer.BackgroundTransparency = 1
+    collapseLayer.Visible = false
+    collapseLayer.ZIndex = 13
+
+    local function makeArrowBar(holder, w, h, xOff, yOff, rot, isCollapse)
+        local p = Instance.new("Frame", holder)
+        p.Size = UDim2.new(0, w * sc, 0, h * sc)
+        p.AnchorPoint = Vector2.new(0.5, 0.5)
+        p.Position = UDim2.new(0.5, xOff * sc, 0.5, yOff * sc)
+        if rot and rot ~= 0 then p.Rotation = rot end
+        p.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        p.BorderSizePixel = 0
+        p.ZIndex = 14
+        Instance.new("UICorner", p).CornerRadius = UDim.new(0.45, 0)
+
+        local g = Instance.new("UIGradient", p)
+        g.Rotation = 90
+        if isCollapse then
+            g.Color = ColorSequence.new({
+                ColorSequenceKeypoint.new(0, Color3.fromRGB(245, 250, 255)),
+                ColorSequenceKeypoint.new(1, Color3.fromRGB(172, 198, 250))
+            })
+        else
+            g.Color = ColorSequence.new({
+                ColorSequenceKeypoint.new(0, Color3.fromRGB(242, 254, 255)),
+                ColorSequenceKeypoint.new(1, Color3.fromRGB(135, 218, 255))
+            })
+        end
+
+        local st = Instance.new("UIStroke", p)
+        st.Color = isCollapse and Color3.fromRGB(78, 112, 215) or Color3.fromRGB(32, 175, 255)
+        st.Thickness = 0.65
+        st.Transparency = 0.25
+        return p
+    end
+
+    for _, sx in ipairs({-1, 1}) do
+        for _, sy in ipairs({-1, 1}) do
+            local diagRot = (sx * sy > 0) and 45 or -45
+            -- 1. Trạng thái ĐÓNG (4 mũi tên hướng RA NGOÀI 4 góc ↖ ↗ ↙ ↘ - bên trái ảnh 1000085269.jpg)
+            makeArrowBar(expandLayer, 4.8, 1.9, sx * 5.0, sy * 6.5, 0, false)
+            makeArrowBar(expandLayer, 1.9, 4.8, sx * 6.5, sy * 5.0, 0, false)
+            makeArrowBar(expandLayer, 5.2, 1.9, sx * 4.1, sy * 4.1, diagRot, false)
+
+            -- 2. Trạng thái MỞ (4 mũi tên chụm VÀO TRONG tâm ↘ ↙ ↗ ↖ - bên phải ảnh 1000085269.jpg)
+            makeArrowBar(collapseLayer, 4.8, 1.9, sx * 3.8, sy * 2.2, 0, true)
+            makeArrowBar(collapseLayer, 1.9, 4.8, sx * 2.2, sy * 3.8, 0, true)
+            makeArrowBar(collapseLayer, 5.2, 1.9, sx * 4.8, sy * 4.8, diagRot, true)
+        end
+    end
+
+    local function setExpanded(isOpen)
+        expandLayer.Visible = not isOpen
+        collapseLayer.Visible = isOpen
+        box.BackgroundColor3 = isOpen and Color3.fromRGB(20, 26, 48) or Color3.fromRGB(11, 15, 28)
+        boxStroke.Color = isOpen and Color3.fromRGB(142, 168, 255) or Color3.fromRGB(58, 195, 255)
+    end
+
+    return box, setExpanded
+end
+
 local function createCycleBtn(parent, prefix, options, stateVar, callback)
     local iconGlyph, cleanPrefix = splitLeadingIcon(prefix)
+    local isOpen = false
+
+    local cols = (#options >= 4) and 2 or 1
+    local rows = math.ceil(#options / cols)
+    local subHeaderH = 22
+    local cellH = 26
+    local padY = 4
+    local subBodyH = rows * cellH + math.max(0, rows - 1) * padY + 10
+    local subTotalH = subHeaderH + subBodyH
+
     local btnFrame = Instance.new("Frame", parent)
-    btnFrame.Size = UDim2.new(0.94, 0, 0, 34); btnFrame.BackgroundTransparency = 1
+    btnFrame.Size = UDim2.new(0.94, 0, 0, 34)
+    btnFrame.BackgroundTransparency = 1
+    btnFrame.ClipsDescendants = true
+    btnFrame.ZIndex = 10
 
     local btn = Instance.new("TextButton", btnFrame)
-    btn.Size = UDim2.new(1, 0, 1, 0); btn.BackgroundColor3 = Color3.fromRGB(255, 255, 255); btn.Text = ""; btn.AutoButtonColor = false; btn.ZIndex = 10
+    btn.Size = UDim2.new(1, 0, 0, 34); btn.BackgroundColor3 = Color3.fromRGB(255, 255, 255); btn.Text = ""; btn.AutoButtonColor = false; btn.ZIndex = 11
     Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 9)
     addSoftGradient(btn, Color3.fromRGB(26, 31, 48), Color3.fromRGB(17, 20, 32), 90)
     local stroke = Instance.new("UIStroke", btn); stroke.Color = Theme.Stroke; stroke.Thickness = 1.05; stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
@@ -1162,50 +1260,208 @@ local function createCycleBtn(parent, prefix, options, stateVar, callback)
 
     local iconBox = Instance.new("Frame", btn)
     iconBox.Size = UDim2.new(0, 24, 0, 24); iconBox.Position = UDim2.new(0, 8, 0.5, -12)
-    iconBox.BackgroundColor3 = Color3.fromRGB(14, 18, 30); iconBox.BorderSizePixel = 0; iconBox.ZIndex = 11
+    iconBox.BackgroundColor3 = Color3.fromRGB(14, 18, 30); iconBox.BorderSizePixel = 0; iconBox.ZIndex = 12
     Instance.new("UICorner", iconBox).CornerRadius = UDim.new(0, 7)
     local ibStroke = Instance.new("UIStroke", iconBox); ibStroke.Color = Theme.Brand; ibStroke.Thickness = 0.9; ibStroke.Transparency = 0.35
 
     local iconLbl = Instance.new("TextLabel", iconBox)
     iconLbl.Size = UDim2.new(1, 0, 1, 0); iconLbl.BackgroundTransparency = 1
-    iconLbl.Text = iconGlyph; iconLbl.TextColor3 = Theme.TextTitle; iconLbl.Font = Enum.Font.GothamBold; iconLbl.TextSize = 11; iconLbl.ZIndex = 12
+    iconLbl.Text = iconGlyph; iconLbl.TextColor3 = Theme.TextTitle; iconLbl.Font = Enum.Font.GothamBold; iconLbl.TextSize = 11; iconLbl.ZIndex = 13
 
     local prefixLbl = Instance.new("TextLabel", btn)
-    prefixLbl.Size = UDim2.new(0.52, -38, 1, 0); prefixLbl.Position = UDim2.new(0, 38, 0, 0)
+    prefixLbl.Size = UDim2.new(0.48, -38, 1, 0); prefixLbl.Position = UDim2.new(0, 38, 0, 0)
     prefixLbl.BackgroundTransparency = 1; prefixLbl.Text = cleanPrefix
     prefixLbl.TextColor3 = Theme.TextTitle; prefixLbl.Font = Enum.Font.GothamSemibold; prefixLbl.TextSize = 9.8
-    prefixLbl.TextXAlignment = Enum.TextXAlignment.Left; prefixLbl.TextTruncate = Enum.TextTruncate.AtEnd; prefixLbl.ZIndex = 11
+    prefixLbl.TextXAlignment = Enum.TextXAlignment.Left; prefixLbl.TextTruncate = Enum.TextTruncate.AtEnd; prefixLbl.ZIndex = 12
 
+    -- Thanh hiển thị giá trị hiện tại + Nút 4 mũi tên Đóng/Mở (1000085269.jpg) ở bên phải
     local valPill = Instance.new("Frame", btn)
-    valPill.Size = UDim2.new(0.46, 0, 0, 22); valPill.Position = UDim2.new(0.54, -6, 0.5, -11)
-    valPill.BackgroundColor3 = Color3.fromRGB(14, 18, 30); valPill.BorderSizePixel = 0; valPill.ZIndex = 11
-    Instance.new("UICorner", valPill).CornerRadius = UDim.new(1, 0)
-    local vpStroke = Instance.new("UIStroke", valPill); vpStroke.Color = Theme.Brand; vpStroke.Thickness = 1; vpStroke.Transparency = 0.25
+    valPill.Size = UDim2.new(0.50, -34, 0, 22); valPill.Position = UDim2.new(0.50, 0, 0.5, -11)
+    valPill.BackgroundColor3 = Color3.fromRGB(14, 18, 30); valPill.BorderSizePixel = 0; valPill.ZIndex = 12
+    Instance.new("UICorner", valPill).CornerRadius = UDim.new(0, 7)
+    local vpStroke = Instance.new("UIStroke", valPill); vpStroke.Color = Theme.Brand; vpStroke.Thickness = 0.95; vpStroke.Transparency = 0.28
 
     local valTxt = Instance.new("TextLabel", valPill)
     valTxt.Size = UDim2.new(1, -10, 1, 0); valTxt.Position = UDim2.new(0, 5, 0, 0)
     valTxt.BackgroundTransparency = 1; valTxt.TextColor3 = getSoftBrandColor(Theme.Brand)
-    valTxt.Font = Enum.Font.GothamBold; valTxt.TextSize = 8.8; valTxt.TextTruncate = Enum.TextTruncate.AtEnd; valTxt.ZIndex = 12
+    valTxt.Font = Enum.Font.GothamBold; valTxt.TextSize = 8.6; valTxt.TextTruncate = Enum.TextTruncate.AtEnd; valTxt.ZIndex = 13
+
+    local arrowIconBox, setArrowExpanded = createFourCornerArrowIcon(
+        btn, 22, UDim2.new(1, -28, 0.5, -11)
+    )
+
+    -- TAB NHỎ BÊN TRONG MENU (Sub-Tab Drawer mở ra khi bấm nút 4 mũi tên)
+    local subTab = Instance.new("Frame", btnFrame)
+    subTab.Size = UDim2.new(1, -4, 0, subTotalH)
+    subTab.Position = UDim2.new(0, 2, 0, 38)
+    subTab.BackgroundColor3 = Color3.fromRGB(13, 16, 26)
+    subTab.Visible = false
+    subTab.ZIndex = 11
+    Instance.new("UICorner", subTab).CornerRadius = UDim.new(0, 9)
+    local subStroke = Instance.new("UIStroke", subTab)
+    subStroke.Color = Color3.fromRGB(62, 185, 255)
+    subStroke.Thickness = 1.0
+    subStroke.Transparency = 0.22
+
+    local subHeader = Instance.new("TextLabel", subTab)
+    subHeader.Size = UDim2.new(1, -16, 0, subHeaderH)
+    subHeader.Position = UDim2.new(0, 8, 0, 0)
+    subHeader.BackgroundTransparency = 1
+    subHeader.Text = "◆ CHỌN " .. string.upper(cleanPrefix:gsub(":", "")) .. " (" .. tostring(#options) .. " MỤC)"
+    subHeader.TextColor3 = Color3.fromRGB(125, 215, 255)
+    subHeader.Font = Enum.Font.GothamBold
+    subHeader.TextSize = 8.0
+    subHeader.TextXAlignment = Enum.TextXAlignment.Left
+    subHeader.ZIndex = 12
+
+    local subGridHolder = Instance.new("Frame", subTab)
+    subGridHolder.Size = UDim2.new(1, -12, 0, subBodyH - 6)
+    subGridHolder.Position = UDim2.new(0, 6, 0, subHeaderH + 2)
+    subGridHolder.BackgroundTransparency = 1
+    subGridHolder.ZIndex = 12
+
+    local subGrid = Instance.new("UIGridLayout", subGridHolder)
+    subGrid.CellSize = UDim2.new(cols == 2 and 0.488 or 1, 0, 0, cellH)
+    subGrid.CellPadding = UDim2.new(0.024, 0, 0, padY)
+    subGrid.SortOrder = Enum.SortOrder.LayoutOrder
+
+    local optionCardRefs = {}
+
+    local function syncOptionSelectionVisuals()
+        local curIdx = State[stateVar] or 1
+        local curItem = options[curIdx] or options[1]
+        valTxt.Text = tostring(curItem.Name)
+
+        for idx, ref in ipairs(optionCardRefs) do
+            local isSel = (idx == curIdx)
+            ref.Btn.BackgroundColor3 = isSel and Color3.fromRGB(20, 48, 56) or Color3.fromRGB(19, 23, 36)
+            ref.Stroke.Color = isSel and Color3.fromRGB(68, 238, 190) or Color3.fromRGB(42, 50, 72)
+            ref.Stroke.Transparency = isSel and 0.1 or 0.45
+            ref.Dot.BackgroundColor3 = isSel and Color3.fromRGB(72, 245, 185) or (ref.SwatchColor or Color3.fromRGB(72, 82, 108))
+            ref.Label.TextColor3 = isSel and Color3.fromRGB(145, 255, 215) or Color3.fromRGB(195, 206, 228)
+            ref.Badge.Text = isSel and "ĐANG CHỌN" or "CHỌN"
+            ref.Badge.TextColor3 = isSel and Color3.fromRGB(85, 245, 185) or Color3.fromRGB(108, 120, 148)
+        end
+    end
+
+    local function toggleSubTab(forceState)
+        if forceState ~= nil then
+            isOpen = forceState
+        else
+            isOpen = not isOpen
+        end
+        setArrowExpanded(isOpen)
+        if not State.RGB then
+            stroke.Color = isOpen and Color3.fromRGB(68, 215, 255) or Theme.Stroke
+        end
+        vpStroke.Color = isOpen and Color3.fromRGB(85, 235, 255) or Theme.Brand
+
+        if isOpen then
+            subTab.Visible = true
+            local targetH = 34 + 6 + subTotalH
+            TweenService:Create(btnFrame, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                Size = UDim2.new(0.94, 0, 0, targetH)
+            }):Play()
+            task.delay(0.19, function()
+                if isOpen and parent and parent:IsA("ScrollingFrame") then
+                    pcall(function()
+                        local bottomY = btnFrame.AbsolutePosition.Y + targetH
+                        local viewBottom = parent.AbsolutePosition.Y + parent.AbsoluteSize.Y
+                        if bottomY > viewBottom then
+                            local extra = bottomY - viewBottom + 14
+                            TweenService:Create(parent, TweenInfo.new(0.18), {
+                                CanvasPosition = Vector2.new(0, parent.CanvasPosition.Y + extra)
+                            }):Play()
+                        end
+                    end)
+                end
+            end)
+        else
+            local tw = TweenService:Create(btnFrame, TweenInfo.new(0.16, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                Size = UDim2.new(0.94, 0, 0, 34)
+            })
+            tw:Play()
+            task.delay(0.16, function()
+                if not isOpen and subTab and subTab.Parent then
+                    subTab.Visible = false
+                end
+            end)
+        end
+    end
+
+    for idx, opt in ipairs(options) do
+        local optBtn = Instance.new("TextButton", subGridHolder)
+        optBtn.LayoutOrder = idx
+        optBtn.Text = ""
+        optBtn.AutoButtonColor = false
+        optBtn.BackgroundColor3 = Color3.fromRGB(19, 23, 36)
+        optBtn.ZIndex = 13
+        Instance.new("UICorner", optBtn).CornerRadius = UDim.new(0, 6)
+        local oStroke = Instance.new("UIStroke", optBtn)
+        oStroke.Thickness = 0.95
+
+        local swatchCol = opt.Value or opt.Brand
+        local dot = Instance.new("Frame", optBtn)
+        dot.Size = UDim2.new(0, 8, 0, 8)
+        dot.Position = UDim2.new(0, 8, 0.5, -4)
+        dot.BackgroundColor3 = swatchCol or Color3.fromRGB(72, 82, 108)
+        dot.BorderSizePixel = 0
+        dot.ZIndex = 14
+        Instance.new("UICorner", dot).CornerRadius = UDim.new(1, 0)
+
+        local oLbl = Instance.new("TextLabel", optBtn)
+        oLbl.Size = UDim2.new(1, -68, 1, 0)
+        oLbl.Position = UDim2.new(0, 22, 0, 0)
+        oLbl.BackgroundTransparency = 1
+        oLbl.Text = tostring(opt.Name)
+        oLbl.Font = Enum.Font.GothamSemibold
+        oLbl.TextSize = 8.6
+        oLbl.TextXAlignment = Enum.TextXAlignment.Left
+        oLbl.TextTruncate = Enum.TextTruncate.AtEnd
+        oLbl.ZIndex = 14
+
+        local oBadge = Instance.new("TextLabel", optBtn)
+        oBadge.Size = UDim2.new(0, 44, 1, 0)
+        oBadge.Position = UDim2.new(1, -48, 0, 0)
+        oBadge.BackgroundTransparency = 1
+        oBadge.Font = Enum.Font.GothamBold
+        oBadge.TextSize = 7.0
+        oBadge.TextXAlignment = Enum.TextXAlignment.Right
+        oBadge.ZIndex = 14
+
+        optionCardRefs[idx] = {
+            Btn = optBtn,
+            Stroke = oStroke,
+            Dot = dot,
+            Label = oLbl,
+            Badge = oBadge,
+            SwatchColor = swatchCol
+        }
+
+        optBtn.MouseButton1Click:Connect(function()
+            clickAnimate(optBtn)
+            State[stateVar] = idx
+            syncOptionSelectionVisuals()
+            if callback then pcall(callback, idx) end
+            MakeToast("Đã chọn " .. cleanPrefix:gsub(":", ""), tostring(opt.Name), Theme.AccentOn)
+            if State.AutoSave then saveConfig() end
+            toggleSubTab(false)
+        end)
+    end
 
     registerBrandUpdater(function(newBrand)
         if ibStroke and ibStroke.Parent then ibStroke.Color = newBrand end
-        if vpStroke and vpStroke.Parent then vpStroke.Color = newBrand end
+        if not isOpen and vpStroke and vpStroke.Parent then vpStroke.Color = newBrand end
         if valTxt and valTxt.Parent then valTxt.TextColor3 = getSoftBrandColor(newBrand) end
     end)
 
-    local function updateText()
-        local item = options[State[stateVar]] or options[1]
-        valTxt.Text = "‹ " .. tostring(item.Name) .. " ›"
-    end
-    updateText()
+    syncOptionSelectionVisuals()
 
     btn.MouseButton1Click:Connect(function()
-        clickAnimate(btn)
-        State[stateVar] = (State[stateVar] % #options) + 1
-        updateText()
-        if callback then pcall(callback, State[stateVar]) end
-        if State.AutoSave then saveConfig() end
+        clickAnimate(arrowIconBox)
+        toggleSubTab()
     end)
+
     return btnFrame
 end
 
@@ -1988,37 +2244,9 @@ local function rejoinServer()
 end
 
 createDivider(page4, "GIAO DIỆN & CÀI ĐẶT MENU")
-do
-    local themeCard = Instance.new("Frame", page4)
-    themeCard.Size = UDim2.new(0.94, 0, 0, 32); themeCard.BackgroundTransparency = 1
-    local tBtn = Instance.new("TextButton", themeCard)
-    tBtn.Size = UDim2.new(1, 0, 1, 0); tBtn.BackgroundColor3 = Theme.ItemBg; tBtn.Text = ""; tBtn.AutoButtonColor = false; tBtn.ZIndex = 10
-    Instance.new("UICorner", tBtn).CornerRadius = UDim.new(0, 8)
-    local tStroke = Instance.new("UIStroke", tBtn); tStroke.Color = Theme.Brand; tStroke.Thickness = 1.1; tStroke.Transparency = 0.2
-    table.insert(RGBElements, {Type = "Button", Stroke = tStroke, DefaultColor = Theme.Brand, UseBrand = true})
-
-    local tTitle = Instance.new("TextLabel", tBtn)
-    tTitle.Size = UDim2.new(1, 0, 1, 0); tTitle.BackgroundTransparency = 1; tTitle.Font = Enum.Font.GothamBold; tTitle.TextSize = 10.2; tTitle.ZIndex = 11
-
-    local function syncThemeText()
-        local p = ThemePresets[State.ThemeIdx] or ThemePresets[1]
-        tTitle.Text = "🎨 Chủ đề giao diện: " .. p.Name
-        tTitle.TextColor3 = Theme.Brand
-        if not State.RGB then tStroke.Color = Theme.Brand end
-    end
-    syncThemeText()
-    registerBrandUpdater(syncThemeText)
-
-    tBtn.MouseButton1Click:Connect(function()
-        clickAnimate(tBtn)
-        State.ThemeIdx = (State.ThemeIdx % #ThemePresets) + 1
-        if refreshThemeVisuals then refreshThemeVisuals() end
-        syncThemeText()
-        local p = ThemePresets[State.ThemeIdx]
-        MakeToast("Đổi Chủ Đề", "Đã chuyển sang " .. p.Name, Theme.Brand)
-        if State.AutoSave then saveConfig() end
-    end)
-end
+createCycleBtn(page4, "🎨 Chủ đề giao diện:", ThemePresets, "ThemeIdx", function()
+    if refreshThemeVisuals then refreshThemeVisuals() end
+end)
 createToggle(page4, "💾 Lưu Cài Đặt Tự Động", "AutoSave", function(v)
     if v then saveConfig(); MakeToast("Đã Bật", "Đã lưu cấu hình hiện tại!", Theme.AccentOn)
     else pcall(function() if isfile and isfile(configFileName) then delfile(configFileName) end end); MakeToast("Đã Tắt", "Đã xóa cấu hình cũ!", Theme.AccentOff) end
@@ -4179,9 +4407,9 @@ do
         end)
     end
 
-    -- KHUNG ĐIỀU KHIỂN TRUNG TÂM TAB 7 (Cao 112px: Mục tiêu + Danh sách 3 kiểu tiếp cận + Vị trí đứng + Khoảng cách)
+    -- KHUNG ĐIỀU KHIỂN TRUNG TÂM TAB 7 (Nút Đóng/Mở 4 Mũi Tên 3D mở Tab Nhỏ chọn Kiểu Di Chuyển & Vị Trí Đứng)
     local tpControlCard = Instance.new("Frame", page7)
-    tpControlCard.Size = UDim2.new(0.94, 0, 0, 112); tpControlCard.BackgroundColor3 = Theme.ItemBg
+    tpControlCard.Size = UDim2.new(0.94, 0, 0, 90); tpControlCard.BackgroundColor3 = Theme.ItemBg
     tpControlCard.LayoutOrder = 1; tpControlCard.ZIndex = 10
     Instance.new("UICorner", tpControlCard).CornerRadius = UDim.new(0, 9)
     local tpCardStroke = Instance.new("UIStroke", tpControlCard); tpCardStroke.Color = Theme.Stroke; tpCardStroke.Thickness = 1
@@ -4215,81 +4443,200 @@ do
     Instance.new("UICorner", spectateBtn).CornerRadius = UDim.new(0, 5)
     local spectateStroke = Instance.new("UIStroke", spectateBtn); spectateStroke.Color = Color3.fromRGB(165, 85, 98); spectateStroke.Thickness = 0.9; spectateStroke.Transparency = 0.45
 
-    -- Hàng 2: Danh sách 3 kiểu tiếp cận (⚡ TP đến | 🕊️ Bay đến | 🏃 Chạy đến)
-    local methodListRow = Instance.new("Frame", tpControlCard)
-    methodListRow.Size = UDim2.new(1, -12, 0, 22); methodListRow.Position = UDim2.new(0, 6, 0, 37)
-    methodListRow.BackgroundColor3 = Color3.fromRGB(14, 17, 26); methodListRow.ZIndex = 10
-    Instance.new("UICorner", methodListRow).CornerRadius = UDim.new(0, 6)
-    local mlrStroke = Instance.new("UIStroke", methodListRow); mlrStroke.Color = Color3.fromRGB(42, 50, 72); mlrStroke.Thickness = 0.8
+    -- Hàng 2: 2 Nút Mở Tab Nhỏ (Bên trái: Kiểu tiếp cận [TP đến / Bay đến / Chạy đến] | Bên phải: Vị trí đứng [Sau lưng / Trước mặt / Trên đầu / Dưới chân])
+    local selectorRow = Instance.new("Frame", tpControlCard)
+    selectorRow.Size = UDim2.new(1, -12, 0, 24); selectorRow.Position = UDim2.new(0, 6, 0, 37)
+    selectorRow.BackgroundTransparency = 1; selectorRow.ZIndex = 10
 
-    local methodBtns = {}
-    local function syncMethodListVisuals()
-        local curIdx = State.TpMoveMethodIdx or 1
-        for idx, ref in ipairs(methodBtns) do
-            local isSel = (idx == curIdx)
-            ref.Btn.BackgroundColor3 = isSel and Color3.fromRGB(22, 46, 58) or Color3.fromRGB(16, 19, 29)
-            ref.Btn.TextColor3 = isSel and Color3.fromRGB(115, 242, 255) or Color3.fromRGB(138, 150, 174)
-            ref.Stroke.Color = isSel and Color3.fromRGB(68, 225, 255) or Color3.fromRGB(36, 42, 60)
-            ref.Stroke.Transparency = isSel and 0.15 or 0.55
-        end
+    -- Nút 1 (Trái): Mở Tab Nhỏ chọn Kiểu Di Chuyển (TP đến / Bay đến / Chạy đến)
+    local tpMethodBtn = Instance.new("TextButton", selectorRow)
+    tpMethodBtn.Size = UDim2.new(0.49, 0, 1, 0); tpMethodBtn.Position = UDim2.new(0, 0, 0, 0)
+    tpMethodBtn.BackgroundColor3 = Color3.fromRGB(16, 20, 32); tpMethodBtn.Text = ""; tpMethodBtn.AutoButtonColor = false; tpMethodBtn.ZIndex = 11
+    Instance.new("UICorner", tpMethodBtn).CornerRadius = UDim.new(0, 7)
+    local tpMethodStroke = Instance.new("UIStroke", tpMethodBtn); tpMethodStroke.Color = Theme.Brand; tpMethodStroke.Thickness = 0.95; tpMethodStroke.Transparency = 0.3
+
+    local tpMethodLabel = Instance.new("TextLabel", tpMethodBtn)
+    tpMethodLabel.Size = UDim2.new(1, -28, 1, 0); tpMethodLabel.Position = UDim2.new(0, 6, 0, 0)
+    tpMethodLabel.BackgroundTransparency = 1; tpMethodLabel.RichText = true
+    tpMethodLabel.Font = Enum.Font.GothamBold; tpMethodLabel.TextSize = 8.6; tpMethodLabel.TextXAlignment = Enum.TextXAlignment.Left
+    tpMethodLabel.TextTruncate = Enum.TextTruncate.AtEnd; tpMethodLabel.ZIndex = 12
+
+    local methodArrowBox, setMethodArrowExpanded = createFourCornerArrowIcon(
+        tpMethodBtn, 18, UDim2.new(1, -21, 0.5, -9)
+    )
+
+    -- Nút 2 (Phải): Mở Tab Nhỏ chọn Vị Trí Đứng (Sau lưng / Trước mặt / Trên đầu / Dưới chân)
+    local tpPosBtn = Instance.new("TextButton", selectorRow)
+    tpPosBtn.Size = UDim2.new(0.49, 0, 1, 0); tpPosBtn.Position = UDim2.new(0.51, 0, 0, 0)
+    tpPosBtn.BackgroundColor3 = Color3.fromRGB(16, 20, 32); tpPosBtn.Text = ""; tpPosBtn.AutoButtonColor = false; tpPosBtn.ZIndex = 11
+    Instance.new("UICorner", tpPosBtn).CornerRadius = UDim.new(0, 7)
+    local tpPosStroke = Instance.new("UIStroke", tpPosBtn); tpPosStroke.Color = Theme.Brand; tpPosStroke.Thickness = 0.95; tpPosStroke.Transparency = 0.3
+
+    local tpPosLabel = Instance.new("TextLabel", tpPosBtn)
+    tpPosLabel.Size = UDim2.new(1, -28, 1, 0); tpPosLabel.Position = UDim2.new(0, 6, 0, 0)
+    tpPosLabel.BackgroundTransparency = 1; tpPosLabel.RichText = true
+    tpPosLabel.Font = Enum.Font.GothamBold; tpPosLabel.TextSize = 8.6; tpPosLabel.TextXAlignment = Enum.TextXAlignment.Left
+    tpPosLabel.TextTruncate = Enum.TextTruncate.AtEnd; tpPosLabel.ZIndex = 12
+
+    local posArrowBox, setPosArrowExpanded = createFourCornerArrowIcon(
+        tpPosBtn, 18, UDim2.new(1, -21, 0.5, -9)
+    )
+
+    -- TAB NHỎ MỞ RA TRONG TAB TP PLAYER (Sub-Tab Drawer hiển thị danh sách tùy chọn)
+    local activeTpSubTabMode = nil -- nil | "method" | "position"
+    local tpSubTabDrawer = Instance.new("Frame", page7)
+    tpSubTabDrawer.Size = UDim2.new(0.94, 0, 0, 0)
+    tpSubTabDrawer.BackgroundColor3 = Color3.fromRGB(13, 16, 26)
+    tpSubTabDrawer.LayoutOrder = 2
+    tpSubTabDrawer.Visible = false
+    tpSubTabDrawer.ClipsDescendants = true
+    tpSubTabDrawer.ZIndex = 15
+    Instance.new("UICorner", tpSubTabDrawer).CornerRadius = UDim.new(0, 9)
+    local tpSubStroke = Instance.new("UIStroke", tpSubTabDrawer)
+    tpSubStroke.Color = Color3.fromRGB(65, 215, 255)
+    tpSubStroke.Thickness = 1.05
+    tpSubStroke.Transparency = 0.15
+
+    local tpSubHeader = Instance.new("TextLabel", tpSubTabDrawer)
+    tpSubHeader.Size = UDim2.new(1, -16, 0, 20)
+    tpSubHeader.Position = UDim2.new(0, 8, 0, 2)
+    tpSubHeader.BackgroundTransparency = 1
+    tpSubHeader.TextColor3 = Color3.fromRGB(125, 222, 255)
+    tpSubHeader.Font = Enum.Font.GothamBold
+    tpSubHeader.TextSize = 8.0
+    tpSubHeader.TextXAlignment = Enum.TextXAlignment.Left
+    tpSubHeader.ZIndex = 16
+
+    local tpSubGridHolder = Instance.new("Frame", tpSubTabDrawer)
+    tpSubGridHolder.Size = UDim2.new(1, -12, 1, -26)
+    tpSubGridHolder.Position = UDim2.new(0, 6, 0, 22)
+    tpSubGridHolder.BackgroundTransparency = 1
+    tpSubGridHolder.ZIndex = 16
+
+    local function syncTpSelectorTexts()
+        local mItem = TpMoveMethods[State.TpMoveMethodIdx] or TpMoveMethods[1]
+        tpMethodLabel.Text = "<font color='#9AA8C4'>Kiểu:</font> <font color='#68E8FF'>" .. mItem.Icon .. " " .. mItem.Name .. "</font>"
+
+        local pItem = TpPositions[State.TpPositionIdx] or TpPositions[1]
+        tpPosLabel.Text = "<font color='#9AA8C4'>Vị trí:</font> <font color='#F0C868'>" .. pItem.Upper .. "</font>"
+
         if updateTpActionButtonsUI then updateTpActionButtonsUI() end
     end
 
-    for idx, mInfo in ipairs(TpMoveMethods) do
-        local mBtn = Instance.new("TextButton", methodListRow)
-        mBtn.Size = UDim2.new(1 / 3 - 0.012, 0, 1, -4)
-        mBtn.Position = UDim2.new((idx - 1) / 3 + 0.006, 0, 0, 2)
-        mBtn.Text = mInfo.Icon .. " " .. mInfo.Name
-        mBtn.Font = Enum.Font.GothamBold
-        mBtn.TextSize = 8.8
-        mBtn.AutoButtonColor = false
-        mBtn.ZIndex = 11
-        Instance.new("UICorner", mBtn).CornerRadius = UDim.new(0, 5)
-        local mSt = Instance.new("UIStroke", mBtn); mSt.Thickness = 0.9
-        methodBtns[idx] = {Btn = mBtn, Stroke = mSt}
+    local function updatePlayerListHeight()
+        if not playerListContainer then return end
+        local extraH = tpSubTabDrawer.Visible and (tpSubTabDrawer.Size.Y.Offset + 5) or 0
+        playerListContainer.Size = UDim2.new(0.94, 0, 1, -(132 + extraH))
+    end
 
-        mBtn.MouseButton1Click:Connect(function()
-            clickAnimate(mBtn)
-            if State.TpMoveMethodIdx ~= idx then
-                stopManualApproach()
-                State.TpMoveMethodIdx = idx
-                syncMethodListVisuals()
-                MakeToast("Kiểu Tiếp Cận", "Đã chọn chế độ: " .. mInfo.Icon .. " " .. mInfo.Name, Theme.Brand)
-                if State.AutoSave then saveConfig() end
+    local function openOrToggleTpSubTab(mode)
+        if activeTpSubTabMode == mode then
+            activeTpSubTabMode = nil
+            setMethodArrowExpanded(false)
+            setPosArrowExpanded(false)
+            tpMethodStroke.Color = Theme.Brand
+            tpPosStroke.Color = Theme.Brand
+            tpSubTabDrawer.Visible = false
+            tpSubTabDrawer.Size = UDim2.new(0.94, 0, 0, 0)
+            updatePlayerListHeight()
+            return
+        end
+
+        activeTpSubTabMode = mode
+        setMethodArrowExpanded(mode == "method")
+        setPosArrowExpanded(mode == "position")
+        tpMethodStroke.Color = (mode == "method") and Color3.fromRGB(75, 235, 255) or Theme.Brand
+        tpPosStroke.Color = (mode == "position") and Color3.fromRGB(75, 235, 255) or Theme.Brand
+
+        for _, ch in ipairs(tpSubGridHolder:GetChildren()) do
+            if not ch:IsA("UIGridLayout") then ch:Destroy() end
+        end
+        local grid = tpSubGridHolder:FindFirstChildOfClass("UIGridLayout") or Instance.new("UIGridLayout", tpSubGridHolder)
+        grid.SortOrder = Enum.SortOrder.LayoutOrder
+
+        if mode == "method" then
+            tpSubHeader.Text = "◆ CHỌN KIỂU DI CHUYỂN ĐẾN NGƯỜI CHƠI (3 CHẾ ĐỘ) ◆"
+            grid.CellSize = UDim2.new(0.32, 0, 0, 26)
+            grid.CellPadding = UDim2.new(0.02, 0, 0, 4)
+            tpSubTabDrawer.Size = UDim2.new(0.94, 0, 0, 54)
+
+            for idx, mInfo in ipairs(TpMoveMethods) do
+                local isSel = (State.TpMoveMethodIdx == idx)
+                local ob = Instance.new("TextButton", tpSubGridHolder)
+                ob.LayoutOrder = idx
+                ob.BackgroundColor3 = isSel and Color3.fromRGB(20, 48, 58) or Color3.fromRGB(19, 23, 36)
+                ob.Text = mInfo.Icon .. " " .. mInfo.Name .. (isSel and " ✓" or "")
+                ob.TextColor3 = isSel and Color3.fromRGB(115, 252, 215) or Color3.fromRGB(195, 206, 228)
+                ob.Font = Enum.Font.GothamBold
+                ob.TextSize = 8.6
+                ob.AutoButtonColor = false
+                ob.ZIndex = 17
+                Instance.new("UICorner", ob).CornerRadius = UDim.new(0, 6)
+                local ost = Instance.new("UIStroke", ob)
+                ost.Color = isSel and Color3.fromRGB(68, 238, 190) or Color3.fromRGB(42, 50, 72)
+                ost.Thickness = 0.95
+
+                ob.MouseButton1Click:Connect(function()
+                    clickAnimate(ob)
+                    stopManualApproach()
+                    State.TpMoveMethodIdx = idx
+                    syncTpSelectorTexts()
+                    MakeToast("Kiểu Di Chuyển", "Đã chọn: " .. mInfo.Icon .. " " .. mInfo.Name, Theme.AccentOn)
+                    if State.AutoSave then saveConfig() end
+                    openOrToggleTpSubTab(mode) -- đóng tab nhỏ sau khi chọn
+                end)
             end
-        end)
+        else
+            tpSubHeader.Text = "◆ CHỌN VỊ TRÍ ĐỨNG SO VỚI MỤC TIÊU (4 VỊ TRÍ) ◆"
+            grid.CellSize = UDim2.new(0.488, 0, 0, 25)
+            grid.CellPadding = UDim2.new(0.024, 0, 0, 4)
+            tpSubTabDrawer.Size = UDim2.new(0.94, 0, 0, 80)
+
+            for idx, pInfo in ipairs(TpPositions) do
+                local isSel = (State.TpPositionIdx == idx)
+                local ob = Instance.new("TextButton", tpSubGridHolder)
+                ob.LayoutOrder = idx
+                ob.BackgroundColor3 = isSel and Color3.fromRGB(20, 48, 58) or Color3.fromRGB(19, 23, 36)
+                ob.Text = "📍 " .. pInfo.Upper .. (isSel and " ✓" or "")
+                ob.TextColor3 = isSel and Color3.fromRGB(248, 215, 115) or Color3.fromRGB(195, 206, 228)
+                ob.Font = Enum.Font.GothamBold
+                ob.TextSize = 8.4
+                ob.AutoButtonColor = false
+                ob.ZIndex = 17
+                Instance.new("UICorner", ob).CornerRadius = UDim.new(0, 6)
+                local ost = Instance.new("UIStroke", ob)
+                ost.Color = isSel and Color3.fromRGB(240, 195, 88) or Color3.fromRGB(42, 50, 72)
+                ost.Thickness = 0.95
+
+                ob.MouseButton1Click:Connect(function()
+                    clickAnimate(ob)
+                    State.TpPositionIdx = idx
+                    syncTpSelectorTexts()
+                    if not pInfo.IsHorizontal and wasHorizontalTp then restoreNormalPosture() end
+                    MakeToast("Vị Trí Đứng", "Đã chọn: " .. pInfo.Upper, Theme.Brand)
+                    if State.AutoSave then saveConfig() end
+                    openOrToggleTpSubTab(mode)
+                end)
+            end
+        end
+
+        tpSubTabDrawer.Visible = true
+        updatePlayerListHeight()
     end
 
-    -- Hàng 3: Chọn vị trí đứng so với mục tiêu (Sau lưng / Trước mặt / Trên đầu / Dưới chân)
-    local tpPosBtn = Instance.new("TextButton", tpControlCard)
-    tpPosBtn.Size = UDim2.new(1, -12, 0, 21); tpPosBtn.Position = UDim2.new(0, 6, 0, 62)
-    tpPosBtn.BackgroundColor3 = Color3.fromRGB(20, 26, 38); tpPosBtn.Text = ""; tpPosBtn.AutoButtonColor = false; tpPosBtn.ZIndex = 10
-    Instance.new("UICorner", tpPosBtn).CornerRadius = UDim.new(0, 6)
-    local tpPosStroke = Instance.new("UIStroke", tpPosBtn); tpPosStroke.Color = Theme.Brand; tpPosStroke.Thickness = 0.95; tpPosStroke.Transparency = 0.35
-    table.insert(RGBElements, {Type = "Button", Stroke = tpPosStroke, DefaultColor = Theme.Brand, UseBrand = true})
-
-    local tpPosLabel = Instance.new("TextLabel", tpPosBtn)
-    tpPosLabel.Size = UDim2.new(1, 0, 1, 0); tpPosLabel.BackgroundTransparency = 1; tpPosLabel.RichText = true
-    tpPosLabel.TextColor3 = Color3.fromRGB(210, 218, 232); tpPosLabel.Font = Enum.Font.GothamSemibold; tpPosLabel.TextSize = 9.5; tpPosLabel.ZIndex = 10
-
-    local function updateTpPosText()
-        local item = TpPositions[State.TpPositionIdx] or TpPositions[1]
-        tpPosLabel.Text = "📍 VỊ TRÍ ĐỨNG: <font color='#D8B868'>" .. item.Upper .. "</font> <font color='#7E8CA8'>(Chạm để đổi)</font>"
-    end
-    updateTpPosText()
-
-    tpPosBtn.MouseButton1Click:Connect(function()
-        clickAnimate(tpPosBtn)
-        State.TpPositionIdx = (State.TpPositionIdx % #TpPositions) + 1
-        updateTpPosText()
-        local currentMode = TpPositions[State.TpPositionIdx] or TpPositions[1]
-        if not currentMode.IsHorizontal and wasHorizontalTp then restoreNormalPosture() end
-        if State.AutoSave then saveConfig() end
+    tpMethodBtn.MouseButton1Click:Connect(function()
+        clickAnimate(methodArrowBox)
+        openOrToggleTpSubTab("method")
     end)
 
-    -- Hàng 4: Khoảng cách đứng (Studs)
+    tpPosBtn.MouseButton1Click:Connect(function()
+        clickAnimate(posArrowBox)
+        openOrToggleTpSubTab("position")
+    end)
+
+    -- Hàng 3: Khoảng cách đứng (Studs)
     local tpDistContainer = Instance.new("Frame", tpControlCard)
-    tpDistContainer.Size = UDim2.new(1, -12, 0, 22); tpDistContainer.Position = UDim2.new(0, 6, 0, 86)
+    tpDistContainer.Size = UDim2.new(1, -12, 0, 22); tpDistContainer.Position = UDim2.new(0, 6, 0, 64)
     tpDistContainer.BackgroundTransparency = 1; tpDistContainer.ZIndex = 10
 
     local tpDistTitle = Instance.new("TextLabel", tpDistContainer)
@@ -4360,7 +4707,7 @@ do
 
     -- Hàng nút hành động (TP 1 LẦN / BAY ĐẾN / CHẠY ĐẾN + AUTO BÁM THEO)
     local tpActionRow = Instance.new("Frame", page7)
-    tpActionRow.Size = UDim2.new(0.94, 0, 0, 26); tpActionRow.BackgroundTransparency = 1; tpActionRow.LayoutOrder = 2
+    tpActionRow.Size = UDim2.new(0.94, 0, 0, 26); tpActionRow.BackgroundTransparency = 1; tpActionRow.LayoutOrder = 3
 
     local tpOnceBtn = Instance.new("TextButton", tpActionRow)
     tpOnceBtn.Size = UDim2.new(0.486, 0, 1, 0); tpOnceBtn.BackgroundColor3 = Color3.fromRGB(19, 24, 34)
@@ -4400,7 +4747,7 @@ do
     registerBrandUpdater(function()
         if updateTpActionButtonsUI then updateTpActionButtonsUI() end
     end)
-    syncMethodListVisuals()
+    syncTpSelectorTexts()
 
     local function updateSpectateBtnUI()
         spectateBtn.Text = spectatePlayerEnabled and "👁️ XEM [BẬT]" or "👁️ XEM [TẮT]"
@@ -4453,8 +4800,8 @@ do
     end)
 
     playerListContainer = Instance.new("Frame", page7)
-    playerListContainer.Size = UDim2.new(0.94, 0, 1, -152); playerListContainer.BackgroundColor3 = Color3.fromRGB(20, 22, 31)
-    playerListContainer.LayoutOrder = 3; playerListContainer.ZIndex = 10
+    playerListContainer.Size = UDim2.new(0.94, 0, 1, -132); playerListContainer.BackgroundColor3 = Color3.fromRGB(20, 22, 31)
+    playerListContainer.LayoutOrder = 4; playerListContainer.ZIndex = 10
     Instance.new("UICorner", playerListContainer).CornerRadius = UDim.new(0, 8)
     local listContainerStroke = Instance.new("UIStroke", playerListContainer); listContainerStroke.Color = Theme.Stroke; listContainerStroke.Thickness = 1
     table.insert(RGBElements, {Type = "Info", Stroke = listContainerStroke})
@@ -6198,7 +6545,7 @@ do
         local s = execTime % 60
 
         sysBody.Text = string.format(
-            "<font color='#78B4DC'>• Executor:</font> <font color='#38CC88'>%s</font>   |   <font color='#78B4DC'>Phiên bản:</font> <font color='#E09F67'>V1.23.0</font>\n" ..
+            "<font color='#78B4DC'>• Executor:</font> <font color='#38CC88'>%s</font>   |   <font color='#78B4DC'>Phiên bản:</font> <font color='#E09F67'>V1.24.0</font>\n" ..
             "<font color='#78B4DC'>• Treo máy:</font> %02d:%02d:%02d   |   <font color='#78B4DC'>Giờ hệ thống:</font> %s",
             execName, h, m, s, os.date("%H:%M:%S")
         )
