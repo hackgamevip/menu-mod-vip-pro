@@ -1,5 +1,5 @@
 -- ==========================================
--- MENU VIP PRO MAX V1.21.0 (LUXURY CYBER-GLASS & BENTO SIDEBAR EDITION)
+-- MENU VIP PRO MAX V1.22.0 (LUXURY CYBER-GLASS & BENTO SIDEBAR EDITION)
 -- ==========================================
 repeat task.wait() until game:IsLoaded()
 
@@ -499,29 +499,33 @@ local onTab9Shown = nil
 local opened = true
 do
     local frameScale = Instance.new("UIScale", frame)
-    -- HEADER SANG TRỌNG VỚI DẢI NEON LINE
+    -- HEADER 3D CYBER-GLASS SANG TRỌNG VỚI DẢI LASER NEON ĐA SẮC
     local header = Instance.new("Frame", frame)
     header.Size = UDim2.new(1, 0, 0, 38); header.BackgroundColor3 = Color3.fromRGB(255, 255, 255); header.BackgroundTransparency = 0; header.BorderSizePixel = 0; header.ZIndex = 11
     Instance.new("UICorner", header).CornerRadius = UDim.new(0, 14)
-    addSoftGradient(header, Color3.fromRGB(30, 35, 52), Color3.fromRGB(19, 22, 34), 0)
+    addSoftGradient(header, Color3.fromRGB(28, 34, 54), Color3.fromRGB(16, 19, 32), 90)
+
+    local headerTopShine = Instance.new("Frame", header)
+    headerTopShine.Size = UDim2.new(1, -24, 0, 1); headerTopShine.Position = UDim2.new(0, 12, 0, 1)
+    headerTopShine.BackgroundColor3 = Color3.fromRGB(165, 225, 255); headerTopShine.BackgroundTransparency = 0.65; headerTopShine.BorderSizePixel = 0; headerTopShine.ZIndex = 12
 
     local headerCover = Instance.new("Frame", header)
-    headerCover.Size = UDim2.new(1, 0, 0, 12); headerCover.Position = UDim2.new(0, 0, 1, -12); headerCover.BackgroundColor3 = Color3.fromRGB(21, 24, 37); headerCover.BorderSizePixel = 0; headerCover.ZIndex = 11
+    headerCover.Size = UDim2.new(1, 0, 0, 12); headerCover.Position = UDim2.new(0, 0, 1, -12); headerCover.BackgroundColor3 = Color3.fromRGB(16, 19, 32); headerCover.BorderSizePixel = 0; headerCover.ZIndex = 11
 
     local headerLine = Instance.new("Frame", header)
-    headerLine.Size = UDim2.new(1, 0, 0, 1.5); headerLine.Position = UDim2.new(0, 0, 1, -1.5); headerLine.BackgroundColor3 = Color3.fromRGB(255, 255, 255); headerLine.BorderSizePixel = 0; headerLine.ZIndex = 12
+    headerLine.Size = UDim2.new(1, 0, 0, 1.6); headerLine.Position = UDim2.new(0, 0, 1, -1.6); headerLine.BackgroundColor3 = Color3.fromRGB(255, 255, 255); headerLine.BorderSizePixel = 0; headerLine.ZIndex = 12
     local hLineGrad = Instance.new("UIGradient", headerLine)
     hLineGrad.Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, Theme.Brand),
-        ColorSequenceKeypoint.new(0.5, Theme.AccentOn),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(165, 115, 255))
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(65, 240, 255)),
+        ColorSequenceKeypoint.new(0.5, Theme.Brand),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(195, 75, 255))
     })
 
     local avatarImg = Instance.new("ImageLabel", header)
     avatarImg.Size = UDim2.new(0, 26, 0, 26); avatarImg.Position = UDim2.new(0, 10, 0.5, -13); avatarImg.BackgroundColor3 = Theme.ItemBg; avatarImg.ZIndex = 12
     pcall(function() avatarImg.Image = Players:GetUserThumbnailAsync(player.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size420x420) end)
     Instance.new("UICorner", avatarImg).CornerRadius = UDim.new(1, 0)
-    avatarStroke = Instance.new("UIStroke", avatarImg); avatarStroke.Color = Theme.Brand; avatarStroke.Thickness = 1.4
+    avatarStroke = Instance.new("UIStroke", avatarImg); avatarStroke.Color = Theme.Brand; avatarStroke.Thickness = 1.5
 
     local onlineDot = Instance.new("Frame", avatarImg)
     onlineDot.Size = UDim2.new(0, 7, 0, 7); onlineDot.Position = UDim2.new(1, -6, 1, -6)
@@ -531,39 +535,48 @@ do
 
     titleLabel = Instance.new("TextLabel", header)
     titleLabel.Size = UDim2.new(0, 175, 0, 16); titleLabel.Position = UDim2.new(0, 43, 0, 5); titleLabel.BackgroundTransparency = 1
-    titleLabel.Text = "✨ MENU VIP PRO MAX"
-    titleLabel.TextColor3 = Theme.TextTitle; titleLabel.Font = Enum.Font.GothamBlack; titleLabel.TextSize = 11.5; titleLabel.TextXAlignment = Enum.TextXAlignment.Left; titleLabel.ZIndex = 12
+    titleLabel.Text = "⚡ MENU VIP PRO MAX"
+    titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255); titleLabel.Font = Enum.Font.GothamBlack; titleLabel.TextSize = 11.5; titleLabel.TextXAlignment = Enum.TextXAlignment.Left; titleLabel.ZIndex = 12
+    local titleGrad = Instance.new("UIGradient", titleLabel)
+    titleGrad.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
+        ColorSequenceKeypoint.new(0.55, Color3.fromRGB(165, 238, 255)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(215, 165, 255))
+    })
 
     local subTitleLabel = Instance.new("TextLabel", header)
     subTitleLabel.Size = UDim2.new(0, 180, 0, 12); subTitleLabel.Position = UDim2.new(0, 43, 0, 21); subTitleLabel.BackgroundTransparency = 1
-    subTitleLabel.RichText = true; subTitleLabel.Text = "@" .. player.Name .. " • <font color='#38CC88'>VIP ACTIVE</font>"
-    subTitleLabel.TextColor3 = Theme.TextDim; subTitleLabel.Font = Enum.Font.GothamSemibold; subTitleLabel.TextSize = 8.5; subTitleLabel.TextXAlignment = Enum.TextXAlignment.Left; subTitleLabel.ZIndex = 12
+    subTitleLabel.RichText = true; subTitleLabel.Text = "@" .. player.Name .. " • <font color='#48F0A8'>VIP PRO ACTIVE</font>"
+    subTitleLabel.TextColor3 = Theme.TextDim; subTitleLabel.Font = Enum.Font.GothamSemibold; subTitleLabel.TextSize = 8.4; subTitleLabel.TextXAlignment = Enum.TextXAlignment.Left; subTitleLabel.ZIndex = 12
 
     local headerStatPill = Instance.new("Frame", header)
-    headerStatPill.Size = UDim2.new(0, 110, 0, 22); headerStatPill.Position = UDim2.new(1, -200, 0.5, -11)
-    headerStatPill.BackgroundColor3 = Color3.fromRGB(14, 16, 25); headerStatPill.ZIndex = 12
+    headerStatPill.Size = UDim2.new(0, 112, 0, 22); headerStatPill.Position = UDim2.new(1, -202, 0.5, -11)
+    headerStatPill.BackgroundColor3 = Color3.fromRGB(255, 255, 255); headerStatPill.ZIndex = 12
     Instance.new("UICorner", headerStatPill).CornerRadius = UDim.new(1, 0)
-    local hspStroke = Instance.new("UIStroke", headerStatPill); hspStroke.Color = Theme.Stroke; hspStroke.Thickness = 1
+    addSoftGradient(headerStatPill, Color3.fromRGB(18, 22, 36), Color3.fromRGB(11, 14, 24), 90)
+    local hspStroke = Instance.new("UIStroke", headerStatPill); hspStroke.Color = Color3.fromRGB(58, 125, 215); hspStroke.Thickness = 1; hspStroke.Transparency = 0.25
 
     headerStatText = Instance.new("TextLabel", headerStatPill)
     headerStatText.Size = UDim2.new(1, 0, 1, 0); headerStatText.BackgroundTransparency = 1
     headerStatText.RichText = true; headerStatText.Text = "<font color='#38CC88'>60 FPS</font> • <font color='#58B6F2'>0ms</font>"
     headerStatText.TextColor3 = Theme.TextTitle; headerStatText.Font = Enum.Font.GothamBold; headerStatText.TextSize = 9; headerStatText.ZIndex = 13
 
-    -- Huy hiệu V1.21 nền tối dịu mắt, chữ thanh rõ nét không bị chói sáng trên Mobile
+    -- Huy hiệu V1.22 3D Cyber-Badge nền tối dịu mắt
     local verBadge = Instance.new("TextLabel", header)
-    verBadge.Size = UDim2.new(0, 48, 0, 20); verBadge.Position = UDim2.new(1, -83, 0.5, -10)
-    verBadge.BackgroundColor3 = Color3.fromRGB(18, 21, 30); verBadge.Text = "V1.21"; verBadge.TextColor3 = getSoftBrandColor(Theme.Brand)
-    verBadge.Font = Enum.Font.GothamSemibold; verBadge.TextSize = 9.5; verBadge.ZIndex = 12
+    verBadge.Size = UDim2.new(0, 48, 0, 21); verBadge.Position = UDim2.new(1, -83, 0.5, -10.5)
+    verBadge.BackgroundColor3 = Color3.fromRGB(255, 255, 255); verBadge.Text = "V1.22"; verBadge.TextColor3 = getSoftBrandColor(Theme.Brand)
+    verBadge.Font = Enum.Font.GothamBold; verBadge.TextSize = 9.2; verBadge.ZIndex = 12
     Instance.new("UICorner", verBadge).CornerRadius = UDim.new(0, 7)
-    local verStroke = Instance.new("UIStroke", verBadge); verStroke.Color = Theme.Brand; verStroke.Thickness = 0.8; verStroke.Transparency = 0.45
+    addSoftGradient(verBadge, Color3.fromRGB(22, 28, 46), Color3.fromRGB(14, 17, 28), 90)
+    local verStroke = Instance.new("UIStroke", verBadge); verStroke.Color = Theme.Brand; verStroke.Thickness = 0.95; verStroke.Transparency = 0.28
 
     local minBtn = Instance.new("TextButton", header)
     minBtn.Size = UDim2.new(0, 24, 0, 22); minBtn.Position = UDim2.new(1, -29, 0.5, -11)
-    minBtn.BackgroundColor3 = Color3.fromRGB(32, 37, 54); minBtn.Text = "—"; minBtn.TextColor3 = Theme.TextTitle
+    minBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255); minBtn.Text = "—"; minBtn.TextColor3 = Color3.fromRGB(195, 225, 255)
     minBtn.Font = Enum.Font.GothamBlack; minBtn.TextSize = 11; minBtn.AutoButtonColor = false; minBtn.ZIndex = 12
     Instance.new("UICorner", minBtn).CornerRadius = UDim.new(0, 7)
-    local minStroke = Instance.new("UIStroke", minBtn); minStroke.Color = Theme.Stroke; minStroke.Thickness = 1
+    addSoftGradient(minBtn, Color3.fromRGB(34, 42, 68), Color3.fromRGB(20, 24, 40), 90)
+    local minStroke = Instance.new("UIStroke", minBtn); minStroke.Color = Color3.fromRGB(72, 138, 225); minStroke.Thickness = 1; minStroke.Transparency = 0.25
 
     do
         local dragInput, dragStart, startPos = nil, nil, nil
@@ -598,8 +611,20 @@ do
     sidebarPatchRight.BackgroundColor3 = Theme.SidebarBg; sidebarPatchRight.BorderSizePixel = 0; sidebarPatchRight.ZIndex = 10
 
     local sidebarDivider = Instance.new("Frame", sidebar)
-    sidebarDivider.Size = UDim2.new(0, 1, 1, 0); sidebarDivider.Position = UDim2.new(1, -1, 0, 0)
-    sidebarDivider.BackgroundColor3 = Theme.Stroke; sidebarDivider.BorderSizePixel = 0; sidebarDivider.ZIndex = 11
+    sidebarDivider.Size = UDim2.new(0, 1.5, 1, 0); sidebarDivider.Position = UDim2.new(1, -1.5, 0, 0)
+    sidebarDivider.BackgroundColor3 = Color3.fromRGB(255, 255, 255); sidebarDivider.BorderSizePixel = 0; sidebarDivider.ZIndex = 11
+    local sbDivGrad = Instance.new("UIGradient", sidebarDivider)
+    sbDivGrad.Rotation = 90
+    sbDivGrad.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(65, 235, 255)),
+        ColorSequenceKeypoint.new(0.5, Theme.Brand),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(185, 75, 255))
+    })
+    sbDivGrad.Transparency = NumberSequence.new({
+        NumberSequenceKeypoint.new(0, 0.15),
+        NumberSequenceKeypoint.new(0.5, 0.25),
+        NumberSequenceKeypoint.new(1, 0.45)
+    })
 
     local tabBar = Instance.new("ScrollingFrame", sidebar)
     tabBar.Size = UDim2.new(1, 0, 1, 0); tabBar.BackgroundTransparency = 1; tabBar.BorderSizePixel = 0; tabBar.ZIndex = 11
@@ -1050,117 +1075,222 @@ do
     minBtn.MouseButton1Click:Connect(function() clickAnimate(minBtn); toggleMenuWindow() end)
 end
 -- ==========================================
--- COMPONENTS HỆ THỐNG
+-- COMPONENTS HỆ THỐNG 3D CYBER-GLASS NEON V1.22
 -- ==========================================
+local function splitLeadingIcon(rawText)
+    local str = tostring(rawText or "")
+    local sp = string.find(str, " ")
+    if sp and sp > 1 and sp <= 12 then
+        local firstTok = string.sub(str, 1, sp - 1)
+        if not string.match(firstTok, "[A-Za-z0-9]") then
+            local cleanTok = (firstTok == "•") and "⚡" or firstTok
+            return cleanTok, string.sub(str, sp + 1)
+        end
+    end
+    return "⚡", str
+end
+
+local function applyCyberSliderFillGrad(fillFrame, isActive)
+    local g = fillFrame:FindFirstChildOfClass("UIGradient") or Instance.new("UIGradient", fillFrame)
+    g.Rotation = 0
+    if isActive then
+        g.Color = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(65, 238, 255)),
+            ColorSequenceKeypoint.new(0.5, Color3.fromRGB(52, 232, 168)),
+            ColorSequenceKeypoint.new(1, Color3.fromRGB(135, 255, 205))
+        })
+    else
+        g.Color = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(68, 232, 255)),
+            ColorSequenceKeypoint.new(0.55, Color3.fromRGB(78, 152, 255)),
+            ColorSequenceKeypoint.new(1, Color3.fromRGB(192, 85, 255))
+        })
+    end
+end
+
 local function createDivider(parent, text)
     local dFrame = Instance.new("Frame", parent)
-    dFrame.Size = UDim2.new(0.94, 0, 0, 20); dFrame.BackgroundTransparency = 1; dFrame.ZIndex = 10
+    dFrame.Size = UDim2.new(0.94, 0, 0, 22); dFrame.BackgroundTransparency = 1; dFrame.ZIndex = 10
 
     local lineLeft = Instance.new("Frame", dFrame)
     lineLeft.Size = UDim2.new(1, 0, 0, 1.5); lineLeft.Position = UDim2.new(0, 0, 0.5, 0)
-    lineLeft.BackgroundColor3 = Theme.Brand; lineLeft.BorderSizePixel = 0; lineLeft.ZIndex = 10
+    lineLeft.BackgroundColor3 = Color3.fromRGB(255, 255, 255); lineLeft.BorderSizePixel = 0; lineLeft.ZIndex = 10
     local lineGrad = Instance.new("UIGradient", lineLeft)
+    lineGrad.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(65, 235, 255)),
+        ColorSequenceKeypoint.new(0.5, Theme.Brand),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(195, 85, 255))
+    })
     lineGrad.Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 1),
-        NumberSequenceKeypoint.new(0.2, 0.35),
-        NumberSequenceKeypoint.new(0.5, 0.1),
-        NumberSequenceKeypoint.new(0.8, 0.35),
-        NumberSequenceKeypoint.new(1, 1)
+        NumberSequenceKeypoint.new(0, 0.92),
+        NumberSequenceKeypoint.new(0.2, 0.28),
+        NumberSequenceKeypoint.new(0.5, 0.05),
+        NumberSequenceKeypoint.new(0.8, 0.28),
+        NumberSequenceKeypoint.new(1, 0.92)
     })
 
     local pill = Instance.new("TextLabel", dFrame)
-    pill.AutomaticSize = Enum.AutomaticSize.X; pill.Size = UDim2.new(0, 0, 0, 17)
+    pill.AutomaticSize = Enum.AutomaticSize.X; pill.Size = UDim2.new(0, 0, 0, 18)
     pill.AnchorPoint = Vector2.new(0.5, 0.5); pill.Position = UDim2.new(0.5, 0, 0.5, 0)
-    pill.BackgroundColor3 = Color3.fromRGB(16, 19, 29); pill.Text = "  " .. text .. "  "
-    pill.TextColor3 = Theme.Brand; pill.Font = Enum.Font.GothamBold; pill.TextSize = 8.8; pill.ZIndex = 11
+    pill.BackgroundColor3 = Color3.fromRGB(14, 18, 30); pill.Text = "  ◆ " .. text .. " ◆  "
+    pill.TextColor3 = getSoftBrandColor(Theme.Brand); pill.Font = Enum.Font.GothamBold; pill.TextSize = 8.6; pill.ZIndex = 11
     Instance.new("UICorner", pill).CornerRadius = UDim.new(1, 0)
-    local pStroke = Instance.new("UIStroke", pill); pStroke.Color = Theme.Brand; pStroke.Thickness = 0.9; pStroke.Transparency = 0.45
+    local pStroke = Instance.new("UIStroke", pill); pStroke.Color = Theme.Brand; pStroke.Thickness = 1; pStroke.Transparency = 0.32
     table.insert(RGBElements, {Type = "Button", Stroke = pStroke, DefaultColor = Theme.Brand, UseBrand = true})
     registerBrandUpdater(function(newBrand)
-        if lineLeft and lineLeft.Parent then lineLeft.BackgroundColor3 = newBrand end
-        if pill and pill.Parent then pill.TextColor3 = newBrand end
+        if pill and pill.Parent then pill.TextColor3 = getSoftBrandColor(newBrand) end
     end)
     return dFrame
 end
 
-local function createCycleBtn(parent, prefix, options, stateVar)
+local function createCycleBtn(parent, prefix, options, stateVar, callback)
+    local iconGlyph, cleanPrefix = splitLeadingIcon(prefix)
     local btnFrame = Instance.new("Frame", parent)
-    btnFrame.Size = UDim2.new(0.94, 0, 0, 32); btnFrame.BackgroundTransparency = 1
-    local btn = Instance.new("TextButton", btnFrame)
-    btn.Size = UDim2.new(1, 0, 1, 0); btn.BackgroundColor3 = Theme.ItemBg; btn.Text = ""; btn.AutoButtonColor = false; btn.ZIndex = 10
-    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
-    local stroke = Instance.new("UIStroke", btn); stroke.Color = Theme.Brand; stroke.Thickness = 1; stroke.Transparency = 0.25; stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-    table.insert(RGBElements, {Type = "Button", Stroke = stroke, DefaultColor = Theme.Brand, UseBrand = true})
+    btnFrame.Size = UDim2.new(0.94, 0, 0, 34); btnFrame.BackgroundTransparency = 1
 
-    local title = Instance.new("TextLabel", btn)
-    title.Size = UDim2.new(1, 0, 1, 0); title.BackgroundTransparency = 1; title.TextColor3 = Theme.Brand; title.Font = Enum.Font.GothamBold; title.TextSize = 10.5; title.ZIndex = 10
+    local btn = Instance.new("TextButton", btnFrame)
+    btn.Size = UDim2.new(1, 0, 1, 0); btn.BackgroundColor3 = Color3.fromRGB(255, 255, 255); btn.Text = ""; btn.AutoButtonColor = false; btn.ZIndex = 10
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 9)
+    addSoftGradient(btn, Color3.fromRGB(26, 31, 48), Color3.fromRGB(17, 20, 32), 90)
+    local stroke = Instance.new("UIStroke", btn); stroke.Color = Theme.Stroke; stroke.Thickness = 1.05; stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    table.insert(RGBElements, {Type = "Button", Stroke = stroke, DefaultColor = Theme.Stroke, UseBrand = false})
+
+    local iconBox = Instance.new("Frame", btn)
+    iconBox.Size = UDim2.new(0, 24, 0, 24); iconBox.Position = UDim2.new(0, 8, 0.5, -12)
+    iconBox.BackgroundColor3 = Color3.fromRGB(14, 18, 30); iconBox.BorderSizePixel = 0; iconBox.ZIndex = 11
+    Instance.new("UICorner", iconBox).CornerRadius = UDim.new(0, 7)
+    local ibStroke = Instance.new("UIStroke", iconBox); ibStroke.Color = Theme.Brand; ibStroke.Thickness = 0.9; ibStroke.Transparency = 0.35
+
+    local iconLbl = Instance.new("TextLabel", iconBox)
+    iconLbl.Size = UDim2.new(1, 0, 1, 0); iconLbl.BackgroundTransparency = 1
+    iconLbl.Text = iconGlyph; iconLbl.TextColor3 = Theme.TextTitle; iconLbl.Font = Enum.Font.GothamBold; iconLbl.TextSize = 11; iconLbl.ZIndex = 12
+
+    local prefixLbl = Instance.new("TextLabel", btn)
+    prefixLbl.Size = UDim2.new(0.52, -38, 1, 0); prefixLbl.Position = UDim2.new(0, 38, 0, 0)
+    prefixLbl.BackgroundTransparency = 1; prefixLbl.Text = cleanPrefix
+    prefixLbl.TextColor3 = Theme.TextTitle; prefixLbl.Font = Enum.Font.GothamSemibold; prefixLbl.TextSize = 9.8
+    prefixLbl.TextXAlignment = Enum.TextXAlignment.Left; prefixLbl.TextTruncate = Enum.TextTruncate.AtEnd; prefixLbl.ZIndex = 11
+
+    local valPill = Instance.new("Frame", btn)
+    valPill.Size = UDim2.new(0.46, 0, 0, 22); valPill.Position = UDim2.new(0.54, -6, 0.5, -11)
+    valPill.BackgroundColor3 = Color3.fromRGB(14, 18, 30); valPill.BorderSizePixel = 0; valPill.ZIndex = 11
+    Instance.new("UICorner", valPill).CornerRadius = UDim.new(1, 0)
+    local vpStroke = Instance.new("UIStroke", valPill); vpStroke.Color = Theme.Brand; vpStroke.Thickness = 1; vpStroke.Transparency = 0.25
+
+    local valTxt = Instance.new("TextLabel", valPill)
+    valTxt.Size = UDim2.new(1, -10, 1, 0); valTxt.Position = UDim2.new(0, 5, 0, 0)
+    valTxt.BackgroundTransparency = 1; valTxt.TextColor3 = getSoftBrandColor(Theme.Brand)
+    valTxt.Font = Enum.Font.GothamBold; valTxt.TextSize = 8.8; valTxt.TextTruncate = Enum.TextTruncate.AtEnd; valTxt.ZIndex = 12
+
     registerBrandUpdater(function(newBrand)
-        if title and title.Parent then title.TextColor3 = newBrand end
+        if ibStroke and ibStroke.Parent then ibStroke.Color = newBrand end
+        if vpStroke and vpStroke.Parent then vpStroke.Color = newBrand end
+        if valTxt and valTxt.Parent then valTxt.TextColor3 = getSoftBrandColor(newBrand) end
     end)
 
     local function updateText()
         local item = options[State[stateVar]] or options[1]
-        title.Text = prefix .. " " .. item.Name
+        valTxt.Text = "‹ " .. tostring(item.Name) .. " ›"
     end
     updateText()
 
     btn.MouseButton1Click:Connect(function()
         clickAnimate(btn)
-        State[stateVar] = State[stateVar] + 1
-        if State[stateVar] > #options then State[stateVar] = 1 end
+        State[stateVar] = (State[stateVar] % #options) + 1
         updateText()
+        if callback then pcall(callback, State[stateVar]) end
         if State.AutoSave then saveConfig() end
     end)
     return btnFrame
 end
 
 local function createToggle(parent, text, varName, callback)
+    local iconGlyph, cleanTitle = splitLeadingIcon(text)
     local btnFrame = Instance.new("Frame", parent)
-    btnFrame.Size = UDim2.new(0.94, 0, 0, 33); btnFrame.BackgroundTransparency = 1
+    btnFrame.Size = UDim2.new(0.94, 0, 0, 35); btnFrame.BackgroundTransparency = 1
 
     local btn = Instance.new("TextButton", btnFrame)
-    btn.Size = UDim2.new(1, 0, 1, 0); btn.Text = ""; btn.AutoButtonColor = false; btn.ZIndex = 10
-    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
-    local stroke = Instance.new("UIStroke", btn); stroke.Thickness = 1
+    btn.Size = UDim2.new(1, 0, 1, 0); btn.BackgroundColor3 = Color3.fromRGB(255, 255, 255); btn.Text = ""; btn.AutoButtonColor = false; btn.ZIndex = 10
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 9)
+    local cardGrad = addSoftGradient(btn, Color3.fromRGB(26, 31, 48), Color3.fromRGB(17, 20, 32), 90)
+    local stroke = Instance.new("UIStroke", btn); stroke.Thickness = 1.05
+
+    -- Vệt bóng kính mỏng phía trên thẻ 3D
+    local topShine = Instance.new("Frame", btn)
+    topShine.Size = UDim2.new(1, -18, 0, 1); topShine.Position = UDim2.new(0, 9, 0, 1)
+    topShine.BackgroundColor3 = Color3.fromRGB(165, 225, 255); topShine.BackgroundTransparency = 0.82; topShine.BorderSizePixel = 0; topShine.ZIndex = 11
 
     local leftBar = Instance.new("Frame", btn)
-    leftBar.Size = UDim2.new(0, 3, 0, 16); leftBar.Position = UDim2.new(0, 6, 0.5, -8)
+    leftBar.Size = UDim2.new(0, 3.5, 0, 18); leftBar.Position = UDim2.new(0, 5, 0.5, -9)
     leftBar.BorderSizePixel = 0; leftBar.ZIndex = 11
     Instance.new("UICorner", leftBar).CornerRadius = UDim.new(1, 0)
 
+    -- Hộp Icon 3D Cyber-Neon bên trái (đồng bộ với Sidebar)
+    local iconBox = Instance.new("Frame", btn)
+    iconBox.Size = UDim2.new(0, 24, 0, 24); iconBox.Position = UDim2.new(0, 13, 0.5, -12)
+    iconBox.BackgroundColor3 = Color3.fromRGB(14, 18, 30); iconBox.BorderSizePixel = 0; iconBox.ZIndex = 11
+    Instance.new("UICorner", iconBox).CornerRadius = UDim.new(0, 7)
+    local iconStroke = Instance.new("UIStroke", iconBox); iconStroke.Thickness = 0.95; iconStroke.Transparency = 0.25
+
+    local iconShine = Instance.new("Frame", iconBox)
+    iconShine.Size = UDim2.new(0, 6, 0, 2); iconShine.Position = UDim2.new(0, 3, 0, 2); iconShine.Rotation = -25
+    iconShine.BackgroundColor3 = Color3.fromRGB(215, 245, 255); iconShine.BackgroundTransparency = 0.55; iconShine.BorderSizePixel = 0; iconShine.ZIndex = 12
+    Instance.new("UICorner", iconShine).CornerRadius = UDim.new(1, 0)
+
+    local iconLbl = Instance.new("TextLabel", iconBox)
+    iconLbl.Size = UDim2.new(1, 0, 1, 0); iconLbl.BackgroundTransparency = 1
+    iconLbl.Text = iconGlyph; iconLbl.TextColor3 = Theme.TextTitle; iconLbl.Font = Enum.Font.GothamBold; iconLbl.TextSize = 11.5; iconLbl.ZIndex = 12
+
     local title = Instance.new("TextLabel", btn)
-    title.Size = UDim2.new(1, -76, 1, 0); title.Position = UDim2.new(0, 15, 0, 0)
-    title.BackgroundTransparency = 1; title.Text = text; title.TextColor3 = Theme.TextTitle
-    title.Font = Enum.Font.GothamSemibold; title.TextSize = 10.5; title.TextXAlignment = Enum.TextXAlignment.Left
+    title.Size = UDim2.new(1, -102, 1, 0); title.Position = UDim2.new(0, 43, 0, 0)
+    title.BackgroundTransparency = 1; title.Text = cleanTitle; title.TextColor3 = Theme.TextTitle
+    title.Font = Enum.Font.GothamSemibold; title.TextSize = 10.2; title.TextXAlignment = Enum.TextXAlignment.Left
     title.TextTruncate = Enum.TextTruncate.AtEnd; title.ZIndex = 11
 
+    -- Công tắc 3D Cyber-Neon có nhãn ON/OFF bên trong
     local switchTrack = Instance.new("Frame", btn)
-    switchTrack.Size = UDim2.new(0, 38, 0, 19); switchTrack.Position = UDim2.new(1, -46, 0.5, -9.5)
+    switchTrack.Size = UDim2.new(0, 44, 0, 20); switchTrack.Position = UDim2.new(1, -52, 0.5, -10)
     switchTrack.BorderSizePixel = 0; switchTrack.ZIndex = 11
     Instance.new("UICorner", switchTrack).CornerRadius = UDim.new(1, 0)
-    local switchStroke = Instance.new("UIStroke", switchTrack); switchStroke.Thickness = 1; switchStroke.Transparency = 0.25
+    local switchStroke = Instance.new("UIStroke", switchTrack); switchStroke.Thickness = 1.1; switchStroke.Transparency = 0.15
+
+    local switchStateTxt = Instance.new("TextLabel", switchTrack)
+    switchStateTxt.Size = UDim2.new(0, 22, 1, 0); switchStateTxt.BackgroundTransparency = 1
+    switchStateTxt.Font = Enum.Font.GothamBlack; switchStateTxt.TextSize = 7.2; switchStateTxt.ZIndex = 12
 
     local switchKnob = Instance.new("Frame", switchTrack)
-    switchKnob.Size = UDim2.new(0, 13, 0, 13); switchKnob.BorderSizePixel = 0; switchKnob.ZIndex = 12
+    switchKnob.Size = UDim2.new(0, 14, 0, 14); switchKnob.BorderSizePixel = 0; switchKnob.ZIndex = 13
     Instance.new("UICorner", switchKnob).CornerRadius = UDim.new(1, 0)
+    local knobStroke = Instance.new("UIStroke", switchKnob); knobStroke.Thickness = 1; knobStroke.Transparency = 0.25
 
     local active = State[varName] and true or false
 
     local function applyVisual(isOn, instant)
         active = isOn
-        local tInfo = TweenInfo.new(instant and 0 or 0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-        local trackCol = isOn and Color3.fromRGB(34, 118, 82) or Color3.fromRGB(18, 20, 28)
-        local knobCol = isOn and Color3.fromRGB(240, 255, 245) or Color3.fromRGB(125, 135, 155)
-        local knobPos = isOn and UDim2.new(1, -16, 0.5, -6.5) or UDim2.new(0, 3, 0.5, -6.5)
-        local barCol = isOn and Theme.AccentOn or Color3.fromRGB(60, 66, 84)
-        local bgCol = isOn and Theme.ItemActive or Theme.ItemBg
-        local borderCol = isOn and Color3.fromRGB(54, 140, 98) or Theme.Stroke
+        local tInfo = TweenInfo.new(instant and 0 or 0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+        local trackCol = isOn and Color3.fromRGB(22, 118, 92) or Color3.fromRGB(13, 16, 26)
+        local knobCol = isOn and Color3.fromRGB(242, 255, 250) or Color3.fromRGB(138, 150, 174)
+        local knobPos = isOn and UDim2.new(1, -17, 0.5, -7) or UDim2.new(0, 3, 0.5, -7)
+        local barCol = isOn and Color3.fromRGB(62, 238, 172) or Color3.fromRGB(58, 68, 92)
+        local borderCol = isOn and Color3.fromRGB(58, 195, 145) or Theme.Stroke
+
+        cardGrad.Color = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, isOn and Color3.fromRGB(22, 52, 50) or Color3.fromRGB(26, 31, 48)),
+            ColorSequenceKeypoint.new(1, isOn and Color3.fromRGB(14, 32, 34) or Color3.fromRGB(17, 20, 32))
+        })
+
+        switchStateTxt.Text = isOn and "ON" or "OFF"
+        switchStateTxt.Position = isOn and UDim2.new(0, 4, 0, 0) or UDim2.new(1, -24, 0, 0)
+        switchStateTxt.TextColor3 = isOn and Color3.fromRGB(145, 255, 210) or Color3.fromRGB(98, 110, 134)
 
         TweenService:Create(switchTrack, tInfo, {BackgroundColor3 = trackCol}):Play()
-        TweenService:Create(switchStroke, tInfo, {Color = isOn and Theme.AccentOn or Theme.Stroke}):Play()
+        TweenService:Create(switchStroke, tInfo, {Color = isOn and Color3.fromRGB(72, 242, 178) or Color3.fromRGB(48, 58, 82)}):Play()
         TweenService:Create(switchKnob, tInfo, {Position = knobPos, BackgroundColor3 = knobCol}):Play()
+        TweenService:Create(knobStroke, tInfo, {Color = isOn and Color3.fromRGB(115, 255, 210) or Color3.fromRGB(75, 86, 112)}):Play()
         TweenService:Create(leftBar, tInfo, {BackgroundColor3 = barCol}):Play()
-        TweenService:Create(btn, tInfo, {BackgroundColor3 = bgCol}):Play()
+        TweenService:Create(iconBox, tInfo, {BackgroundColor3 = isOn and Color3.fromRGB(14, 36, 38) or Color3.fromRGB(14, 18, 30)}):Play()
+        TweenService:Create(iconStroke, tInfo, {Color = isOn and Color3.fromRGB(68, 238, 175) or Color3.fromRGB(58, 115, 195)}):Play()
+        TweenService:Create(title, tInfo, {TextColor3 = isOn and Color3.fromRGB(245, 252, 255) or Color3.fromRGB(215, 225, 242)}):Play()
         if not State.RGB then
             TweenService:Create(stroke, tInfo, {Color = borderCol}):Play()
         end
@@ -1188,20 +1318,45 @@ end
 
 local function createButton(parent, text, color, callback)
     local isBrandColor = (color == Theme.Brand)
+    local iconGlyph, cleanTitle = splitLeadingIcon(text)
     local btnFrame = Instance.new("Frame", parent)
-    btnFrame.Size = UDim2.new(0.94, 0, 0, 31); btnFrame.BackgroundTransparency = 1
+    btnFrame.Size = UDim2.new(0.94, 0, 0, 33); btnFrame.BackgroundTransparency = 1
     local btn = Instance.new("TextButton", btnFrame)
     btn.Size = UDim2.new(1, 0, 1, 0); btn.BackgroundColor3 = Color3.fromRGB(255, 255, 255); btn.Text = ""; btn.AutoButtonColor = false; btn.ZIndex = 10
-    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
-    addSoftGradient(btn, Color3.fromRGB(32, 36, 50), Color3.fromRGB(24, 27, 38), 90)
-    local stroke = Instance.new("UIStroke", btn); stroke.Color = color; stroke.Thickness = 1.1; stroke.Transparency = 0.25; stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 9)
+    addSoftGradient(btn, Color3.fromRGB(28, 34, 52), Color3.fromRGB(18, 22, 35), 90)
+    local stroke = Instance.new("UIStroke", btn); stroke.Color = color; stroke.Thickness = 1.1; stroke.Transparency = 0.22; stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
     local rgbEntry = {Type = "Button", Stroke = stroke, DefaultColor = color, UseBrand = isBrandColor}
     table.insert(RGBElements, rgbEntry)
+
+    local iconBox = Instance.new("Frame", btn)
+    iconBox.Size = UDim2.new(0, 22, 0, 22); iconBox.Position = UDim2.new(0, 8, 0.5, -11)
+    iconBox.BackgroundColor3 = Color3.fromRGB(14, 18, 30); iconBox.BorderSizePixel = 0; iconBox.ZIndex = 11
+    Instance.new("UICorner", iconBox).CornerRadius = UDim.new(0, 6)
+    local ibStroke = Instance.new("UIStroke", iconBox); ibStroke.Color = color; ibStroke.Thickness = 0.9; ibStroke.Transparency = 0.35
+
+    local iconLbl = Instance.new("TextLabel", iconBox)
+    iconLbl.Size = UDim2.new(1, 0, 1, 0); iconLbl.BackgroundTransparency = 1
+    iconLbl.Text = iconGlyph; iconLbl.TextColor3 = Theme.TextTitle; iconLbl.Font = Enum.Font.GothamBold; iconLbl.TextSize = 11; iconLbl.ZIndex = 12
+
     local title = Instance.new("TextLabel", btn)
-    title.Size = UDim2.new(1, 0, 1, 0); title.BackgroundTransparency = 1; title.Text = text; title.TextColor3 = isBrandColor and getSoftBrandColor(color) or color; title.Font = Enum.Font.GothamSemibold; title.TextSize = 10.2; title.ZIndex = 10
+    title.Size = UDim2.new(1, -64, 1, 0); title.Position = UDim2.new(0, 36, 0, 0)
+    title.BackgroundTransparency = 1; title.Text = cleanTitle
+    title.TextColor3 = isBrandColor and getSoftBrandColor(color) or color
+    title.Font = Enum.Font.GothamBold; title.TextSize = 10.0; title.TextXAlignment = Enum.TextXAlignment.Left; title.ZIndex = 11
+
+    local arrowBadge = Instance.new("TextLabel", btn)
+    arrowBadge.Size = UDim2.new(0, 20, 0, 20); arrowBadge.Position = UDim2.new(1, -26, 0.5, -10)
+    arrowBadge.BackgroundColor3 = Color3.fromRGB(14, 18, 30); arrowBadge.Text = "›"
+    arrowBadge.TextColor3 = isBrandColor and getSoftBrandColor(color) or color
+    arrowBadge.Font = Enum.Font.GothamBlack; arrowBadge.TextSize = 13; arrowBadge.ZIndex = 11
+    Instance.new("UICorner", arrowBadge).CornerRadius = UDim.new(1, 0)
+
     if isBrandColor then
         registerBrandUpdater(function(newBrand)
             if title and title.Parent then title.TextColor3 = getSoftBrandColor(newBrand) end
+            if arrowBadge and arrowBadge.Parent then arrowBadge.TextColor3 = getSoftBrandColor(newBrand) end
+            if ibStroke and ibStroke.Parent then ibStroke.Color = newBrand end
         end)
     end
     btn.MouseButton1Click:Connect(function()
@@ -1215,17 +1370,17 @@ end
 
 local function createDualButtons(parent, text1, color1, cb1, text2, color2, cb2)
     local dFrame = Instance.new("Frame", parent)
-    dFrame.Size = UDim2.new(0.94, 0, 0, 30); dFrame.BackgroundTransparency = 1
+    dFrame.Size = UDim2.new(0.94, 0, 0, 32); dFrame.BackgroundTransparency = 1
     local function makeBtn(xPos, txt, col, cb)
         local isBrandColor = (col == Theme.Brand)
         local btn = Instance.new("TextButton", dFrame)
         btn.Size = UDim2.new(0.486, 0, 1, 0); btn.Position = UDim2.new(xPos, 0, 0, 0); btn.BackgroundColor3 = Color3.fromRGB(255, 255, 255); btn.Text = ""; btn.AutoButtonColor = false; btn.ZIndex = 10
-        Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
-        addSoftGradient(btn, Color3.fromRGB(31, 35, 48), Color3.fromRGB(23, 26, 36), 90)
-        local stroke = Instance.new("UIStroke", btn); stroke.Color = col; stroke.Thickness = 1.1; stroke.Transparency = 0.25; stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+        Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 9)
+        addSoftGradient(btn, Color3.fromRGB(28, 33, 50), Color3.fromRGB(18, 22, 34), 90)
+        local stroke = Instance.new("UIStroke", btn); stroke.Color = col; stroke.Thickness = 1.1; stroke.Transparency = 0.24; stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
         table.insert(RGBElements, {Type = "Button", Stroke = stroke, DefaultColor = col, UseBrand = isBrandColor})
         local title = Instance.new("TextLabel", btn)
-        title.Size = UDim2.new(1, -6, 1, 0); title.Position = UDim2.new(0, 3, 0, 0); title.BackgroundTransparency = 1; title.Text = txt; title.TextColor3 = isBrandColor and getSoftBrandColor(col) or col; title.Font = Enum.Font.GothamSemibold; title.TextSize = 9.5; title.TextTruncate = Enum.TextTruncate.AtEnd; title.ZIndex = 10
+        title.Size = UDim2.new(1, -8, 1, 0); title.Position = UDim2.new(0, 4, 0, 0); title.BackgroundTransparency = 1; title.Text = txt; title.TextColor3 = isBrandColor and getSoftBrandColor(col) or col; title.Font = Enum.Font.GothamBold; title.TextSize = 9.4; title.TextTruncate = Enum.TextTruncate.AtEnd; title.ZIndex = 10
         if isBrandColor then
             registerBrandUpdater(function(newBrand)
                 if title and title.Parent then title.TextColor3 = getSoftBrandColor(newBrand) end
@@ -1244,49 +1399,51 @@ end
 
 local function createSlider(parent, text, min, max, varName, callback)
     local sFrame = Instance.new("Frame", parent)
-    sFrame.Size = UDim2.new(0.94, 0, 0, 38); sFrame.BackgroundTransparency = 1
-    local bg = Instance.new("Frame", sFrame); bg.Size = UDim2.new(1, 0, 1, 0); bg.BackgroundColor3 = Theme.ItemBg; bg.ZIndex = 10
-    Instance.new("UICorner", bg).CornerRadius = UDim.new(0, 8)
-    local stroke = Instance.new("UIStroke", bg); stroke.Color = Theme.Stroke; stroke.Thickness = 1
+    sFrame.Size = UDim2.new(0.94, 0, 0, 40); sFrame.BackgroundTransparency = 1
+    local bg = Instance.new("Frame", sFrame); bg.Size = UDim2.new(1, 0, 1, 0); bg.BackgroundColor3 = Color3.fromRGB(255, 255, 255); bg.ZIndex = 10
+    Instance.new("UICorner", bg).CornerRadius = UDim.new(0, 9)
+    addSoftGradient(bg, Color3.fromRGB(26, 31, 48), Color3.fromRGB(17, 20, 32), 90)
+    local stroke = Instance.new("UIStroke", bg); stroke.Color = Theme.Stroke; stroke.Thickness = 1.05
     table.insert(RGBElements, {Type = "Slider", Stroke = stroke})
 
     local titleLabel = Instance.new("TextLabel", bg)
-    titleLabel.Size = UDim2.new(0.72, 0, 0, 17); titleLabel.Position = UDim2.new(0, 12, 0, 3)
+    titleLabel.Size = UDim2.new(0.72, 0, 0, 18); titleLabel.Position = UDim2.new(0, 12, 0, 3)
     titleLabel.BackgroundTransparency = 1; titleLabel.Text = text; titleLabel.TextColor3 = Theme.TextTitle
-    titleLabel.Font = Enum.Font.GothamSemibold; titleLabel.TextSize = 10; titleLabel.TextXAlignment = Enum.TextXAlignment.Left; titleLabel.ZIndex = 10
+    titleLabel.Font = Enum.Font.GothamSemibold; titleLabel.TextSize = 9.8; titleLabel.TextXAlignment = Enum.TextXAlignment.Left; titleLabel.ZIndex = 10
 
     local valBadge = Instance.new("Frame", bg)
-    valBadge.Size = UDim2.new(0, 44, 0, 15); valBadge.Position = UDim2.new(1, -54, 0, 4)
-    valBadge.BackgroundColor3 = Color3.fromRGB(17, 19, 27); valBadge.ZIndex = 10
-    Instance.new("UICorner", valBadge).CornerRadius = UDim.new(0, 5)
-    local valStroke = Instance.new("UIStroke", valBadge); valStroke.Color = Theme.Stroke; valStroke.Thickness = 0.8
+    valBadge.Size = UDim2.new(0, 46, 0, 16); valBadge.Position = UDim2.new(1, -56, 0, 4)
+    valBadge.BackgroundColor3 = Color3.fromRGB(13, 16, 26); valBadge.ZIndex = 10
+    Instance.new("UICorner", valBadge).CornerRadius = UDim.new(1, 0)
+    local valStroke = Instance.new("UIStroke", valBadge); valStroke.Color = Theme.Brand; valStroke.Thickness = 0.9; valStroke.Transparency = 0.3
 
     local valLabel = Instance.new("TextLabel", valBadge)
     valLabel.Size = UDim2.new(1, 0, 1, 0); valLabel.BackgroundTransparency = 1
-    valLabel.Text = tostring(State[varName]); valLabel.TextColor3 = Theme.Brand
-    valLabel.Font = Enum.Font.GothamBold; valLabel.TextSize = 9.5; valLabel.ZIndex = 11
+    valLabel.Text = tostring(State[varName]); valLabel.TextColor3 = getSoftBrandColor(Theme.Brand)
+    valLabel.Font = Enum.Font.GothamBold; valLabel.TextSize = 9.2; valLabel.ZIndex = 11
 
     local track = Instance.new("Frame", bg)
-    track.Size = UDim2.new(1, -24, 0, 5); track.Position = UDim2.new(0, 12, 0, 25)
-    track.BackgroundColor3 = Color3.fromRGB(15, 17, 24); track.ZIndex = 10
+    track.Size = UDim2.new(1, -24, 0, 6); track.Position = UDim2.new(0, 12, 0, 26)
+    track.BackgroundColor3 = Color3.fromRGB(12, 15, 24); track.ZIndex = 10
     Instance.new("UICorner", track).CornerRadius = UDim.new(1, 0)
+    local trkStroke = Instance.new("UIStroke", track); trkStroke.Color = Color3.fromRGB(38, 46, 68); trkStroke.Thickness = 0.7
 
     local initPos = math.clamp((State[varName] - min) / (max - min), 0, 1)
     local fill = Instance.new("Frame", track)
-    fill.Size = UDim2.new(initPos, 0, 1, 0); fill.BackgroundColor3 = Theme.Brand; fill.ZIndex = 11
+    fill.Size = UDim2.new(initPos, 0, 1, 0); fill.BackgroundColor3 = Color3.fromRGB(255, 255, 255); fill.ZIndex = 11
     Instance.new("UICorner", fill).CornerRadius = UDim.new(1, 0)
+    applyCyberSliderFillGrad(fill, false)
 
     local knob = Instance.new("Frame", track)
-    knob.Size = UDim2.new(0, 11, 0, 11); knob.AnchorPoint = Vector2.new(0.5, 0.5)
+    knob.Size = UDim2.new(0, 12, 0, 12); knob.AnchorPoint = Vector2.new(0.5, 0.5)
     knob.Position = UDim2.new(initPos, 0, 0.5, 0)
-    knob.BackgroundColor3 = Color3.fromRGB(240, 248, 255); knob.ZIndex = 12
+    knob.BackgroundColor3 = Color3.fromRGB(245, 250, 255); knob.ZIndex = 12
     Instance.new("UICorner", knob).CornerRadius = UDim.new(1, 0)
-    local knobStroke = Instance.new("UIStroke", knob); knobStroke.Color = Theme.Brand; knobStroke.Thickness = 1.4
+    local knobStroke = Instance.new("UIStroke", knob); knobStroke.Color = Color3.fromRGB(68, 232, 255); knobStroke.Thickness = 1.5
 
     registerBrandUpdater(function(newBrand)
-        if valLabel and valLabel.Parent then valLabel.TextColor3 = newBrand end
-        if fill and fill.Parent then fill.BackgroundColor3 = newBrand end
-        if knobStroke and knobStroke.Parent then knobStroke.Color = newBrand end
+        if valLabel and valLabel.Parent then valLabel.TextColor3 = getSoftBrandColor(newBrand) end
+        if valStroke and valStroke.Parent then valStroke.Color = newBrand end
     end)
 
     local dragInput = nil
@@ -1320,74 +1477,91 @@ local function createSlider(parent, text, min, max, varName, callback)
 end
 
 local function createCombinedToggleSlider(parent, toggleText, toggleVar, sliderText, min, max, sliderVar, toggleCb, sliderCb)
+    local iconGlyph, cleanTitle = splitLeadingIcon(toggleText)
     local card = Instance.new("Frame", parent)
-    card.Size = UDim2.new(0.94, 0, 0, 62)
-    card.BackgroundColor3 = Theme.ItemBg
+    card.Size = UDim2.new(0.94, 0, 0, 66)
+    card.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     card.ZIndex = 10
-    Instance.new("UICorner", card).CornerRadius = UDim.new(0, 8)
-    local stroke = Instance.new("UIStroke", card); stroke.Thickness = 1
+    Instance.new("UICorner", card).CornerRadius = UDim.new(0, 9)
+    local cardGrad = addSoftGradient(card, Color3.fromRGB(26, 31, 48), Color3.fromRGB(16, 19, 30), 90)
+    local stroke = Instance.new("UIStroke", card); stroke.Thickness = 1.05
 
     local topBtn = Instance.new("TextButton", card)
-    topBtn.Size = UDim2.new(1, 0, 0, 30); topBtn.BackgroundTransparency = 1
+    topBtn.Size = UDim2.new(1, 0, 0, 33); topBtn.BackgroundTransparency = 1
     topBtn.Text = ""; topBtn.AutoButtonColor = false; topBtn.ZIndex = 11
 
     local leftBar = Instance.new("Frame", topBtn)
-    leftBar.Size = UDim2.new(0, 3, 0, 15); leftBar.Position = UDim2.new(0, 6, 0.5, -7.5)
+    leftBar.Size = UDim2.new(0, 3.5, 0, 17); leftBar.Position = UDim2.new(0, 5, 0.5, -8.5)
     leftBar.BorderSizePixel = 0; leftBar.ZIndex = 12
     Instance.new("UICorner", leftBar).CornerRadius = UDim.new(1, 0)
 
+    local iconBox = Instance.new("Frame", topBtn)
+    iconBox.Size = UDim2.new(0, 23, 0, 23); iconBox.Position = UDim2.new(0, 13, 0.5, -11.5)
+    iconBox.BackgroundColor3 = Color3.fromRGB(14, 18, 30); iconBox.BorderSizePixel = 0; iconBox.ZIndex = 12
+    Instance.new("UICorner", iconBox).CornerRadius = UDim.new(0, 7)
+    local iconStroke = Instance.new("UIStroke", iconBox); iconStroke.Thickness = 0.9; iconStroke.Transparency = 0.25
+
+    local iconLbl = Instance.new("TextLabel", iconBox)
+    iconLbl.Size = UDim2.new(1, 0, 1, 0); iconLbl.BackgroundTransparency = 1
+    iconLbl.Text = iconGlyph; iconLbl.TextColor3 = Theme.TextTitle; iconLbl.Font = Enum.Font.GothamBold; iconLbl.TextSize = 11; iconLbl.ZIndex = 13
+
     local title = Instance.new("TextLabel", topBtn)
-    title.Size = UDim2.new(1, -70, 1, 0); title.Position = UDim2.new(0, 15, 0, 0)
-    title.BackgroundTransparency = 1; title.Text = toggleText; title.TextColor3 = Theme.TextTitle
-    title.Font = Enum.Font.GothamBold; title.TextSize = 10.5
+    title.Size = UDim2.new(1, -100, 1, 0); title.Position = UDim2.new(0, 42, 0, 0)
+    title.BackgroundTransparency = 1; title.Text = cleanTitle; title.TextColor3 = Theme.TextTitle
+    title.Font = Enum.Font.GothamBold; title.TextSize = 10.2
     title.TextXAlignment = Enum.TextXAlignment.Left; title.TextTruncate = Enum.TextTruncate.AtEnd; title.ZIndex = 12
 
     local switchTrack = Instance.new("Frame", topBtn)
-    switchTrack.Size = UDim2.new(0, 38, 0, 18); switchTrack.Position = UDim2.new(1, -46, 0.5, -9)
+    switchTrack.Size = UDim2.new(0, 44, 0, 19); switchTrack.Position = UDim2.new(1, -52, 0.5, -9.5)
     switchTrack.BorderSizePixel = 0; switchTrack.ZIndex = 12
     Instance.new("UICorner", switchTrack).CornerRadius = UDim.new(1, 0)
-    local switchStroke = Instance.new("UIStroke", switchTrack); switchStroke.Thickness = 1; switchStroke.Transparency = 0.25
+    local switchStroke = Instance.new("UIStroke", switchTrack); switchStroke.Thickness = 1.1; switchStroke.Transparency = 0.15
+
+    local switchStateTxt = Instance.new("TextLabel", switchTrack)
+    switchStateTxt.Size = UDim2.new(0, 22, 1, 0); switchStateTxt.BackgroundTransparency = 1
+    switchStateTxt.Font = Enum.Font.GothamBlack; switchStateTxt.TextSize = 7.2; switchStateTxt.ZIndex = 13
 
     local switchKnob = Instance.new("Frame", switchTrack)
-    switchKnob.Size = UDim2.new(0, 12, 0, 12); switchKnob.BorderSizePixel = 0; switchKnob.ZIndex = 13
+    switchKnob.Size = UDim2.new(0, 13, 0, 13); switchKnob.BorderSizePixel = 0; switchKnob.ZIndex = 14
     Instance.new("UICorner", switchKnob).CornerRadius = UDim.new(1, 0)
 
     local divider = Instance.new("Frame", card)
-    divider.Size = UDim2.new(1, -16, 0, 1); divider.Position = UDim2.new(0, 8, 0, 30)
-    divider.BackgroundColor3 = Theme.Stroke; divider.BackgroundTransparency = 0.35; divider.BorderSizePixel = 0; divider.ZIndex = 11
+    divider.Size = UDim2.new(1, -20, 0, 1); divider.Position = UDim2.new(0, 10, 0, 33)
+    divider.BackgroundColor3 = Theme.Stroke; divider.BackgroundTransparency = 0.45; divider.BorderSizePixel = 0; divider.ZIndex = 11
 
     local sliderArea = Instance.new("Frame", card)
-    sliderArea.Size = UDim2.new(1, 0, 0, 31); sliderArea.Position = UDim2.new(0, 0, 0, 31)
+    sliderArea.Size = UDim2.new(1, 0, 0, 32); sliderArea.Position = UDim2.new(0, 0, 0, 34)
     sliderArea.BackgroundTransparency = 1; sliderArea.ZIndex = 11
 
     local sTitle = Instance.new("TextLabel", sliderArea)
-    sTitle.Size = UDim2.new(0.68, 0, 0, 14); sTitle.Position = UDim2.new(0, 15, 0, 2)
-    sTitle.BackgroundTransparency = 1; sTitle.Text = "• " .. sliderText
-    sTitle.Font = Enum.Font.GothamSemibold; sTitle.TextSize = 9.5; sTitle.TextXAlignment = Enum.TextXAlignment.Left; sTitle.ZIndex = 12
+    sTitle.Size = UDim2.new(0.68, 0, 0, 14); sTitle.Position = UDim2.new(0, 14, 0, 2)
+    sTitle.BackgroundTransparency = 1; sTitle.Text = "▸ " .. sliderText
+    sTitle.Font = Enum.Font.GothamSemibold; sTitle.TextSize = 9.2; sTitle.TextXAlignment = Enum.TextXAlignment.Left; sTitle.ZIndex = 12
 
     local valBadge = Instance.new("Frame", sliderArea)
-    valBadge.Size = UDim2.new(0, 44, 0, 14); valBadge.Position = UDim2.new(1, -52, 0, 2)
-    valBadge.BackgroundColor3 = Color3.fromRGB(16, 18, 26); valBadge.ZIndex = 12
-    Instance.new("UICorner", valBadge).CornerRadius = UDim.new(0, 4)
-    local valStroke = Instance.new("UIStroke", valBadge); valStroke.Color = Theme.Stroke; valStroke.Thickness = 0.8
+    valBadge.Size = UDim2.new(0, 46, 0, 15); valBadge.Position = UDim2.new(1, -54, 0, 2)
+    valBadge.BackgroundColor3 = Color3.fromRGB(13, 16, 26); valBadge.ZIndex = 12
+    Instance.new("UICorner", valBadge).CornerRadius = UDim.new(1, 0)
+    local valStroke = Instance.new("UIStroke", valBadge); valStroke.Color = Theme.Stroke; valStroke.Thickness = 0.85
 
     local valLabel = Instance.new("TextLabel", valBadge)
     valLabel.Size = UDim2.new(1, 0, 1, 0); valLabel.BackgroundTransparency = 1
-    valLabel.Text = tostring(State[sliderVar]); valLabel.Font = Enum.Font.GothamBold; valLabel.TextSize = 9.5; valLabel.ZIndex = 13
+    valLabel.Text = tostring(State[sliderVar]); valLabel.Font = Enum.Font.GothamBold; valLabel.TextSize = 9.0; valLabel.ZIndex = 13
 
     local track = Instance.new("Frame", sliderArea)
-    track.Size = UDim2.new(1, -26, 0, 5); track.Position = UDim2.new(0, 13, 0, 20)
-    track.BackgroundColor3 = Color3.fromRGB(15, 17, 24); track.ZIndex = 12
+    track.Size = UDim2.new(1, -26, 0, 5.5); track.Position = UDim2.new(0, 13, 0, 21)
+    track.BackgroundColor3 = Color3.fromRGB(12, 15, 24); track.ZIndex = 12
     Instance.new("UICorner", track).CornerRadius = UDim.new(1, 0)
+    local trkStroke = Instance.new("UIStroke", track); trkStroke.Color = Color3.fromRGB(38, 46, 68); trkStroke.Thickness = 0.7
 
     local initPos = math.clamp((State[sliderVar] - min) / (max - min), 0, 1)
     local fill = Instance.new("Frame", track)
-    fill.Size = UDim2.new(initPos, 0, 1, 0); fill.BackgroundColor3 = Theme.Brand; fill.ZIndex = 13
+    fill.Size = UDim2.new(initPos, 0, 1, 0); fill.BackgroundColor3 = Color3.fromRGB(255, 255, 255); fill.ZIndex = 13
     Instance.new("UICorner", fill).CornerRadius = UDim.new(1, 0)
 
     local knob = Instance.new("Frame", track)
-    knob.Size = UDim2.new(0, 11, 0, 11); knob.AnchorPoint = Vector2.new(0.5, 0.5)
-    knob.Position = UDim2.new(initPos, 0, 0.5, 0); knob.BackgroundColor3 = Color3.fromRGB(240, 248, 255); knob.ZIndex = 14
+    knob.Size = UDim2.new(0, 11.5, 0, 11.5); knob.AnchorPoint = Vector2.new(0.5, 0.5)
+    knob.Position = UDim2.new(initPos, 0, 0.5, 0); knob.BackgroundColor3 = Color3.fromRGB(245, 250, 255); knob.ZIndex = 14
     Instance.new("UICorner", knob).CornerRadius = UDim.new(1, 0)
     local knobStroke = Instance.new("UIStroke", knob); knobStroke.Thickness = 1.4
 
@@ -1395,22 +1569,33 @@ local function createCombinedToggleSlider(parent, toggleText, toggleVar, sliderT
 
     local function syncVisual(isOn, instant)
         active = isOn
-        local tInfo = TweenInfo.new(instant and 0 or 0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-        local trackCol = isOn and Color3.fromRGB(34, 118, 82) or Color3.fromRGB(18, 20, 28)
-        local knobCol = isOn and Color3.fromRGB(240, 255, 245) or Color3.fromRGB(125, 135, 155)
-        local knobPos = isOn and UDim2.new(1, -15, 0.5, -6) or UDim2.new(0, 3, 0.5, -6)
-        local barCol = isOn and Theme.AccentOn or Color3.fromRGB(60, 66, 84)
-        local bgCol = isOn and Theme.ItemActive or Theme.ItemBg
-        local borderCol = isOn and Color3.fromRGB(54, 140, 98) or Theme.Stroke
-        local sliderAccent = isOn and Theme.AccentOn or Theme.Brand
+        local tInfo = TweenInfo.new(instant and 0 or 0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+        local trackCol = isOn and Color3.fromRGB(22, 118, 92) or Color3.fromRGB(13, 16, 26)
+        local knobCol = isOn and Color3.fromRGB(242, 255, 250) or Color3.fromRGB(138, 150, 174)
+        local knobPos = isOn and UDim2.new(1, -16, 0.5, -6.5) or UDim2.new(0, 3, 0.5, -6.5)
+        local barCol = isOn and Color3.fromRGB(62, 238, 172) or Color3.fromRGB(58, 68, 92)
+        local borderCol = isOn and Color3.fromRGB(58, 195, 145) or Theme.Stroke
+        local sliderAccent = isOn and Color3.fromRGB(72, 242, 178) or Color3.fromRGB(68, 225, 255)
+
+        cardGrad.Color = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, isOn and Color3.fromRGB(22, 52, 50) or Color3.fromRGB(26, 31, 48)),
+            ColorSequenceKeypoint.new(1, isOn and Color3.fromRGB(14, 30, 34) or Color3.fromRGB(16, 19, 30))
+        })
+
+        switchStateTxt.Text = isOn and "ON" or "OFF"
+        switchStateTxt.Position = isOn and UDim2.new(0, 4, 0, 0) or UDim2.new(1, -24, 0, 0)
+        switchStateTxt.TextColor3 = isOn and Color3.fromRGB(145, 255, 210) or Color3.fromRGB(98, 110, 134)
+
+        applyCyberSliderFillGrad(fill, isOn)
 
         TweenService:Create(switchTrack, tInfo, {BackgroundColor3 = trackCol}):Play()
-        TweenService:Create(switchStroke, tInfo, {Color = isOn and Theme.AccentOn or Theme.Stroke}):Play()
+        TweenService:Create(switchStroke, tInfo, {Color = isOn and Color3.fromRGB(72, 242, 178) or Color3.fromRGB(48, 58, 82)}):Play()
         TweenService:Create(switchKnob, tInfo, {Position = knobPos, BackgroundColor3 = knobCol}):Play()
         TweenService:Create(leftBar, tInfo, {BackgroundColor3 = barCol}):Play()
-        TweenService:Create(card, tInfo, {BackgroundColor3 = bgCol}):Play()
-        TweenService:Create(fill, tInfo, {BackgroundColor3 = sliderAccent}):Play()
+        TweenService:Create(iconBox, tInfo, {BackgroundColor3 = isOn and Color3.fromRGB(14, 36, 38) or Color3.fromRGB(14, 18, 30)}):Play()
+        TweenService:Create(iconStroke, tInfo, {Color = isOn and Color3.fromRGB(68, 238, 175) or Color3.fromRGB(58, 115, 195)}):Play()
         TweenService:Create(knobStroke, tInfo, {Color = sliderAccent}):Play()
+        TweenService:Create(valStroke, tInfo, {Color = sliderAccent}):Play()
         TweenService:Create(valLabel, tInfo, {TextColor3 = sliderAccent}):Play()
         TweenService:Create(sTitle, tInfo, {TextColor3 = isOn and Theme.TextTitle or Theme.TextDim}):Play()
 
@@ -1506,6 +1691,7 @@ local wasHorizontalTp = false
 do
 
 -- Sửa lỗi không bật lại trạng thái FallingDown/Ragdoll khi tắt AntiStun
+createDivider(page2, "DI CHUYỂN & CHỐNG KHỐNG CHẾ")
 createToggle(page2, "🛡️ Chống ngã & Chống văng xa", "AntiStun", function(v)
     if not v and player.Character then
         pcall(function()
@@ -1599,6 +1785,7 @@ createToggle(page2, "🚷 Đi xuyên tường (Noclip)", "Noclip", function(v)
     end
 end)
 
+createDivider(page2, "THU THẬP TỰ ĐỘNG & QUAN SÁT BẢN ĐỒ")
 createToggle(page2, "⚡ Lấy đồ nhanh (Instant Prompt)", "Instant")
 createToggle(page2, "🧲 Auto nhặt đồ & Tool xung quanh", "AutoCollect")
 createToggle(page2, "💎 Hút Tiền, Ngọc & Vật phẩm rơi (Magnet)", "MagnetOrbs")
@@ -1629,6 +1816,7 @@ createToggle(page2, "👀 Nhìn xuyên bản đồ (Xray)", "XRay", function(v)
     end)
 end)
 
+createDivider(page2, "CÔNG CỤ HỖ TRỢ ĐẶC BIỆT")
 createButton(page2, "⚡ NHẬN GẬY CLICK TP", Theme.Brand, function()
     local backpack = player:FindFirstChildOfClass("Backpack")
     if not backpack then return end
@@ -1687,6 +1875,7 @@ do
 local defaultWalkSpeed = 16
 local defaultJumpPower = 50
 
+createDivider(page3, "TỐC ĐỘ DI CHUYỂN & BAY LƯỢN")
 createCombinedToggleSlider(page3, "🕊️ Bay trên bầu trời (Fly)", "Fly", "Tốc độ bay", 10, 1000, "FlySpeed", function(v)
     local char = player.Character
     if char then
@@ -1741,11 +1930,13 @@ end)
 
 createCombinedToggleSlider(page3, "💨 Lướt liên tục (Auto Dash)", "AutoDash", "Tốc độ lướt", 1, 50, "DashSpeed")
 
+createDivider(page3, "CHIẾN ĐẤU & MỞ RỘNG TẦM ĐÁNH")
 createToggle(page3, "🖱️ Auto Click Vũ Khí", "AutoClick")
 createCombinedToggleSlider(page3, "⚔️ Đánh xa (Reach Vũ Khí)", "Reach", "Kích thước vũ khí", 0, 300, "ReachSize")
 createCombinedToggleSlider(page3, "🎯 Mở rộng Hitbox", "Hitbox", "Kích thước Hitbox", 0, 100, "HitboxSize")
 createCombinedToggleSlider(page3, "🌪️ Xoay vòng tròn (SpinBot)", "SpinBot", "Tốc độ xoay", 0, 100, "SpinSpeed")
 
+createDivider(page3, "HIỆU ỨNG ÁNH SÁNG NHÂN VẬT")
 createCombinedToggleSlider(page3, "💡 Ánh sáng quanh người", "PlayerLight", "Phạm vi sáng (Max 60)", 0, 60, "LightRange", function(v)
     if not v and player.Character then
         local root = getUniversalRoot(player.Character)
@@ -5805,7 +5996,7 @@ do
         local s = execTime % 60
 
         sysBody.Text = string.format(
-            "<font color='#78B4DC'>• Executor:</font> <font color='#38CC88'>%s</font>   |   <font color='#78B4DC'>Phiên bản:</font> <font color='#E09F67'>V1.21.0</font>\n" ..
+            "<font color='#78B4DC'>• Executor:</font> <font color='#38CC88'>%s</font>   |   <font color='#78B4DC'>Phiên bản:</font> <font color='#E09F67'>V1.22.0</font>\n" ..
             "<font color='#78B4DC'>• Treo máy:</font> %02d:%02d:%02d   |   <font color='#78B4DC'>Giờ hệ thống:</font> %s",
             execName, h, m, s, os.date("%H:%M:%S")
         )
