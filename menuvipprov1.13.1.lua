@@ -1,5 +1,5 @@
 -- ==========================================
--- MENU VIP PRO MAX V1.20.0 (LUXURY CYBER-GLASS & BENTO SIDEBAR EDITION)
+-- MENU VIP PRO MAX V1.21.0 (LUXURY CYBER-GLASS & BENTO SIDEBAR EDITION)
 -- ==========================================
 repeat task.wait() until game:IsLoaded()
 
@@ -30,10 +30,13 @@ local State = {
     FpsCapValue = 60, Disable3D = false, AfkModeScreen = false, RemoveTextures = false,
     HidePlayers = false, OptimizeTerrain = false, NoShadows = false,
     DisableParticles = false, DisablePostEffects = false, HidePetsAccessories = false, AutoClearRAM = false,
-    AutoSkillDelay = 5,
+    AutoSkillMaster = true, AutoSkillDelay = 5, AutoSkillModeIdx = 1, AutoSkillHoldIdx = 1,
+    AutoSkillPauseOnChat = true, AutoEquipNumberTools = false,
     AutoSkillZ = false, AutoSkillX = false, AutoSkillC = false, AutoSkillV = false,
     AutoSkillE = false, AutoSkillF = false, AutoSkillQ = false, AutoSkillR = false,
-    AutoSkill1 = false, AutoSkill2 = false, AutoSkill3 = false, AutoSkill4 = false, AutoSkill5 = false, AutoSkill6 = false,
+    AutoSkillG = false, AutoSkillT = false, AutoSkillY = false, AutoSkillB = false,
+    AutoSkill1 = false, AutoSkill2 = false, AutoSkill3 = false, AutoSkill4 = false,
+    AutoSkill5 = false, AutoSkill6 = false, AutoSkill7 = false, AutoSkill8 = false,
     TpPositionIdx = 1, TpDistance = 4,
     TpSaveESP = false, TpSaveLoop = false, TpSaveLoopDelay = 2,
     AirWalk = false,
@@ -547,10 +550,10 @@ do
     headerStatText.RichText = true; headerStatText.Text = "<font color='#38CC88'>60 FPS</font> • <font color='#58B6F2'>0ms</font>"
     headerStatText.TextColor3 = Theme.TextTitle; headerStatText.Font = Enum.Font.GothamBold; headerStatText.TextSize = 9; headerStatText.ZIndex = 13
 
-    -- Huy hiệu V1.20 nền tối dịu mắt, chữ thanh rõ nét không bị chói sáng trên Mobile
+    -- Huy hiệu V1.21 nền tối dịu mắt, chữ thanh rõ nét không bị chói sáng trên Mobile
     local verBadge = Instance.new("TextLabel", header)
     verBadge.Size = UDim2.new(0, 48, 0, 20); verBadge.Position = UDim2.new(1, -83, 0.5, -10)
-    verBadge.BackgroundColor3 = Color3.fromRGB(18, 21, 30); verBadge.Text = "V1.20"; verBadge.TextColor3 = getSoftBrandColor(Theme.Brand)
+    verBadge.BackgroundColor3 = Color3.fromRGB(18, 21, 30); verBadge.Text = "V1.21"; verBadge.TextColor3 = getSoftBrandColor(Theme.Brand)
     verBadge.Font = Enum.Font.GothamSemibold; verBadge.TextSize = 9.5; verBadge.ZIndex = 12
     Instance.new("UICorner", verBadge).CornerRadius = UDim.new(0, 7)
     local verStroke = Instance.new("UIStroke", verBadge); verStroke.Color = Theme.Brand; verStroke.Thickness = 0.8; verStroke.Transparency = 0.45
@@ -2806,7 +2809,7 @@ do
         end
         local chosen = savedMusicList[nextIdx]
         if chosen then
-            musicIdBox.Text = chosen.id
+            setMusicIdBoxProgrammatically(chosen.id)
             playMusic(chosen.id)
         end
     end
@@ -2824,15 +2827,61 @@ do
         musicTimeLabel.Text = formatTime(newPos) .. " / " .. formatTime(currentSound.TimeLength)
     end
 
+    local suppressAutoPlayOnTextChange = false
+    local lastObservedInputText = ""
+
+    local function setMusicIdBoxProgrammatically(txt)
+        suppressAutoPlayOnTextChange = true
+        lastObservedInputText = tostring(txt or "")
+        musicIdBox.Text = lastObservedInputText
+        suppressAutoPlayOnTextChange = false
+    end
+
+    -- Khi người dùng dán (Paste) ID hoặc link .mp3 vào ô nhập -> Tự động phát nhạc ngay lập tức!
+    musicIdBox:GetPropertyChangedSignal("Text"):Connect(function()
+        if suppressAutoPlayOnTextChange then return end
+        local nowTxt = tostring(musicIdBox.Text or "")
+        local diffLen = math.abs(#nowTxt - #lastObservedInputText)
+        lastObservedInputText = nowTxt
+
+        local trimmed = nowTxt:gsub("^%s*(.-)%s*$", "%1")
+        local isUrl = trimmed:lower():match("^https?://") ~= nil
+        local digits = trimmed:match("^%d+$")
+        -- Phát hiện thao tác Dán (Paste): văn bản thay đổi từ 5 ký tự trở lên trong 1 bước và là ID hợp lệ (>= 5 chữ số) hoặc link http
+        if diffLen >= 5 and ((digits and #digits >= 5) or (isUrl and #trimmed >= 12)) then
+            task.defer(function()
+                if musicIdBox:IsFocused() then
+                    pcall(function() musicIdBox:ReleaseFocus(false) end)
+                end
+                if tostring(currentMusicId) ~= tostring(digits or trimmed) then
+                    MakeToast("🎶 Tự Động Phát", "Đã nhận ID dán vào và tự động phát ngay!", Theme.AccentOn)
+                    playMusic(trimmed)
+                end
+            end)
+        end
+    end)
+
+    -- Khi người dùng nhập xong ID và đóng bàn phím / nhấn Enter -> Tự động phát luôn
+    musicIdBox.FocusLost:Connect(function(enterPressed)
+        local trimmed = tostring(musicIdBox.Text or ""):gsub("^%s*(.-)%s*$", "%1")
+        local isUrl = trimmed:lower():match("^https?://") ~= nil
+        local soundId = isUrl and trimmed or trimmed:match("%d+")
+        if soundId and soundId ~= "" then
+            if enterPressed or tostring(soundId) ~= tostring(currentMusicId) then
+                playMusic(trimmed)
+            end
+        end
+    end)
+
     noteBadge.MouseButton1Click:Connect(function()
         clickAnimate(noteBadge)
         local pasted = nil
         pcall(function() if getclipboard then pasted = getclipboard() end end)
         if pasted and (tostring(pasted):match("%d+") or tostring(pasted):lower():match("^https?://")) then
             local clean = tostring(pasted):lower():match("^https?://") and tostring(pasted) or tostring(pasted):match("%d+")
-            musicIdBox.Text = clean
-            MakeToast("Đã Dán Nhạc", "Nội dung: " .. clean, Theme.Brand)
-            checkInputIdStatus()
+            setMusicIdBoxProgrammatically(clean)
+            MakeToast("🎶 Đã Dán & Phát Ngay", "Đang phát ID: " .. clean, Theme.AccentOn)
+            playMusic(clean)
         else
             musicIdBox:CaptureFocus()
         end
@@ -3528,8 +3577,8 @@ do
                     local delItemBtn, delItemHolder = createGlossyCircleBtn(rowInner, 21, UDim2.new(1, -24, 0.5, 0), Vector2.new(0, 0.5))
                     drawGlossyIcon(delItemHolder, "Cross", 0.65)
 
-                    songIconBtn.MouseButton1Click:Connect(function() clickAnimate(songIconBtn); musicIdBox.Text = data.id; playMusic(data.id) end)
-                    playItemBtn.MouseButton1Click:Connect(function() clickAnimate(playItemBtn); musicIdBox.Text = data.id; playMusic(data.id) end)
+                    songIconBtn.MouseButton1Click:Connect(function() clickAnimate(songIconBtn); setMusicIdBoxProgrammatically(data.id); playMusic(data.id) end)
+                    playItemBtn.MouseButton1Click:Connect(function() clickAnimate(playItemBtn); setMusicIdBoxProgrammatically(data.id); playMusic(data.id) end)
                     delItemBtn.MouseButton1Click:Connect(function() clickAnimate(delItemBtn); table.remove(savedMusicList, i); saveMusicData(); renderSavedMusic() end)
                 end
             end
@@ -4198,154 +4247,469 @@ end
     end)
 end
 -- ==========================================
--- [TAB 8: AUTO SKILL (NÂNG CẤP BẬT/TẮT NHANH & PHÍM Q, R)]
+-- [TAB 8: AUTO SKILL PRO MAX V1.21 (BÀN PHÍM CƠ 3D CYBER-NEON 4 CỘT + CHẾ ĐỘ COMBO/BURST + HOLD CHIÊU)]
 -- ==========================================
 do
-createDivider(page8, "ĐIỀU KHIỂN NHANH & TỐC ĐỘ SPAM")
-local allSkillVars = {
-    "AutoSkillZ", "AutoSkillX", "AutoSkillC", "AutoSkillV",
-    "AutoSkillE", "AutoSkillF", "AutoSkillQ", "AutoSkillR",
-    "AutoSkill1", "AutoSkill2", "AutoSkill3", "AutoSkill4", "AutoSkill5", "AutoSkill6"
-}
+    local SkillLetterDefs = {
+        {Key = "Z", Var = "AutoSkillZ", Code = Enum.KeyCode.Z},
+        {Key = "X", Var = "AutoSkillX", Code = Enum.KeyCode.X},
+        {Key = "C", Var = "AutoSkillC", Code = Enum.KeyCode.C},
+        {Key = "V", Var = "AutoSkillV", Code = Enum.KeyCode.V},
+        {Key = "E", Var = "AutoSkillE", Code = Enum.KeyCode.E},
+        {Key = "F", Var = "AutoSkillF", Code = Enum.KeyCode.F},
+        {Key = "Q", Var = "AutoSkillQ", Code = Enum.KeyCode.Q},
+        {Key = "R", Var = "AutoSkillR", Code = Enum.KeyCode.R},
+        {Key = "G", Var = "AutoSkillG", Code = Enum.KeyCode.G},
+        {Key = "T", Var = "AutoSkillT", Code = Enum.KeyCode.T},
+        {Key = "Y", Var = "AutoSkillY", Code = Enum.KeyCode.Y},
+        {Key = "B", Var = "AutoSkillB", Code = Enum.KeyCode.B}
+    }
 
-createDualButtons(
-    page8, "✅ BẬT TẤT CẢ PHÍM", Theme.AccentOn,
-    function()
-        for _, vName in ipairs(allSkillVars) do
-            State[vName] = true
-            fireSync(vName, true, false)
-        end
-        if State.AutoSave then saveConfig() end
-    end,
-    "🛑 TẮT TẤT CẢ PHÍM", Theme.AccentOff,
-    function()
-        for _, vName in ipairs(allSkillVars) do
-            State[vName] = false
-            fireSync(vName, false, false)
-        end
-        if State.AutoSave then saveConfig() end
-    end
-)
+    local SkillNumberDefs = {
+        {Key = "1", Var = "AutoSkill1", Code = Enum.KeyCode.One, Slot = 1},
+        {Key = "2", Var = "AutoSkill2", Code = Enum.KeyCode.Two, Slot = 2},
+        {Key = "3", Var = "AutoSkill3", Code = Enum.KeyCode.Three, Slot = 3},
+        {Key = "4", Var = "AutoSkill4", Code = Enum.KeyCode.Four, Slot = 4},
+        {Key = "5", Var = "AutoSkill5", Code = Enum.KeyCode.Five, Slot = 5},
+        {Key = "6", Var = "AutoSkill6", Code = Enum.KeyCode.Six, Slot = 6},
+        {Key = "7", Var = "AutoSkill7", Code = Enum.KeyCode.Seven, Slot = 7},
+        {Key = "8", Var = "AutoSkill8", Code = Enum.KeyCode.Eight, Slot = 8}
+    }
 
-createToggle(page8, "🖱️ Auto Click Vũ Khí (Đánh thường)", "AutoClick")
-createSlider(page8, "⏱️ Chu kỳ nhấn phím (x0.1 giây)", 1, 50, "AutoSkillDelay")
+    local AllSkillDefs = {}
+    for _, d in ipairs(SkillLetterDefs) do table.insert(AllSkillDefs, d) end
+    for _, d in ipairs(SkillNumberDefs) do table.insert(AllSkillDefs, d) end
 
-local function createKeycapGrid(parent, keysList)
-    local gridContainer = Instance.new("Frame", parent)
-    local rows = math.ceil(#keysList / 2)
-    gridContainer.Size = UDim2.new(0.94, 0, 0, rows * 33 + (rows - 1) * 5)
-    gridContainer.BackgroundTransparency = 1; gridContainer.ZIndex = 10
+    local SkillSpamModes = {
+        {Name = "Tuần tự (Combo)", Desc = "Nhấn lần lượt từng phím mượt mà"},
+        {Name = "Đồng loạt (Xả chiêu)", Desc = "Nhấn tất cả phím đang bật cùng lúc"}
+    }
+    if not SkillSpamModes[State.AutoSkillModeIdx] then State.AutoSkillModeIdx = 1 end
 
-    local grid = Instance.new("UIGridLayout", gridContainer)
-    grid.CellSize = UDim2.new(0.488, 0, 0, 33); grid.CellPadding = UDim2.new(0.024, 0, 0, 5); grid.SortOrder = Enum.SortOrder.LayoutOrder
+    local SkillHoldPresets = {
+        {Name = "Nhấn nhả (0.03s)", Hold = 0.03},
+        {Name = "Giữ nhẹ (0.15s)", Hold = 0.15},
+        {Name = "Giữ vừa (0.35s)", Hold = 0.35},
+        {Name = "Giữ lâu (0.65s)", Hold = 0.65}
+    }
+    if not SkillHoldPresets[State.AutoSkillHoldIdx] then State.AutoSkillHoldIdx = 1 end
 
-    for idx, item in ipairs(keysList) do
-        local cell = Instance.new("TextButton", gridContainer)
-        cell.LayoutOrder = idx; cell.Text = ""; cell.AutoButtonColor = false; cell.ZIndex = 10
-        Instance.new("UICorner", cell).CornerRadius = UDim.new(0, 8)
-        local cStroke = Instance.new("UIStroke", cell); cStroke.Thickness = 1
+    local KeyPulseCallbacks = {}
+    local updateDashboardSummary
 
-        local keycap = Instance.new("TextLabel", cell)
-        keycap.Size = UDim2.new(0, 24, 0, 21); keycap.Position = UDim2.new(0, 6, 0.5, -10.5)
-        keycap.BackgroundColor3 = Color3.fromRGB(16, 18, 26); keycap.Text = item.Key
-        keycap.Font = Enum.Font.GothamBlack; keycap.TextSize = 10.5; keycap.ZIndex = 11
-        Instance.new("UICorner", keycap).CornerRadius = UDim.new(0, 5)
-        local kStroke = Instance.new("UIStroke", keycap); kStroke.Thickness = 1
+    -- 1. KHUNG TRUNG TÂM ĐIỀU KHIỂN AUTO SKILL (MASTER SWITCH + TRẠNG THÁI + 3 NÚT NHANH)
+    do
+        local dashCard = Instance.new("Frame", page8)
+        dashCard.Size = UDim2.new(0.94, 0, 0, 82)
+        dashCard.BackgroundColor3 = Theme.ItemBg
+        dashCard.ZIndex = 10
+        Instance.new("UICorner", dashCard).CornerRadius = UDim.new(0, 10)
+        local dashStroke = Instance.new("UIStroke", dashCard)
+        dashStroke.Color = Theme.Stroke; dashStroke.Thickness = 1
+        table.insert(RGBElements, {Type = "Info", Stroke = dashStroke})
 
-        local kTitle = Instance.new("TextLabel", cell)
-        kTitle.Size = UDim2.new(1, -78, 1, 0); kTitle.Position = UDim2.new(0, 35, 0, 0)
-        kTitle.BackgroundTransparency = 1; kTitle.Text = "Phím " .. item.Key
-        kTitle.TextColor3 = Theme.TextTitle; kTitle.Font = Enum.Font.GothamSemibold; kTitle.TextSize = 10
-        kTitle.TextXAlignment = Enum.TextXAlignment.Left; kTitle.ZIndex = 11
+        -- Nút Tổng Bật/Tắt Auto Skill (giữ nguyên danh sách phím đã chọn khi tạm dừng)
+        local masterBtn = Instance.new("TextButton", dashCard)
+        masterBtn.Size = UDim2.new(0, 118, 0, 24)
+        masterBtn.Position = UDim2.new(0, 8, 0, 7)
+        masterBtn.AutoButtonColor = false
+        masterBtn.Font = Enum.Font.GothamBold
+        masterBtn.TextSize = 8.6
+        masterBtn.ZIndex = 12
+        Instance.new("UICorner", masterBtn).CornerRadius = UDim.new(0, 7)
+        local masterStroke = Instance.new("UIStroke", masterBtn)
+        masterStroke.Thickness = 1.1
 
-        local miniTrack = Instance.new("Frame", cell)
-        miniTrack.Size = UDim2.new(0, 32, 0, 16); miniTrack.Position = UDim2.new(1, -38, 0.5, -8)
-        miniTrack.BorderSizePixel = 0; miniTrack.ZIndex = 11
-        Instance.new("UICorner", miniTrack).CornerRadius = UDim.new(1, 0)
+        local statusSummaryLbl = Instance.new("TextLabel", dashCard)
+        statusSummaryLbl.Size = UDim2.new(1, -138, 0, 24)
+        statusSummaryLbl.Position = UDim2.new(0, 132, 0, 7)
+        statusSummaryLbl.BackgroundTransparency = 1
+        statusSummaryLbl.RichText = true
+        statusSummaryLbl.Font = Enum.Font.GothamSemibold
+        statusSummaryLbl.TextSize = 8.4
+        statusSummaryLbl.TextXAlignment = Enum.TextXAlignment.Left
+        statusSummaryLbl.TextTruncate = Enum.TextTruncate.AtEnd
+        statusSummaryLbl.ZIndex = 11
 
-        local miniKnob = Instance.new("Frame", miniTrack)
-        miniKnob.Size = UDim2.new(0, 12, 0, 12); miniKnob.BorderSizePixel = 0; miniKnob.ZIndex = 12
-        Instance.new("UICorner", miniKnob).CornerRadius = UDim.new(1, 0)
+        local subInfoLbl = Instance.new("TextLabel", dashCard)
+        subInfoLbl.Size = UDim2.new(1, -16, 0, 14)
+        subInfoLbl.Position = UDim2.new(0, 8, 0, 33)
+        subInfoLbl.BackgroundTransparency = 1
+        subInfoLbl.RichText = true
+        subInfoLbl.Font = Enum.Font.GothamMedium
+        subInfoLbl.TextSize = 7.8
+        subInfoLbl.TextColor3 = Theme.TextDim
+        subInfoLbl.TextXAlignment = Enum.TextXAlignment.Left
+        subInfoLbl.ZIndex = 11
 
-        local function syncKeyVisual(isOn, instant)
-            local tInfo = TweenInfo.new(instant and 0 or 0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-            TweenService:Create(cell, tInfo, {BackgroundColor3 = isOn and Theme.ItemActive or Theme.ItemBg}):Play()
-            TweenService:Create(keycap, tInfo, {TextColor3 = isOn and Theme.AccentOn or Theme.Brand}):Play()
-            TweenService:Create(kStroke, tInfo, {Color = isOn and Theme.AccentOn or Theme.Stroke}):Play()
-            TweenService:Create(miniTrack, tInfo, {BackgroundColor3 = isOn and Color3.fromRGB(34, 118, 82) or Color3.fromRGB(16, 18, 26)}):Play()
-            TweenService:Create(miniKnob, tInfo, {
-                Position = isOn and UDim2.new(1, -14, 0.5, -6) or UDim2.new(0, 2, 0.5, -6),
-                BackgroundColor3 = isOn and Color3.fromRGB(240, 255, 245) or Color3.fromRGB(125, 135, 155)
-            }):Play()
-            if not State.RGB then
-                TweenService:Create(cStroke, tInfo, {Color = isOn and Color3.fromRGB(54, 140, 98) or Theme.Stroke}):Play()
+        updateDashboardSummary = function()
+            local activeKeys = {}
+            for _, d in ipairs(AllSkillDefs) do
+                if State[d.Var] then
+                    table.insert(activeKeys, d.Key)
+                end
             end
+
+            local masterOn = (State.AutoSkillMaster ~= false)
+            if masterOn then
+                masterBtn.BackgroundColor3 = Color3.fromRGB(20, 52, 44)
+                masterBtn.TextColor3 = Color3.fromRGB(115, 245, 185)
+                masterBtn.Text = "⚡ AUTO SKILL: BẬT"
+                masterStroke.Color = Color3.fromRGB(58, 195, 138)
+            else
+                masterBtn.BackgroundColor3 = Color3.fromRGB(44, 22, 28)
+                masterBtn.TextColor3 = Color3.fromRGB(240, 125, 140)
+                masterBtn.Text = "⏸ AUTO SKILL: TẠM DỪNG"
+                masterStroke.Color = Color3.fromRGB(185, 72, 88)
+            end
+
+            if #activeKeys > 0 then
+                local joined = table.concat(activeKeys, " • ")
+                statusSummaryLbl.Text = string.format(
+                    "<font color='#9AA8C2'>Đang chọn (%d):</font> <font color='#68E8FF'>[ %s ]</font>",
+                    #activeKeys, joined
+                )
+            else
+                statusSummaryLbl.Text = "<font color='#8E9AB2'>Chưa chọn phím nào (Chạm phím bên dưới để bật)</font>"
+            end
+
+            local modeObj = SkillSpamModes[State.AutoSkillModeIdx] or SkillSpamModes[1]
+            local holdObj = SkillHoldPresets[State.AutoSkillHoldIdx] or SkillHoldPresets[1]
+            local delaySec = string.format("%.1fs", (tonumber(State.AutoSkillDelay) or 5) * 0.1)
+            subInfoLbl.Text = string.format(
+                "<font color='#7E8CA8'>Chế độ:</font> <font color='#C8D6F0'>%s</font>  •  <font color='#7E8CA8'>Giữ phím:</font> <font color='#C8D6F0'>%s</font>  •  <font color='#7E8CA8'>Chu kỳ:</font> <font color='#72E5B2'>%s</font>",
+                modeObj.Name, holdObj.Name, delaySec
+            )
         end
 
-        syncKeyVisual(State[item.Var] and true or false, true)
-        registerSync(item.Var, syncKeyVisual)
-        table.insert(RGBElements, {Type = "Toggle", Stroke = cStroke, State = function() return State[item.Var] end})
-
-        cell.MouseButton1Click:Connect(function()
-            clickAnimate(cell)
-            State[item.Var] = not State[item.Var]
-            local nowOn = State[item.Var]
-            fireSync(item.Var, nowOn, false)
-            MakeToast(nowOn and "Đã Bật Auto Skill" or "Đã Tắt Auto Skill", "Tự động kích hoạt Phím [" .. item.Key .. "]", nowOn and Theme.AccentOn or Theme.AccentOff)
+        masterBtn.MouseButton1Click:Connect(function()
+            clickAnimate(masterBtn)
+            State.AutoSkillMaster = not (State.AutoSkillMaster ~= false)
+            updateDashboardSummary()
+            MakeToast(
+                State.AutoSkillMaster and "⚡ Đã Bật Auto Skill" or "⏸ Đã Tạm Dừng Auto Skill",
+                State.AutoSkillMaster and "Đang tiếp tục tung chuỗi phím đã chọn!" or "Đã tạm dừng (vẫn giữ nguyên các phím đã chọn)",
+                State.AutoSkillMaster and Theme.AccentOn or Theme.AccentOff
+            )
             if State.AutoSave then saveConfig() end
         end)
-    end
-end
 
-createDivider(page8, "BẢNG PHÍM CHỮ (2 CỘT)")
-createKeycapGrid(page8, {
-    {Key = "Z", Var = "AutoSkillZ"}, {Key = "X", Var = "AutoSkillX"},
-    {Key = "C", Var = "AutoSkillC"}, {Key = "V", Var = "AutoSkillV"},
-    {Key = "E", Var = "AutoSkillE"}, {Key = "F", Var = "AutoSkillF"},
-    {Key = "Q", Var = "AutoSkillQ"}, {Key = "R", Var = "AutoSkillR"}
-})
+        -- Hàng 3 nút thao tác nhanh dịu mắt, viền mảnh sang trọng
+        local quickRow = Instance.new("Frame", dashCard)
+        quickRow.Size = UDim2.new(1, -16, 0, 24)
+        quickRow.Position = UDim2.new(0, 8, 0, 51)
+        quickRow.BackgroundTransparency = 1
+        quickRow.ZIndex = 11
 
-createDivider(page8, "BẢNG PHÍM SỐ (2 CỘT)")
-createKeycapGrid(page8, {
-    {Key = "1", Var = "AutoSkill1"}, {Key = "2", Var = "AutoSkill2"},
-    {Key = "3", Var = "AutoSkill3"}, {Key = "4", Var = "AutoSkill4"},
-    {Key = "5", Var = "AutoSkill5"}, {Key = "6", Var = "AutoSkill6"}
-})
+        local function makeQuickActionBtn(idx, total, txt, bgCol, txtCol, borderCol, onClick)
+            local b = Instance.new("TextButton", quickRow)
+            b.Size = UDim2.new((1 / total) - 0.014, 0, 1, 0)
+            b.Position = UDim2.new((idx - 1) / total + (idx > 1 and 0.007 or 0), 0, 0, 0)
+            b.BackgroundColor3 = bgCol
+            b.Text = txt
+            b.TextColor3 = txtCol
+            b.Font = Enum.Font.GothamSemibold
+            b.TextSize = 8.2
+            b.AutoButtonColor = false
+            b.ZIndex = 12
+            Instance.new("UICorner", b).CornerRadius = UDim.new(0, 6)
+            local st = Instance.new("UIStroke", b)
+            st.Color = borderCol; st.Thickness = 0.9; st.Transparency = 0.25
+            b.MouseButton1Click:Connect(function()
+                clickAnimate(b)
+                onClick()
+            end)
+            return b
+        end
 
-task.spawn(function()
-    while true do
-        local waitTime = math.clamp((tonumber(State.AutoSkillDelay) or 5) * 0.1, 0.1, 5)
-        task.wait(waitTime)
-        local keysToPress = {}
-        if State.AutoSkillZ then table.insert(keysToPress, Enum.KeyCode.Z) end
-        if State.AutoSkillX then table.insert(keysToPress, Enum.KeyCode.X) end
-        if State.AutoSkillC then table.insert(keysToPress, Enum.KeyCode.C) end
-        if State.AutoSkillV then table.insert(keysToPress, Enum.KeyCode.V) end
-        if State.AutoSkillE then table.insert(keysToPress, Enum.KeyCode.E) end
-        if State.AutoSkillF then table.insert(keysToPress, Enum.KeyCode.F) end
-        if State.AutoSkillQ then table.insert(keysToPress, Enum.KeyCode.Q) end
-        if State.AutoSkillR then table.insert(keysToPress, Enum.KeyCode.R) end
-        if State.AutoSkill1 then table.insert(keysToPress, Enum.KeyCode.One) end
-        if State.AutoSkill2 then table.insert(keysToPress, Enum.KeyCode.Two) end
-        if State.AutoSkill3 then table.insert(keysToPress, Enum.KeyCode.Three) end
-        if State.AutoSkill4 then table.insert(keysToPress, Enum.KeyCode.Four) end
-        if State.AutoSkill5 then table.insert(keysToPress, Enum.KeyCode.Five) end
-        if State.AutoSkill6 then table.insert(keysToPress, Enum.KeyCode.Six) end
-
-        if #keysToPress > 0 then
-            for _, keyEnum in ipairs(keysToPress) do
-                task.spawn(function()
-                    pcall(function()
-                        Vim:SendKeyEvent(true, keyEnum, false, game)
-                        task.wait(0.02)
-                        Vim:SendKeyEvent(false, keyEnum, false, game)
-                    end)
-                end)
-                task.wait(0.04)
+        makeQuickActionBtn(
+            1, 3, "⚡ Bật Phím Chữ",
+            Color3.fromRGB(18, 36, 56), Color3.fromRGB(115, 215, 255), Color3.fromRGB(58, 145, 215),
+            function()
+                State.AutoSkillMaster = true
+                for _, d in ipairs(SkillLetterDefs) do
+                    State[d.Var] = true
+                    fireSync(d.Var, true, false)
+                end
+                updateDashboardSummary()
+                MakeToast("⚡ Đã Bật Phím Chữ", "Đã kích hoạt toàn bộ 12 phím kỹ năng chữ!", Theme.Brand)
+                if State.AutoSave then saveConfig() end
             end
+        )
+
+        makeQuickActionBtn(
+            2, 3, "🔢 Bật Phím Số",
+            Color3.fromRGB(28, 24, 54), Color3.fromRGB(195, 155, 255), Color3.fromRGB(132, 88, 215),
+            function()
+                State.AutoSkillMaster = true
+                for _, d in ipairs(SkillNumberDefs) do
+                    State[d.Var] = true
+                    fireSync(d.Var, true, false)
+                end
+                updateDashboardSummary()
+                MakeToast("🔢 Đã Bật Phím Số", "Đã kích hoạt toàn bộ 8 phím ô số (1 - 8)!", Theme.Brand)
+                if State.AutoSave then saveConfig() end
+            end
+        )
+
+        makeQuickActionBtn(
+            3, 3, "🛑 Tắt Hết Phím",
+            Color3.fromRGB(42, 20, 28), Color3.fromRGB(235, 130, 145), Color3.fromRGB(175, 68, 86),
+            function()
+                for _, d in ipairs(AllSkillDefs) do
+                    State[d.Var] = false
+                    fireSync(d.Var, false, false)
+                end
+                updateDashboardSummary()
+                MakeToast("🛑 Đã Tắt Tất Cả", "Đã tắt toàn bộ phím kỹ năng và phím số!", Theme.AccentOff)
+                if State.AutoSave then saveConfig() end
+            end
+        )
+    end
+
+    -- 2. HÀM DỰNG LƯỚI BÀN PHÍM CƠ 3D CYBER-NEON (4 CỘT GỌN ĐẸP + ĐÈN LED XUNG NHỊP)
+    local function create3DKeycapGrid(parent, keysList, accentMode)
+        local cols = 4
+        local rows = math.ceil(#keysList / cols)
+        local gridContainer = Instance.new("Frame", parent)
+        gridContainer.Size = UDim2.new(0.94, 0, 0, rows * 34 + (rows - 1) * 5)
+        gridContainer.BackgroundTransparency = 1
+        gridContainer.ZIndex = 10
+
+        local grid = Instance.new("UIGridLayout", gridContainer)
+        grid.CellSize = UDim2.new(0.236, 0, 0, 34)
+        grid.CellPadding = UDim2.new(0.018, 0, 0, 5)
+        grid.SortOrder = Enum.SortOrder.LayoutOrder
+
+        for idx, item in ipairs(keysList) do
+            -- Đế Keycap 3D (Outer Bevel)
+            local cell = Instance.new("TextButton", gridContainer)
+            cell.LayoutOrder = idx
+            cell.Text = ""
+            cell.AutoButtonColor = false
+            cell.BackgroundColor3 = Color3.fromRGB(14, 17, 26)
+            cell.ZIndex = 10
+            Instance.new("UICorner", cell).CornerRadius = UDim.new(0, 8)
+            local cStroke = Instance.new("UIStroke", cell)
+            cStroke.Thickness = 1.1
+
+            -- Mặt trên Keycap 3D (Inner Keycap Cap)
+            local capTop = Instance.new("Frame", cell)
+            capTop.Size = UDim2.new(1, -4, 1, -6)
+            capTop.Position = UDim2.new(0, 2, 0, 2)
+            capTop.BackgroundColor3 = Color3.fromRGB(22, 26, 40)
+            capTop.BorderSizePixel = 0
+            capTop.ZIndex = 11
+            Instance.new("UICorner", capTop).CornerRadius = UDim.new(0, 6)
+
+            -- Hộp huy hiệu ký tự phím bên trái
+            local keyBadge = Instance.new("Frame", capTop)
+            keyBadge.Size = UDim2.new(0, 22, 0, 20)
+            keyBadge.Position = UDim2.new(0, 4, 0.5, -10)
+            keyBadge.BackgroundColor3 = Color3.fromRGB(14, 18, 30)
+            keyBadge.BorderSizePixel = 0
+            keyBadge.ZIndex = 12
+            Instance.new("UICorner", keyBadge).CornerRadius = UDim.new(0, 5)
+            local kbStroke = Instance.new("UIStroke", keyBadge)
+            kbStroke.Thickness = 0.9
+
+            local keyChar = Instance.new("TextLabel", keyBadge)
+            keyChar.Size = UDim2.new(1, 0, 1, 0)
+            keyChar.BackgroundTransparency = 1
+            keyChar.Text = item.Key
+            keyChar.Font = Enum.Font.GothamBlack
+            keyChar.TextSize = 10.5
+            keyChar.ZIndex = 13
+
+            -- Nhãn trạng thái ON / OFF bên phải
+            local stateTxt = Instance.new("TextLabel", capTop)
+            stateTxt.Size = UDim2.new(1, -30, 0, 14)
+            stateTxt.Position = UDim2.new(0, 28, 0, 3)
+            stateTxt.BackgroundTransparency = 1
+            stateTxt.Font = Enum.Font.GothamBold
+            stateTxt.TextSize = 8.0
+            stateTxt.TextXAlignment = Enum.TextXAlignment.Center
+            stateTxt.ZIndex = 12
+
+            -- Thanh đèn LED Neon dưới chân Keycap
+            local ledBar = Instance.new("Frame", capTop)
+            ledBar.Size = UDim2.new(1, -34, 0, 3)
+            ledBar.Position = UDim2.new(0, 30, 1, -6)
+            ledBar.BorderSizePixel = 0
+            ledBar.ZIndex = 12
+            Instance.new("UICorner", ledBar).CornerRadius = UDim.new(1, 0)
+
+            local activeMainCol = (accentMode == "number")
+                and Color3.fromRGB(175, 118, 255)
+                or Color3.fromRGB(68, 228, 255)
+            local activeBgCol = (accentMode == "number")
+                and Color3.fromRGB(28, 22, 48)
+                or Color3.fromRGB(18, 36, 52)
+
+            local function syncKeyVisual(isOn, instant)
+                local tInfo = TweenInfo.new(instant and 0 or 0.16, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+                TweenService:Create(capTop, tInfo, {
+                    BackgroundColor3 = isOn and activeBgCol or Color3.fromRGB(21, 25, 38)
+                }):Play()
+                TweenService:Create(keyBadge, tInfo, {
+                    BackgroundColor3 = isOn and Color3.fromRGB(12, 22, 36) or Color3.fromRGB(14, 17, 26)
+                }):Play()
+                TweenService:Create(keyChar, tInfo, {
+                    TextColor3 = isOn and activeMainCol or Color3.fromRGB(165, 178, 204)
+                }):Play()
+                TweenService:Create(kbStroke, tInfo, {
+                    Color = isOn and activeMainCol or Color3.fromRGB(45, 54, 76)
+                }):Play()
+                stateTxt.Text = isOn and "BẬT" or "TẮT"
+                TweenService:Create(stateTxt, tInfo, {
+                    TextColor3 = isOn and Color3.fromRGB(105, 245, 185) or Color3.fromRGB(108, 118, 142)
+                }):Play()
+                TweenService:Create(ledBar, tInfo, {
+                    BackgroundColor3 = isOn and Color3.fromRGB(72, 242, 178) or Color3.fromRGB(36, 42, 58)
+                }):Play()
+                if not State.RGB then
+                    TweenService:Create(cStroke, tInfo, {
+                        Color = isOn and activeMainCol or Theme.Stroke
+                    }):Play()
+                end
+                if updateDashboardSummary then updateDashboardSummary() end
+            end
+
+            -- Hiệu ứng nháy đèn LED trên Keycap mỗi khi phím vừa được kích hoạt
+            KeyPulseCallbacks[item.Var] = function()
+                if not page8.Visible or not State[item.Var] then return end
+                ledBar.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+                keyChar.TextColor3 = Color3.fromRGB(255, 255, 255)
+                TweenService:Create(ledBar, TweenInfo.new(0.22), {
+                    BackgroundColor3 = Color3.fromRGB(72, 242, 178)
+                }):Play()
+                TweenService:Create(keyChar, TweenInfo.new(0.22), {
+                    TextColor3 = activeMainCol
+                }):Play()
+            end
+
+            syncKeyVisual(State[item.Var] and true or false, true)
+            registerSync(item.Var, syncKeyVisual)
+            table.insert(RGBElements, {Type = "Toggle", Stroke = cStroke, State = function() return State[item.Var] end})
+
+            cell.MouseButton1Click:Connect(function()
+                clickAnimate(cell)
+                State[item.Var] = not State[item.Var]
+                local nowOn = State[item.Var]
+                fireSync(item.Var, nowOn, false)
+                MakeToast(
+                    nowOn and ("⚡ Bật Phím [" .. item.Key .. "]") or ("🛑 Tắt Phím [" .. item.Key .. "]"),
+                    nowOn and ("Đã thêm phím [" .. item.Key .. "] vào chuỗi Auto Skill") or ("Đã ngắt phím [" .. item.Key .. "]"),
+                    nowOn and Theme.AccentOn or Theme.AccentOff
+                )
+                if State.AutoSave then saveConfig() end
+            end)
         end
     end
-end)
+
+    createDivider(page8, "BÀN PHÍM KỸ NĂNG CHỮ (12 PHÍM • 4 CỘT)")
+    create3DKeycapGrid(page8, SkillLetterDefs, "letter")
+
+    createDivider(page8, "BÀN PHÍM Ô TRANG BỊ SỐ (1 - 8 • 4 CỘT)")
+    create3DKeycapGrid(page8, SkillNumberDefs, "number")
+
+    createDivider(page8, "CẤU HÌNH ĐÁNH THƯỜNG & NHỊP TUNG CHIÊU")
+    createToggle(page8, "🖱️ Auto Click Vũ Khí (Đánh thường Mobile/PC)", "AutoClick")
+    createToggle(page8, "🗡️ Tự Cầm Vũ Khí Trong Balo Theo Phím Số (Mobile)", "AutoEquipNumberTools")
+    createToggle(page8, "💬 Tự Tạm Dừng Khi Đang Mở Khung Chat", "AutoSkillPauseOnChat")
+
+    createCycleBtn(page8, "🔄 Kiểu tung chiêu:", SkillSpamModes, "AutoSkillModeIdx", function()
+        if updateDashboardSummary then updateDashboardSummary() end
+    end)
+    createCycleBtn(page8, "⏳ Thời gian giữ phím (Hold):", SkillHoldPresets, "AutoSkillHoldIdx", function()
+        if updateDashboardSummary then updateDashboardSummary() end
+    end)
+    createSlider(page8, "⏱️ Chu kỳ lặp chiêu (x0.1 giây)", 1, 50, "AutoSkillDelay", function()
+        if updateDashboardSummary then updateDashboardSummary() end
+    end)
+
+    updateDashboardSummary()
+
+    -- Hàm hỗ trợ tự cầm vũ khí theo vị trí ô số từ Backpack/Character trên Mobile
+    local function tryEquipToolSlot(slotIdx)
+        if not State.AutoEquipNumberTools then return end
+        pcall(function()
+            local char = player.Character
+            local hum = char and char:FindFirstChildOfClass("Humanoid")
+            local bp = player:FindFirstChildOfClass("Backpack")
+            if not char or not hum or not bp then return end
+
+            local allTools = {}
+            for _, item in ipairs(char:GetChildren()) do
+                if item:IsA("Tool") then table.insert(allTools, item) end
+            end
+            for _, item in ipairs(bp:GetChildren()) do
+                if item:IsA("Tool") then table.insert(allTools, item) end
+            end
+            local chosenTool = allTools[slotIdx]
+            if chosenTool and chosenTool.Parent == bp then
+                hum:EquipTool(chosenTool)
+            end
+        end)
+    end
+
+    local function triggerSingleSkillDef(def, holdTime)
+        if KeyPulseCallbacks[def.Var] then
+            pcall(KeyPulseCallbacks[def.Var])
+        end
+        if def.Slot and State.AutoEquipNumberTools then
+            tryEquipToolSlot(def.Slot)
+        end
+        pcall(function()
+            Vim:SendKeyEvent(true, def.Code, false, game)
+            task.wait(holdTime)
+            Vim:SendKeyEvent(false, def.Code, false, game)
+        end)
+        if State.AutoClick then
+            pcall(function()
+                local char = player.Character
+                local tool = char and char:FindFirstChildOfClass("Tool")
+                if tool then tool:Activate() end
+            end)
+        end
+    end
+
+    task.spawn(function()
+        while true do
+            local waitTime = math.clamp((tonumber(State.AutoSkillDelay) or 5) * 0.1, 0.1, 5)
+            task.wait(waitTime)
+
+            local isChatting = (State.AutoSkillPauseOnChat ~= false) and (UIS:GetFocusedTextBox() ~= nil)
+            if (State.AutoSkillMaster ~= false) and not isChatting then
+                local activeDefs = {}
+                for _, def in ipairs(AllSkillDefs) do
+                    if State[def.Var] then
+                        table.insert(activeDefs, def)
+                    end
+                end
+
+                if #activeDefs > 0 then
+                    local holdPreset = SkillHoldPresets[State.AutoSkillHoldIdx] or SkillHoldPresets[1]
+                    local holdSec = holdPreset.Hold or 0.03
+                    local isBurst = (State.AutoSkillModeIdx == 2)
+
+                    if isBurst then
+                        -- Chế độ Đồng loạt (Xả tất cả phím đang bật cùng lúc)
+                        for _, def in ipairs(activeDefs) do
+                            task.spawn(triggerSingleSkillDef, def, holdSec)
+                        end
+                    else
+                        -- Chế độ Tuần tự (Nhấn lần lượt từng phím mượt mà)
+                        for _, def in ipairs(activeDefs) do
+                            if State.AutoSkillMaster == false then break end
+                            task.spawn(triggerSingleSkillDef, def, holdSec)
+                            task.wait(math.max(0.04, holdSec + 0.02))
+                        end
+                    end
+                end
+            end
+        end
+    end)
 end
 -- ==========================================
 -- [TAB 9: CẤU HÌNH & GIẢM LAG CHUYÊN SÂU (HỢP NHẤT TOÀN BỘ)]
@@ -5441,7 +5805,7 @@ do
         local s = execTime % 60
 
         sysBody.Text = string.format(
-            "<font color='#78B4DC'>• Executor:</font> <font color='#38CC88'>%s</font>   |   <font color='#78B4DC'>Phiên bản:</font> <font color='#E09F67'>V1.20.0</font>\n" ..
+            "<font color='#78B4DC'>• Executor:</font> <font color='#38CC88'>%s</font>   |   <font color='#78B4DC'>Phiên bản:</font> <font color='#E09F67'>V1.21.0</font>\n" ..
             "<font color='#78B4DC'>• Treo máy:</font> %02d:%02d:%02d   |   <font color='#78B4DC'>Giờ hệ thống:</font> %s",
             execName, h, m, s, os.date("%H:%M:%S")
         )
