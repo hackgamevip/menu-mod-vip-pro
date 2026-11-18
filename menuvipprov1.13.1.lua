@@ -1,5 +1,5 @@
 -- ==========================================
--- MENU VIP PRO MAX V1.18.0 (LUXURY CYBER-GLASS & BENTO SIDEBAR EDITION)
+-- MENU VIP PRO MAX V1.19.0 (LUXURY CYBER-GLASS & BENTO SIDEBAR EDITION)
 -- ==========================================
 repeat task.wait() until game:IsLoaded()
 
@@ -26,7 +26,7 @@ local State = {
     SpinBot = false, SpinSpeed = 50, Hitbox = false, HitboxSize = 15, AutoClick = false, RGB = false,
     Reach = false, ReachSize = 15, AutoDash = false, DashSpeed = 10, AutoSave = false, Astral = false,
     ShiftLock = false, SpeedValue = 60, JumpValue = 120, LightRange = 60, LightBrightness = 3,
-    MusicVolume = 5, MusicLoop = false, MusicSpeedIdx = 2, LightColorIdx = 1, ThemeIdx = 1, NoFog = false,
+    MusicVolume = 1, MusicLoop = false, MusicShuffle = false, MusicSpeedIdx = 2, LightColorIdx = 1, ThemeIdx = 1, NoFog = false,
     FpsCapValue = 60, Disable3D = false, AfkModeScreen = false, RemoveTextures = false,
     HidePlayers = false, OptimizeTerrain = false, NoShadows = false,
     DisableParticles = false, DisablePostEffects = false, HidePetsAccessories = false, AutoClearRAM = false,
@@ -182,6 +182,7 @@ local MusicSpeedPresets = {
     {Name = "2x (Siêu tốc)", Badge = "2x", Speed = 2.0}
 }
 if not MusicSpeedPresets[State.MusicSpeedIdx] then State.MusicSpeedIdx = 2 end
+State.MusicVolume = 1
 if not PlayerLightColors[State.LightColorIdx] then State.LightColorIdx = 1 end
 if not ThemePresets[State.ThemeIdx] then State.ThemeIdx = 1 end
 do local p = ThemePresets[State.ThemeIdx]; Theme.Brand = p.Brand; Theme.BrandSoft = p.Soft; Theme.AccentOn = p.On; Theme.ItemActive = p.ActiveBg end
@@ -546,10 +547,10 @@ do
     headerStatText.RichText = true; headerStatText.Text = "<font color='#38CC88'>60 FPS</font> • <font color='#58B6F2'>0ms</font>"
     headerStatText.TextColor3 = Theme.TextTitle; headerStatText.Font = Enum.Font.GothamBold; headerStatText.TextSize = 9; headerStatText.ZIndex = 13
 
-    -- Huy hiệu V1.18 nền tối dịu mắt, chữ thanh rõ nét không bị chói sáng trên Mobile
+    -- Huy hiệu V1.19 nền tối dịu mắt, chữ thanh rõ nét không bị chói sáng trên Mobile
     local verBadge = Instance.new("TextLabel", header)
     verBadge.Size = UDim2.new(0, 48, 0, 20); verBadge.Position = UDim2.new(1, -83, 0.5, -10)
-    verBadge.BackgroundColor3 = Color3.fromRGB(18, 21, 30); verBadge.Text = "V1.18"; verBadge.TextColor3 = getSoftBrandColor(Theme.Brand)
+    verBadge.BackgroundColor3 = Color3.fromRGB(18, 21, 30); verBadge.Text = "V1.19"; verBadge.TextColor3 = getSoftBrandColor(Theme.Brand)
     verBadge.Font = Enum.Font.GothamSemibold; verBadge.TextSize = 9.5; verBadge.ZIndex = 12
     Instance.new("UICorner", verBadge).CornerRadius = UDim.new(0, 7)
     local verStroke = Instance.new("UIStroke", verBadge); verStroke.Color = Theme.Brand; verStroke.Thickness = 0.8; verStroke.Transparency = 0.45
@@ -827,7 +828,7 @@ do
 
     page5 = Instance.new("Frame", pageContainer)
     page5.Size = UDim2.new(1, 0, 1, 0); page5.BackgroundTransparency = 1; page5.Visible = false; page5.ZIndex = 10
-    local l5 = Instance.new("UIListLayout", page5); l5.HorizontalAlignment = Enum.HorizontalAlignment.Center; l5.Padding = UDim.new(0, 5); l5.SortOrder = Enum.SortOrder.LayoutOrder; Instance.new("UIPadding", page5).PaddingTop = UDim.new(0, 6)
+    local l5 = Instance.new("UIListLayout", page5); l5.HorizontalAlignment = Enum.HorizontalAlignment.Center; l5.Padding = UDim.new(0, 4); l5.SortOrder = Enum.SortOrder.LayoutOrder; Instance.new("UIPadding", page5).PaddingTop = UDim.new(0, 5)
 
     page6 = Instance.new("Frame", pageContainer)
     page6.Size = UDim2.new(1, 0, 1, 0); page6.BackgroundTransparency = 1; page6.Visible = false; page6.ZIndex = 10
@@ -1938,136 +1939,39 @@ createDualButtons(
 end
 
 -- ==========================================
--- [TAB 5: NHẠC ID (GỘP PLAY/PAUSE 1 NÚT + XOÁ NÚT VUÔNG + Ô NHẬP HẸN GIỜ TỐI ĐA 90 PHÚT)]
+-- [TAB 5: NHẠC ID V1.19 (8 NÚT TRÒN 3D CYBER-NEON + HẸN GIỜ KHÔNG GIỚI HẠN & ÂM THANH 1-10 Ở HÀNG DƯỚI)]
 -- ==========================================
 do
     local currentSound = nil; local currentMusicId = ""; local savedMusicList = {}; local isMusicPaused = false
-    local GlossPalette = {
-        RimWhite = Color3.fromRGB(234, 240, 248),
-        RimActive = Color3.fromRGB(92, 235, 168),
-        OuterBevel = Color3.fromRGB(24, 38, 50),
-        InnerTop = Color3.fromRGB(62, 90, 112),
-        InnerMid = Color3.fromRGB(48, 71, 89),
-        InnerBottom = Color3.fromRGB(34, 52, 68),
-        InnerActiveTop = Color3.fromRGB(46, 118, 96),
-        InnerActiveMid = Color3.fromRGB(35, 92, 76),
-        InnerActiveBottom = Color3.fromRGB(22, 66, 54),
-        InnerStroke = Color3.fromRGB(88, 120, 145),
-        IconWhite = Color3.fromRGB(244, 248, 252),
-        IconShadow = Color3.fromRGB(182, 194, 208),
-        Shine = Color3.fromRGB(165, 208, 235)
-    }
-
     local timerActive = false
     local timerEndTime = 0
-    local timerInputMinutes = 15
 
-    -- Hàm tạo nút tròn 3D Glossy viền trắng + vệt bóng kính góc trên phải
-    local function createGlossyCircleBtn(parent, diameter, posUDim, anchorPt)
-        local outer = Instance.new("TextButton", parent)
-        outer.Size = UDim2.new(0, diameter, 0, diameter)
-        outer.Position = posUDim
-        if anchorPt then outer.AnchorPoint = anchorPt end
-        outer.BackgroundColor3 = GlossPalette.OuterBevel
-        outer.Text = ""
-        outer.AutoButtonColor = false
-        outer.ZIndex = 11
-        Instance.new("UICorner", outer).CornerRadius = UDim.new(1, 0)
+    local GlossPalette = {
+        RimWhite = Color3.fromRGB(95, 225, 255),
+        RimActive = Color3.fromRGB(85, 255, 190),
+        OuterBevel = Color3.fromRGB(10, 14, 34),
+        InnerTop = Color3.fromRGB(30, 74, 172),
+        InnerMid = Color3.fromRGB(20, 42, 112),
+        InnerBottom = Color3.fromRGB(14, 16, 56),
+        InnerActiveTop = Color3.fromRGB(32, 132, 145),
+        InnerActiveMid = Color3.fromRGB(22, 92, 108),
+        InnerActiveBottom = Color3.fromRGB(14, 48, 68),
+        InnerStroke = Color3.fromRGB(78, 128, 235),
+        IconWhite = Color3.fromRGB(244, 248, 255),
+        IconShadow = Color3.fromRGB(182, 198, 225),
+        Shine = Color3.fromRGB(215, 250, 255)
+    }
 
-        local rimStroke = Instance.new("UIStroke", outer)
-        rimStroke.Color = GlossPalette.RimWhite
-        rimStroke.Thickness = 1.6
-        rimStroke.Transparency = 0.05
-        rimStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-
-        local pad = math.max(3, math.floor(diameter * 0.11))
-        local inner = Instance.new("Frame", outer)
-        inner.Name = "InnerFace"
-        inner.Size = UDim2.new(1, -pad * 2, 1, -pad * 2)
-        inner.Position = UDim2.new(0, pad, 0, pad)
-        inner.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-        inner.BorderSizePixel = 0
-        inner.ZIndex = 12
-        Instance.new("UICorner", inner).CornerRadius = UDim.new(1, 0)
-
-        local innerGrad = addSoftGradient(inner, GlossPalette.InnerTop, GlossPalette.InnerBottom, 90)
-        local innerStroke = Instance.new("UIStroke", inner)
-        innerStroke.Color = GlossPalette.InnerStroke
-        innerStroke.Thickness = 0.9
-        innerStroke.Transparency = 0.35
-
-        -- 2 vệt bóng kính góc trên phải
-        local sDot = math.max(2, math.floor(diameter * 0.08))
-        local shineDot = Instance.new("Frame", inner)
-        shineDot.Size = UDim2.new(0, sDot, 0, sDot)
-        shineDot.Position = UDim2.new(0.56, 0, 0.11, 0)
-        shineDot.BackgroundColor3 = GlossPalette.Shine
-        shineDot.BackgroundTransparency = 0.45
-        shineDot.BorderSizePixel = 0
-        shineDot.ZIndex = 13
-        Instance.new("UICorner", shineDot).CornerRadius = UDim.new(1, 0)
-
-        local shineOval = Instance.new("Frame", inner)
-        shineOval.Size = UDim2.new(0, math.max(4, math.floor(diameter * 0.16)), 0, sDot)
-        shineOval.Position = UDim2.new(0.66, 0, 0.15, 0)
-        shineOval.Rotation = 28
-        shineOval.BackgroundColor3 = GlossPalette.Shine
-        shineOval.BackgroundTransparency = 0.38
-        shineOval.BorderSizePixel = 0
-        shineOval.ZIndex = 13
-        Instance.new("UICorner", shineOval).CornerRadius = UDim.new(1, 0)
-
-        local iconHolder = Instance.new("Frame", inner)
-        iconHolder.Name = "IconHolder"
-        iconHolder.Size = UDim2.new(1, 0, 1, 0)
-        iconHolder.BackgroundTransparency = 1
-        iconHolder.ZIndex = 14
-
-        return outer, iconHolder, rimStroke, innerGrad
-    end
-
-    -- Hàm tạo thanh Pill dài 3D Glossy viền trắng
-    local function createGlossyPillFrame(parent, sizeUDim, posUDim, order)
-        local outer = Instance.new("Frame", parent)
-        outer.Size = sizeUDim
-        if posUDim then outer.Position = posUDim end
-        if order then outer.LayoutOrder = order end
-        outer.BackgroundColor3 = GlossPalette.OuterBevel
-        outer.BorderSizePixel = 0
-        outer.ZIndex = 10
-        Instance.new("UICorner", outer).CornerRadius = UDim.new(1, 0)
-
-        local rimStroke = Instance.new("UIStroke", outer)
-        rimStroke.Color = GlossPalette.RimWhite
-        rimStroke.Thickness = 1.5
-        rimStroke.Transparency = 0.08
-
-        local inner = Instance.new("Frame", outer)
-        inner.Name = "InnerPill"
-        inner.Size = UDim2.new(1, -6, 1, -6)
-        inner.Position = UDim2.new(0, 3, 0, 3)
-        inner.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-        inner.BorderSizePixel = 0
-        inner.ZIndex = 11
-        Instance.new("UICorner", inner).CornerRadius = UDim.new(1, 0)
-        local innerGrad = addSoftGradient(inner, GlossPalette.InnerTop, GlossPalette.InnerBottom, 90)
-
-        local innerStroke = Instance.new("UIStroke", inner)
-        innerStroke.Color = GlossPalette.InnerStroke
-        innerStroke.Thickness = 0.9
-        innerStroke.Transparency = 0.38
-
-        return outer, inner, rimStroke, innerGrad
-    end
-
-    -- Bộ vẽ biểu tượng 3D Neon Cyan -> Blue -> Purple viền tối sắc nét theo đúng mẫu ảnh 1000085250.png
     local NeonIconColors = {
-        CyanTop = Color3.fromRGB(98, 245, 255),
-        BlueMid = Color3.fromRGB(65, 138, 255),
-        PurpleBot = Color3.fromRGB(205, 72, 255),
-        MagentaTop = Color3.fromRGB(228, 115, 255),
-        MagentaBot = Color3.fromRGB(168, 45, 235),
-        DarkOutline = Color3.fromRGB(12, 16, 36)
+        CyanTop = Color3.fromRGB(175, 248, 255),
+        BlueMid = Color3.fromRGB(108, 158, 255),
+        PurpleBot = Color3.fromRGB(228, 118, 255),
+        MagentaTop = Color3.fromRGB(238, 135, 255),
+        MagentaBot = Color3.fromRGB(178, 62, 245),
+        RimCyan = Color3.fromRGB(62, 242, 255),
+        RimBlue = Color3.fromRGB(58, 128, 255),
+        RimPurple = Color3.fromRGB(212, 58, 255),
+        DarkOutline = Color3.fromRGB(10, 14, 38)
     }
 
     local function applyNeonTriGrad(parent, rot)
@@ -2081,6 +1985,126 @@ do
         return g
     end
 
+    local function applyRimNeonGrad(strokeObj, isActive)
+        local g = strokeObj:FindFirstChildOfClass("UIGradient") or Instance.new("UIGradient", strokeObj)
+        g.Rotation = 90
+        if isActive then
+            g.Color = ColorSequence.new({
+                ColorSequenceKeypoint.new(0, Color3.fromRGB(135, 255, 220)),
+                ColorSequenceKeypoint.new(0.5, Color3.fromRGB(55, 235, 185)),
+                ColorSequenceKeypoint.new(1, Color3.fromRGB(65, 200, 255))
+            })
+        else
+            g.Color = ColorSequence.new({
+                ColorSequenceKeypoint.new(0, NeonIconColors.RimCyan),
+                ColorSequenceKeypoint.new(0.5, NeonIconColors.RimBlue),
+                ColorSequenceKeypoint.new(1, NeonIconColors.RimPurple)
+            })
+        end
+        return g
+    end
+
+    -- Hàm tạo nút tròn 3D Cyber-Neon Glossy theo đúng mẫu 1000085251.png
+    local function createGlossyCircleBtn(parent, diameter, posUDim, anchorPt)
+        local outer = Instance.new("TextButton", parent)
+        outer.Size = UDim2.new(0, diameter, 0, diameter)
+        outer.Position = posUDim
+        if anchorPt then outer.AnchorPoint = anchorPt end
+        outer.BackgroundColor3 = GlossPalette.OuterBevel
+        outer.Text = ""
+        outer.AutoButtonColor = false
+        outer.ZIndex = 11
+        Instance.new("UICorner", outer).CornerRadius = UDim.new(1, 0)
+
+        local rimStroke = Instance.new("UIStroke", outer)
+        rimStroke.Color = Color3.fromRGB(255, 255, 255)
+        rimStroke.Thickness = 1.65
+        rimStroke.Transparency = 0.02
+        rimStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+        applyRimNeonGrad(rimStroke, false)
+
+        local pad = math.max(2, math.floor(diameter * 0.10))
+        local inner = Instance.new("Frame", outer)
+        inner.Name = "InnerFace"
+        inner.Size = UDim2.new(1, -pad * 2, 1, -pad * 2)
+        inner.Position = UDim2.new(0, pad, 0, pad)
+        inner.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        inner.BorderSizePixel = 0
+        inner.ZIndex = 12
+        Instance.new("UICorner", inner).CornerRadius = UDim.new(1, 0)
+
+        local innerGrad = addSoftGradient(inner, GlossPalette.InnerTop, GlossPalette.InnerBottom, 90)
+        local innerStroke = Instance.new("UIStroke", inner)
+        innerStroke.Color = GlossPalette.InnerStroke
+        innerStroke.Thickness = 0.85
+        innerStroke.Transparency = 0.32
+
+        -- 2 vệt bóng kính cong góc trên trái theo đúng mẫu 1000085251.png
+        local sDot = math.max(2, math.floor(diameter * 0.08))
+        local shineOval = Instance.new("Frame", inner)
+        shineOval.Size = UDim2.new(0, math.max(4, math.floor(diameter * 0.22)), 0, sDot)
+        shineOval.Position = UDim2.new(0.14, 0, 0.14, 0)
+        shineOval.Rotation = -34
+        shineOval.BackgroundColor3 = GlossPalette.Shine
+        shineOval.BackgroundTransparency = 0.22
+        shineOval.BorderSizePixel = 0
+        shineOval.ZIndex = 13
+        Instance.new("UICorner", shineOval).CornerRadius = UDim.new(1, 0)
+
+        local shineDot = Instance.new("Frame", inner)
+        shineDot.Size = UDim2.new(0, sDot, 0, sDot)
+        shineDot.Position = UDim2.new(0.38, 0, 0.08, 0)
+        shineDot.BackgroundColor3 = GlossPalette.Shine
+        shineDot.BackgroundTransparency = 0.35
+        shineDot.BorderSizePixel = 0
+        shineDot.ZIndex = 13
+        Instance.new("UICorner", shineDot).CornerRadius = UDim.new(1, 0)
+
+        local iconHolder = Instance.new("Frame", inner)
+        iconHolder.Name = "IconHolder"
+        iconHolder.Size = UDim2.new(1, 0, 1, 0)
+        iconHolder.BackgroundTransparency = 1
+        iconHolder.ZIndex = 14
+
+        return outer, iconHolder, rimStroke, innerGrad
+    end
+
+    -- Hàm tạo thanh Pill dài 3D Cyber-Neon Glossy đồng bộ viền Cyan-Blue-Purple
+    local function createGlossyPillFrame(parent, sizeUDim, posUDim, order)
+        local outer = Instance.new("Frame", parent)
+        outer.Size = sizeUDim
+        if posUDim then outer.Position = posUDim end
+        if order then outer.LayoutOrder = order end
+        outer.BackgroundColor3 = GlossPalette.OuterBevel
+        outer.BorderSizePixel = 0
+        outer.ZIndex = 10
+        Instance.new("UICorner", outer).CornerRadius = UDim.new(1, 0)
+
+        local rimStroke = Instance.new("UIStroke", outer)
+        rimStroke.Color = Color3.fromRGB(255, 255, 255)
+        rimStroke.Thickness = 1.45
+        rimStroke.Transparency = 0.06
+        applyRimNeonGrad(rimStroke, false)
+
+        local inner = Instance.new("Frame", outer)
+        inner.Name = "InnerPill"
+        inner.Size = UDim2.new(1, -4, 1, -4)
+        inner.Position = UDim2.new(0, 2, 0, 2)
+        inner.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        inner.BorderSizePixel = 0
+        inner.ZIndex = 11
+        Instance.new("UICorner", inner).CornerRadius = UDim.new(1, 0)
+        local innerGrad = addSoftGradient(inner, GlossPalette.InnerTop, GlossPalette.InnerBottom, 90)
+
+        local innerStroke = Instance.new("UIStroke", inner)
+        innerStroke.Color = GlossPalette.InnerStroke
+        innerStroke.Thickness = 0.8
+        innerStroke.Transparency = 0.38
+
+        return outer, inner, rimStroke, innerGrad
+    end
+
+    -- Bộ vẽ đầy đủ 12 biểu tượng 3D Cyber-Neon theo đúng mẫu ảnh 1000085251.png
     local function drawGlossyIcon(holder, iconType, scale)
         local sc = scale or 1
         local function makeNeonPart(w, h, xOff, yOff, rot, radiusScale, zIdx, customGradMode, withStroke)
@@ -2103,8 +2127,8 @@ do
             if withStroke ~= false then
                 local st = Instance.new("UIStroke", f)
                 st.Color = NeonIconColors.DarkOutline
-                st.Thickness = 0.85
-                st.Transparency = 0.15
+                st.Thickness = 0.8
+                st.Transparency = 0.18
             end
             return f
         end
@@ -2123,220 +2147,242 @@ do
         end
 
         if iconType == "Play" then
-            -- Tam giác Play 3D Cyan -> Blue -> Purple (Hàng 1 Cột 1 của ảnh 1000085250.png)
-            makeNeonPart(3.4, 13.2, -3.6, 0, 0, 1, 15, nil, false)
-            makeNeonPart(3.4, 10.6, -1.6, 0, 0, 1, 15, nil, false)
-            makeNeonPart(3.4, 8.0, 0.4, 0, 0, 1, 15, nil, false)
-            makeNeonPart(3.4, 5.4, 2.4, 0, 0, 1, 15, nil, false)
-            makeNeonPart(2.8, 3.2, 4.2, 0, 0, 1, 15, nil, false)
-            -- Vệt sáng bóng trắng-xanh trên cạnh trái
-            local hi = Instance.new("Frame", holder)
-            hi.Size = UDim2.new(0, 1.3 * sc, 0, 8.5 * sc); hi.AnchorPoint = Vector2.new(0.5, 0.5)
-            hi.Position = UDim2.new(0.5, -4.1 * sc, 0.5, -1.2 * sc); hi.BackgroundColor3 = Color3.fromRGB(220, 252, 255)
-            hi.BackgroundTransparency = 0.25; hi.BorderSizePixel = 0; hi.ZIndex = 16
-            Instance.new("UICorner", hi).CornerRadius = UDim.new(1, 0)
+            makeNeonPart(3.2, 12.6, -3.4, 0, 0, 1, 15, nil, false)
+            makeNeonPart(3.2, 10.2, -1.5, 0, 0, 1, 15, nil, false)
+            makeNeonPart(3.2, 7.6, 0.4, 0, 0, 1, 15, nil, false)
+            makeNeonPart(3.2, 5.2, 2.3, 0, 0, 1, 15, nil, false)
+            makeNeonPart(2.6, 3.0, 4.0, 0, 0, 1, 15, nil, false)
         elseif iconType == "Pause" then
-            -- 2 thanh dọc Pause 3D Cyan -> Blue -> Purple (Hàng 1 Cột 2 của ảnh 1000085250.png)
-            local b1 = makeNeonPart(4.4, 13.0, -3.5, 0, 0, 0.35, 15, nil, true)
-            local b2 = makeNeonPart(4.4, 13.0, 3.5, 0, 0, 0.35, 15, nil, true)
-            for _, bar in ipairs({b1, b2}) do
-                local hi = Instance.new("Frame", bar)
-                hi.Size = UDim2.new(0.32, 0, 0.65, 0); hi.Position = UDim2.new(0.16, 0, 0.1, 0)
-                hi.BackgroundColor3 = Color3.fromRGB(225, 252, 255); hi.BackgroundTransparency = 0.3
-                hi.BorderSizePixel = 0; hi.ZIndex = 16
-                Instance.new("UICorner", hi).CornerRadius = UDim.new(1, 0)
-            end
+            makeNeonPart(4.2, 12.4, -3.3, 0, 0, 0.38, 15, nil, true)
+            makeNeonPart(4.2, 12.4, 3.3, 0, 0, 0.38, 15, nil, true)
         elseif iconType == "NextTrack" then
-            -- Qua bài tiếp ⏭ (Hàng 1 Cột 3 của ảnh 1000085250.png)
-            makeNeonPart(2.8, 11.2, -4.4, 0, 0, 1, 15, nil, false)
-            makeNeonPart(2.8, 8.6, -2.6, 0, 0, 1, 15, nil, false)
-            makeNeonPart(2.8, 6.0, -0.8, 0, 0, 1, 15, nil, false)
-            makeNeonPart(2.6, 3.6, 0.8, 0, 0, 1, 15, nil, false)
-            makeNeonPart(3.2, 11.4, 4.0, 0, 0, 0.38, 16, nil, true)
+            -- Qua bài tiếp ⏭ (Hàng 1 Cột 3 của ảnh 1000085251.png)
+            makeNeonPart(2.7, 11.0, -4.2, 0, 0, 1, 15, nil, false)
+            makeNeonPart(2.7, 8.4, -2.5, 0, 0, 1, 15, nil, false)
+            makeNeonPart(2.7, 5.8, -0.8, 0, 0, 1, 15, nil, false)
+            makeNeonPart(2.5, 3.4, 0.8, 0, 0, 1, 15, nil, false)
+            makeNeonPart(3.0, 11.2, 3.9, 0, 0, 0.4, 16, nil, true)
         elseif iconType == "PrevTrack" then
-            -- Lùi bài trước ⏮ (Hàng 1 Cột 4 của ảnh 1000085250.png)
-            makeNeonPart(3.2, 11.4, -4.0, 0, 0, 0.38, 16, nil, true)
-            makeNeonPart(2.6, 3.6, -0.8, 0, 0, 1, 15, nil, false)
-            makeNeonPart(2.8, 6.0, 0.8, 0, 0, 1, 15, nil, false)
-            makeNeonPart(2.8, 8.6, 2.6, 0, 0, 1, 15, nil, false)
-            makeNeonPart(2.8, 11.2, 4.4, 0, 0, 1, 15, nil, false)
+            -- Lùi bài trước ⏮ (Hàng 1 Cột 4 của ảnh 1000085251.png)
+            makeNeonPart(3.0, 11.2, -3.9, 0, 0, 0.4, 16, nil, true)
+            makeNeonPart(2.5, 3.4, -0.8, 0, 0, 1, 15, nil, false)
+            makeNeonPart(2.7, 5.8, 0.8, 0, 0, 1, 15, nil, false)
+            makeNeonPart(2.7, 8.4, 2.5, 0, 0, 1, 15, nil, false)
+            makeNeonPart(2.7, 11.0, 4.2, 0, 0, 1, 15, nil, false)
+        elseif iconType == "FastForward" then
+            -- Tua nhanh ⏩ (Hàng 3 Cột 3 của ảnh 1000085251.png: 2 tam giác ▶▶)
+            makeNeonPart(2.2, 9.8, -5.6, 0, 0, 1, 15, nil, false)
+            makeNeonPart(2.2, 7.2, -4.1, 0, 0, 1, 15, nil, false)
+            makeNeonPart(2.2, 4.6, -2.6, 0, 0, 1, 15, nil, false)
+            makeNeonPart(2.0, 2.6, -1.2, 0, 0, 1, 15, nil, false)
+
+            makeNeonPart(2.2, 9.8, 0.8, 0, 0, 1, 16, nil, false)
+            makeNeonPart(2.2, 7.2, 2.3, 0, 0, 1, 16, nil, false)
+            makeNeonPart(2.2, 4.6, 3.8, 0, 0, 1, 16, nil, false)
+            makeNeonPart(2.0, 2.6, 5.2, 0, 0, 1, 16, nil, false)
+        elseif iconType == "Rewind" then
+            -- Tua lùi ⏪ (Hàng 3 Cột 4 của ảnh 1000085251.png: 2 tam giác ◀◀)
+            makeNeonPart(2.0, 2.6, -5.2, 0, 0, 1, 16, nil, false)
+            makeNeonPart(2.2, 4.6, -3.8, 0, 0, 1, 16, nil, false)
+            makeNeonPart(2.2, 7.2, -2.3, 0, 0, 1, 16, nil, false)
+            makeNeonPart(2.2, 9.8, -0.8, 0, 0, 1, 16, nil, false)
+
+            makeNeonPart(2.0, 2.6, 1.2, 0, 0, 1, 15, nil, false)
+            makeNeonPart(2.2, 4.6, 2.6, 0, 0, 1, 15, nil, false)
+            makeNeonPart(2.2, 7.2, 4.1, 0, 0, 1, 15, nil, false)
+            makeNeonPart(2.2, 9.8, 5.6, 0, 0, 1, 15, nil, false)
+        elseif iconType == "Shuffle" then
+            -- Trộn bài 🔀 (Hàng 2 Cột 1 của ảnh 1000085251.png: 2 mũi tên đan chéo)
+            -- Nhánh 1: Trái-trên xuống Phải-dưới (Tím-Hồng)
+            makeNeonPart(4.2, 2.4, -4.8, -3.4, 0, 0.5, 15, "purple_magenta", false)
+            makeNeonPart(7.8, 2.4, -0.4, 0, 42, 0.5, 15, "purple_magenta", false)
+            makeNeonPart(3.8, 2.4, 3.2, 3.4, 0, 0.5, 15, "purple_magenta", false)
+            -- Đầu mũi tên dưới phải
+            makeNeonPart(3.6, 2.1, 4.8, 2.3, 35, 0.45, 16, "purple_magenta", false)
+            makeNeonPart(3.6, 2.1, 4.8, 4.5, -35, 0.45, 16, "purple_magenta", false)
+
+            -- Nhánh 2: Trái-dưới lên Phải-trên (Xanh Băng - Lam) đè lên trên
+            makeNeonPart(4.2, 2.4, -4.8, 3.4, 0, 0.5, 17, "cyan_blue", false)
+            makeNeonPart(7.8, 2.4, -0.4, 0, -42, 0.5, 17, "cyan_blue", false)
+            makeNeonPart(3.8, 2.4, 3.2, -3.4, 0, 0.5, 17, "cyan_blue", false)
+            -- Đầu mũi tên trên phải
+            makeNeonPart(3.6, 2.1, 4.8, -4.5, 35, 0.45, 18, "cyan_blue", false)
+            makeNeonPart(3.6, 2.1, 4.8, -2.3, -35, 0.45, 18, "cyan_blue", false)
         elseif iconType == "Cross" then
-            makeNeonPart(13.5, 3.4, 0, 0, 45, 0.5, 15, nil, false)
-            makeNeonPart(13.5, 3.4, 0, 0, -45, 0.5, 15, nil, false)
+            makeNeonPart(13.0, 3.2, 0, 0, 45, 0.5, 15, nil, false)
+            makeNeonPart(13.0, 3.2, 0, 0, -45, 0.5, 15, nil, false)
         elseif iconType == "MusicNote" then
-            makeNeonPart(6.6, 4.8, -1.8, 3.6, -22, 1, 16, "purple_magenta", false)
-            makeNeonPart(2.6, 11.2, 0.8, -1.0, 8, 0.4, 15, nil, false)
-            makeNeonPart(6.0, 2.8, 3.1, -4.5, 24, 0.5, 16, "cyan_blue", false)
+            makeNeonPart(6.4, 4.6, -1.8, 3.5, -22, 1, 16, "purple_magenta", false)
+            makeNeonPart(2.5, 11.0, 0.8, -1.0, 8, 0.4, 15, nil, false)
+            makeNeonPart(5.8, 2.6, 3.0, -4.4, 24, 0.5, 16, "cyan_blue", false)
         elseif iconType == "PlaylistNote" then
-            -- Icon Danh sách nhạc ☰♫ (Hàng 3 Cột 2 của ảnh 1000085250.png)
-            makeNeonPart(10.5, 2.8, -1.8, -4.2, 0, 0.5, 15, "cyan_blue", true)
-            makeNeonPart(10.5, 2.8, -1.8, -0.2, 0, 0.5, 15, "cyan_blue", true)
-            makeNeonPart(7.2, 2.8, -3.4, 3.8, 0, 0.5, 15, "purple_magenta", true)
-            -- Nốt nhạc đôi góc dưới phải
-            makeNeonPart(3.8, 3.0, 2.0, 4.8, -18, 1, 17, "purple_magenta", false)
-            makeNeonPart(3.8, 3.0, 6.0, 3.8, -18, 1, 17, "purple_magenta", false)
-            makeNeonPart(1.8, 7.2, 3.1, 1.5, 0, 0.35, 16, nil, false)
-            makeNeonPart(1.8, 7.2, 7.1, 0.5, 0, 0.35, 16, nil, false)
-            makeNeonPart(5.6, 2.2, 5.1, -1.8, -14, 0.4, 17, "cyan_blue", false)
+            -- Icon Danh sách nhạc ☰♫ (Hàng 3 Cột 2 của ảnh 1000085251.png)
+            makeNeonPart(10.2, 2.6, -1.8, -4.0, 0, 0.5, 15, "cyan_blue", true)
+            makeNeonPart(10.2, 2.6, -1.8, -0.2, 0, 0.5, 15, "cyan_blue", true)
+            makeNeonPart(7.0, 2.6, -3.4, 3.6, 0, 0.5, 15, "purple_magenta", true)
+            makeNeonPart(3.6, 2.8, 2.0, 4.6, -18, 1, 17, "purple_magenta", false)
+            makeNeonPart(3.6, 2.8, 5.8, 3.6, -18, 1, 17, "purple_magenta", false)
+            makeNeonPart(1.8, 7.0, 3.0, 1.4, 0, 0.35, 16, nil, false)
+            makeNeonPart(1.8, 7.0, 6.8, 0.4, 0, 0.35, 16, nil, false)
+            makeNeonPart(5.4, 2.1, 4.9, -1.8, -14, 0.4, 17, "cyan_blue", false)
         elseif iconType == "Floppy" then
-            makeNeonPart(13.5, 13.5, 0, 0, 0, 0.22, 15, nil, true)
-            makeDarkCutout(7.6, 4.8, -0.4, -4.2, 0, 0.25, 16)
-            makeNeonPart(2.5, 3.4, 1.3, -4.2, 0, 0.3, 17, "cyan_blue", false)
-            makeDarkCutout(10.2, 6.2, 0, 3.6, 0, 0.22, 16)
+            makeNeonPart(13.0, 13.0, 0, 0, 0, 0.22, 15, nil, true)
+            makeDarkCutout(7.4, 4.6, -0.4, -4.0, 0, 0.25, 16)
+            makeNeonPart(2.4, 3.2, 1.2, -4.0, 0, 0.3, 17, "cyan_blue", false)
+            makeDarkCutout(9.8, 6.0, 0, 3.5, 0, 0.22, 16)
             local lblPart = Instance.new("Frame", holder)
-            lblPart.Size = UDim2.new(0, 8.4 * sc, 0, 5.0 * sc); lblPart.AnchorPoint = Vector2.new(0.5, 0.5)
-            lblPart.Position = UDim2.new(0.5, 0, 0.5, 3.8 * sc); lblPart.BackgroundColor3 = Color3.fromRGB(235, 245, 255)
+            lblPart.Size = UDim2.new(0, 8.0 * sc, 0, 4.8 * sc); lblPart.AnchorPoint = Vector2.new(0.5, 0.5)
+            lblPart.Position = UDim2.new(0.5, 0, 0.5, 3.6 * sc); lblPart.BackgroundColor3 = Color3.fromRGB(235, 245, 255)
             lblPart.BorderSizePixel = 0; lblPart.ZIndex = 17
             Instance.new("UICorner", lblPart).CornerRadius = UDim.new(0.2, 0)
-            makeDarkCutout(5.4, 1.1, 0, 2.9, 0, 0.5, 18)
-            makeDarkCutout(5.4, 1.1, 0, 4.6, 0, 0.5, 18)
+            makeDarkCutout(5.2, 1.0, 0, 2.8, 0, 0.5, 18)
+            makeDarkCutout(5.2, 1.0, 0, 4.4, 0, 0.5, 18)
         elseif iconType == "DoubleLoop" then
-            -- Icon Lặp lại 2 mũi tên: Cung trên Xanh Băng -> Xanh Lam, Cung dưới Tím -> Hồng Tím (Hàng 2 Cột 2 của ảnh 1000085250.png)
-            local r = 5.4
+            -- Icon Lặp lại 🔁 (Hàng 2 Cột 2 của ảnh 1000085251.png)
+            local r = 5.2
             for a = -152, -32, 15 do
                 local rad = math.rad(a)
-                makeNeonPart(3.2, 2.8, math.cos(rad) * r, math.sin(rad) * r, a + 90, 1, 16, "cyan_blue", false)
+                makeNeonPart(3.0, 2.6, math.cos(rad) * r, math.sin(rad) * r, a + 90, 1, 16, "cyan_blue", false)
             end
-            makeNeonPart(5.4, 2.6, 4.8, -1.6, -32, 0.45, 17, "cyan_blue", false)
-            makeNeonPart(5.4, 2.6, 5.7, -3.1, -112, 0.45, 17, "cyan_blue", false)
-            makeNeonPart(3.5, 3.1, 4.9, -2.3, 18, 0.45, 17, "cyan_blue", false)
+            makeNeonPart(5.0, 2.4, 4.6, -1.5, -32, 0.45, 17, "cyan_blue", false)
+            makeNeonPart(5.0, 2.4, 5.4, -2.9, -112, 0.45, 17, "cyan_blue", false)
+            makeNeonPart(3.2, 2.8, 4.7, -2.1, 18, 0.45, 17, "cyan_blue", false)
 
             for a = 28, 148, 15 do
                 local rad = math.rad(a)
-                makeNeonPart(3.2, 2.8, math.cos(rad) * r, math.sin(rad) * r, a + 90, 1, 16, "purple_magenta", false)
+                makeNeonPart(3.0, 2.6, math.cos(rad) * r, math.sin(rad) * r, a + 90, 1, 16, "purple_magenta", false)
             end
-            makeNeonPart(5.4, 2.6, -4.8, 1.6, -32, 0.45, 17, "purple_magenta", false)
-            makeNeonPart(5.4, 2.6, -5.7, 3.1, -112, 0.45, 17, "purple_magenta", false)
-            makeNeonPart(3.5, 3.1, -4.9, 2.3, 18, 0.45, 17, "purple_magenta", false)
+            makeNeonPart(5.0, 2.4, -4.6, 1.5, -32, 0.45, 17, "purple_magenta", false)
+            makeNeonPart(5.0, 2.4, -5.4, 2.9, -112, 0.45, 17, "purple_magenta", false)
+            makeNeonPart(3.2, 2.8, -4.7, 2.1, 18, 0.45, 17, "purple_magenta", false)
         elseif iconType == "Stopwatch" then
-            makeNeonPart(5.4, 2.1, 0, -7.2, 0, 0.45, 16, "cyan_blue", false)
-            makeNeonPart(2.4, 2.2, 0, -5.8, 0, 0.2, 15, "cyan_blue", false)
+            makeNeonPart(5.2, 2.0, 0, -6.9, 0, 0.45, 16, "cyan_blue", false)
+            makeNeonPart(2.2, 2.0, 0, -5.5, 0, 0.2, 15, "cyan_blue", false)
 
             local dial = Instance.new("Frame", holder)
-            dial.Size = UDim2.new(0, 12.2 * sc, 0, 12.2 * sc)
+            dial.Size = UDim2.new(0, 11.8 * sc, 0, 11.8 * sc)
             dial.AnchorPoint = Vector2.new(0.5, 0.5)
-            dial.Position = UDim2.new(0.5, 0, 0.5, 1.3 * sc)
+            dial.Position = UDim2.new(0.5, 0, 0.5, 1.2 * sc)
             dial.BackgroundTransparency = 1
             dial.ZIndex = 15
             Instance.new("UICorner", dial).CornerRadius = UDim.new(1, 0)
             local dSt = Instance.new("UIStroke", dial)
             dSt.Color = Color3.fromRGB(255, 255, 255)
-            dSt.Thickness = 2.3 * sc
+            dSt.Thickness = 2.2 * sc
             applyNeonTriGrad(dSt, 90)
 
-            makeNeonPart(2.1, 4.4, -0.5, 0.1, 0, 0.45, 17, "cyan_blue", false)
-            makeNeonPart(3.8, 2.1, 0.8, 1.3, 0, 0.45, 17, "purple_magenta", false)
+            makeNeonPart(2.0, 4.2, -0.5, 0.1, 0, 0.45, 17, "cyan_blue", false)
+            makeNeonPart(3.6, 2.0, 0.8, 1.2, 0, 0.45, 17, "purple_magenta", false)
         end
     end
 
-    -- 1. KHUNG TRÊN CÙNG: NÚT NỐT NHẠC + PILL NHẬP ID + NÚT LƯU ĐĨA MỀM + THANH TUA NHẠC
-    local musicIdBox, saveIdBtn, nowPlayingLabel, musicTimeLabel, seekFill, seekKnob
-    local seekDragInput = nil
-    local prevTrackBtn, nextTrackBtn, noteBadge
+    -- Hàm định dạng thời gian (hỗ trợ cả HH:MM:SS khi hẹn giờ không giới hạn > 60 phút)
     local function formatTime(sec)
         sec = math.max(0, math.floor(tonumber(sec) or 0))
-        return string.format("%02d:%02d", math.floor(sec / 60), sec % 60)
+        local hrs = math.floor(sec / 3600)
+        local mins = math.floor((sec % 3600) / 60)
+        local remSec = sec % 60
+        if hrs > 0 then
+            return string.format("%02d:%02d:%02d", hrs, mins, remSec)
+        end
+        return string.format("%02d:%02d", mins, remSec)
     end
+
+    -- 1. KHUNG TRÊN CÙNG (LayoutOrder = 1): NÚT NỐT NHẠC + PILL NHẬP ID + NÚT LƯU + THANH TUA NHẠC
+    local musicIdBox, saveIdBtn, nowPlayingLabel, musicTimeLabel, seekFill, seekKnob
+    local seekDragInput = nil
+    local noteBadge
     do
-    local topMusicCard = Instance.new("Frame", page5)
-    topMusicCard.Size = UDim2.new(0.94, 0, 0, 68)
-    topMusicCard.BackgroundColor3 = Theme.ItemBg
-    topMusicCard.LayoutOrder = 1; topMusicCard.ZIndex = 10
-    Instance.new("UICorner", topMusicCard).CornerRadius = UDim.new(0, 10)
-    local tmStroke = Instance.new("UIStroke", topMusicCard); tmStroke.Color = Theme.Stroke; tmStroke.Thickness = 1
-    table.insert(RGBElements, {Type = "Info", Stroke = tmStroke})
+        local topMusicCard = Instance.new("Frame", page5)
+        topMusicCard.Size = UDim2.new(0.94, 0, 0, 56)
+        topMusicCard.BackgroundColor3 = Theme.ItemBg
+        topMusicCard.LayoutOrder = 1; topMusicCard.ZIndex = 10
+        Instance.new("UICorner", topMusicCard).CornerRadius = UDim.new(0, 10)
+        local tmStroke = Instance.new("UIStroke", topMusicCard); tmStroke.Color = Theme.Stroke; tmStroke.Thickness = 1
+        table.insert(RGBElements, {Type = "Info", Stroke = tmStroke})
 
-    local noteHolder; noteBadge, noteHolder = createGlossyCircleBtn(topMusicCard, 28, UDim2.new(0, 6, 0, 4))
-    drawGlossyIcon(noteHolder, "MusicNote", 0.85)
+        local noteHolder
+        noteBadge, noteHolder = createGlossyCircleBtn(topMusicCard, 25, UDim2.new(0, 6, 0, 4))
+        drawGlossyIcon(noteHolder, "MusicNote", 0.78)
 
-    local inputPillOuter, inputPillInner = createGlossyPillFrame(topMusicCard, UDim2.new(1, -76, 0, 28), UDim2.new(0, 38, 0, 4))
-    musicIdBox = Instance.new("TextBox", inputPillInner)
-    musicIdBox.Size = UDim2.new(1, -20, 1, 0); musicIdBox.Position = UDim2.new(0, 10, 0, 0)
-    musicIdBox.BackgroundTransparency = 1; musicIdBox.PlaceholderText = "Nhập hoặc dán ID Nhạc..."
-    musicIdBox.PlaceholderColor3 = Color3.fromRGB(168, 184, 204); musicIdBox.Text = ""
-    musicIdBox.TextColor3 = GlossPalette.IconWhite
-    musicIdBox.Font = Enum.Font.GothamSemibold; musicIdBox.TextSize = 9.5
-    musicIdBox.TextXAlignment = Enum.TextXAlignment.Left
-    musicIdBox.ClearTextOnFocus = false; musicIdBox.ZIndex = 13
+        local inputPillOuter, inputPillInner = createGlossyPillFrame(topMusicCard, UDim2.new(1, -68, 0, 25), UDim2.new(0, 34, 0, 4))
+        musicIdBox = Instance.new("TextBox", inputPillInner)
+        musicIdBox.Size = UDim2.new(1, -18, 1, 0); musicIdBox.Position = UDim2.new(0, 9, 0, 0)
+        musicIdBox.BackgroundTransparency = 1; musicIdBox.PlaceholderText = "Nhập hoặc dán ID Nhạc / link .mp3..."
+        musicIdBox.PlaceholderColor3 = Color3.fromRGB(168, 184, 204); musicIdBox.Text = ""
+        musicIdBox.TextColor3 = GlossPalette.IconWhite
+        musicIdBox.Font = Enum.Font.GothamSemibold; musicIdBox.TextSize = 9.0
+        musicIdBox.TextXAlignment = Enum.TextXAlignment.Left
+        musicIdBox.ClearTextOnFocus = false; musicIdBox.ZIndex = 13
 
-    local saveHolder; saveIdBtn, saveHolder = createGlossyCircleBtn(topMusicCard, 28, UDim2.new(1, -34, 0, 4))
-    drawGlossyIcon(saveHolder, "Floppy", 0.86)
+        local saveHolder
+        saveIdBtn, saveHolder = createGlossyCircleBtn(topMusicCard, 25, UDim2.new(1, -31, 0, 4))
+        drawGlossyIcon(saveHolder, "Floppy", 0.78)
 
-    nowPlayingLabel = Instance.new("TextLabel", topMusicCard)
-    nowPlayingLabel.Size = UDim2.new(1, -138, 0, 16); nowPlayingLabel.Position = UDim2.new(0, 10, 0, 34)
-    nowPlayingLabel.BackgroundTransparency = 1; nowPlayingLabel.RichText = true
-    nowPlayingLabel.Text = "<font color='#9AA4B8'>🎵 Chưa có nhạc phát</font>"
-    nowPlayingLabel.Font = Enum.Font.GothamSemibold; nowPlayingLabel.TextSize = 9.2
-    nowPlayingLabel.TextXAlignment = Enum.TextXAlignment.Left
-    nowPlayingLabel.TextTruncate = Enum.TextTruncate.AtEnd; nowPlayingLabel.ZIndex = 11
+        nowPlayingLabel = Instance.new("TextLabel", topMusicCard)
+        nowPlayingLabel.Size = UDim2.new(1, -96, 0, 14); nowPlayingLabel.Position = UDim2.new(0, 10, 0, 30)
+        nowPlayingLabel.BackgroundTransparency = 1; nowPlayingLabel.RichText = true
+        nowPlayingLabel.Text = "<font color='#9AA4B8'>🎵 Chưa có nhạc phát</font>"
+        nowPlayingLabel.Font = Enum.Font.GothamSemibold; nowPlayingLabel.TextSize = 8.8
+        nowPlayingLabel.TextXAlignment = Enum.TextXAlignment.Left
+        nowPlayingLabel.TextTruncate = Enum.TextTruncate.AtEnd; nowPlayingLabel.ZIndex = 11
 
-    -- 2 nút Lùi bài (⏮) & Qua bài (⏭) 3D Cyan->Blue->Purple theo mẫu 1000085250.png
-    prevTrackBtn = Instance.new("TextButton", topMusicCard)
-    prevTrackBtn.Size = UDim2.new(0, 18, 0, 16); prevTrackBtn.Position = UDim2.new(1, -124, 0, 34)
-    prevTrackBtn.BackgroundTransparency = 1; prevTrackBtn.Text = ""; prevTrackBtn.AutoButtonColor = false; prevTrackBtn.ZIndex = 14
-    drawGlossyIcon(prevTrackBtn, "PrevTrack", 0.72)
+        musicTimeLabel = Instance.new("TextLabel", topMusicCard)
+        musicTimeLabel.Size = UDim2.new(0, 78, 0, 14); musicTimeLabel.Position = UDim2.new(1, -88, 0, 30)
+        musicTimeLabel.BackgroundTransparency = 1; musicTimeLabel.Text = "00:00 / 00:00"
+        musicTimeLabel.TextColor3 = getSoftBrandColor(Theme.Brand)
+        musicTimeLabel.Font = Enum.Font.GothamSemibold; musicTimeLabel.TextSize = 8.5
+        musicTimeLabel.TextXAlignment = Enum.TextXAlignment.Right; musicTimeLabel.ZIndex = 11
+        registerBrandUpdater(function(newBrand)
+            if musicTimeLabel and musicTimeLabel.Parent then musicTimeLabel.TextColor3 = getSoftBrandColor(newBrand) end
+        end)
 
-    nextTrackBtn = Instance.new("TextButton", topMusicCard)
-    nextTrackBtn.Size = UDim2.new(0, 18, 0, 16); nextTrackBtn.Position = UDim2.new(1, -104, 0, 34)
-    nextTrackBtn.BackgroundTransparency = 1; nextTrackBtn.Text = ""; nextTrackBtn.AutoButtonColor = false; nextTrackBtn.ZIndex = 14
-    drawGlossyIcon(nextTrackBtn, "NextTrack", 0.72)
+        local seekContainer = Instance.new("Frame", topMusicCard)
+        seekContainer.Size = UDim2.new(1, -20, 0, 11); seekContainer.Position = UDim2.new(0, 10, 0, 44)
+        seekContainer.BackgroundTransparency = 1; seekContainer.ZIndex = 11
 
-    musicTimeLabel = Instance.new("TextLabel", topMusicCard)
-    musicTimeLabel.Size = UDim2.new(0, 74, 0, 16); musicTimeLabel.Position = UDim2.new(1, -84, 0, 34)
-    musicTimeLabel.BackgroundTransparency = 1; musicTimeLabel.Text = "00:00 / 00:00"
-    musicTimeLabel.TextColor3 = getSoftBrandColor(Theme.Brand)
-    musicTimeLabel.Font = Enum.Font.GothamSemibold; musicTimeLabel.TextSize = 8.8
-    musicTimeLabel.TextXAlignment = Enum.TextXAlignment.Right; musicTimeLabel.ZIndex = 11
-    registerBrandUpdater(function(newBrand)
-        if musicTimeLabel and musicTimeLabel.Parent then musicTimeLabel.TextColor3 = getSoftBrandColor(newBrand) end
-    end)
+        local seekTrack = Instance.new("Frame", seekContainer)
+        seekTrack.Size = UDim2.new(1, 0, 0, 4); seekTrack.Position = UDim2.new(0, 0, 0.5, -2)
+        seekTrack.BackgroundColor3 = Color3.fromRGB(16, 22, 34); seekTrack.BorderSizePixel = 0; seekTrack.ZIndex = 11
+        Instance.new("UICorner", seekTrack).CornerRadius = UDim.new(1, 0)
 
-    local seekContainer = Instance.new("Frame", topMusicCard)
-    seekContainer.Size = UDim2.new(1, -20, 0, 14); seekContainer.Position = UDim2.new(0, 10, 0, 51)
-    seekContainer.BackgroundTransparency = 1; seekContainer.ZIndex = 11
+        seekFill = Instance.new("Frame", seekTrack)
+        seekFill.Size = UDim2.new(0, 0, 1, 0); seekFill.BackgroundColor3 = Color3.fromRGB(255, 255, 255); seekFill.BorderSizePixel = 0; seekFill.ZIndex = 12
+        Instance.new("UICorner", seekFill).CornerRadius = UDim.new(1, 0)
+        applyNeonTriGrad(seekFill, 0)
 
-    local seekTrack = Instance.new("Frame", seekContainer)
-    seekTrack.Size = UDim2.new(1, 0, 0, 5); seekTrack.Position = UDim2.new(0, 0, 0.5, -2.5)
-    seekTrack.BackgroundColor3 = Color3.fromRGB(16, 22, 30); seekTrack.BorderSizePixel = 0; seekTrack.ZIndex = 11
-    Instance.new("UICorner", seekTrack).CornerRadius = UDim.new(1, 0)
+        seekKnob = Instance.new("Frame", seekTrack)
+        seekKnob.Size = UDim2.new(0, 9, 0, 9); seekKnob.AnchorPoint = Vector2.new(0.5, 0.5)
+        seekKnob.Position = UDim2.new(0, 0, 0.5, 0); seekKnob.BackgroundColor3 = GlossPalette.IconWhite; seekKnob.ZIndex = 13
+        Instance.new("UICorner", seekKnob).CornerRadius = UDim.new(1, 0)
+        local seekKnobStroke = Instance.new("UIStroke", seekKnob); seekKnobStroke.Color = Theme.Brand; seekKnobStroke.Thickness = 1.1
 
-    seekFill = Instance.new("Frame", seekTrack)
-    seekFill.Size = UDim2.new(0, 0, 1, 0); seekFill.BackgroundColor3 = Theme.Brand; seekFill.BorderSizePixel = 0; seekFill.ZIndex = 12
-    Instance.new("UICorner", seekFill).CornerRadius = UDim.new(1, 0)
+        registerBrandUpdater(function(newBrand)
+            if seekKnobStroke and seekKnobStroke.Parent then seekKnobStroke.Color = newBrand end
+        end)
 
-    seekKnob = Instance.new("Frame", seekTrack)
-    seekKnob.Size = UDim2.new(0, 10, 0, 10); seekKnob.AnchorPoint = Vector2.new(0.5, 0.5)
-    seekKnob.Position = UDim2.new(0, 0, 0.5, 0); seekKnob.BackgroundColor3 = GlossPalette.IconWhite; seekKnob.ZIndex = 13
-    Instance.new("UICorner", seekKnob).CornerRadius = UDim.new(1, 0)
-    local seekKnobStroke = Instance.new("UIStroke", seekKnob); seekKnobStroke.Color = Theme.Brand; seekKnobStroke.Thickness = 1.2
-
-    registerBrandUpdater(function(newBrand)
-        if seekFill and seekFill.Parent then seekFill.BackgroundColor3 = newBrand end
-        if seekKnobStroke and seekKnobStroke.Parent then seekKnobStroke.Color = newBrand end
-    end)
-
-    local function scrubMusicToInput(input)
-        local pos = math.clamp((input.Position.X - seekTrack.AbsolutePosition.X) / math.max(1, seekTrack.AbsoluteSize.X), 0, 1)
-        seekFill.Size = UDim2.new(pos, 0, 1, 0)
-        seekKnob.Position = UDim2.new(pos, 0, 0.5, 0)
-        if currentSound and currentSound.TimeLength > 0 then
-            local targetSec = pos * currentSound.TimeLength
-            pcall(function() currentSound.TimePosition = targetSec end)
-            musicTimeLabel.Text = formatTime(targetSec) .. " / " .. formatTime(currentSound.TimeLength)
+        local function scrubMusicToInput(input)
+            local pos = math.clamp((input.Position.X - seekTrack.AbsolutePosition.X) / math.max(1, seekTrack.AbsoluteSize.X), 0, 1)
+            seekFill.Size = UDim2.new(pos, 0, 1, 0)
+            seekKnob.Position = UDim2.new(pos, 0, 0.5, 0)
+            if currentSound and currentSound.TimeLength > 0 then
+                local targetSec = pos * currentSound.TimeLength
+                pcall(function() currentSound.TimePosition = targetSec end)
+                musicTimeLabel.Text = formatTime(targetSec) .. " / " .. formatTime(currentSound.TimeLength)
+            end
         end
-    end
 
-    seekContainer.InputBegan:Connect(function(input)
-        if not seekDragInput and (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
-            seekDragInput = input; scrubMusicToInput(input)
-        end
-    end)
-    UIS.InputChanged:Connect(function(input)
-        if isDragUpdateInput(input, seekDragInput) then scrubMusicToInput(input) end
-    end)
-    UIS.InputEnded:Connect(function(input)
-        if input == seekDragInput then seekDragInput = nil end
-    end)
+        seekContainer.InputBegan:Connect(function(input)
+            if not seekDragInput and (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
+                seekDragInput = input; scrubMusicToInput(input)
+            end
+        end)
+        UIS.InputChanged:Connect(function(input)
+            if isDragUpdateInput(input, seekDragInput) then scrubMusicToInput(input) end
+        end)
+        UIS.InputEnded:Connect(function(input)
+            if input == seekDragInput then seekDragInput = nil end
+        end)
     end
 
     local function getCurrentSpeedPreset()
@@ -2344,7 +2390,7 @@ do
     end
 
     local function getSongName(id)
-        local numId = tonumber(id); if not numId then return "ID sai!" end
+        local numId = tonumber(id); if not numId then return "File MP3 / Custom" end
         local s, info = pcall(function() return MarketplaceService:GetProductInfo(numId) end)
         return (s and info and info.Name) or "Ẩn danh"
     end
@@ -2405,29 +2451,52 @@ do
         if syncPlayPauseBtnVisual then syncPlayPauseBtnVisual() end
     end
 
-    local function playMusic(id)
+    local stepPlaylistTrack
+    local function playMusic(rawInput)
         if currentSound then currentSound:Destroy(); currentSound = nil end
-        local soundId = tostring(id):match("%d+")
+        local rawStr = tostring(rawInput or ""):gsub("^%s*(.-)%s*$", "%1")
+        local isUrlMp3 = rawStr:lower():match("^https?://") ~= nil
+        local soundId = isUrlMp3 and rawStr or rawStr:match("%d+")
+
         if not soundId or soundId == "" then
             MakeToast("Chưa có ID Nhạc", "Hãy nhập hoặc chọn 1 bài nhạc để phát!", Theme.AccentOff)
             if syncPlayPauseBtnVisual then syncPlayPauseBtnVisual() end
             return
         end
+
         currentMusicId = soundId; isMusicPaused = false
         nowPlayingLabel.Text = "<font color='#C2CCDC'>⏳ Đang kiểm tra & tải nhạc...</font>"
-        local songTitle = "Ẩn danh"
-        task.spawn(function()
-            songTitle = getSongName(soundId)
-            if currentMusicId == soundId and currentSound then
-                local stTag = (currentSound.IsLoaded and currentSound.TimeLength > 0)
-                    and "<font color='#58D5FF'>[PUBLIC]</font> "
-                    or "<font color='#9AA4B8'>[ĐANG TẢI]</font> "
-                nowPlayingLabel.Text = stTag .. "<font color='#D8B868'>" .. songTitle .. "</font>"
+        local songTitle = isUrlMp3 and (rawStr:match("([^/]+%.mp3)") or "Nhạc MP3 Trực Tuyến") or "Ẩn danh"
+
+        local resolvedAsset = "rbxassetid://" .. soundId
+        if isUrlMp3 then
+            local getAssetFn = getcustomasset or getsynasset
+            if getAssetFn and writefile then
+                local okDl, mp3Data = pcall(function() return game:HttpGet(rawStr) end)
+                if okDl and mp3Data and #mp3Data > 64 then
+                    local tempMp3 = "MenuVipProMax_TempTrack.mp3"
+                    pcall(function() writefile(tempMp3, mp3Data) end)
+                    local okAsset, customUri = pcall(function() return getAssetFn(tempMp3) end)
+                    if okAsset and customUri then
+                        resolvedAsset = customUri
+                    end
+                end
             end
-        end)
+        else
+            task.spawn(function()
+                songTitle = getSongName(soundId)
+                if currentMusicId == soundId and currentSound then
+                    local stTag = (currentSound.IsLoaded and currentSound.TimeLength > 0)
+                        and "<font color='#58D5FF'>[PUBLIC]</font> "
+                        or "<font color='#9AA4B8'>[ĐANG TẢI]</font> "
+                    nowPlayingLabel.Text = stTag .. "<font color='#D8B868'>" .. songTitle .. "</font>"
+                end
+            end)
+        end
+
         local soundObj = Instance.new("Sound")
         soundObj.Name = "MenuVipMusic"
-        soundObj.SoundId = "rbxassetid://" .. soundId
+        soundObj.SoundId = resolvedAsset
         soundObj.Volume = State.MusicVolume
         soundObj.PlaybackSpeed = getCurrentSpeedPreset().Speed
         soundObj.Looped = State.MusicLoop
@@ -2438,7 +2507,7 @@ do
             if currentSound == soundObj and currentMusicId == soundId then
                 if soundObj.TimeLength > 0 then
                     nowPlayingLabel.Text = "<font color='#58D5FF'>[PUBLIC]</font> <font color='#D8B868'>" .. songTitle .. "</font>"
-                    markSongStatusById(soundId, "public")
+                    if not isUrlMp3 then markSongStatusById(soundId, "public") end
                 end
             end
         end)
@@ -2446,9 +2515,7 @@ do
         soundObj.Ended:Connect(function()
             if not State.MusicLoop then
                 if #savedMusicList > 0 then
-                    local cx = 0; for i, v in ipairs(savedMusicList) do if v.id == currentMusicId then cx = i; break end end
-                    local nx = cx + 1; if nx > #savedMusicList then nx = 1 end
-                    playMusic(savedMusicList[nx].id)
+                    stepPlaylistTrack(1)
                 else
                     stopMusic()
                 end
@@ -2461,18 +2528,18 @@ do
             if currentSound == soundObj and currentMusicId == soundId then
                 if not soundObj.IsLoaded or soundObj.TimeLength <= 0 then
                     stopMusic()
-                    markSongStatusById(soundId, "private")
+                    if not isUrlMp3 then markSongStatusById(soundId, "private") end
                     nowPlayingLabel.Text = "<font color='#FFB838'>[PRIVATE]</font> <font color='#E05666'>Bị khóa ở game này (" .. songTitle .. ")</font>"
                     MakeToast("⚠️ ID Private / Bị Khóa", "Bài '" .. songTitle .. "' là ID Private (chỉ dùng cho game gốc/Boombox)!", Theme.AccentOff)
                 else
-                    markSongStatusById(soundId, "public")
+                    if not isUrlMp3 then markSongStatusById(soundId, "public") end
                     nowPlayingLabel.Text = "<font color='#58D5FF'>[PUBLIC]</font> <font color='#D8B868'>" .. songTitle .. "</font>"
                 end
             end
         end)
     end
 
-    local function stepPlaylistTrack(dir)
+    stepPlaylistTrack = function(dir)
         if #savedMusicList == 0 then
             MakeToast("Kho nhạc trống", "Hãy lưu ít nhất 1 bài nhạc vào danh sách!", Theme.AccentOff)
             return
@@ -2481,9 +2548,16 @@ do
         for i, v in ipairs(savedMusicList) do
             if tostring(v.id) == tostring(currentMusicId) then curIdx = i; break end
         end
-        local nextIdx = curIdx + dir
-        if nextIdx > #savedMusicList then nextIdx = 1 end
-        if nextIdx < 1 then nextIdx = #savedMusicList end
+        local nextIdx
+        if State.MusicShuffle and #savedMusicList > 1 then
+            repeat
+                nextIdx = math.random(1, #savedMusicList)
+            until nextIdx ~= curIdx
+        else
+            nextIdx = curIdx + dir
+            if nextIdx > #savedMusicList then nextIdx = 1 end
+            if nextIdx < 1 then nextIdx = #savedMusicList end
+        end
         local chosen = savedMusicList[nextIdx]
         if chosen then
             musicIdBox.Text = chosen.id
@@ -2491,777 +2565,887 @@ do
         end
     end
 
-    prevTrackBtn.MouseButton1Click:Connect(function() clickAnimate(prevTrackBtn); stepPlaylistTrack(-1) end)
-    nextTrackBtn.MouseButton1Click:Connect(function() clickAnimate(nextTrackBtn); stepPlaylistTrack(1) end)
+    local function skipCurrentTime(deltaSec)
+        if not currentSound or not currentSound.Parent or currentSound.TimeLength <= 0 then
+            MakeToast("Chưa có nhạc phát", "Hãy phát 1 bài nhạc trước khi tua nhanh/lùi!", Theme.AccentOff)
+            return
+        end
+        local newPos = math.clamp(currentSound.TimePosition + deltaSec, 0, currentSound.TimeLength)
+        pcall(function() currentSound.TimePosition = newPos end)
+        local ratio = math.clamp(newPos / currentSound.TimeLength, 0, 1)
+        seekFill.Size = UDim2.new(ratio, 0, 1, 0)
+        seekKnob.Position = UDim2.new(ratio, 0, 0.5, 0)
+        musicTimeLabel.Text = formatTime(newPos) .. " / " .. formatTime(currentSound.TimeLength)
+    end
 
     noteBadge.MouseButton1Click:Connect(function()
         clickAnimate(noteBadge)
         local pasted = nil
         pcall(function() if getclipboard then pasted = getclipboard() end end)
-        if pasted and tostring(pasted):match("%d+") then
-            musicIdBox.Text = tostring(pasted):match("%d+")
-            MakeToast("Đã Dán ID", "ID Nhạc: " .. musicIdBox.Text, Theme.Brand)
+        if pasted and (tostring(pasted):match("%d+") or tostring(pasted):lower():match("^https?://")) then
+            local clean = tostring(pasted):lower():match("^https?://") and tostring(pasted) or tostring(pasted):match("%d+")
+            musicIdBox.Text = clean
+            MakeToast("Đã Dán Nhạc", "Nội dung: " .. clean, Theme.Brand)
         else
             musicIdBox:CaptureFocus()
         end
     end)
 
-    -- 2. HÀNG ĐIỀU KHIỂN TRUNG TÂM:
-    -- Nút 1: Gộp Phát (▶) / Dừng (||) (Xoá nút vuông Stop)
-    -- Nút 2: Lặp lại (🔄)
-    -- Nút 3: Tốc độ (0.8x..2x)
-    -- Cụm 4: Nút Hẹn giờ (⏱️) + Ô nhập số phút hẹn giờ (Tối đa 90 phút)
-    -- Cụm 5: Thanh Pill Âm lượng
-    local dockRow = Instance.new("Frame", page5)
-    dockRow.Size = UDim2.new(0.94, 0, 0, 44); dockRow.BackgroundTransparency = 1; dockRow.LayoutOrder = 2
-
+    -- 2. HÀNG 8 NÚT TRÒN 3D ĐIỀU KHIỂN ĐA PHƯƠNG TIỆN (LayoutOrder = 2, theo đúng bộ nút 1000085251.png):
+    -- [1] Lùi bài (⏮) | [2] Tua -10s (⏪) | [3] Phát/Dừng (▶/||) | [4] Tua +10s (⏩) | [5] Qua bài (⏭) | [6] Trộn bài (🔀) | [7] Lặp lại (🔁) | [8] Tốc độ (1x)
     do
-    local btnDock = Instance.new("Frame", dockRow)
-    btnDock.Size = UDim2.new(0, 108, 1, 0); btnDock.Position = UDim2.new(0, 0, 0, 0)
-    btnDock.BackgroundTransparency = 1
+        local dockRow = Instance.new("Frame", page5)
+        dockRow.Size = UDim2.new(0.94, 0, 0, 38)
+        dockRow.BackgroundTransparency = 1
+        dockRow.LayoutOrder = 2
 
-    local function makeDockItem(idx, iconName, labelTxt)
-        local slot = Instance.new("Frame", btnDock)
-        slot.Size = UDim2.new(0, 35, 1, 0)
-        slot.Position = UDim2.new(0, (idx - 1) * 36, 0, 0)
-        slot.BackgroundTransparency = 1
+        local totalDockBtns = 8
+        local function makeDockItem(idx, iconName, labelTxt)
+            local slot = Instance.new("Frame", dockRow)
+            slot.Size = UDim2.new(1 / totalDockBtns, 0, 1, 0)
+            slot.Position = UDim2.new((idx - 1) / totalDockBtns, 0, 0, 0)
+            slot.BackgroundTransparency = 1
 
-        local circleBtn, holder, rimSt, inGrad = createGlossyCircleBtn(slot, 30, UDim2.new(0.5, 0, 0, 0), Vector2.new(0.5, 0))
-        if iconName then
-            drawGlossyIcon(holder, iconName, 0.88)
-        end
-
-        local subLbl = Instance.new("TextLabel", slot)
-        subLbl.Size = UDim2.new(1, 10, 0, 12); subLbl.Position = UDim2.new(0.5, 0, 0, 31); subLbl.AnchorPoint = Vector2.new(0.5, 0)
-        subLbl.BackgroundTransparency = 1; subLbl.Text = labelTxt
-        subLbl.TextColor3 = Color3.fromRGB(162, 174, 196); subLbl.Font = Enum.Font.GothamSemibold; subLbl.TextSize = 8; subLbl.ZIndex = 12
-
-        return circleBtn, holder, subLbl, rimSt, inGrad
-    end
-
-    -- Nút 1: Gộp Play (▶) & Pause (||) theo đúng ảnh 1000085160.png (đã xoá nút vuông Stop)
-    local btnPlayPause, playPauseHolder, lblPlayPause, rimPlayPause, gradPlayPause = makeDockItem(1, nil, "Phát")
-    local playIconContainer = Instance.new("Frame", playPauseHolder)
-    playIconContainer.Size = UDim2.new(1, 0, 1, 0); playIconContainer.BackgroundTransparency = 1; playIconContainer.ZIndex = 15
-    drawGlossyIcon(playIconContainer, "Play", 0.88)
-
-    local pauseIconContainer = Instance.new("Frame", playPauseHolder)
-    pauseIconContainer.Size = UDim2.new(1, 0, 1, 0); pauseIconContainer.BackgroundTransparency = 1; pauseIconContainer.Visible = false; pauseIconContainer.ZIndex = 15
-    drawGlossyIcon(pauseIconContainer, "Pause", 0.88)
-
-    syncPlayPauseBtnVisual = function()
-        local hasSound = (currentSound ~= nil and currentSound.Parent ~= nil)
-        local isActivelyPlaying = (hasSound and not isMusicPaused)
-        playIconContainer.Visible = not isActivelyPlaying
-        pauseIconContainer.Visible = isActivelyPlaying
-        lblPlayPause.Text = isActivelyPlaying and "Dừng" or "Phát"
-        lblPlayPause.TextColor3 = isActivelyPlaying and GlossPalette.RimActive or Color3.fromRGB(162, 174, 196)
-        rimPlayPause.Color = isActivelyPlaying and GlossPalette.RimActive or GlossPalette.RimWhite
-    end
-    syncPlayPauseBtnVisual()
-
-    -- Nút 2: Lặp lại (chữ dưới cố định "Lặp lại", nút tròn đổi màu xanh/trắng khi bật/tắt)
-    local btnLoop, _, lblLoop, rimLoop, gradLoop = makeDockItem(2, "DoubleLoop", "Lặp lại")
-    local function syncLoopVisual()
-        local on = State.MusicLoop
-        lblLoop.TextColor3 = on and GlossPalette.RimActive or Color3.fromRGB(162, 174, 196)
-        rimLoop.Color = on and GlossPalette.RimActive or GlossPalette.RimWhite
-        gradLoop.Color = ColorSequence.new({
-            ColorSequenceKeypoint.new(0, on and GlossPalette.InnerActiveTop or GlossPalette.InnerTop),
-            ColorSequenceKeypoint.new(1, on and GlossPalette.InnerActiveBottom or GlossPalette.InnerBottom)
-        })
-    end
-    syncLoopVisual()
-
-    -- Nút 3: Tốc độ (hiển thị 0.8x..2x bên trong hình tròn, chữ dưới là "Tốc độ")
-    local btnSpeed, speedHolder, lblSpeed = makeDockItem(3, nil, "Tốc độ")
-    local speedBadgeLbl = Instance.new("TextLabel", speedHolder)
-    speedBadgeLbl.Size = UDim2.new(1, 2, 1, 0)
-    speedBadgeLbl.Position = UDim2.new(0.5, 0, 0.5, 0)
-    speedBadgeLbl.AnchorPoint = Vector2.new(0.5, 0.5)
-    speedBadgeLbl.BackgroundTransparency = 1
-    speedBadgeLbl.Font = Enum.Font.GothamBlack
-    speedBadgeLbl.TextColor3 = Color3.fromRGB(255, 255, 255)
-    speedBadgeLbl.ZIndex = 16
-    addSoftGradient(speedBadgeLbl, GlossPalette.IconWhite, GlossPalette.IconShadow, 90)
-    local speedTxtStroke = Instance.new("UIStroke", speedBadgeLbl)
-    speedTxtStroke.Color = GlossPalette.OuterBevel
-    speedTxtStroke.Thickness = 1.3
-    speedTxtStroke.Transparency = 0.1
-
-    local function syncSpeedBadgeVisual()
-        local preset = getCurrentSpeedPreset()
-        local badgeTxt = preset.Badge or "1x"
-        speedBadgeLbl.Text = badgeTxt
-        local len = #badgeTxt
-        if len <= 2 then
-            speedBadgeLbl.TextSize = 10.5
-        elseif len <= 4 then
-            speedBadgeLbl.TextSize = 8.8
-        else
-            speedBadgeLbl.TextSize = 7.4
-        end
-    end
-    syncSpeedBadgeVisual()
-
-    -- Cụm 4: Ô nhập thời gian Hẹn giờ (Tối đa 90 phút) kết hợp nút Đồng hồ bấm giờ
-    local timerGroup = Instance.new("Frame", dockRow)
-    timerGroup.Size = UDim2.new(0, 90, 1, 0); timerGroup.Position = UDim2.new(0, 108, 0, 0)
-    timerGroup.BackgroundTransparency = 1
-
-    local timerPillOuter, timerPillInner, timerPillRim, timerPillGrad = createGlossyPillFrame(
-        timerGroup, UDim2.new(1, 0, 0, 30), UDim2.new(0, 0, 0, 0)
-    )
-
-    local timerBtn, timerIconHolder, rimTimer, gradTimer = createGlossyCircleBtn(
-        timerGroup, 30, UDim2.new(0, 0, 0, 0)
-    )
-    timerBtn.ZIndex = 14
-    drawGlossyIcon(timerIconHolder, "Stopwatch", 0.88)
-
-    local timerInputBox = Instance.new("TextBox", timerPillInner)
-    timerInputBox.Size = UDim2.new(1, -30, 1, 0)
-    timerInputBox.Position = UDim2.new(0, 26, 0, 0)
-    timerInputBox.BackgroundTransparency = 1
-    timerInputBox.PlaceholderText = "Phút (≤90)"
-    timerInputBox.PlaceholderColor3 = Color3.fromRGB(162, 178, 198)
-    timerInputBox.Text = ""
-    timerInputBox.TextColor3 = GlossPalette.IconWhite
-    timerInputBox.Font = Enum.Font.GothamBold
-    timerInputBox.TextSize = 8.8
-    timerInputBox.TextXAlignment = Enum.TextXAlignment.Center
-    timerInputBox.ClearTextOnFocus = false
-    timerInputBox.ZIndex = 13
-
-    local lblTimer = Instance.new("TextLabel", timerGroup)
-    lblTimer.Size = UDim2.new(1, 0, 0, 12); lblTimer.Position = UDim2.new(0.5, 0, 0, 31); lblTimer.AnchorPoint = Vector2.new(0.5, 0)
-    lblTimer.BackgroundTransparency = 1; lblTimer.Text = "Hẹn giờ (≤90p)"
-    lblTimer.TextColor3 = Color3.fromRGB(162, 174, 196); lblTimer.Font = Enum.Font.GothamSemibold; lblTimer.TextSize = 7.8; lblTimer.ZIndex = 12
-
-    local function syncTimerVisual()
-        local active = (timerActive and timerEndTime > tick())
-        rimTimer.Color = active and GlossPalette.RimActive or GlossPalette.RimWhite
-        timerPillRim.Color = active and GlossPalette.RimActive or GlossPalette.RimWhite
-        gradTimer.Color = ColorSequence.new({
-            ColorSequenceKeypoint.new(0, active and GlossPalette.InnerActiveTop or GlossPalette.InnerTop),
-            ColorSequenceKeypoint.new(1, active and GlossPalette.InnerActiveBottom or GlossPalette.InnerBottom)
-        })
-        if not active then
-            lblTimer.Text = "Hẹn giờ (≤90p)"
-            lblTimer.TextColor3 = Color3.fromRGB(162, 174, 196)
-        else
-            lblTimer.TextColor3 = GlossPalette.RimActive
-        end
-    end
-    syncTimerVisual()
-
-    local function startOrUpdateTimerFromInput(rawText)
-        local num = tonumber(tostring(rawText):match("%d+"))
-        if not num or num <= 0 then
-            timerActive = false
-            timerEndTime = 0
-            timerInputBox.Text = ""
-            syncTimerVisual()
-            MakeToast("⏰ Hẹn Giờ Tắt Nhạc", "Đã tắt hẹn giờ nhạc", Theme.AccentOff)
-            return
-        end
-        if num > 90 then
-            num = 90
-            MakeToast("⏰ Giới hạn 90 phút", "Đã tự động đặt mức tối đa là 90 phút!", Theme.Brand)
-        else
-            MakeToast("⏰ Đã Bật Hẹn Giờ", "Sẽ tự động tắt nhạc sau " .. tostring(num) .. " phút!", Theme.AccentOn)
-        end
-        timerInputMinutes = num
-        timerInputBox.Text = tostring(num) .. "p"
-        timerActive = true
-        timerEndTime = tick() + (num * 60)
-        lblTimer.Text = formatTime(num * 60)
-        syncTimerVisual()
-    end
-
-    timerInputBox.FocusLost:Connect(function()
-        if timerInputBox.Text ~= "" then
-            startOrUpdateTimerFromInput(timerInputBox.Text)
-        elseif timerActive then
-            timerActive = false
-            timerEndTime = 0
-            syncTimerVisual()
-            MakeToast("⏰ Hẹn Giờ Tắt Nhạc", "Đã hủy hẹn giờ nhạc", Theme.AccentOff)
-        end
-    end)
-
-    timerBtn.MouseButton1Click:Connect(function()
-        clickAnimate(timerBtn)
-        if timerActive then
-            timerActive = false
-            timerEndTime = 0
-            timerInputBox.Text = ""
-            syncTimerVisual()
-            MakeToast("⏰ Hẹn Giờ Tắt Nhạc", "Đã tắt hẹn giờ nhạc", Theme.AccentOff)
-        else
-            local typed = tostring(timerInputBox.Text):match("%d+")
-            if typed and tonumber(typed) and tonumber(typed) > 0 then
-                startOrUpdateTimerFromInput(typed)
-            else
-                timerInputBox:CaptureFocus()
-                MakeToast("⏰ Nhập Số Phút", "Hãy nhập số phút hẹn giờ (1 - 90 phút) vào ô bên cạnh!", Theme.Brand)
+            local circleBtn, holder, rimSt, inGrad = createGlossyCircleBtn(slot, 27, UDim2.new(0.5, 0, 0, 0), Vector2.new(0.5, 0))
+            if iconName then
+                drawGlossyIcon(holder, iconName, 0.80)
             end
-        end
-    end)
 
-    btnPlayPause.MouseButton1Click:Connect(function()
-        clickAnimate(btnPlayPause)
-        local typedId = tostring(musicIdBox.Text):match("%d+")
-        if currentSound and currentSound.Parent then
-            if typedId and typedId ~= "" and typedId ~= currentMusicId then
-                playMusic(typedId)
-            elseif isMusicPaused then
-                currentSound:Resume(); isMusicPaused = false
-                syncPlayPauseBtnVisual()
-                MakeToast("Tiếp tục phát", "Đã tiếp tục bài nhạc", Theme.AccentOn)
+            local subLbl = Instance.new("TextLabel", slot)
+            subLbl.Size = UDim2.new(1, 6, 0, 10)
+            subLbl.Position = UDim2.new(0.5, 0, 0, 28)
+            subLbl.AnchorPoint = Vector2.new(0.5, 0)
+            subLbl.BackgroundTransparency = 1
+            subLbl.Text = labelTxt
+            subLbl.TextColor3 = Color3.fromRGB(168, 180, 204)
+            subLbl.Font = Enum.Font.GothamSemibold
+            subLbl.TextSize = 7.4
+            subLbl.ZIndex = 12
+
+            return circleBtn, holder, subLbl, rimSt, inGrad
+        end
+
+        -- Nút 1: Lùi bài trước (⏮ PrevTrack)
+        local btnPrev = makeDockItem(1, "PrevTrack", "Lùi bài")
+        btnPrev.MouseButton1Click:Connect(function()
+            clickAnimate(btnPrev)
+            stepPlaylistTrack(-1)
+        end)
+
+        -- Nút 2: Tua lùi 10 giây (⏪ Rewind)
+        local btnRewind = makeDockItem(2, "Rewind", "-10s")
+        btnRewind.MouseButton1Click:Connect(function()
+            clickAnimate(btnRewind)
+            skipCurrentTime(-10)
+        end)
+
+        -- Nút 3: Gộp Phát (▶) & Dừng (||)
+        local btnPlayPause, playPauseHolder, lblPlayPause, rimPlayPause, gradPlayPause = makeDockItem(3, nil, "Phát")
+        local playIconContainer = Instance.new("Frame", playPauseHolder)
+        playIconContainer.Size = UDim2.new(1, 0, 1, 0); playIconContainer.BackgroundTransparency = 1; playIconContainer.ZIndex = 15
+        drawGlossyIcon(playIconContainer, "Play", 0.82)
+
+        local pauseIconContainer = Instance.new("Frame", playPauseHolder)
+        pauseIconContainer.Size = UDim2.new(1, 0, 1, 0); pauseIconContainer.BackgroundTransparency = 1; pauseIconContainer.Visible = false; pauseIconContainer.ZIndex = 15
+        drawGlossyIcon(pauseIconContainer, "Pause", 0.82)
+
+        syncPlayPauseBtnVisual = function()
+            local hasSound = (currentSound ~= nil and currentSound.Parent ~= nil)
+            local isActivelyPlaying = (hasSound and not isMusicPaused)
+            playIconContainer.Visible = not isActivelyPlaying
+            pauseIconContainer.Visible = isActivelyPlaying
+            lblPlayPause.Text = isActivelyPlaying and "Dừng" or "Phát"
+            lblPlayPause.TextColor3 = isActivelyPlaying and GlossPalette.RimActive or Color3.fromRGB(168, 180, 204)
+            applyRimNeonGrad(rimPlayPause, isActivelyPlaying)
+            gradPlayPause.Color = ColorSequence.new({
+                ColorSequenceKeypoint.new(0, isActivelyPlaying and GlossPalette.InnerActiveTop or GlossPalette.InnerTop),
+                ColorSequenceKeypoint.new(1, isActivelyPlaying and GlossPalette.InnerActiveBottom or GlossPalette.InnerBottom)
+            })
+        end
+        syncPlayPauseBtnVisual()
+
+        btnPlayPause.MouseButton1Click:Connect(function()
+            clickAnimate(btnPlayPause)
+            local rawTxt = tostring(musicIdBox.Text):gsub("^%s*(.-)%s*$", "%1")
+            local typedId = rawTxt:lower():match("^https?://") and rawTxt or rawTxt:match("%d+")
+            if currentSound and currentSound.Parent then
+                if typedId and typedId ~= "" and typedId ~= currentMusicId then
+                    playMusic(typedId)
+                elseif isMusicPaused then
+                    currentSound:Resume(); isMusicPaused = false
+                    syncPlayPauseBtnVisual()
+                    MakeToast("Tiếp tục phát", "Đã tiếp tục bài nhạc", Theme.AccentOn)
+                else
+                    currentSound:Pause(); isMusicPaused = true
+                    syncPlayPauseBtnVisual()
+                    MakeToast("Tạm dừng", "Đã tạm dừng bài nhạc", Theme.Brand)
+                end
             else
-                currentSound:Pause(); isMusicPaused = true
-                syncPlayPauseBtnVisual()
-                MakeToast("Tạm dừng", "Đã tạm dừng bài nhạc", Theme.Brand)
+                playMusic(musicIdBox.Text)
             end
-        else
-            playMusic(musicIdBox.Text)
-        end
-    end)
+        end)
 
-    btnLoop.MouseButton1Click:Connect(function()
-        clickAnimate(btnLoop)
-        State.MusicLoop = not State.MusicLoop
-        if currentSound then currentSound.Looped = State.MusicLoop end
+        -- Nút 4: Tua nhanh 10 giây (⏩ FastForward)
+        local btnFastFwd = makeDockItem(4, "FastForward", "+10s")
+        btnFastFwd.MouseButton1Click:Connect(function()
+            clickAnimate(btnFastFwd)
+            skipCurrentTime(10)
+        end)
+
+        -- Nút 5: Qua bài kế tiếp (⏭ NextTrack)
+        local btnNext = makeDockItem(5, "NextTrack", "Qua bài")
+        btnNext.MouseButton1Click:Connect(function()
+            clickAnimate(btnNext)
+            stepPlaylistTrack(1)
+        end)
+
+        -- Nút 6: Trộn bài ngẫu nhiên (🔀 Shuffle)
+        local btnShuffle, _, lblShuffle, rimShuffle, gradShuffle = makeDockItem(6, "Shuffle", "Trộn bài")
+        local function syncShuffleVisual()
+            local on = State.MusicShuffle
+            lblShuffle.TextColor3 = on and GlossPalette.RimActive or Color3.fromRGB(168, 180, 204)
+            applyRimNeonGrad(rimShuffle, on)
+            gradShuffle.Color = ColorSequence.new({
+                ColorSequenceKeypoint.new(0, on and GlossPalette.InnerActiveTop or GlossPalette.InnerTop),
+                ColorSequenceKeypoint.new(1, on and GlossPalette.InnerActiveBottom or GlossPalette.InnerBottom)
+            })
+        end
+        syncShuffleVisual()
+
+        btnShuffle.MouseButton1Click:Connect(function()
+            clickAnimate(btnShuffle)
+            State.MusicShuffle = not State.MusicShuffle
+            syncShuffleVisual()
+            MakeToast(
+                "🔀 Trộn Bài Ngẫu Nhiên",
+                State.MusicShuffle and "Đã BẬT phát ngẫu nhiên trong Kho Nhạc!" or "Đã TẮT phát ngẫu nhiên",
+                State.MusicShuffle and Theme.AccentOn or Theme.AccentOff
+            )
+            if State.AutoSave then saveConfig() end
+        end)
+
+        -- Nút 7: Lặp lại bài hiện tại (🔁 DoubleLoop)
+        local btnLoop, _, lblLoop, rimLoop, gradLoop = makeDockItem(7, "DoubleLoop", "Lặp lại")
+        local function syncLoopVisual()
+            local on = State.MusicLoop
+            lblLoop.TextColor3 = on and GlossPalette.RimActive or Color3.fromRGB(168, 180, 204)
+            applyRimNeonGrad(rimLoop, on)
+            gradLoop.Color = ColorSequence.new({
+                ColorSequenceKeypoint.new(0, on and GlossPalette.InnerActiveTop or GlossPalette.InnerTop),
+                ColorSequenceKeypoint.new(1, on and GlossPalette.InnerActiveBottom or GlossPalette.InnerBottom)
+            })
+        end
         syncLoopVisual()
-        if State.AutoSave then saveConfig() end
-    end)
 
-    btnSpeed.MouseButton1Click:Connect(function()
-        clickAnimate(btnSpeed)
-        State.MusicSpeedIdx = (State.MusicSpeedIdx % #MusicSpeedPresets) + 1
-        local preset = getCurrentSpeedPreset()
+        btnLoop.MouseButton1Click:Connect(function()
+            clickAnimate(btnLoop)
+            State.MusicLoop = not State.MusicLoop
+            if currentSound then currentSound.Looped = State.MusicLoop end
+            syncLoopVisual()
+            MakeToast(
+                "🔁 Lặp Lại Nhạc",
+                State.MusicLoop and "Đã BẬT lặp lại bài nhạc hiện tại!" or "Đã TẮT lặp lại nhạc",
+                State.MusicLoop and Theme.AccentOn or Theme.AccentOff
+            )
+            if State.AutoSave then saveConfig() end
+        end)
+
+        -- Nút 8: Tốc độ phát (0.8x..2x)
+        local btnSpeed, speedHolder, lblSpeed = makeDockItem(8, nil, "Tốc độ")
+        local speedBadgeLbl = Instance.new("TextLabel", speedHolder)
+        speedBadgeLbl.Size = UDim2.new(1, 2, 1, 0)
+        speedBadgeLbl.Position = UDim2.new(0.5, 0, 0.5, 0)
+        speedBadgeLbl.AnchorPoint = Vector2.new(0.5, 0.5)
+        speedBadgeLbl.BackgroundTransparency = 1
+        speedBadgeLbl.Font = Enum.Font.GothamBlack
+        speedBadgeLbl.TextColor3 = Color3.fromRGB(255, 255, 255)
+        speedBadgeLbl.ZIndex = 16
+        applyNeonTriGrad(speedBadgeLbl, 90)
+        local speedTxtStroke = Instance.new("UIStroke", speedBadgeLbl)
+        speedTxtStroke.Color = NeonIconColors.DarkOutline
+        speedTxtStroke.Thickness = 1.15
+        speedTxtStroke.Transparency = 0.12
+
+        local function syncSpeedBadgeVisual()
+            local preset = getCurrentSpeedPreset()
+            local badgeTxt = preset.Badge or "1x"
+            speedBadgeLbl.Text = badgeTxt
+            local len = #badgeTxt
+            if len <= 2 then
+                speedBadgeLbl.TextSize = 9.8
+            elseif len <= 4 then
+                speedBadgeLbl.TextSize = 8.2
+            else
+                speedBadgeLbl.TextSize = 7.0
+            end
+        end
         syncSpeedBadgeVisual()
-        if currentSound then currentSound.PlaybackSpeed = preset.Speed end
-        MakeToast("Tốc Độ Nhạc", "Chế độ: " .. preset.Name, Theme.Brand)
-        if State.AutoSave then saveConfig() end
-    end)
 
-    -- Vòng lặp cập nhật thanh thời gian bài hát & đếm ngược Hẹn giờ tắt nhạc
-    task.spawn(function()
-        while task.wait(0.25) do
-            if timerActive and timerEndTime > 0 then
-                local remain = timerEndTime - tick()
-                if remain <= 0 then
-                    timerActive = false
-                    timerEndTime = 0
-                    timerInputBox.Text = ""
-                    stopMusic()
-                    syncTimerVisual()
-                    MakeToast("⏰ Hết Giờ Hẹn", "Đã tự động tắt nhạc theo thời gian hẹn!", Theme.Brand)
+        btnSpeed.MouseButton1Click:Connect(function()
+            clickAnimate(btnSpeed)
+            State.MusicSpeedIdx = (State.MusicSpeedIdx % #MusicSpeedPresets) + 1
+            local preset = getCurrentSpeedPreset()
+            syncSpeedBadgeVisual()
+            if currentSound then currentSound.PlaybackSpeed = preset.Speed end
+            MakeToast("Tốc Độ Nhạc", "Chế độ: " .. preset.Name, Theme.Brand)
+            if State.AutoSave then saveConfig() end
+        end)
+    end
+
+    -- 3. HÀNG DƯỚI (LayoutOrder = 3): HẸN GIỜ KHÔNG GIỚI HẠN (TRÁI) & ÂM THANH 1 - 10 MẶC ĐỊNH LÀ 1 (PHẢI)
+    local subControlRow = Instance.new("Frame", page5)
+    subControlRow.Size = UDim2.new(0.94, 0, 0, 35)
+    subControlRow.BackgroundTransparency = 1
+    subControlRow.LayoutOrder = 3
+
+    -- 3A. Cụm Trái: Hẹn giờ không giới hạn (nhập số phút bất kỳ, không giới hạn trần)
+    do
+        local timerGroup = Instance.new("Frame", subControlRow)
+        timerGroup.Size = UDim2.new(0.485, 0, 1, 0)
+        timerGroup.Position = UDim2.new(0, 0, 0, 0)
+        timerGroup.BackgroundTransparency = 1
+
+        local timerPillOuter, timerPillInner, timerPillRim = createGlossyPillFrame(
+            timerGroup, UDim2.new(1, 0, 0, 24), UDim2.new(0, 0, 0, 0)
+        )
+
+        local timerBtn, timerIconHolder, rimTimer, gradTimer = createGlossyCircleBtn(
+            timerGroup, 24, UDim2.new(0, 0, 0, 0)
+        )
+        timerBtn.ZIndex = 14
+        drawGlossyIcon(timerIconHolder, "Stopwatch", 0.74)
+
+        local timerInputBox = Instance.new("TextBox", timerPillInner)
+        timerInputBox.Size = UDim2.new(1, -28, 1, 0)
+        timerInputBox.Position = UDim2.new(0, 25, 0, 0)
+        timerInputBox.BackgroundTransparency = 1
+        timerInputBox.PlaceholderText = "Nhập phút hẹn giờ..."
+        timerInputBox.PlaceholderColor3 = Color3.fromRGB(162, 178, 202)
+        timerInputBox.Text = ""
+        timerInputBox.TextColor3 = GlossPalette.IconWhite
+        timerInputBox.Font = Enum.Font.GothamBold
+        timerInputBox.TextSize = 8.4
+        timerInputBox.TextXAlignment = Enum.TextXAlignment.Center
+        timerInputBox.ClearTextOnFocus = false
+        timerInputBox.ZIndex = 13
+
+        local lblTimer = Instance.new("TextLabel", timerGroup)
+        lblTimer.Size = UDim2.new(1, 0, 0, 10)
+        lblTimer.Position = UDim2.new(0.5, 0, 0, 25)
+        lblTimer.AnchorPoint = Vector2.new(0.5, 0)
+        lblTimer.BackgroundTransparency = 1
+        lblTimer.Text = "Hẹn giờ (Không giới hạn)"
+        lblTimer.TextColor3 = Color3.fromRGB(168, 180, 204)
+        lblTimer.Font = Enum.Font.GothamSemibold
+        lblTimer.TextSize = 7.4
+        lblTimer.ZIndex = 12
+
+        local function syncTimerVisual()
+            local active = (timerActive and timerEndTime > tick())
+            applyRimNeonGrad(rimTimer, active)
+            applyRimNeonGrad(timerPillRim, active)
+            gradTimer.Color = ColorSequence.new({
+                ColorSequenceKeypoint.new(0, active and GlossPalette.InnerActiveTop or GlossPalette.InnerTop),
+                ColorSequenceKeypoint.new(1, active and GlossPalette.InnerActiveBottom or GlossPalette.InnerBottom)
+            })
+            if not active then
+                lblTimer.Text = "Hẹn giờ (Không giới hạn)"
+                lblTimer.TextColor3 = Color3.fromRGB(168, 180, 204)
+            else
+                lblTimer.TextColor3 = GlossPalette.RimActive
+            end
+        end
+        syncTimerVisual()
+
+        local function startOrUpdateTimerFromInput(rawText)
+            local num = tonumber(tostring(rawText):match("%d+%.?%d*"))
+            if not num or num <= 0 then
+                timerActive = false
+                timerEndTime = 0
+                timerInputBox.Text = ""
+                syncTimerVisual()
+                MakeToast("⏰ Hẹn Giờ Tắt Nhạc", "Đã tắt hẹn giờ nhạc", Theme.AccentOff)
+                return
+            end
+            num = math.floor(num)
+            if num < 1 then num = 1 end
+            timerInputBox.Text = tostring(num) .. " phút"
+            timerActive = true
+            timerEndTime = tick() + (num * 60)
+            lblTimer.Text = "Còn lại: " .. formatTime(num * 60)
+            syncTimerVisual()
+            MakeToast("⏰ Đã Bật Hẹn Giờ", "Sẽ tự động tắt nhạc sau " .. tostring(num) .. " phút (Không giới hạn)!", Theme.AccentOn)
+        end
+
+        timerInputBox.FocusLost:Connect(function()
+            if timerInputBox.Text ~= "" then
+                startOrUpdateTimerFromInput(timerInputBox.Text)
+            elseif timerActive then
+                timerActive = false
+                timerEndTime = 0
+                syncTimerVisual()
+                MakeToast("⏰ Hẹn Giờ Tắt Nhạc", "Đã hủy hẹn giờ nhạc", Theme.AccentOff)
+            end
+        end)
+
+        timerBtn.MouseButton1Click:Connect(function()
+            clickAnimate(timerBtn)
+            if timerActive then
+                timerActive = false
+                timerEndTime = 0
+                timerInputBox.Text = ""
+                syncTimerVisual()
+                MakeToast("⏰ Hẹn Giờ Tắt Nhạc", "Đã tắt hẹn giờ nhạc", Theme.AccentOff)
+            else
+                local typed = tostring(timerInputBox.Text):match("%d+")
+                if typed and tonumber(typed) and tonumber(typed) > 0 then
+                    startOrUpdateTimerFromInput(typed)
                 else
-                    lblTimer.Text = formatTime(remain)
+                    timerInputBox:CaptureFocus()
+                    MakeToast("⏰ Nhập Số Phút", "Hãy nhập số phút bất kỳ (không giới hạn) vào ô hẹn giờ!", Theme.Brand)
                 end
             end
+        end)
 
-            if page5.Visible and not seekDragInput then
-                if currentSound and currentSound.Parent and currentSound.TimeLength > 0 then
-                    local cur = currentSound.TimePosition
-                    local len = currentSound.TimeLength
-                    local ratio = math.clamp(cur / len, 0, 1)
-                    seekFill.Size = UDim2.new(ratio, 0, 1, 0)
-                    seekKnob.Position = UDim2.new(ratio, 0, 0.5, 0)
-                    musicTimeLabel.Text = formatTime(cur) .. " / " .. formatTime(len)
-                else
-                    seekFill.Size = UDim2.new(0, 0, 1, 0)
-                    seekKnob.Position = UDim2.new(0, 0, 0.5, 0)
-                    musicTimeLabel.Text = "00:00 / 00:00"
-                end
-            end
-        end
-    end)
-
-    end
-
-    -- Cụm 5: Thanh Pill 3D chỉnh Âm lượng tích hợp Biểu tượng Loa 3D động (🔊 / 🔉 / 🔇 theo mẫu 1000085250.png)
-    do
-    local volGroup = Instance.new("Frame", dockRow)
-    volGroup.Size = UDim2.new(1, -202, 1, 0); volGroup.Position = UDim2.new(0, 202, 0, 0)
-    volGroup.BackgroundTransparency = 1
-
-    local volPillOuter, volPillInner = createGlossyPillFrame(volGroup, UDim2.new(1, 0, 0, 30), UDim2.new(0, 0, 0, 0))
-    local volTitle = Instance.new("TextLabel", volGroup)
-    volTitle.Size = UDim2.new(1, 0, 0, 12); volTitle.Position = UDim2.new(0.5, 0, 0, 31); volTitle.AnchorPoint = Vector2.new(0.5, 0)
-    volTitle.BackgroundTransparency = 1; volTitle.Text = "Âm lượng: " .. tostring(State.MusicVolume)
-    volTitle.TextColor3 = Color3.fromRGB(162, 174, 196); volTitle.Font = Enum.Font.GothamSemibold; volTitle.TextSize = 7.8
-    volTitle.TextXAlignment = Enum.TextXAlignment.Center; volTitle.ZIndex = 12
-
-    -- Nút Loa 3D Cyan->Blue->Purple bên trái thanh trượt (bấm để tắt/bật tiếng nhanh)
-    local speakerBtn = Instance.new("TextButton", volPillInner)
-    speakerBtn.Size = UDim2.new(0, 22, 0, 22); speakerBtn.Position = UDim2.new(0, 4, 0.5, -11)
-    speakerBtn.BackgroundTransparency = 1; speakerBtn.Text = ""; speakerBtn.AutoButtonColor = false; speakerBtn.ZIndex = 15
-
-    local spkRear = Instance.new("Frame", speakerBtn)
-    spkRear.Size = UDim2.new(0, 4.5, 0, 7.5); spkRear.Position = UDim2.new(0, 2, 0.5, -3.75)
-    spkRear.BackgroundColor3 = Color3.fromRGB(255, 255, 255); spkRear.BorderSizePixel = 0; spkRear.ZIndex = 15
-    Instance.new("UICorner", spkRear).CornerRadius = UDim.new(0.35, 0)
-    applyNeonTriGrad(spkRear, 90)
-
-    local spkCone = Instance.new("Frame", speakerBtn)
-    spkCone.Size = UDim2.new(0, 6.5, 0, 12.5); spkCone.Position = UDim2.new(0, 5.5, 0.5, -6.25)
-    spkCone.BackgroundColor3 = Color3.fromRGB(255, 255, 255); spkCone.BorderSizePixel = 0; spkCone.ZIndex = 15
-    Instance.new("UICorner", spkCone).CornerRadius = UDim.new(0.35, 0)
-    applyNeonTriGrad(spkCone, 90)
-
-    local wave1 = Instance.new("Frame", speakerBtn)
-    wave1.Size = UDim2.new(0, 2.2, 0, 6.8); wave1.Position = UDim2.new(0, 13.5, 0.5, -3.4)
-    wave1.BackgroundColor3 = Color3.fromRGB(255, 255, 255); wave1.BorderSizePixel = 0; wave1.ZIndex = 15
-    Instance.new("UICorner", wave1).CornerRadius = UDim.new(1, 0)
-    applyNeonTriGrad(wave1, 90)
-
-    local wave2 = Instance.new("Frame", speakerBtn)
-    wave2.Size = UDim2.new(0, 2.2, 0, 11.2); wave2.Position = UDim2.new(0, 17, 0.5, -5.6)
-    wave2.BackgroundColor3 = Color3.fromRGB(255, 255, 255); wave2.BorderSizePixel = 0; wave2.ZIndex = 15
-    Instance.new("UICorner", wave2).CornerRadius = UDim.new(1, 0)
-    applyNeonTriGrad(wave2, 90)
-
-    local muteX1 = Instance.new("Frame", speakerBtn)
-    muteX1.Size = UDim2.new(0, 7.5, 0, 2.2); muteX1.AnchorPoint = Vector2.new(0.5, 0.5)
-    muteX1.Position = UDim2.new(0, 16.5, 0.5, 0); muteX1.Rotation = 45
-    muteX1.BackgroundColor3 = Color3.fromRGB(255, 255, 255); muteX1.BorderSizePixel = 0; muteX1.Visible = false; muteX1.ZIndex = 16
-    Instance.new("UICorner", muteX1).CornerRadius = UDim.new(1, 0)
-    applyNeonTriGrad(muteX1, 90)
-
-    local muteX2 = Instance.new("Frame", speakerBtn)
-    muteX2.Size = UDim2.new(0, 7.5, 0, 2.2); muteX2.AnchorPoint = Vector2.new(0.5, 0.5)
-    muteX2.Position = UDim2.new(0, 16.5, 0.5, 0); muteX2.Rotation = -45
-    muteX2.BackgroundColor3 = Color3.fromRGB(255, 255, 255); muteX2.BorderSizePixel = 0; muteX2.Visible = false; muteX2.ZIndex = 16
-    Instance.new("UICorner", muteX2).CornerRadius = UDim.new(1, 0)
-    applyNeonTriGrad(muteX2, 90)
-
-    local function syncSpeakerIcon(val)
-        if val <= 0 then
-            wave1.Visible = false; wave2.Visible = false
-            muteX1.Visible = true; muteX2.Visible = true
-        elseif val <= 5 then
-            wave1.Visible = true; wave2.Visible = false
-            muteX1.Visible = false; muteX2.Visible = false
-        else
-            wave1.Visible = true; wave2.Visible = true
-            muteX1.Visible = false; muteX2.Visible = false
-        end
-    end
-    syncSpeakerIcon(State.MusicVolume)
-
-    local volTrack = Instance.new("Frame", volPillInner)
-    volTrack.Size = UDim2.new(1, -36, 0, 5); volTrack.Position = UDim2.new(0, 27, 0.5, -2.5)
-    volTrack.BackgroundColor3 = Color3.fromRGB(16, 22, 32); volTrack.BorderSizePixel = 0; volTrack.ZIndex = 13
-    Instance.new("UICorner", volTrack).CornerRadius = UDim.new(1, 0)
-
-    local initVolPos = math.clamp(State.MusicVolume / 10, 0, 1)
-    local volFill = Instance.new("Frame", volTrack)
-    volFill.Size = UDim2.new(initVolPos, 0, 1, 0); volFill.BackgroundColor3 = Color3.fromRGB(255, 255, 255); volFill.BorderSizePixel = 0; volFill.ZIndex = 14
-    Instance.new("UICorner", volFill).CornerRadius = UDim.new(1, 0)
-    applyNeonTriGrad(volFill, 0)
-
-    local volKnob = Instance.new("Frame", volTrack)
-    volKnob.Size = UDim2.new(0, 10, 0, 10); volKnob.AnchorPoint = Vector2.new(0.5, 0.5)
-    volKnob.Position = UDim2.new(initVolPos, 0, 0.5, 0); volKnob.BackgroundColor3 = GlossPalette.IconWhite; volKnob.ZIndex = 15
-    Instance.new("UICorner", volKnob).CornerRadius = UDim.new(1, 0)
-
-    local savedUnmuteVol = State.MusicVolume > 0 and State.MusicVolume or 5
-    local function applyVolValue(value)
-        if value > 0 then savedUnmuteVol = value end
-        local pos = math.clamp(value / 10, 0, 1)
-        volTitle.Text = "Âm lượng: " .. tostring(value)
-        syncSpeakerIcon(value)
-        TweenService:Create(volFill, TweenInfo.new(0.08), {Size = UDim2.new(pos, 0, 1, 0)}):Play()
-        TweenService:Create(volKnob, TweenInfo.new(0.08), {Position = UDim2.new(pos, 0, 0.5, 0)}):Play()
-        State.MusicVolume = value
-        if currentSound then currentSound.Volume = value end
-        if State.AutoSave then saveConfig() end
-    end
-
-    speakerBtn.MouseButton1Click:Connect(function()
-        clickAnimate(speakerBtn)
-        if State.MusicVolume > 0 then
-            applyVolValue(0)
-        else
-            applyVolValue(savedUnmuteVol)
-        end
-    end)
-
-    local volDragInput = nil
-    local function updateVolSlider(input)
-        local pos = math.clamp((input.Position.X - volTrack.AbsolutePosition.X) / math.max(1, volTrack.AbsoluteSize.X), 0, 1)
-        local value = math.floor(10 * pos + 0.5)
-        applyVolValue(value)
-    end
-    volPillOuter.InputBegan:Connect(function(input)
-        if not volDragInput and (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
-            if input.Position.X >= volTrack.AbsolutePosition.X - 6 then
-                volDragInput = input; updateVolSlider(input)
-            end
-        end
-    end)
-    UIS.InputChanged:Connect(function(input)
-        if isDragUpdateInput(input, volDragInput) then updateVolSlider(input) end
-    end)
-    UIS.InputEnded:Connect(function(input)
-        if input == volDragInput then volDragInput = nil end
-    end)
-    end
-
-    -- 3. KHUNG DANH SÁCH NHẠC ĐÃ LƯU (LOGO 3D PUBLIC XANH BĂNG & PRIVATE LỬA VÀNG THEO MẪU 1000085248.png)
-    do
-    local currentMusicFilter = "all" -- "all" | "public" | "private"
-
-    -- Hàm dựng Logo 3D PUBLIC (Năng lượng Xanh Băng - Tím) và PRIVATE (Hào quang Lửa Đỏ - Chữ Vàng Cam)
-    local function createStatusLogoEmblem(parent, statusType, posUDim, sizeUDim)
-        local btn = Instance.new("TextButton", parent)
-        btn.Size = sizeUDim or UDim2.new(0, 58, 0, 20)
-        btn.Position = posUDim or UDim2.new(1, -112, 0.5, -10)
-        btn.BackgroundTransparency = 1
-        btn.Text = ""
-        btn.AutoButtonColor = false
-        btn.ZIndex = 14
-
-        -- Quầng xoáy năng lượng / lửa phía sau (2 vòng elip nghiêng ngược chiều)
-        local aura1 = Instance.new("Frame", btn)
-        aura1.Size = UDim2.new(1, 0, 0.78, 0)
-        aura1.AnchorPoint = Vector2.new(0.5, 0.5)
-        aura1.Position = UDim2.new(0.5, 0, 0.5, 0)
-        aura1.Rotation = -11
-        aura1.BackgroundTransparency = 1
-        aura1.ZIndex = 14
-        Instance.new("UICorner", aura1).CornerRadius = UDim.new(1, 0)
-        local aura1Stroke = Instance.new("UIStroke", aura1)
-        aura1Stroke.Thickness = 1.4
-        local aura1Grad = Instance.new("UIGradient", aura1Stroke)
-
-        local aura2 = Instance.new("Frame", btn)
-        aura2.Size = UDim2.new(0.92, 0, 0.68, 0)
-        aura2.AnchorPoint = Vector2.new(0.5, 0.5)
-        aura2.Position = UDim2.new(0.5, 0, 0.5, 0)
-        aura2.Rotation = 10
-        aura2.BackgroundTransparency = 1
-        aura2.ZIndex = 14
-        Instance.new("UICorner", aura2).CornerRadius = UDim.new(1, 0)
-        local aura2Stroke = Instance.new("UIStroke", aura2)
-        aura2Stroke.Thickness = 1.1
-
-        -- Nền khiên tối sâu giúp chữ 3D nổi bật sắc nét
-        local coreShield = Instance.new("Frame", btn)
-        coreShield.Size = UDim2.new(0.94, 0, 0.76, 0)
-        coreShield.AnchorPoint = Vector2.new(0.5, 0.5)
-        coreShield.Position = UDim2.new(0.5, 0, 0.5, 0)
-        coreShield.Rotation = -3
-        coreShield.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-        coreShield.BorderSizePixel = 0
-        coreShield.ZIndex = 15
-        Instance.new("UICorner", coreShield).CornerRadius = UDim.new(0.45, 0)
-        local shieldGrad = Instance.new("UIGradient", coreShield)
-        shieldGrad.Rotation = 90
-        local shieldStroke = Instance.new("UIStroke", coreShield)
-        shieldStroke.Thickness = 1.0
-
-        -- Lớp bóng đổ khối 3D (Extrusion Shadow) phía dưới chữ
-        local shadowTxt = Instance.new("TextLabel", btn)
-        shadowTxt.Size = UDim2.new(1, 4, 1, 0)
-        shadowTxt.AnchorPoint = Vector2.new(0.5, 0.5)
-        shadowTxt.Position = UDim2.new(0.5, 1, 0.5, 1.5)
-        shadowTxt.Rotation = -4
-        shadowTxt.BackgroundTransparency = 1
-        shadowTxt.Font = Enum.Font.GothamBlack
-        shadowTxt.ZIndex = 16
-
-        -- Lớp chữ 3D ánh kim chính ở trên
-        local mainTxt = Instance.new("TextLabel", btn)
-        mainTxt.Size = UDim2.new(1, 4, 1, 0)
-        mainTxt.AnchorPoint = Vector2.new(0.5, 0.5)
-        mainTxt.Position = UDim2.new(0.5, 0, 0.5, 0)
-        mainTxt.Rotation = -4
-        mainTxt.BackgroundTransparency = 1
-        mainTxt.TextColor3 = Color3.fromRGB(255, 255, 255)
-        mainTxt.Font = Enum.Font.GothamBlack
-        mainTxt.ZIndex = 17
-        local txtGrad = Instance.new("UIGradient", mainTxt)
-        txtGrad.Rotation = 90
-        local txtStroke = Instance.new("UIStroke", mainTxt)
-        txtStroke.Thickness = 1.15
-
-        if statusType == "public" then
-            -- Logo PUBLIC: Hào quang Xanh Băng - Tím + Chữ 3D Trắng Băng -> Xanh Lam (giống bên phải ảnh 1000085248.png)
-            aura1Grad.Color = ColorSequence.new({
-                ColorSequenceKeypoint.new(0, Color3.fromRGB(55, 235, 255)),
-                ColorSequenceKeypoint.new(0.5, Color3.fromRGB(35, 115, 255)),
-                ColorSequenceKeypoint.new(1, Color3.fromRGB(205, 55, 255))
-            })
-            aura2Stroke.Color = Color3.fromRGB(65, 215, 255)
-            shieldGrad.Color = ColorSequence.new({
-                ColorSequenceKeypoint.new(0, Color3.fromRGB(16, 38, 88)),
-                ColorSequenceKeypoint.new(1, Color3.fromRGB(10, 14, 38))
-            })
-            shieldStroke.Color = Color3.fromRGB(65, 210, 255)
-            shadowTxt.Text = "PUBLIC"
-            shadowTxt.TextSize = 8.4
-            shadowTxt.TextColor3 = Color3.fromRGB(6, 12, 34)
-            mainTxt.Text = "PUBLIC"
-            mainTxt.TextSize = 8.4
-            txtStroke.Color = Color3.fromRGB(10, 24, 62)
-            txtGrad.Color = ColorSequence.new({
-                ColorSequenceKeypoint.new(0, Color3.fromRGB(248, 254, 255)),
-                ColorSequenceKeypoint.new(0.52, Color3.fromRGB(95, 218, 255)),
-                ColorSequenceKeypoint.new(1, Color3.fromRGB(42, 118, 255))
-            })
-        elseif statusType == "private" then
-            -- Logo PRIVATE: Hào quang Lửa Đỏ Cam + Chữ 3D Vàng Kim -> Cam Đỏ (giống bên trái ảnh 1000085248.png)
-            aura1Grad.Color = ColorSequence.new({
-                ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 230, 65)),
-                ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 95, 18)),
-                ColorSequenceKeypoint.new(1, Color3.fromRGB(205, 18, 15))
-            })
-            aura2Stroke.Color = Color3.fromRGB(255, 135, 25)
-            shieldGrad.Color = ColorSequence.new({
-                ColorSequenceKeypoint.new(0, Color3.fromRGB(78, 16, 10)),
-                ColorSequenceKeypoint.new(1, Color3.fromRGB(24, 6, 6))
-            })
-            shieldStroke.Color = Color3.fromRGB(255, 145, 30)
-            shadowTxt.Text = "PRIVATE"
-            shadowTxt.TextSize = 7.8
-            shadowTxt.TextColor3 = Color3.fromRGB(28, 4, 4)
-            mainTxt.Text = "PRIVATE"
-            mainTxt.TextSize = 7.8
-            txtStroke.Color = Color3.fromRGB(48, 10, 6)
-            txtGrad.Color = ColorSequence.new({
-                ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 250, 125)),
-                ColorSequenceKeypoint.new(0.52, Color3.fromRGB(255, 182, 28)),
-                ColorSequenceKeypoint.new(1, Color3.fromRGB(235, 68, 14))
-            })
-        else
-            aura1Grad.Color = ColorSequence.new(Color3.fromRGB(185, 155, 75))
-            aura2Stroke.Color = Color3.fromRGB(145, 120, 60)
-            shieldGrad.Color = ColorSequence.new(Color3.fromRGB(34, 30, 20))
-            shieldStroke.Color = Color3.fromRGB(175, 145, 65)
-            shadowTxt.Text = "ĐO..."
-            shadowTxt.TextSize = 7.8
-            shadowTxt.TextColor3 = Color3.fromRGB(15, 12, 8)
-            mainTxt.Text = "ĐO..."
-            mainTxt.TextSize = 7.8
-            txtStroke.Color = Color3.fromRGB(25, 20, 12)
-            txtGrad.Color = ColorSequence.new(Color3.fromRGB(240, 205, 110))
-        end
-
-        return btn
-    end
-
-    local musicListCard = Instance.new("Frame", page5)
-    musicListCard.Size = UDim2.new(0.94, 0, 1, -128); musicListCard.BackgroundColor3 = Color3.fromRGB(20, 22, 31); musicListCard.LayoutOrder = 3; musicListCard.ZIndex = 10
-    Instance.new("UICorner", musicListCard).CornerRadius = UDim.new(0, 8)
-    local mlStroke = Instance.new("UIStroke", musicListCard); mlStroke.Color = Theme.Stroke; mlStroke.Thickness = 1; table.insert(RGBElements, {Type = "Info", Stroke = mlStroke})
-
-    local playlistIconBox = Instance.new("Frame", musicListCard)
-    playlistIconBox.Size = UDim2.new(0, 18, 0, 18); playlistIconBox.Position = UDim2.new(0, 8, 0, 5)
-    playlistIconBox.BackgroundTransparency = 1; playlistIconBox.ZIndex = 12
-    drawGlossyIcon(playlistIconBox, "PlaylistNote", 0.92)
-
-    local mlHeader = Instance.new("TextLabel", musicListCard)
-    mlHeader.Size = UDim2.new(0.35, 0, 0, 20); mlHeader.Position = UDim2.new(0, 30, 0, 4); mlHeader.BackgroundTransparency = 1
-    mlHeader.Text = "KHO NHẠC (0)"; mlHeader.TextColor3 = Color3.fromRGB(178, 190, 210); mlHeader.Font = Enum.Font.GothamSemibold; mlHeader.TextSize = 8.6
-    mlHeader.TextXAlignment = Enum.TextXAlignment.Left; mlHeader.TextTruncate = Enum.TextTruncate.AtEnd; mlHeader.ZIndex = 11
-
-    -- 3 nút lọc: Tất cả | Public | Private (Đã làm dịu chữ & nền tối sâu chống chói lóa)
-    local filterBar = Instance.new("Frame", musicListCard)
-    filterBar.Size = UDim2.new(0, 184, 0, 19); filterBar.Position = UDim2.new(1, -188, 0, 4)
-    filterBar.BackgroundTransparency = 1; filterBar.ZIndex = 11
-
-    local function makeMusicFilterBtn(xPos, width, txt)
-        local b = Instance.new("TextButton", filterBar)
-        b.Size = UDim2.new(0, width, 1, 0); b.Position = UDim2.new(0, xPos, 0, 0)
-        b.BackgroundColor3 = Color3.fromRGB(14, 16, 23); b.Text = txt
-        b.TextColor3 = Color3.fromRGB(132, 142, 162); b.Font = Enum.Font.GothamMedium; b.TextSize = 8
-        b.TextStrokeColor3 = Color3.fromRGB(8, 10, 16); b.TextStrokeTransparency = 0.45
-        b.AutoButtonColor = false; b.ZIndex = 12
-        Instance.new("UICorner", b).CornerRadius = UDim.new(0, 6)
-        local st = Instance.new("UIStroke", b); st.Color = Color3.fromRGB(42, 48, 66); st.Thickness = 0.8; st.Transparency = 0.45
-        return b, st
-    end
-
-    local fBtnAll, fStAll = makeMusicFilterBtn(0, 56, "Tất cả")
-    local fBtnPub, fStPub = makeMusicFilterBtn(60, 60, "Public")
-    local fBtnPriv, fStPriv = makeMusicFilterBtn(124, 60, "Private")
-
-    local function syncMusicFilterTabs()
-        local pubCount, privCount = 0, 0
-        for _, item in ipairs(savedMusicList) do
-            if item.status == "public" then pubCount = pubCount + 1
-            elseif item.status == "private" then privCount = privCount + 1 end
-        end
-        fBtnAll.Text = "Tất cả (" .. #savedMusicList .. ")"
-        fBtnPub.Text = "Public (" .. pubCount .. ")"
-        fBtnPriv.Text = "Private (" .. privCount .. ")"
-
-        local tabs = {
-            {
-                btn = fBtnAll, st = fStAll, key = "all",
-                col = Color3.fromRGB(198, 208, 224),
-                bg = Color3.fromRGB(22, 26, 38),
-                border = Color3.fromRGB(88, 102, 132)
-            },
-            {
-                btn = fBtnPub, st = fStPub, key = "public",
-                col = Color3.fromRGB(125, 198, 240),
-                bg = Color3.fromRGB(16, 28, 44),
-                border = Color3.fromRGB(58, 138, 195)
-            },
-            {
-                btn = fBtnPriv, st = fStPriv, key = "private",
-                col = Color3.fromRGB(228, 178, 95),
-                bg = Color3.fromRGB(34, 22, 18),
-                border = Color3.fromRGB(175, 105, 42)
-            }
-        }
-        for _, t in ipairs(tabs) do
-            local isSel = (currentMusicFilter == t.key)
-            t.btn.BackgroundColor3 = isSel and t.bg or Color3.fromRGB(14, 16, 23)
-            t.btn.TextColor3 = isSel and t.col or Color3.fromRGB(124, 134, 154)
-            t.st.Color = isSel and t.border or Color3.fromRGB(40, 46, 62)
-            t.st.Transparency = isSel and 0.25 or 0.55
-        end
-    end
-
-    local emptyMusicState = Instance.new("TextLabel", musicListCard)
-    emptyMusicState.Size = UDim2.new(1, -24, 1, -28); emptyMusicState.Position = UDim2.new(0, 12, 0, 24)
-    emptyMusicState.BackgroundTransparency = 1; emptyMusicState.RichText = true
-    emptyMusicState.Text = "🎶 Chưa có bài nhạc nào được lưu.\n<font color='#7E889E'>Nhập ID Nhạc ở trên rồi bấm nút Lưu đĩa mềm bên phải để thêm!</font>"
-    emptyMusicState.TextColor3 = Theme.TextDim; emptyMusicState.Font = Enum.Font.GothamSemibold; emptyMusicState.TextSize = 9.2
-    emptyMusicState.LineHeight = 1.25; emptyMusicState.TextWrapped = true
-    emptyMusicState.TextXAlignment = Enum.TextXAlignment.Center; emptyMusicState.TextYAlignment = Enum.TextYAlignment.Center; emptyMusicState.ZIndex = 11
-
-    local savedMusicContent = Instance.new("ScrollingFrame", musicListCard)
-    savedMusicContent.Size = UDim2.new(1, -10, 1, -28); savedMusicContent.Position = UDim2.new(0, 5, 0, 26)
-    savedMusicContent.BackgroundTransparency = 1; savedMusicContent.ScrollBarThickness = 3; savedMusicContent.ScrollBarImageColor3 = Theme.Brand; savedMusicContent.BorderSizePixel = 0; savedMusicContent.ZIndex = 10
-    local sLayout = Instance.new("UIListLayout", savedMusicContent); sLayout.SortOrder = Enum.SortOrder.LayoutOrder; sLayout.Padding = UDim.new(0, 5)
-    local sPad = Instance.new("UIPadding", savedMusicContent); sPad.PaddingTop = UDim.new(0, 2); sPad.PaddingBottom = UDim.new(0, 6); sPad.PaddingLeft = UDim.new(0, 2); sPad.PaddingRight = UDim.new(0, 4)
-    sLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function() savedMusicContent.CanvasSize = UDim2.new(0, 0, 0, sLayout.AbsoluteContentSize.Y + 10) end)
-
-    registerBrandUpdater(function(newBrand)
-        if savedMusicContent and savedMusicContent.Parent then savedMusicContent.ScrollBarImageColor3 = newBrand end
-        syncMusicFilterTabs()
-    end)
-
-    local fileName = "MenuVipProMax_SavedMusic.json"
-    pcall(function() if isfile and isfile(fileName) then local decoded = HttpService:JSONDecode(readfile(fileName)); if type(decoded) == "table" then savedMusicList = decoded end end end)
-    saveMusicData = function() pcall(function() if writefile then writefile(fileName, HttpService:JSONEncode(savedMusicList)) end end) end
-
-    renderSavedMusic = function()
-        for _, child in pairs(savedMusicContent:GetChildren()) do if child:IsA("Frame") then child:Destroy() end end
-        cleanRGBElements()
-        mlHeader.Text = "KHO NHẠC (" .. #savedMusicList .. ")"
-        syncMusicFilterTabs()
-
-        local visibleCount = 0
-        for i, data in ipairs(savedMusicList) do
-            local st = data.status or "checking"
-            local matchFilter = (currentMusicFilter == "all")
-                or (currentMusicFilter == "public" and st == "public")
-                or (currentMusicFilter == "private" and st == "private")
-
-            if matchFilter then
-                visibleCount = visibleCount + 1
-                local rowOuter, rowInner = createGlossyPillFrame(savedMusicContent, UDim2.new(1, -2, 0, 32), nil, i)
-
-                local songIconBtn, songIconHolder = createGlossyCircleBtn(rowInner, 22, UDim2.new(0, 3, 0.5, 0), Vector2.new(0, 0.5))
-                drawGlossyIcon(songIconHolder, "MusicNote", 0.68)
-
-                local nameBox = Instance.new("TextBox", rowInner)
-                nameBox.Size = UDim2.new(1, -146, 1, 0); nameBox.Position = UDim2.new(0, 29, 0, 0)
-                nameBox.Text = data.name; nameBox.TextColor3 = GlossPalette.IconWhite
-                nameBox.Font = Enum.Font.GothamSemibold; nameBox.TextSize = 9.2
-                nameBox.BackgroundTransparency = 1; nameBox.TextXAlignment = Enum.TextXAlignment.Left
-                nameBox.TextTruncate = Enum.TextTruncate.AtEnd
-                nameBox.ClearTextOnFocus = false; nameBox.ZIndex = 13
-                nameBox.FocusLost:Connect(function()
-                    if nameBox.Text ~= "" then data.name = nameBox.Text; saveMusicData() else nameBox.Text = data.name end
-                end)
-
-                -- Logo 3D PUBLIC (Xanh Băng) / PRIVATE (Lửa Vàng) theo đúng mẫu 1000085248.png
-                local statusBadge = createStatusLogoEmblem(
-                    rowInner,
-                    st,
-                    UDim2.new(1, -112, 0.5, -10),
-                    UDim2.new(0, 58, 0, 20)
-                )
-
-                statusBadge.MouseButton1Click:Connect(function()
-                    clickAnimate(statusBadge)
-                    if data.status == "public" then
-                        data.status = "private"
-                        MakeToast("Phân loại ID", "Đã chuyển '" .. data.name .. "' sang PRIVATE", Theme.AccentOff)
+        -- Vòng lặp cập nhật thanh thời gian bài hát & đếm ngược Hẹn giờ tắt nhạc
+        task.spawn(function()
+            while task.wait(0.25) do
+                if timerActive and timerEndTime > 0 then
+                    local remain = timerEndTime - tick()
+                    if remain <= 0 then
+                        timerActive = false
+                        timerEndTime = 0
+                        timerInputBox.Text = ""
+                        stopMusic()
+                        syncTimerVisual()
+                        MakeToast("⏰ Hết Giờ Hẹn", "Đã tự động tắt nhạc theo thời gian hẹn!", Theme.Brand)
                     else
-                        data.status = "public"
-                        MakeToast("Phân loại ID", "Đã chuyển '" .. data.name .. "' sang PUBLIC", Theme.AccentOn)
+                        lblTimer.Text = "Còn lại: " .. formatTime(remain)
                     end
-                    saveMusicData()
-                    renderSavedMusic()
-                end)
+                end
 
-                local playItemBtn, playItemHolder = createGlossyCircleBtn(rowInner, 22, UDim2.new(1, -50, 0.5, 0), Vector2.new(0, 0.5))
-                drawGlossyIcon(playItemHolder, "Play", 0.68)
-
-                local delItemBtn, delItemHolder = createGlossyCircleBtn(rowInner, 22, UDim2.new(1, -25, 0.5, 0), Vector2.new(0, 0.5))
-                drawGlossyIcon(delItemHolder, "Cross", 0.68)
-
-                songIconBtn.MouseButton1Click:Connect(function() clickAnimate(songIconBtn); musicIdBox.Text = data.id; playMusic(data.id) end)
-                playItemBtn.MouseButton1Click:Connect(function() clickAnimate(playItemBtn); musicIdBox.Text = data.id; playMusic(data.id) end)
-                delItemBtn.MouseButton1Click:Connect(function() clickAnimate(delItemBtn); table.remove(savedMusicList, i); saveMusicData(); renderSavedMusic() end)
+                if page5.Visible and not seekDragInput then
+                    if currentSound and currentSound.Parent and currentSound.TimeLength > 0 then
+                        local cur = currentSound.TimePosition
+                        local len = currentSound.TimeLength
+                        local ratio = math.clamp(cur / len, 0, 1)
+                        seekFill.Size = UDim2.new(ratio, 0, 1, 0)
+                        seekKnob.Position = UDim2.new(ratio, 0, 0.5, 0)
+                        musicTimeLabel.Text = formatTime(cur) .. " / " .. formatTime(len)
+                    else
+                        seekFill.Size = UDim2.new(0, 0, 1, 0)
+                        seekKnob.Position = UDim2.new(0, 0, 0.5, 0)
+                        musicTimeLabel.Text = "00:00 / 00:00"
+                    end
+                end
             end
-        end
-
-        if #savedMusicList == 0 then
-            emptyMusicState.Text = "🎶 Chưa có bài nhạc nào được lưu.\n<font color='#7E889E'>Nhập ID Nhạc ở trên rồi bấm nút Lưu đĩa mềm bên phải để thêm!</font>"
-            emptyMusicState.Visible = true
-        elseif visibleCount == 0 then
-            local filterName = currentMusicFilter == "public" and "PUBLIC" or "PRIVATE"
-            emptyMusicState.Text = "🔎 Không có bài nhạc nào thuộc nhóm <font color='#F0C868'>" .. filterName .. "</font>.\n<font color='#7E889E'>Bấm sang mục 'Tất cả' để xem toàn bộ danh sách!</font>"
-            emptyMusicState.Visible = true
-        else
-            emptyMusicState.Visible = false
-        end
+        end)
     end
 
-    fBtnAll.MouseButton1Click:Connect(function() clickAnimate(fBtnAll); currentMusicFilter = "all"; renderSavedMusic() end)
-    fBtnPub.MouseButton1Click:Connect(function() clickAnimate(fBtnPub); currentMusicFilter = "public"; renderSavedMusic() end)
-    fBtnPriv.MouseButton1Click:Connect(function() clickAnimate(fBtnPriv); currentMusicFilter = "private"; renderSavedMusic() end)
+    -- 3B. Cụm Phải: Âm thanh 1 - 10 (Mặc định là 1) + Nút tròn 3D Loa 3 trạng thái (🔊 / 🔉 / 🔇 theo mẫu 1000085251.png)
+    do
+        local volGroup = Instance.new("Frame", subControlRow)
+        volGroup.Size = UDim2.new(0.485, 0, 1, 0)
+        volGroup.Position = UDim2.new(0.515, 0, 0, 0)
+        volGroup.BackgroundTransparency = 1
 
-    saveIdBtn.MouseButton1Click:Connect(function()
-        clickAnimate(saveIdBtn)
-        local rawId = musicIdBox.Text:match("%d+")
-        if rawId and rawId ~= "" then
-            task.spawn(function()
-                local name = getSongName(rawId)
-                local newSong = {id = rawId, name = name, status = "checking"}
-                table.insert(savedMusicList, newSong)
-                saveMusicData(); renderSavedMusic()
-                MakeToast("Đã lưu & Đang kiểm tra", "Đang phân loại Public/Private cho: " .. name, Theme.Brand)
-                probeSongStatus(newSong)
-            end)
-        else
-            MakeToast("Chưa có ID", "Hãy nhập ID Nhạc trước khi bấm nút Lưu!", Theme.AccentOff)
-        end
-    end)
+        local volPillOuter, volPillInner, volPillRim = createGlossyPillFrame(
+            volGroup, UDim2.new(1, 0, 0, 24), UDim2.new(0, 0, 0, 0)
+        )
 
-    renderSavedMusic()
+        local speakerBtn, spkHolder, rimSpeaker = createGlossyCircleBtn(
+            volGroup, 24, UDim2.new(0, 0, 0, 0)
+        )
+        speakerBtn.ZIndex = 14
 
-    -- Tự động kiểm tra phân loại Public / Private cho các bài đã lưu từ trước nhưng chưa có nhãn
-    task.spawn(function()
-        for _, item in ipairs(savedMusicList) do
-            if not item.status or item.status == "checking" then
-                probeSongStatus(item)
-                task.wait(0.35)
+        local spkRear = Instance.new("Frame", spkHolder)
+        spkRear.Size = UDim2.new(0, 3.6, 0, 6.2); spkRear.Position = UDim2.new(0.5, -6.5, 0.5, -3.1)
+        spkRear.BackgroundColor3 = Color3.fromRGB(255, 255, 255); spkRear.BorderSizePixel = 0; spkRear.ZIndex = 15
+        Instance.new("UICorner", spkRear).CornerRadius = UDim.new(0.35, 0)
+        applyNeonTriGrad(spkRear, 90)
+
+        local spkCone = Instance.new("Frame", spkHolder)
+        spkCone.Size = UDim2.new(0, 5.2, 0, 10.4); spkCone.Position = UDim2.new(0.5, -3.5, 0.5, -5.2)
+        spkCone.BackgroundColor3 = Color3.fromRGB(255, 255, 255); spkCone.BorderSizePixel = 0; spkCone.ZIndex = 15
+        Instance.new("UICorner", spkCone).CornerRadius = UDim.new(0.35, 0)
+        applyNeonTriGrad(spkCone, 90)
+
+        local wave1 = Instance.new("Frame", spkHolder)
+        wave1.Size = UDim2.new(0, 2.0, 0, 5.8); wave1.Position = UDim2.new(0.5, 2.6, 0.5, -2.9)
+        wave1.BackgroundColor3 = Color3.fromRGB(255, 255, 255); wave1.BorderSizePixel = 0; wave1.ZIndex = 15
+        Instance.new("UICorner", wave1).CornerRadius = UDim.new(1, 0)
+        applyNeonTriGrad(wave1, 90)
+
+        local wave2 = Instance.new("Frame", spkHolder)
+        wave2.Size = UDim2.new(0, 2.0, 0, 9.6); wave2.Position = UDim2.new(0.5, 5.4, 0.5, -4.8)
+        wave2.BackgroundColor3 = Color3.fromRGB(255, 255, 255); wave2.BorderSizePixel = 0; wave2.ZIndex = 15
+        Instance.new("UICorner", wave2).CornerRadius = UDim.new(1, 0)
+        applyNeonTriGrad(wave2, 90)
+
+        local muteX1 = Instance.new("Frame", spkHolder)
+        muteX1.Size = UDim2.new(0, 6.4, 0, 2.0); muteX1.AnchorPoint = Vector2.new(0.5, 0.5)
+        muteX1.Position = UDim2.new(0.5, 4.5, 0.5, 0); muteX1.Rotation = 45
+        muteX1.BackgroundColor3 = Color3.fromRGB(255, 255, 255); muteX1.BorderSizePixel = 0; muteX1.Visible = false; muteX1.ZIndex = 16
+        Instance.new("UICorner", muteX1).CornerRadius = UDim.new(1, 0)
+        applyNeonTriGrad(muteX1, 90)
+
+        local muteX2 = Instance.new("Frame", spkHolder)
+        muteX2.Size = UDim2.new(0, 6.4, 0, 2.0); muteX2.AnchorPoint = Vector2.new(0.5, 0.5)
+        muteX2.Position = UDim2.new(0.5, 4.5, 0.5, 0); muteX2.Rotation = -45
+        muteX2.BackgroundColor3 = Color3.fromRGB(255, 255, 255); muteX2.BorderSizePixel = 0; muteX2.Visible = false; muteX2.ZIndex = 16
+        Instance.new("UICorner", muteX2).CornerRadius = UDim.new(1, 0)
+        applyNeonTriGrad(muteX2, 90)
+
+        local function syncSpeakerIcon(val)
+            if val <= 0 then
+                wave1.Visible = false; wave2.Visible = false
+                muteX1.Visible = true; muteX2.Visible = true
+            elseif val <= 4 then
+                wave1.Visible = true; wave2.Visible = false
+                muteX1.Visible = false; muteX2.Visible = false
+            else
+                wave1.Visible = true; wave2.Visible = true
+                muteX1.Visible = false; muteX2.Visible = false
             end
         end
-    end)
+
+        local volTitle = Instance.new("TextLabel", volGroup)
+        volTitle.Size = UDim2.new(1, 0, 0, 10)
+        volTitle.Position = UDim2.new(0.5, 0, 0, 25)
+        volTitle.AnchorPoint = Vector2.new(0.5, 0)
+        volTitle.BackgroundTransparency = 1
+        volTitle.Text = "Âm thanh: " .. tostring(State.MusicVolume) .. " (1 - 10)"
+        volTitle.TextColor3 = Color3.fromRGB(168, 180, 204)
+        volTitle.Font = Enum.Font.GothamSemibold
+        volTitle.TextSize = 7.4
+        volTitle.TextXAlignment = Enum.TextXAlignment.Center
+        volTitle.ZIndex = 12
+
+        local volTrack = Instance.new("Frame", volPillInner)
+        volTrack.Size = UDim2.new(1, -34, 0, 4.5)
+        volTrack.Position = UDim2.new(0, 26, 0.5, -2.25)
+        volTrack.BackgroundColor3 = Color3.fromRGB(14, 18, 32)
+        volTrack.BorderSizePixel = 0
+        volTrack.ZIndex = 13
+        Instance.new("UICorner", volTrack).CornerRadius = UDim.new(1, 0)
+
+        local function getVolFillRatio(val)
+            if val <= 0 then return 0 end
+            return math.clamp(val / 10, 0.1, 1)
+        end
+
+        local initVolPos = getVolFillRatio(State.MusicVolume)
+        local volFill = Instance.new("Frame", volTrack)
+        volFill.Size = UDim2.new(initVolPos, 0, 1, 0)
+        volFill.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        volFill.BorderSizePixel = 0
+        volFill.ZIndex = 14
+        Instance.new("UICorner", volFill).CornerRadius = UDim.new(1, 0)
+        applyNeonTriGrad(volFill, 0)
+
+        local volKnob = Instance.new("Frame", volTrack)
+        volKnob.Size = UDim2.new(0, 9, 0, 9)
+        volKnob.AnchorPoint = Vector2.new(0.5, 0.5)
+        volKnob.Position = UDim2.new(initVolPos, 0, 0.5, 0)
+        volKnob.BackgroundColor3 = GlossPalette.IconWhite
+        volKnob.ZIndex = 15
+        Instance.new("UICorner", volKnob).CornerRadius = UDim.new(1, 0)
+
+        syncSpeakerIcon(State.MusicVolume)
+
+        local savedUnmuteVol = (State.MusicVolume >= 1 and State.MusicVolume <= 10) and State.MusicVolume or 1
+        local function applyVolValue(value)
+            if value >= 1 then savedUnmuteVol = value end
+            local pos = getVolFillRatio(value)
+            if value <= 0 then
+                volTitle.Text = "Âm thanh: Tắt (0)"
+            else
+                volTitle.Text = "Âm thanh: " .. tostring(value) .. " (1 - 10)"
+            end
+            syncSpeakerIcon(value)
+            TweenService:Create(volFill, TweenInfo.new(0.08), {Size = UDim2.new(pos, 0, 1, 0)}):Play()
+            TweenService:Create(volKnob, TweenInfo.new(0.08), {Position = UDim2.new(pos, 0, 0.5, 0)}):Play()
+            State.MusicVolume = value
+            if currentSound then currentSound.Volume = value end
+            if State.AutoSave then saveConfig() end
+        end
+
+        speakerBtn.MouseButton1Click:Connect(function()
+            clickAnimate(speakerBtn)
+            if State.MusicVolume > 0 then
+                applyVolValue(0)
+            else
+                applyVolValue(savedUnmuteVol)
+            end
+        end)
+
+        local volDragInput = nil
+        local function updateVolSlider(input)
+            local pos = math.clamp((input.Position.X - volTrack.AbsolutePosition.X) / math.max(1, volTrack.AbsoluteSize.X), 0, 1)
+            -- Thang âm thanh từ 1 đến 10 (mặc định là 1)
+            local value = math.clamp(math.floor(1 + pos * 9 + 0.5), 1, 10)
+            applyVolValue(value)
+        end
+        volPillOuter.InputBegan:Connect(function(input)
+            if not volDragInput and (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
+                if input.Position.X >= volTrack.AbsolutePosition.X - 6 then
+                    volDragInput = input; updateVolSlider(input)
+                end
+            end
+        end)
+        UIS.InputChanged:Connect(function(input)
+            if isDragUpdateInput(input, volDragInput) then updateVolSlider(input) end
+        end)
+        UIS.InputEnded:Connect(function(input)
+            if input == volDragInput then volDragInput = nil end
+        end)
+    end
+
+    -- 4. KHUNG DANH SÁCH NHẠC ĐÃ LƯU (LayoutOrder = 4, LOGO 3D PUBLIC XANH BĂNG & PRIVATE LỬA VÀNG)
+    do
+        local currentMusicFilter = "all"
+
+        local function createStatusLogoEmblem(parent, statusType, posUDim, sizeUDim)
+            local btn = Instance.new("TextButton", parent)
+            btn.Size = sizeUDim or UDim2.new(0, 58, 0, 20)
+            btn.Position = posUDim or UDim2.new(1, -112, 0.5, -10)
+            btn.BackgroundTransparency = 1
+            btn.Text = ""
+            btn.AutoButtonColor = false
+            btn.ZIndex = 14
+
+            local aura1 = Instance.new("Frame", btn)
+            aura1.Size = UDim2.new(1, 0, 0.78, 0)
+            aura1.AnchorPoint = Vector2.new(0.5, 0.5)
+            aura1.Position = UDim2.new(0.5, 0, 0.5, 0)
+            aura1.Rotation = -11
+            aura1.BackgroundTransparency = 1
+            aura1.ZIndex = 14
+            Instance.new("UICorner", aura1).CornerRadius = UDim.new(1, 0)
+            local aura1Stroke = Instance.new("UIStroke", aura1)
+            aura1Stroke.Thickness = 1.4
+            local aura1Grad = Instance.new("UIGradient", aura1Stroke)
+
+            local aura2 = Instance.new("Frame", btn)
+            aura2.Size = UDim2.new(0.92, 0, 0.68, 0)
+            aura2.AnchorPoint = Vector2.new(0.5, 0.5)
+            aura2.Position = UDim2.new(0.5, 0, 0.5, 0)
+            aura2.Rotation = 10
+            aura2.BackgroundTransparency = 1
+            aura2.ZIndex = 14
+            Instance.new("UICorner", aura2).CornerRadius = UDim.new(1, 0)
+            local aura2Stroke = Instance.new("UIStroke", aura2)
+            aura2Stroke.Thickness = 1.1
+
+            local coreShield = Instance.new("Frame", btn)
+            coreShield.Size = UDim2.new(0.94, 0, 0.76, 0)
+            coreShield.AnchorPoint = Vector2.new(0.5, 0.5)
+            coreShield.Position = UDim2.new(0.5, 0, 0.5, 0)
+            coreShield.Rotation = -3
+            coreShield.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+            coreShield.BorderSizePixel = 0
+            coreShield.ZIndex = 15
+            Instance.new("UICorner", coreShield).CornerRadius = UDim.new(0.45, 0)
+            local shieldGrad = Instance.new("UIGradient", coreShield)
+            shieldGrad.Rotation = 90
+            local shieldStroke = Instance.new("UIStroke", coreShield)
+            shieldStroke.Thickness = 1.0
+
+            local shadowTxt = Instance.new("TextLabel", btn)
+            shadowTxt.Size = UDim2.new(1, 4, 1, 0)
+            shadowTxt.AnchorPoint = Vector2.new(0.5, 0.5)
+            shadowTxt.Position = UDim2.new(0.5, 1, 0.5, 1.5)
+            shadowTxt.Rotation = -4
+            shadowTxt.BackgroundTransparency = 1
+            shadowTxt.Font = Enum.Font.GothamBlack
+            shadowTxt.ZIndex = 16
+
+            local mainTxt = Instance.new("TextLabel", btn)
+            mainTxt.Size = UDim2.new(1, 4, 1, 0)
+            mainTxt.AnchorPoint = Vector2.new(0.5, 0.5)
+            mainTxt.Position = UDim2.new(0.5, 0, 0.5, 0)
+            mainTxt.Rotation = -4
+            mainTxt.BackgroundTransparency = 1
+            mainTxt.TextColor3 = Color3.fromRGB(255, 255, 255)
+            mainTxt.Font = Enum.Font.GothamBlack
+            mainTxt.ZIndex = 17
+            local txtGrad = Instance.new("UIGradient", mainTxt)
+            txtGrad.Rotation = 90
+            local txtStroke = Instance.new("UIStroke", mainTxt)
+            txtStroke.Thickness = 1.15
+
+            if statusType == "public" then
+                aura1Grad.Color = ColorSequence.new({
+                    ColorSequenceKeypoint.new(0, Color3.fromRGB(55, 235, 255)),
+                    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(35, 115, 255)),
+                    ColorSequenceKeypoint.new(1, Color3.fromRGB(205, 55, 255))
+                })
+                aura2Stroke.Color = Color3.fromRGB(65, 215, 255)
+                shieldGrad.Color = ColorSequence.new({
+                    ColorSequenceKeypoint.new(0, Color3.fromRGB(16, 38, 88)),
+                    ColorSequenceKeypoint.new(1, Color3.fromRGB(10, 14, 38))
+                })
+                shieldStroke.Color = Color3.fromRGB(65, 210, 255)
+                shadowTxt.Text = "PUBLIC"
+                shadowTxt.TextSize = 8.4
+                shadowTxt.TextColor3 = Color3.fromRGB(6, 12, 34)
+                mainTxt.Text = "PUBLIC"
+                mainTxt.TextSize = 8.4
+                txtStroke.Color = Color3.fromRGB(10, 24, 62)
+                txtGrad.Color = ColorSequence.new({
+                    ColorSequenceKeypoint.new(0, Color3.fromRGB(248, 254, 255)),
+                    ColorSequenceKeypoint.new(0.52, Color3.fromRGB(95, 218, 255)),
+                    ColorSequenceKeypoint.new(1, Color3.fromRGB(42, 118, 255))
+                })
+            elseif statusType == "private" then
+                aura1Grad.Color = ColorSequence.new({
+                    ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 230, 65)),
+                    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 95, 18)),
+                    ColorSequenceKeypoint.new(1, Color3.fromRGB(205, 18, 15))
+                })
+                aura2Stroke.Color = Color3.fromRGB(255, 135, 25)
+                shieldGrad.Color = ColorSequence.new({
+                    ColorSequenceKeypoint.new(0, Color3.fromRGB(78, 16, 10)),
+                    ColorSequenceKeypoint.new(1, Color3.fromRGB(24, 6, 6))
+                })
+                shieldStroke.Color = Color3.fromRGB(255, 145, 30)
+                shadowTxt.Text = "PRIVATE"
+                shadowTxt.TextSize = 7.8
+                shadowTxt.TextColor3 = Color3.fromRGB(28, 4, 4)
+                mainTxt.Text = "PRIVATE"
+                mainTxt.TextSize = 7.8
+                txtStroke.Color = Color3.fromRGB(48, 10, 6)
+                txtGrad.Color = ColorSequence.new({
+                    ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 250, 125)),
+                    ColorSequenceKeypoint.new(0.52, Color3.fromRGB(255, 182, 28)),
+                    ColorSequenceKeypoint.new(1, Color3.fromRGB(235, 68, 14))
+                })
+            else
+                aura1Grad.Color = ColorSequence.new(Color3.fromRGB(185, 155, 75))
+                aura2Stroke.Color = Color3.fromRGB(145, 120, 60)
+                shieldGrad.Color = ColorSequence.new(Color3.fromRGB(34, 30, 20))
+                shieldStroke.Color = Color3.fromRGB(175, 145, 65)
+                shadowTxt.Text = "ĐO..."
+                shadowTxt.TextSize = 7.8
+                shadowTxt.TextColor3 = Color3.fromRGB(15, 12, 8)
+                mainTxt.Text = "ĐO..."
+                mainTxt.TextSize = 7.8
+                txtStroke.Color = Color3.fromRGB(25, 20, 12)
+                txtGrad.Color = ColorSequence.new(Color3.fromRGB(240, 205, 110))
+            end
+
+            return btn
+        end
+
+        local musicListCard = Instance.new("Frame", page5)
+        musicListCard.Size = UDim2.new(0.94, 0, 1, -150)
+        musicListCard.BackgroundColor3 = Color3.fromRGB(20, 22, 31)
+        musicListCard.LayoutOrder = 4
+        musicListCard.ZIndex = 10
+        Instance.new("UICorner", musicListCard).CornerRadius = UDim.new(0, 8)
+        local mlStroke = Instance.new("UIStroke", musicListCard); mlStroke.Color = Theme.Stroke; mlStroke.Thickness = 1; table.insert(RGBElements, {Type = "Info", Stroke = mlStroke})
+
+        local playlistIconBox = Instance.new("Frame", musicListCard)
+        playlistIconBox.Size = UDim2.new(0, 17, 0, 17); playlistIconBox.Position = UDim2.new(0, 8, 0, 4)
+        playlistIconBox.BackgroundTransparency = 1; playlistIconBox.ZIndex = 12
+        drawGlossyIcon(playlistIconBox, "PlaylistNote", 0.88)
+
+        local mlHeader = Instance.new("TextLabel", musicListCard)
+        mlHeader.Size = UDim2.new(0.35, 0, 0, 19); mlHeader.Position = UDim2.new(0, 29, 0, 3); mlHeader.BackgroundTransparency = 1
+        mlHeader.Text = "KHO NHẠC (0)"; mlHeader.TextColor3 = Color3.fromRGB(178, 190, 210); mlHeader.Font = Enum.Font.GothamSemibold; mlHeader.TextSize = 8.4
+        mlHeader.TextXAlignment = Enum.TextXAlignment.Left; mlHeader.TextTruncate = Enum.TextTruncate.AtEnd; mlHeader.ZIndex = 11
+
+        local filterBar = Instance.new("Frame", musicListCard)
+        filterBar.Size = UDim2.new(0, 184, 0, 18); filterBar.Position = UDim2.new(1, -188, 0, 4)
+        filterBar.BackgroundTransparency = 1; filterBar.ZIndex = 11
+
+        local function makeMusicFilterBtn(xPos, width, txt)
+            local b = Instance.new("TextButton", filterBar)
+            b.Size = UDim2.new(0, width, 1, 0); b.Position = UDim2.new(0, xPos, 0, 0)
+            b.BackgroundColor3 = Color3.fromRGB(14, 16, 23); b.Text = txt
+            b.TextColor3 = Color3.fromRGB(132, 142, 162); b.Font = Enum.Font.GothamMedium; b.TextSize = 7.8
+            b.TextStrokeColor3 = Color3.fromRGB(8, 10, 16); b.TextStrokeTransparency = 0.45
+            b.AutoButtonColor = false; b.ZIndex = 12
+            Instance.new("UICorner", b).CornerRadius = UDim.new(0, 6)
+            local st = Instance.new("UIStroke", b); st.Color = Color3.fromRGB(42, 48, 66); st.Thickness = 0.8; st.Transparency = 0.45
+            return b, st
+        end
+
+        local fBtnAll, fStAll = makeMusicFilterBtn(0, 56, "Tất cả")
+        local fBtnPub, fStPub = makeMusicFilterBtn(60, 60, "Public")
+        local fBtnPriv, fStPriv = makeMusicFilterBtn(124, 60, "Private")
+
+        local function syncMusicFilterTabs()
+            local pubCount, privCount = 0, 0
+            for _, item in ipairs(savedMusicList) do
+                if item.status == "public" then pubCount = pubCount + 1
+                elseif item.status == "private" then privCount = privCount + 1 end
+            end
+            fBtnAll.Text = "Tất cả (" .. #savedMusicList .. ")"
+            fBtnPub.Text = "Public (" .. pubCount .. ")"
+            fBtnPriv.Text = "Private (" .. privCount .. ")"
+
+            local tabs = {
+                {
+                    btn = fBtnAll, st = fStAll, key = "all",
+                    col = Color3.fromRGB(198, 208, 224),
+                    bg = Color3.fromRGB(22, 26, 38),
+                    border = Color3.fromRGB(88, 102, 132)
+                },
+                {
+                    btn = fBtnPub, st = fStPub, key = "public",
+                    col = Color3.fromRGB(125, 198, 240),
+                    bg = Color3.fromRGB(16, 28, 44),
+                    border = Color3.fromRGB(58, 138, 195)
+                },
+                {
+                    btn = fBtnPriv, st = fStPriv, key = "private",
+                    col = Color3.fromRGB(228, 178, 95),
+                    bg = Color3.fromRGB(34, 22, 18),
+                    border = Color3.fromRGB(175, 105, 42)
+                }
+            }
+            for _, t in ipairs(tabs) do
+                local isSel = (currentMusicFilter == t.key)
+                t.btn.BackgroundColor3 = isSel and t.bg or Color3.fromRGB(14, 16, 23)
+                t.btn.TextColor3 = isSel and t.col or Color3.fromRGB(124, 134, 154)
+                t.st.Color = isSel and t.border or Color3.fromRGB(40, 46, 62)
+                t.st.Transparency = isSel and 0.25 or 0.55
+            end
+        end
+
+        local emptyMusicState = Instance.new("TextLabel", musicListCard)
+        emptyMusicState.Size = UDim2.new(1, -24, 1, -26); emptyMusicState.Position = UDim2.new(0, 12, 0, 23)
+        emptyMusicState.BackgroundTransparency = 1; emptyMusicState.RichText = true
+        emptyMusicState.Text = "🎶 Chưa có bài nhạc nào được lưu.\n<font color='#7E889E'>Nhập ID Nhạc ở trên rồi bấm nút Lưu đĩa mềm bên phải để thêm!</font>"
+        emptyMusicState.TextColor3 = Theme.TextDim; emptyMusicState.Font = Enum.Font.GothamSemibold; emptyMusicState.TextSize = 8.8
+        emptyMusicState.LineHeight = 1.25; emptyMusicState.TextWrapped = true
+        emptyMusicState.TextXAlignment = Enum.TextXAlignment.Center; emptyMusicState.TextYAlignment = Enum.TextYAlignment.Center; emptyMusicState.ZIndex = 11
+
+        local savedMusicContent = Instance.new("ScrollingFrame", musicListCard)
+        savedMusicContent.Size = UDim2.new(1, -10, 1, -26); savedMusicContent.Position = UDim2.new(0, 5, 0, 24)
+        savedMusicContent.BackgroundTransparency = 1; savedMusicContent.ScrollBarThickness = 3; savedMusicContent.ScrollBarImageColor3 = Theme.Brand; savedMusicContent.BorderSizePixel = 0; savedMusicContent.ZIndex = 10
+        local sLayout = Instance.new("UIListLayout", savedMusicContent); sLayout.SortOrder = Enum.SortOrder.LayoutOrder; sLayout.Padding = UDim.new(0, 4)
+        local sPad = Instance.new("UIPadding", savedMusicContent); sPad.PaddingTop = UDim.new(0, 2); sPad.PaddingBottom = UDim.new(0, 6); sPad.PaddingLeft = UDim.new(0, 2); sPad.PaddingRight = UDim.new(0, 4)
+        sLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function() savedMusicContent.CanvasSize = UDim2.new(0, 0, 0, sLayout.AbsoluteContentSize.Y + 10) end)
+
+        registerBrandUpdater(function(newBrand)
+            if savedMusicContent and savedMusicContent.Parent then savedMusicContent.ScrollBarImageColor3 = newBrand end
+            syncMusicFilterTabs()
+        end)
+
+        local fileName = "MenuVipProMax_SavedMusic.json"
+        pcall(function() if isfile and isfile(fileName) then local decoded = HttpService:JSONDecode(readfile(fileName)); if type(decoded) == "table" then savedMusicList = decoded end end end)
+        saveMusicData = function() pcall(function() if writefile then writefile(fileName, HttpService:JSONEncode(savedMusicList)) end end) end
+
+        renderSavedMusic = function()
+            for _, child in pairs(savedMusicContent:GetChildren()) do if child:IsA("Frame") then child:Destroy() end end
+            cleanRGBElements()
+            mlHeader.Text = "KHO NHẠC (" .. #savedMusicList .. ")"
+            syncMusicFilterTabs()
+
+            local visibleCount = 0
+            for i, data in ipairs(savedMusicList) do
+                local st = data.status or "checking"
+                local matchFilter = (currentMusicFilter == "all")
+                    or (currentMusicFilter == "public" and st == "public")
+                    or (currentMusicFilter == "private" and st == "private")
+
+                if matchFilter then
+                    visibleCount = visibleCount + 1
+                    local rowOuter, rowInner = createGlossyPillFrame(savedMusicContent, UDim2.new(1, -2, 0, 30), nil, i)
+
+                    local songIconBtn, songIconHolder = createGlossyCircleBtn(rowInner, 21, UDim2.new(0, 3, 0.5, 0), Vector2.new(0, 0.5))
+                    drawGlossyIcon(songIconHolder, "MusicNote", 0.65)
+
+                    local nameBox = Instance.new("TextBox", rowInner)
+                    nameBox.Size = UDim2.new(1, -144, 1, 0); nameBox.Position = UDim2.new(0, 28, 0, 0)
+                    nameBox.Text = data.name; nameBox.TextColor3 = GlossPalette.IconWhite
+                    nameBox.Font = Enum.Font.GothamSemibold; nameBox.TextSize = 8.8
+                    nameBox.BackgroundTransparency = 1; nameBox.TextXAlignment = Enum.TextXAlignment.Left
+                    nameBox.TextTruncate = Enum.TextTruncate.AtEnd
+                    nameBox.ClearTextOnFocus = false; nameBox.ZIndex = 13
+                    nameBox.FocusLost:Connect(function()
+                        if nameBox.Text ~= "" then data.name = nameBox.Text; saveMusicData() else nameBox.Text = data.name end
+                    end)
+
+                    local statusBadge = createStatusLogoEmblem(
+                        rowInner,
+                        st,
+                        UDim2.new(1, -110, 0.5, -9.5),
+                        UDim2.new(0, 56, 0, 19)
+                    )
+
+                    statusBadge.MouseButton1Click:Connect(function()
+                        clickAnimate(statusBadge)
+                        if data.status == "public" then
+                            data.status = "private"
+                            MakeToast("Phân loại ID", "Đã chuyển '" .. data.name .. "' sang PRIVATE", Theme.AccentOff)
+                        else
+                            data.status = "public"
+                            MakeToast("Phân loại ID", "Đã chuyển '" .. data.name .. "' sang PUBLIC", Theme.AccentOn)
+                        end
+                        saveMusicData()
+                        renderSavedMusic()
+                    end)
+
+                    local playItemBtn, playItemHolder = createGlossyCircleBtn(rowInner, 21, UDim2.new(1, -48, 0.5, 0), Vector2.new(0, 0.5))
+                    drawGlossyIcon(playItemHolder, "Play", 0.65)
+
+                    local delItemBtn, delItemHolder = createGlossyCircleBtn(rowInner, 21, UDim2.new(1, -24, 0.5, 0), Vector2.new(0, 0.5))
+                    drawGlossyIcon(delItemHolder, "Cross", 0.65)
+
+                    songIconBtn.MouseButton1Click:Connect(function() clickAnimate(songIconBtn); musicIdBox.Text = data.id; playMusic(data.id) end)
+                    playItemBtn.MouseButton1Click:Connect(function() clickAnimate(playItemBtn); musicIdBox.Text = data.id; playMusic(data.id) end)
+                    delItemBtn.MouseButton1Click:Connect(function() clickAnimate(delItemBtn); table.remove(savedMusicList, i); saveMusicData(); renderSavedMusic() end)
+                end
+            end
+
+            if #savedMusicList == 0 then
+                emptyMusicState.Text = "🎶 Chưa có bài nhạc nào được lưu.\n<font color='#7E889E'>Nhập ID Nhạc ở trên rồi bấm nút Lưu đĩa mềm bên phải để thêm!</font>"
+                emptyMusicState.Visible = true
+            elseif visibleCount == 0 then
+                local filterName = currentMusicFilter == "public" and "PUBLIC" or "PRIVATE"
+                emptyMusicState.Text = "🔎 Không có bài nhạc nào thuộc nhóm <font color='#F0C868'>" .. filterName .. "</font>.\n<font color='#7E889E'>Bấm sang mục 'Tất cả' để xem toàn bộ danh sách!</font>"
+                emptyMusicState.Visible = true
+            else
+                emptyMusicState.Visible = false
+            end
+        end
+
+        fBtnAll.MouseButton1Click:Connect(function() clickAnimate(fBtnAll); currentMusicFilter = "all"; renderSavedMusic() end)
+        fBtnPub.MouseButton1Click:Connect(function() clickAnimate(fBtnPub); currentMusicFilter = "public"; renderSavedMusic() end)
+        fBtnPriv.MouseButton1Click:Connect(function() clickAnimate(fBtnPriv); currentMusicFilter = "private"; renderSavedMusic() end)
+
+        saveIdBtn.MouseButton1Click:Connect(function()
+            clickAnimate(saveIdBtn)
+            local rawTxt = tostring(musicIdBox.Text):gsub("^%s*(.-)%s*$", "%1")
+            local isUrlMp3 = rawTxt:lower():match("^https?://") ~= nil
+            local rawId = isUrlMp3 and rawTxt or rawTxt:match("%d+")
+            if rawId and rawId ~= "" then
+                task.spawn(function()
+                    local name = isUrlMp3 and (rawTxt:match("([^/]+%.mp3)") or "Nhạc MP3 Trực Tuyến") or getSongName(rawId)
+                    local newSong = {id = rawId, name = name, status = isUrlMp3 and "public" or "checking"}
+                    table.insert(savedMusicList, newSong)
+                    saveMusicData(); renderSavedMusic()
+                    MakeToast("Đã lưu & Đang kiểm tra", "Đã thêm: " .. name, Theme.Brand)
+                    if not isUrlMp3 then probeSongStatus(newSong) end
+                end)
+            else
+                MakeToast("Chưa có ID", "Hãy nhập ID Nhạc trước khi bấm nút Lưu!", Theme.AccentOff)
+            end
+        end)
+
+        renderSavedMusic()
+
+        task.spawn(function()
+            for _, item in ipairs(savedMusicList) do
+                if not item.status or item.status == "checking" then
+                    probeSongStatus(item)
+                    task.wait(0.35)
+                end
+            end
+        end)
     end
 end
 -- ==========================================
@@ -5124,7 +5308,7 @@ do
         local s = execTime % 60
 
         sysBody.Text = string.format(
-            "<font color='#78B4DC'>• Executor:</font> <font color='#38CC88'>%s</font>   |   <font color='#78B4DC'>Phiên bản:</font> <font color='#E09F67'>V1.18.0</font>\n" ..
+            "<font color='#78B4DC'>• Executor:</font> <font color='#38CC88'>%s</font>   |   <font color='#78B4DC'>Phiên bản:</font> <font color='#E09F67'>V1.19.0</font>\n" ..
             "<font color='#78B4DC'>• Treo máy:</font> %02d:%02d:%02d   |   <font color='#78B4DC'>Giờ hệ thống:</font> %s",
             execName, h, m, s, os.date("%H:%M:%S")
         )
