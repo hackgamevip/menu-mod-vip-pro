@@ -1,5 +1,5 @@
 -- ==========================================
--- MENU VIP PRO MAX V1.22.0 (LUXURY CYBER-GLASS & BENTO SIDEBAR EDITION)
+-- MENU VIP PRO MAX V1.23.0 (LUXURY CYBER-GLASS & BENTO SIDEBAR EDITION)
 -- ==========================================
 repeat task.wait() until game:IsLoaded()
 
@@ -37,7 +37,7 @@ local State = {
     AutoSkillG = false, AutoSkillT = false, AutoSkillY = false, AutoSkillB = false,
     AutoSkill1 = false, AutoSkill2 = false, AutoSkill3 = false, AutoSkill4 = false,
     AutoSkill5 = false, AutoSkill6 = false, AutoSkill7 = false, AutoSkill8 = false,
-    TpPositionIdx = 1, TpDistance = 4,
+    TpPositionIdx = 1, TpMoveMethodIdx = 1, TpDistance = 4,
     TpSaveESP = false, TpSaveLoop = false, TpSaveLoopDelay = 2,
     AirWalk = false,
     HidePopups = false, MuteSFX = false, DisableAnims = false, DarkMap = false,
@@ -84,6 +84,12 @@ local TpPositions = {
     {Name = "Trước mặt", Upper = "TRƯỚC MẶT", IsHorizontal = false, GetOffset = function(d) return CFrame.new(0, 0, -d) * CFrame.Angles(0, math.pi, 0) end},
     {Name = "Trên đầu", Upper = "TRÊN ĐẦU", IsHorizontal = true, GetOffset = function(d) return CFrame.new(0, d, 0) * CFrame.Angles(math.rad(-90), 0, 0) end},
     {Name = "Dưới chân", Upper = "DƯỚI CHÂN", IsHorizontal = true, GetOffset = function(d) return CFrame.new(0, -d, 0) * CFrame.Angles(math.rad(90), 0, 0) end}
+}
+
+local TpMoveMethods = {
+    {Key = "tp", Name = "TP đến", Icon = "⚡", BtnOnce = "⚡ TP ĐẾN (1 LẦN)", BtnAuto = "🔁 AUTO TP"},
+    {Key = "fly", Name = "Bay đến", Icon = "🕊️", BtnOnce = "🕊️ BAY ĐẾN (1 LẦN)", BtnAuto = "🔁 AUTO BAY"},
+    {Key = "walk", Name = "Chạy đến", Icon = "🏃", BtnOnce = "🏃 CHẠY ĐẾN (1 LẦN)", BtnAuto = "🔁 AUTO CHẠY"}
 }
 
 local RGBElements = {}
@@ -176,6 +182,7 @@ pcall(function()
     end
 end)
 if not TpPositions[State.TpPositionIdx] then State.TpPositionIdx = 1 end
+if not TpMoveMethods[State.TpMoveMethodIdx] then State.TpMoveMethodIdx = 1 end
 local MusicSpeedPresets = {
     {Name = "0.8x (Slowed)", Badge = "0.8x", Speed = 0.8},
     {Name = "1x (Chuẩn)", Badge = "1x", Speed = 1.0},
@@ -561,21 +568,19 @@ do
     headerStatText.RichText = true; headerStatText.Text = "<font color='#38CC88'>60 FPS</font> • <font color='#58B6F2'>0ms</font>"
     headerStatText.TextColor3 = Theme.TextTitle; headerStatText.Font = Enum.Font.GothamBold; headerStatText.TextSize = 9; headerStatText.ZIndex = 13
 
-    -- Huy hiệu V1.22 3D Cyber-Badge nền tối dịu mắt
+    -- Huy hiệu V1.23 nền tối sâu, chữ sáng rõ nét trên Mobile
     local verBadge = Instance.new("TextLabel", header)
     verBadge.Size = UDim2.new(0, 48, 0, 21); verBadge.Position = UDim2.new(1, -83, 0.5, -10.5)
-    verBadge.BackgroundColor3 = Color3.fromRGB(255, 255, 255); verBadge.Text = "V1.22"; verBadge.TextColor3 = getSoftBrandColor(Theme.Brand)
-    verBadge.Font = Enum.Font.GothamBold; verBadge.TextSize = 9.2; verBadge.ZIndex = 12
+    verBadge.BackgroundColor3 = Color3.fromRGB(18, 22, 36); verBadge.Text = "V1.23"; verBadge.TextColor3 = getSoftBrandColor(Theme.Brand)
+    verBadge.Font = Enum.Font.GothamBold; verBadge.TextSize = 9.5; verBadge.ZIndex = 12
     Instance.new("UICorner", verBadge).CornerRadius = UDim.new(0, 7)
-    addSoftGradient(verBadge, Color3.fromRGB(22, 28, 46), Color3.fromRGB(14, 17, 28), 90)
-    local verStroke = Instance.new("UIStroke", verBadge); verStroke.Color = Theme.Brand; verStroke.Thickness = 0.95; verStroke.Transparency = 0.28
+    local verStroke = Instance.new("UIStroke", verBadge); verStroke.Color = Theme.Brand; verStroke.Thickness = 1.0; verStroke.Transparency = 0.25
 
     local minBtn = Instance.new("TextButton", header)
     minBtn.Size = UDim2.new(0, 24, 0, 22); minBtn.Position = UDim2.new(1, -29, 0.5, -11)
-    minBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255); minBtn.Text = "—"; minBtn.TextColor3 = Color3.fromRGB(195, 225, 255)
+    minBtn.BackgroundColor3 = Color3.fromRGB(26, 32, 50); minBtn.Text = "—"; minBtn.TextColor3 = Color3.fromRGB(220, 238, 255)
     minBtn.Font = Enum.Font.GothamBlack; minBtn.TextSize = 11; minBtn.AutoButtonColor = false; minBtn.ZIndex = 12
     Instance.new("UICorner", minBtn).CornerRadius = UDim.new(0, 7)
-    addSoftGradient(minBtn, Color3.fromRGB(34, 42, 68), Color3.fromRGB(20, 24, 40), 90)
     local minStroke = Instance.new("UIStroke", minBtn); minStroke.Color = Color3.fromRGB(72, 138, 225); minStroke.Thickness = 1; minStroke.Transparency = 0.25
 
     do
@@ -1075,7 +1080,7 @@ do
     minBtn.MouseButton1Click:Connect(function() clickAnimate(minBtn); toggleMenuWindow() end)
 end
 -- ==========================================
--- COMPONENTS HỆ THỐNG 3D CYBER-GLASS NEON V1.22
+-- COMPONENTS HỆ THỐNG 3D CYBER-GLASS NEON V1.23
 -- ==========================================
 local function splitLeadingIcon(rawText)
     local str = tostring(rawText or "")
@@ -3920,7 +3925,7 @@ do
     renderSavedTps()
 end
 -- ==========================================
--- [TAB 7: TP NGƯỜI CHƠI (CUỘN MƯỢT KHÔNG GIẬT + KHÔNG KẸT TƯ THẾ TP 1 LẦN)]
+-- [TAB 7: TP NGƯỜI CHƠI V1.23 (CHỌN KIỂU: TP ĐẾN / BAY ĐẾN / CHẠY ĐẾN + CUỘN MƯỢT)]
 -- ==========================================
 local targetTpPlayer = nil
 local autoTpPlayerEnabled = false
@@ -3930,211 +3935,388 @@ local lastSpectateStreamTick = 0
 local teleportToSelectedPlayer
 
 do
-local playerListContainer, playerListScroll
-local playerDistLabels = {}
-local playerCardRefs = {}
+    local playerListContainer, playerListScroll
+    local playerDistLabels = {}
+    local playerCardRefs = {}
+    local manualApproachActive = false
+    local manualApproachTicket = 0
+    local updateTpActionButtonsUI
 
-local function restoreNormalPosture()
-    local myChar = player.Character
-    if not myChar then return end
-    local myRoot = getUniversalRoot(myChar)
-    local myHum = myChar:FindFirstChildOfClass("Humanoid")
-    if myHum and not State.Fly then myHum.PlatformStand = false end
-    if myRoot then
-        myRoot.AssemblyLinearVelocity = Vector3.zero
-        myRoot.AssemblyAngularVelocity = Vector3.zero
-        local pos = myRoot.Position
-        local look = myRoot.CFrame.LookVector
-        local flatLook = Vector3.new(look.X, 0, look.Z)
-        if flatLook.Magnitude > 0.001 then
-            myRoot.CFrame = CFrame.lookAt(pos, pos + flatLook.Unit)
-        else
-            myRoot.CFrame = CFrame.new(pos)
+    local function restoreNormalPosture()
+        local myChar = player.Character
+        if not myChar then return end
+        local myRoot = getUniversalRoot(myChar)
+        local myHum = myChar:FindFirstChildOfClass("Humanoid")
+        if myHum and not State.Fly then myHum.PlatformStand = false end
+        if myRoot then
+            myRoot.AssemblyLinearVelocity = Vector3.zero
+            myRoot.AssemblyAngularVelocity = Vector3.zero
+            local pos = myRoot.Position
+            local look = myRoot.CFrame.LookVector
+            local flatLook = Vector3.new(look.X, 0, look.Z)
+            if flatLook.Magnitude > 0.001 then
+                myRoot.CFrame = CFrame.lookAt(pos, pos + flatLook.Unit)
+            else
+                myRoot.CFrame = CFrame.new(pos)
+            end
+        end
+        if not State.Noclip then
+            for _, part in ipairs(myChar:GetDescendants()) do
+                if part:IsA("BasePart") then part.CanCollide = true end
+            end
+        end
+        wasHorizontalTp = false
+    end
+
+    local function stopManualApproach()
+        manualApproachTicket = manualApproachTicket + 1
+        if manualApproachActive then
+            manualApproachActive = false
+            restoreNormalPosture()
+            if updateTpActionButtonsUI then updateTpActionButtonsUI() end
         end
     end
-    if not State.Noclip then
-        for _, part in ipairs(myChar:GetDescendants()) do
-            if part:IsA("BasePart") then part.CanCollide = true end
-        end
-    end
-    wasHorizontalTp = false
-end
 
-local lastStreamRequest = 0
-teleportToSelectedPlayer = function(isManualClick)
-    if not targetTpPlayer or not targetTpPlayer.Character then return false end
-    local targetCF = getCharacterCFrame(targetTpPlayer.Character)
-    local targetHum = targetTpPlayer.Character:FindFirstChildOfClass("Humanoid")
+    local lastStreamRequest = 0
+    local lastWalkMoveTick = 0
 
-    local myChar = player.Character
-    if not myChar then return false end
-    local myRoot = getUniversalRoot(myChar)
-    local myHum = myChar:FindFirstChildOfClass("Humanoid")
+    -- Hàm tính toán CFrame đích dựa theo Vị trí đứng (Sau lưng / Trước mặt / Trên đầu / Dưới chân) & Khoảng cách
+    local function computeTargetDestination(isInstantMode, isManualClick)
+        if not targetTpPlayer or not targetTpPlayer.Character then return nil, nil, nil end
+        local targetCF = getCharacterCFrame(targetTpPlayer.Character)
+        local targetHum = targetTpPlayer.Character:FindFirstChildOfClass("Humanoid")
+        if not targetCF or (targetHum and targetHum.Health <= 0) then return nil, nil, nil end
 
-    if targetCF and myRoot and (not targetHum or targetHum.Health > 0) and (not myHum or myHum.Health > 0) then
         local mode = TpPositions[State.TpPositionIdx] or TpPositions[1]
         local targetPos = targetCF.Position
-        local dist = (myRoot.Position - targetPos).Magnitude
-
-        if (dist > 250 or not getUniversalRoot(targetTpPlayer.Character)) and (tick() - lastStreamRequest > 0.6) then
-            lastStreamRequest = tick()
-            task.spawn(function() pcall(function() player:RequestStreamAroundAsync(targetPos, 3) end) end)
-        end
-
         local _, targetYaw, _ = targetCF:ToEulerAnglesYXZ()
         local baseCFrame = CFrame.new(targetPos) * CFrame.Angles(0, targetYaw, 0)
         local finalCFrame = baseCFrame * mode.GetOffset(State.TpDistance)
 
-        if mode.IsHorizontal and autoTpPlayerEnabled then
-            if myHum then myHum.PlatformStand = true end
-            wasHorizontalTp = true
+        if mode.IsHorizontal and (not isInstantMode or (isManualClick and not autoTpPlayerEnabled)) then
+            finalCFrame = CFrame.new(finalCFrame.Position) * CFrame.Angles(0, targetYaw, 0)
+        end
+        return finalCFrame, targetPos, mode
+    end
+
+    -- Thực thi 1 bước tiếp cận mục tiêu theo kiểu đã chọn (1: TP đến | 2: Bay đến | 3: Chạy đến)
+    local function stepApproachToTarget(dt, isManualOnce)
+        local myChar = player.Character
+        if not myChar then return false, 0 end
+        local myRoot = getUniversalRoot(myChar)
+        local myHum = myChar:FindFirstChildOfClass("Humanoid")
+        if not myRoot or (myHum and myHum.Health <= 0) then return false, 0 end
+
+        local methodIdx = State.TpMoveMethodIdx or 1
+        local isInstant = (methodIdx == 1)
+        local finalCF, rawTargetPos, posMode = computeTargetDestination(isInstant, isManualOnce)
+        if not finalCF then return false, 0 end
+
+        local destPos = finalCF.Position
+        local curPos = myRoot.Position
+        local distToDest = (destPos - curPos).Magnitude
+        local distToTarget = (rawTargetPos - curPos).Magnitude
+
+        if (distToTarget > 250 or not getUniversalRoot(targetTpPlayer.Character)) and (tick() - lastStreamRequest > 0.6) then
+            lastStreamRequest = tick()
+            task.spawn(function() pcall(function() player:RequestStreamAroundAsync(rawTargetPos, 3) end) end)
+        end
+
+        if methodIdx == 1 then
+            -- KIỂU 1: ⚡ TP ĐẾN (Dịch chuyển tức thì)
+            if posMode.IsHorizontal and autoTpPlayerEnabled then
+                if myHum then myHum.PlatformStand = true end
+                wasHorizontalTp = true
+                for _, part in ipairs(myChar:GetDescendants()) do
+                    if part:IsA("BasePart") and part.CanCollide then part.CanCollide = false end
+                end
+            elseif wasHorizontalTp then
+                restoreNormalPosture()
+            end
+
+            myRoot.CFrame = finalCF
+            myRoot.AssemblyLinearVelocity = Vector3.zero
+            myRoot.AssemblyAngularVelocity = Vector3.zero
+            if State.AirWalk then airWalkY = myRoot.Position.Y - getFootOffset(myChar) end
+            return true, 0
+
+        elseif methodIdx == 2 then
+            -- KIỂU 2: 🕊️ BAY ĐẾN (Bay lướt mượt mà xuyên vật cản tới mục tiêu)
             for _, part in ipairs(myChar:GetDescendants()) do
                 if part:IsA("BasePart") and part.CanCollide then part.CanCollide = false end
             end
-        elseif mode.IsHorizontal and isManualClick then
-            -- Khi chỉ bấm "TP 1 LẦN" ở chế độ Trên Đầu / Dưới Chân: đặt nhân vật đứng thẳng tại điểm đích hoặc tự trả lại tư thế ngay để không bị kẹt nằm đơ
-            finalCFrame = CFrame.new(finalCFrame.Position) * CFrame.Angles(0, targetYaw, 0)
+            wasHorizontalTp = true
+            myRoot.AssemblyLinearVelocity = Vector3.zero
+            myRoot.AssemblyAngularVelocity = Vector3.zero
+
+            local flySpeed = 185 -- Studs/giây (bay mượt & chống giật lại)
+            local stepDist = flySpeed * math.clamp(dt or 0.03, 0.01, 0.1)
+            if distToDest <= math.max(stepDist, 2.2) then
+                myRoot.CFrame = finalCF
+            else
+                local dir = (destPos - curPos).Unit
+                local nextPos = curPos + dir * stepDist
+                local flatLook = Vector3.new(rawTargetPos.X - nextPos.X, 0, rawTargetPos.Z - nextPos.Z)
+                if flatLook.Magnitude > 0.05 then
+                    myRoot.CFrame = CFrame.lookAt(nextPos, nextPos + flatLook.Unit)
+                else
+                    myRoot.CFrame = CFrame.new(nextPos)
+                end
+            end
+            if State.AirWalk then airWalkY = myRoot.Position.Y - getFootOffset(myChar) end
+            return true, distToDest
+
+        else
+            -- KIỂU 3: 🏃 CHẠY ĐẾN (Chạy bộ thông minh tới mục tiêu + tự nhảy vượt chướng ngại vật)
             if wasHorizontalTp then restoreNormalPosture() end
-        elseif wasHorizontalTp then
-            restoreNormalPosture()
+            if myHum then
+                if myHum.PlatformStand and not State.Fly then myHum.PlatformStand = false end
+                if myHum.Sit then myHum.Sit = false end
+
+                if distToDest > 2.8 then
+                    if tick() - lastWalkMoveTick > 0.12 then
+                        lastWalkMoveTick = tick()
+                        myHum:MoveTo(destPos)
+                    end
+                    -- Tự động nhảy nếu phía trước có vật cản hoặc mục tiêu ở vị trí cao hơn
+                    local moveDir = (Vector3.new(destPos.X, curPos.Y, destPos.Z) - curPos)
+                    if moveDir.Magnitude > 1.5 then
+                        local rayParams = RaycastParams.new()
+                        rayParams.FilterDescendantsInstances = {myChar, targetTpPlayer.Character}
+                        rayParams.FilterType = Enum.RaycastFilterType.Exclude
+                        local hit = workspace:Raycast(curPos, moveDir.Unit * 4.5, rayParams)
+                        if hit or (destPos.Y - curPos.Y > 3.5) then
+                            myHum.Jump = true
+                        end
+                    end
+                else
+                    myHum:MoveTo(curPos)
+                end
+            end
+            return true, distToDest
+        end
+    end
+
+    teleportToSelectedPlayer = function(isManualClick)
+        if not targetTpPlayer or not targetTpPlayer.Character then return false end
+        local methodIdx = State.TpMoveMethodIdx or 1
+
+        -- Khi đang ở trong vòng lặp Heartbeat của Auto TP / Auto Bay / Auto Chạy
+        if not isManualClick then
+            local ok = stepApproachToTarget(0.03, false)
+            return ok
         end
 
-        myRoot.CFrame = finalCFrame
-        myRoot.AssemblyLinearVelocity = Vector3.zero
-        myRoot.AssemblyAngularVelocity = Vector3.zero
-        if State.AirWalk then airWalkY = myRoot.Position.Y - getFootOffset(myChar) end
-
-        if isManualClick and dist > 500 then
-            task.spawn(function()
-                for _ = 1, 6 do
-                    task.wait(0.1)
-                    if not targetTpPlayer or not targetTpPlayer.Character then break end
-                    local updatedCF = getCharacterCFrame(targetTpPlayer.Character)
-                    local curRoot = getUniversalRoot(player.Character)
-                    if updatedCF and curRoot then
-                        local _, yaw, _ = updatedCF:ToEulerAnglesYXZ()
-                        local bCF = CFrame.new(updatedCF.Position) * CFrame.Angles(0, yaw, 0)
-                        local stepCF = bCF * mode.GetOffset(State.TpDistance)
-                        if mode.IsHorizontal and not autoTpPlayerEnabled then
-                            stepCF = CFrame.new(stepCF.Position) * CFrame.Angles(0, yaw, 0)
+        -- Khi người dùng bấm nút hành động 1 LẦN
+        if methodIdx == 1 then
+            stopManualApproach()
+            local ok = stepApproachToTarget(0.03, true)
+            if ok then
+                local myChar = player.Character
+                local myRoot = getUniversalRoot(myChar)
+                local tCF = getCharacterCFrame(targetTpPlayer.Character)
+                if myRoot and tCF and (myRoot.Position - tCF.Position).Magnitude > 500 then
+                    task.spawn(function()
+                        for _ = 1, 6 do
+                            task.wait(0.1)
+                            if not targetTpPlayer or not targetTpPlayer.Character then break end
+                            stepApproachToTarget(0.1, true)
                         end
-                        curRoot.CFrame = stepCF
-                        curRoot.AssemblyLinearVelocity = Vector3.zero
+                    end)
+                end
+            end
+            return ok
+        else
+            -- Nếu đang trong quá trình Bay đến / Chạy đến 1 lần mà bấm lại -> Dừng ngay
+            if manualApproachActive then
+                stopManualApproach()
+                MakeToast("⏹ Đã Dừng Di Chuyển", "Đã dừng quá trình di chuyển đến mục tiêu", Theme.AccentOff)
+                return true
+            end
+            manualApproachTicket = manualApproachTicket + 1
+            local myTicket = manualApproachTicket
+            manualApproachActive = true
+            if updateTpActionButtonsUI then updateTpActionButtonsUI() end
+
+            task.spawn(function()
+                local startTick = tick()
+                while manualApproachActive and manualApproachTicket == myTicket do
+                    if not targetTpPlayer or not targetTpPlayer.Character then break end
+                    local myChar = player.Character
+                    local myHum = myChar and myChar:FindFirstChildOfClass("Humanoid")
+                    if not myChar or not myHum or myHum.Health <= 0 then break end
+
+                    -- Nếu đang ở chế độ Chạy đến mà người chơi chủ động chạm nút nhảy/kéo joystick sau 0.6s hoặc quá 25s thì dừng
+                    if tick() - startTick > 25 then break end
+
+                    local ok, remDist = stepApproachToTarget(0.03, true)
+                    if not ok or remDist <= 3.0 then
+                        break
                     end
+                    task.wait(0.03)
+                end
+                if manualApproachTicket == myTicket then
+                    manualApproachActive = false
+                    if not autoTpPlayerEnabled then
+                        restoreNormalPosture()
+                    end
+                    if updateTpActionButtonsUI then updateTpActionButtonsUI() end
                 end
             end)
+            return true
         end
-        return true
     end
-    return false
-end
 
-local function resetCameraSubject()
-    pcall(function()
-        if spectateProxyPart then spectateProxyPart:Destroy(); spectateProxyPart = nil end
-        player.ReplicationFocus = nil
-        local cam = workspace.CurrentCamera
-        if cam and player.Character then
-            local myHum = player.Character:FindFirstChildOfClass("Humanoid")
-            if myHum then cam.CameraType = Enum.CameraType.Custom; cam.CameraSubject = myHum end
-        end
-    end)
-end
+    local function resetCameraSubject()
+        pcall(function()
+            if spectateProxyPart then spectateProxyPart:Destroy(); spectateProxyPart = nil end
+            player.ReplicationFocus = nil
+            local cam = workspace.CurrentCamera
+            if cam and player.Character then
+                local myHum = player.Character:FindFirstChildOfClass("Humanoid")
+                if myHum then cam.CameraType = Enum.CameraType.Custom; cam.CameraSubject = myHum end
+            end
+        end)
+    end
 
+    -- KHUNG ĐIỀU KHIỂN TRUNG TÂM TAB 7 (Cao 112px: Mục tiêu + Danh sách 3 kiểu tiếp cận + Vị trí đứng + Khoảng cách)
     local tpControlCard = Instance.new("Frame", page7)
-    tpControlCard.Size = UDim2.new(0.94, 0, 0, 88); tpControlCard.BackgroundColor3 = Theme.ItemBg
+    tpControlCard.Size = UDim2.new(0.94, 0, 0, 112); tpControlCard.BackgroundColor3 = Theme.ItemBg
     tpControlCard.LayoutOrder = 1; tpControlCard.ZIndex = 10
-    Instance.new("UICorner", tpControlCard).CornerRadius = UDim.new(0, 8)
+    Instance.new("UICorner", tpControlCard).CornerRadius = UDim.new(0, 9)
     local tpCardStroke = Instance.new("UIStroke", tpControlCard); tpCardStroke.Color = Theme.Stroke; tpCardStroke.Thickness = 1
     table.insert(RGBElements, {Type = "Info", Stroke = tpCardStroke})
 
-    -- Mở rộng khung hiển thị mục tiêu (cao 32px, avatar 24x24, chữ to rõ hơn)
+    -- Hàng 1: Mục tiêu đang chọn + Nút XEM
     local targetHeaderRow = Instance.new("Frame", tpControlCard)
-    targetHeaderRow.Size = UDim2.new(1, -12, 0, 32); targetHeaderRow.Position = UDim2.new(0, 6, 0, 4)
+    targetHeaderRow.Size = UDim2.new(1, -12, 0, 30); targetHeaderRow.Position = UDim2.new(0, 6, 0, 4)
     targetHeaderRow.BackgroundColor3 = Color3.fromRGB(16, 18, 26); targetHeaderRow.ZIndex = 10
     Instance.new("UICorner", targetHeaderRow).CornerRadius = UDim.new(0, 7)
     local thrStroke = Instance.new("UIStroke", targetHeaderRow); thrStroke.Color = Theme.Stroke; thrStroke.Thickness = 0.8; thrStroke.Transparency = 0.35
 
     local selectedAvatarImg = Instance.new("ImageLabel", targetHeaderRow)
-    selectedAvatarImg.Size = UDim2.new(0, 24, 0, 24); selectedAvatarImg.Position = UDim2.new(0, 6, 0.5, -12)
+    selectedAvatarImg.Size = UDim2.new(0, 22, 0, 22); selectedAvatarImg.Position = UDim2.new(0, 6, 0.5, -11)
     selectedAvatarImg.BackgroundColor3 = Color3.fromRGB(30, 34, 46); selectedAvatarImg.Image = "rbxassetid://0"; selectedAvatarImg.ZIndex = 10
     Instance.new("UICorner", selectedAvatarImg).CornerRadius = UDim.new(1, 0)
     local selAvaStroke = Instance.new("UIStroke", selectedAvatarImg); selAvaStroke.Color = Theme.Brand; selAvaStroke.Thickness = 1.2
 
     local targetStatusLabel = Instance.new("TextLabel", targetHeaderRow)
-    targetStatusLabel.Size = UDim2.new(1, -114, 1, 0); targetStatusLabel.Position = UDim2.new(0, 35, 0, 0)
+    targetStatusLabel.Size = UDim2.new(1, -112, 1, 0); targetStatusLabel.Position = UDim2.new(0, 33, 0, 0)
     targetStatusLabel.BackgroundTransparency = 1; targetStatusLabel.RichText = true
     targetStatusLabel.Text = "🎯 <font color='#C97A86'>Chưa chọn mục tiêu</font>"; targetStatusLabel.TextColor3 = Theme.TextTitle
-    targetStatusLabel.Font = Enum.Font.GothamBold; targetStatusLabel.TextSize = 11; targetStatusLabel.TextTruncate = Enum.TextTruncate.AtEnd
+    targetStatusLabel.Font = Enum.Font.GothamBold; targetStatusLabel.TextSize = 10.5; targetStatusLabel.TextTruncate = Enum.TextTruncate.AtEnd
     targetStatusLabel.TextXAlignment = Enum.TextXAlignment.Left; targetStatusLabel.ZIndex = 10
 
     local spectateBtn = Instance.new("TextButton", targetHeaderRow)
-    spectateBtn.Size = UDim2.new(0, 72, 0, 22); spectateBtn.Position = UDim2.new(1, -76, 0.5, -11)
+    spectateBtn.Size = UDim2.new(0, 72, 0, 21); spectateBtn.Position = UDim2.new(1, -76, 0.5, -10.5)
     spectateBtn.BackgroundColor3 = Color3.fromRGB(22, 20, 28); spectateBtn.Text = "👁️ XEM [TẮT]"
-    spectateBtn.TextColor3 = Color3.fromRGB(185, 115, 126); spectateBtn.Font = Enum.Font.GothamSemibold; spectateBtn.TextSize = 8.5
+    spectateBtn.TextColor3 = Color3.fromRGB(185, 115, 126); spectateBtn.Font = Enum.Font.GothamSemibold; spectateBtn.TextSize = 8.4
     spectateBtn.AutoButtonColor = false; spectateBtn.ZIndex = 10
     Instance.new("UICorner", spectateBtn).CornerRadius = UDim.new(0, 5)
     local spectateStroke = Instance.new("UIStroke", spectateBtn); spectateStroke.Color = Color3.fromRGB(165, 85, 98); spectateStroke.Thickness = 0.9; spectateStroke.Transparency = 0.45
 
+    -- Hàng 2: Danh sách 3 kiểu tiếp cận (⚡ TP đến | 🕊️ Bay đến | 🏃 Chạy đến)
+    local methodListRow = Instance.new("Frame", tpControlCard)
+    methodListRow.Size = UDim2.new(1, -12, 0, 22); methodListRow.Position = UDim2.new(0, 6, 0, 37)
+    methodListRow.BackgroundColor3 = Color3.fromRGB(14, 17, 26); methodListRow.ZIndex = 10
+    Instance.new("UICorner", methodListRow).CornerRadius = UDim.new(0, 6)
+    local mlrStroke = Instance.new("UIStroke", methodListRow); mlrStroke.Color = Color3.fromRGB(42, 50, 72); mlrStroke.Thickness = 0.8
+
+    local methodBtns = {}
+    local function syncMethodListVisuals()
+        local curIdx = State.TpMoveMethodIdx or 1
+        for idx, ref in ipairs(methodBtns) do
+            local isSel = (idx == curIdx)
+            ref.Btn.BackgroundColor3 = isSel and Color3.fromRGB(22, 46, 58) or Color3.fromRGB(16, 19, 29)
+            ref.Btn.TextColor3 = isSel and Color3.fromRGB(115, 242, 255) or Color3.fromRGB(138, 150, 174)
+            ref.Stroke.Color = isSel and Color3.fromRGB(68, 225, 255) or Color3.fromRGB(36, 42, 60)
+            ref.Stroke.Transparency = isSel and 0.15 or 0.55
+        end
+        if updateTpActionButtonsUI then updateTpActionButtonsUI() end
+    end
+
+    for idx, mInfo in ipairs(TpMoveMethods) do
+        local mBtn = Instance.new("TextButton", methodListRow)
+        mBtn.Size = UDim2.new(1 / 3 - 0.012, 0, 1, -4)
+        mBtn.Position = UDim2.new((idx - 1) / 3 + 0.006, 0, 0, 2)
+        mBtn.Text = mInfo.Icon .. " " .. mInfo.Name
+        mBtn.Font = Enum.Font.GothamBold
+        mBtn.TextSize = 8.8
+        mBtn.AutoButtonColor = false
+        mBtn.ZIndex = 11
+        Instance.new("UICorner", mBtn).CornerRadius = UDim.new(0, 5)
+        local mSt = Instance.new("UIStroke", mBtn); mSt.Thickness = 0.9
+        methodBtns[idx] = {Btn = mBtn, Stroke = mSt}
+
+        mBtn.MouseButton1Click:Connect(function()
+            clickAnimate(mBtn)
+            if State.TpMoveMethodIdx ~= idx then
+                stopManualApproach()
+                State.TpMoveMethodIdx = idx
+                syncMethodListVisuals()
+                MakeToast("Kiểu Tiếp Cận", "Đã chọn chế độ: " .. mInfo.Icon .. " " .. mInfo.Name, Theme.Brand)
+                if State.AutoSave then saveConfig() end
+            end
+        end)
+    end
+
+    -- Hàng 3: Chọn vị trí đứng so với mục tiêu (Sau lưng / Trước mặt / Trên đầu / Dưới chân)
     local tpPosBtn = Instance.new("TextButton", tpControlCard)
-    tpPosBtn.Size = UDim2.new(1, -12, 0, 22); tpPosBtn.Position = UDim2.new(0, 6, 0, 39)
+    tpPosBtn.Size = UDim2.new(1, -12, 0, 21); tpPosBtn.Position = UDim2.new(0, 6, 0, 62)
     tpPosBtn.BackgroundColor3 = Color3.fromRGB(20, 26, 38); tpPosBtn.Text = ""; tpPosBtn.AutoButtonColor = false; tpPosBtn.ZIndex = 10
     Instance.new("UICorner", tpPosBtn).CornerRadius = UDim.new(0, 6)
-    local tpPosStroke = Instance.new("UIStroke", tpPosBtn); tpPosStroke.Color = Theme.Brand; tpPosStroke.Thickness = 1; tpPosStroke.Transparency = 0.35
+    local tpPosStroke = Instance.new("UIStroke", tpPosBtn); tpPosStroke.Color = Theme.Brand; tpPosStroke.Thickness = 0.95; tpPosStroke.Transparency = 0.35
     table.insert(RGBElements, {Type = "Button", Stroke = tpPosStroke, DefaultColor = Theme.Brand, UseBrand = true})
 
     local tpPosLabel = Instance.new("TextLabel", tpPosBtn)
     tpPosLabel.Size = UDim2.new(1, 0, 1, 0); tpPosLabel.BackgroundTransparency = 1; tpPosLabel.RichText = true
-    tpPosLabel.TextColor3 = Color3.fromRGB(210, 218, 232); tpPosLabel.Font = Enum.Font.GothamSemibold; tpPosLabel.TextSize = 10; tpPosLabel.ZIndex = 10
+    tpPosLabel.TextColor3 = Color3.fromRGB(210, 218, 232); tpPosLabel.Font = Enum.Font.GothamSemibold; tpPosLabel.TextSize = 9.5; tpPosLabel.ZIndex = 10
 
     local function updateTpPosText()
         local item = TpPositions[State.TpPositionIdx] or TpPositions[1]
-        tpPosLabel.Text = "📍 VỊ TRÍ TP: <font color='#D8B868'>" .. item.Upper .. "</font>"
+        tpPosLabel.Text = "📍 VỊ TRÍ ĐỨNG: <font color='#D8B868'>" .. item.Upper .. "</font> <font color='#7E8CA8'>(Chạm để đổi)</font>"
     end
     updateTpPosText()
 
     tpPosBtn.MouseButton1Click:Connect(function()
         clickAnimate(tpPosBtn)
-        State.TpPositionIdx = State.TpPositionIdx + 1
-        if State.TpPositionIdx > #TpPositions then State.TpPositionIdx = 1 end
+        State.TpPositionIdx = (State.TpPositionIdx % #TpPositions) + 1
         updateTpPosText()
         local currentMode = TpPositions[State.TpPositionIdx] or TpPositions[1]
         if not currentMode.IsHorizontal and wasHorizontalTp then restoreNormalPosture() end
         if State.AutoSave then saveConfig() end
     end)
 
+    -- Hàng 4: Khoảng cách đứng (Studs)
     local tpDistContainer = Instance.new("Frame", tpControlCard)
-    tpDistContainer.Size = UDim2.new(1, -12, 0, 22); tpDistContainer.Position = UDim2.new(0, 6, 0, 63)
+    tpDistContainer.Size = UDim2.new(1, -12, 0, 22); tpDistContainer.Position = UDim2.new(0, 6, 0, 86)
     tpDistContainer.BackgroundTransparency = 1; tpDistContainer.ZIndex = 10
 
     local tpDistTitle = Instance.new("TextLabel", tpDistContainer)
     tpDistTitle.Size = UDim2.new(0.7, 0, 0, 11); tpDistTitle.Position = UDim2.new(0, 2, 0, 0)
     tpDistTitle.BackgroundTransparency = 1; tpDistTitle.Text = "📏 Khoảng cách đứng (Studs):"
-    tpDistTitle.TextColor3 = Theme.TextDim; tpDistTitle.Font = Enum.Font.GothamSemibold; tpDistTitle.TextSize = 9.5; tpDistTitle.TextXAlignment = Enum.TextXAlignment.Left; tpDistTitle.ZIndex = 10
+    tpDistTitle.TextColor3 = Theme.TextDim; tpDistTitle.Font = Enum.Font.GothamSemibold; tpDistTitle.TextSize = 9.2; tpDistTitle.TextXAlignment = Enum.TextXAlignment.Left; tpDistTitle.ZIndex = 10
 
     local tpDistValLabel = Instance.new("TextLabel", tpDistContainer)
     tpDistValLabel.Size = UDim2.new(0.3, -4, 0, 11); tpDistValLabel.Position = UDim2.new(0.7, 0, 0, 0)
     tpDistValLabel.BackgroundTransparency = 1; tpDistValLabel.Text = tostring(State.TpDistance) .. " m"
-    tpDistValLabel.TextColor3 = Color3.fromRGB(240, 200, 104); tpDistValLabel.Font = Enum.Font.GothamBold; tpDistValLabel.TextSize = 10; tpDistValLabel.TextXAlignment = Enum.TextXAlignment.Right; tpDistValLabel.ZIndex = 10
+    tpDistValLabel.TextColor3 = Color3.fromRGB(240, 200, 104); tpDistValLabel.Font = Enum.Font.GothamBold; tpDistValLabel.TextSize = 9.8; tpDistValLabel.TextXAlignment = Enum.TextXAlignment.Right; tpDistValLabel.ZIndex = 10
 
     local tpDistTrack = Instance.new("Frame", tpDistContainer)
     tpDistTrack.Size = UDim2.new(1, -4, 0, 5); tpDistTrack.Position = UDim2.new(0, 2, 0, 14)
-    tpDistTrack.BackgroundColor3 = Color3.fromRGB(16, 17, 24); tpDistTrack.ZIndex = 10
+    tpDistTrack.BackgroundColor3 = Color3.fromRGB(14, 17, 26); tpDistTrack.ZIndex = 10
     Instance.new("UICorner", tpDistTrack).CornerRadius = UDim.new(1, 0)
 
     local initTpPos = math.clamp((State.TpDistance - 1) / 24, 0, 1)
     local tpDistFill = Instance.new("Frame", tpDistTrack)
-    tpDistFill.Size = UDim2.new(initTpPos, 0, 1, 0); tpDistFill.BackgroundColor3 = Theme.Brand; tpDistFill.ZIndex = 11
+    tpDistFill.Size = UDim2.new(initTpPos, 0, 1, 0); tpDistFill.BackgroundColor3 = Color3.fromRGB(255, 255, 255); tpDistFill.ZIndex = 11
     Instance.new("UICorner", tpDistFill).CornerRadius = UDim.new(1, 0)
+    applyCyberSliderFillGrad(tpDistFill, false)
 
     local tpKnob = Instance.new("Frame", tpDistTrack)
     tpKnob.Size = UDim2.new(0, 10, 0, 10); tpKnob.AnchorPoint = Vector2.new(0.5, 0.5)
     tpKnob.Position = UDim2.new(initTpPos, 0, 0.5, 0); tpKnob.BackgroundColor3 = Color3.fromRGB(240, 248, 255); tpKnob.ZIndex = 12
     Instance.new("UICorner", tpKnob).CornerRadius = UDim.new(1, 0)
-
-    registerBrandUpdater(function(newBrand)
-        if tpDistFill and tpDistFill.Parent then tpDistFill.BackgroundColor3 = newBrand end
-    end)
 
     local tpDistDragInput = nil
     local function updateTpDistSlider(input)
@@ -4176,35 +4358,49 @@ end
         end
     end
 
+    -- Hàng nút hành động (TP 1 LẦN / BAY ĐẾN / CHẠY ĐẾN + AUTO BÁM THEO)
     local tpActionRow = Instance.new("Frame", page7)
     tpActionRow.Size = UDim2.new(0.94, 0, 0, 26); tpActionRow.BackgroundTransparency = 1; tpActionRow.LayoutOrder = 2
 
     local tpOnceBtn = Instance.new("TextButton", tpActionRow)
     tpOnceBtn.Size = UDim2.new(0.486, 0, 1, 0); tpOnceBtn.BackgroundColor3 = Color3.fromRGB(19, 24, 34)
-    tpOnceBtn.Text = "⚡ TP 1 LẦN"; tpOnceBtn.TextColor3 = getSoftBrandColor(Theme.Brand); tpOnceBtn.Font = Enum.Font.GothamSemibold; tpOnceBtn.TextSize = 9.5
+    tpOnceBtn.Text = "⚡ TP ĐẾN (1 LẦN)"; tpOnceBtn.TextColor3 = getSoftBrandColor(Theme.Brand); tpOnceBtn.Font = Enum.Font.GothamBold; tpOnceBtn.TextSize = 9.0
     tpOnceBtn.AutoButtonColor = false; tpOnceBtn.ZIndex = 10
     Instance.new("UICorner", tpOnceBtn).CornerRadius = UDim.new(0, 6)
-    local tpOnceStroke = Instance.new("UIStroke", tpOnceBtn); tpOnceStroke.Color = Theme.Brand; tpOnceStroke.Thickness = 1; tpOnceStroke.Transparency = 0.4
+    local tpOnceStroke = Instance.new("UIStroke", tpOnceBtn); tpOnceStroke.Color = Theme.Brand; tpOnceStroke.Thickness = 1; tpOnceStroke.Transparency = 0.35
     table.insert(RGBElements, {Type = "Button", Stroke = tpOnceStroke, DefaultColor = Theme.Brand, UseBrand = true})
-    registerBrandUpdater(function(newBrand)
-        if tpOnceBtn and tpOnceBtn.Parent then tpOnceBtn.TextColor3 = getSoftBrandColor(newBrand) end
-    end)
 
     local autoTpBtn = Instance.new("TextButton", tpActionRow)
     autoTpBtn.Size = UDim2.new(0.486, 0, 1, 0); autoTpBtn.Position = UDim2.new(0.514, 0, 0, 0)
     autoTpBtn.BackgroundColor3 = Color3.fromRGB(22, 20, 28); autoTpBtn.Text = "🔁 AUTO TP [TẮT]"
-    autoTpBtn.TextColor3 = Color3.fromRGB(185, 115, 126); autoTpBtn.Font = Enum.Font.GothamSemibold; autoTpBtn.TextSize = 9.5
+    autoTpBtn.TextColor3 = Color3.fromRGB(185, 115, 126); autoTpBtn.Font = Enum.Font.GothamBold; autoTpBtn.TextSize = 9.0
     autoTpBtn.AutoButtonColor = false; autoTpBtn.ZIndex = 10
     Instance.new("UICorner", autoTpBtn).CornerRadius = UDim.new(0, 6)
     local autoTpStroke = Instance.new("UIStroke", autoTpBtn); autoTpStroke.Color = Color3.fromRGB(165, 85, 98); autoTpStroke.Thickness = 1; autoTpStroke.Transparency = 0.45
     table.insert(RGBElements, {Type = "Toggle", Stroke = autoTpStroke, State = function() return autoTpPlayerEnabled end})
 
-    local function updateAutoTpBtnUI()
-        autoTpBtn.Text = autoTpPlayerEnabled and "🔁 AUTO TP [BẬT]" or "🔁 AUTO TP [TẮT]"
+    updateTpActionButtonsUI = function()
+        local mInfo = TpMoveMethods[State.TpMoveMethodIdx] or TpMoveMethods[1]
+        if manualApproachActive then
+            tpOnceBtn.Text = "⏹ DỪNG " .. string.upper(mInfo.Name)
+            tpOnceBtn.TextColor3 = Color3.fromRGB(245, 195, 95)
+            tpOnceBtn.BackgroundColor3 = Color3.fromRGB(36, 28, 18)
+        else
+            tpOnceBtn.Text = mInfo.BtnOnce
+            tpOnceBtn.TextColor3 = getSoftBrandColor(Theme.Brand)
+            tpOnceBtn.BackgroundColor3 = Color3.fromRGB(19, 24, 34)
+        end
+
+        autoTpBtn.Text = mInfo.BtnAuto .. (autoTpPlayerEnabled and " [BẬT]" or " [TẮT]")
         autoTpBtn.TextColor3 = autoTpPlayerEnabled and Color3.fromRGB(86, 194, 139) or Color3.fromRGB(185, 115, 126)
         autoTpBtn.BackgroundColor3 = autoTpPlayerEnabled and Color3.fromRGB(18, 32, 26) or Color3.fromRGB(22, 20, 28)
         if not State.RGB then autoTpStroke.Color = autoTpPlayerEnabled and Color3.fromRGB(70, 165, 115) or Color3.fromRGB(165, 85, 98) end
     end
+
+    registerBrandUpdater(function()
+        if updateTpActionButtonsUI then updateTpActionButtonsUI() end
+    end)
+    syncMethodListVisuals()
 
     local function updateSpectateBtnUI()
         spectateBtn.Text = spectatePlayerEnabled and "👁️ XEM [BẬT]" or "👁️ XEM [TẮT]"
@@ -4216,9 +4412,13 @@ end
     tpOnceBtn.MouseButton1Click:Connect(function()
         clickAnimate(tpOnceBtn)
         if not targetTpPlayer then MakeToast("⚠️ Chưa chọn ai", "Hãy bấm chọn 1 người chơi ở danh sách dưới!", Theme.AccentOff); return end
+        local wasActive = manualApproachActive
         if teleportToSelectedPlayer(true) then
-            local modeName = (TpPositions[State.TpPositionIdx] or TpPositions[1]).Name
-            MakeToast("Dịch Chuyển", "Đến " .. targetTpPlayer.DisplayName .. " (" .. modeName .. ")", Theme.Brand)
+            if not wasActive then
+                local mInfo = TpMoveMethods[State.TpMoveMethodIdx] or TpMoveMethods[1]
+                local posName = (TpPositions[State.TpPositionIdx] or TpPositions[1]).Name
+                MakeToast(mInfo.Icon .. " " .. mInfo.Name, "Đến " .. targetTpPlayer.DisplayName .. " (" .. posName .. ")", Theme.Brand)
+            end
         else
             MakeToast("Lỗi", "Người chơi chưa tải nhân vật hoặc đã chết!", Theme.AccentOff)
         end
@@ -4227,13 +4427,15 @@ end
     autoTpBtn.MouseButton1Click:Connect(function()
         clickAnimate(autoTpBtn)
         if not targetTpPlayer then MakeToast("⚠️ Chưa chọn ai", "Hãy bấm chọn 1 người chơi ở danh sách dưới!", Theme.AccentOff); return end
+        stopManualApproach()
         autoTpPlayerEnabled = not autoTpPlayerEnabled
-        updateAutoTpBtnUI()
+        updateTpActionButtonsUI()
+        local mInfo = TpMoveMethods[State.TpMoveMethodIdx] or TpMoveMethods[1]
         if autoTpPlayerEnabled then
-            MakeToast("Đã Bật Auto TP", "Đang bám theo " .. targetTpPlayer.DisplayName, Theme.AccentOn)
+            MakeToast("Đã Bật " .. mInfo.BtnAuto, "Đang " .. string.lower(mInfo.Name) .. " bám theo " .. targetTpPlayer.DisplayName, Theme.AccentOn)
         else
             restoreNormalPosture()
-            MakeToast("Đã Tắt Auto TP", "Đã dừng bám theo mục tiêu", Theme.AccentOff)
+            MakeToast("Đã Tắt " .. mInfo.BtnAuto, "Đã dừng bám theo mục tiêu", Theme.AccentOff)
         end
     end)
 
@@ -4251,7 +4453,7 @@ end
     end)
 
     playerListContainer = Instance.new("Frame", page7)
-    playerListContainer.Size = UDim2.new(0.94, 0, 1, -130); playerListContainer.BackgroundColor3 = Color3.fromRGB(20, 22, 31)
+    playerListContainer.Size = UDim2.new(0.94, 0, 1, -152); playerListContainer.BackgroundColor3 = Color3.fromRGB(20, 22, 31)
     playerListContainer.LayoutOrder = 3; playerListContainer.ZIndex = 10
     Instance.new("UICorner", playerListContainer).CornerRadius = UDim.new(0, 8)
     local listContainerStroke = Instance.new("UIStroke", playerListContainer); listContainerStroke.Color = Theme.Stroke; listContainerStroke.Thickness = 1
@@ -4308,7 +4510,6 @@ end
     end
     searchBox:GetPropertyChangedSignal("Text"):Connect(filterPlayerCards)
 
-    -- Cập nhật trạng thái chọn tại chỗ mà không Destroy() danh sách, giúp thanh cuộn không bao giờ bị giật
     local function refreshPlayerSelectionVisuals()
         for p, ref in pairs(playerCardRefs) do
             if ref and ref.Btn and ref.Btn.Parent then
@@ -4428,10 +4629,11 @@ end
     Players.PlayerAdded:Connect(function() task.wait(0.5); updatePlayerList() end)
     Players.PlayerRemoving:Connect(function(leavingPlayer)
         if leavingPlayer == targetTpPlayer then
+            stopManualApproach()
             targetTpPlayer = nil
             if autoTpPlayerEnabled then autoTpPlayerEnabled = false; restoreNormalPosture() end
             if spectatePlayerEnabled then spectatePlayerEnabled = false; resetCameraSubject(); updateSpectateBtnUI() end
-            updateTargetLabel(); updateAutoTpBtnUI()
+            updateTargetLabel(); updateTpActionButtonsUI()
             MakeToast("Mục tiêu đã thoát", leavingPlayer.DisplayName .. " đã rời khỏi server!", Theme.AccentOff)
         end
         updatePlayerList()
@@ -5996,7 +6198,7 @@ do
         local s = execTime % 60
 
         sysBody.Text = string.format(
-            "<font color='#78B4DC'>• Executor:</font> <font color='#38CC88'>%s</font>   |   <font color='#78B4DC'>Phiên bản:</font> <font color='#E09F67'>V1.22.0</font>\n" ..
+            "<font color='#78B4DC'>• Executor:</font> <font color='#38CC88'>%s</font>   |   <font color='#78B4DC'>Phiên bản:</font> <font color='#E09F67'>V1.23.0</font>\n" ..
             "<font color='#78B4DC'>• Treo máy:</font> %02d:%02d:%02d   |   <font color='#78B4DC'>Giờ hệ thống:</font> %s",
             execName, h, m, s, os.date("%H:%M:%S")
         )
@@ -6362,7 +6564,7 @@ RunService.Heartbeat:Connect(function()
         if State.LockPosition then root.Anchored = true end
         if State.Jump then hum.UseJumpPower = true; hum.JumpPower = State.JumpValue end
 
-        if not State.Fly and not autoTpPlayerEnabled then
+        if not State.Fly and (not autoTpPlayerEnabled or State.TpMoveMethodIdx == 3) then
             if State.Speed then
                 hum.WalkSpeed = State.SpeedValue
                 if hum.MoveDirection.Magnitude > 0 then
