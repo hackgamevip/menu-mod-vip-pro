@@ -1,5 +1,5 @@
 -- ==========================================
--- MENU VIP PRO MAX V1.24.0 (LUXURY CYBER-GLASS & BENTO SIDEBAR EDITION)
+-- MENU VIP PRO MAX V1.25.0 (LUXURY CYBER-GLASS & BENTO SIDEBAR EDITION)
 -- ==========================================
 repeat task.wait() until game:IsLoaded()
 
@@ -543,12 +543,12 @@ do
     titleLabel = Instance.new("TextLabel", header)
     titleLabel.Size = UDim2.new(0, 175, 0, 16); titleLabel.Position = UDim2.new(0, 43, 0, 5); titleLabel.BackgroundTransparency = 1
     titleLabel.Text = "⚡ MENU VIP PRO MAX"
-    titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255); titleLabel.Font = Enum.Font.GothamBlack; titleLabel.TextSize = 11.5; titleLabel.TextXAlignment = Enum.TextXAlignment.Left; titleLabel.ZIndex = 12
+    titleLabel.TextColor3 = Color3.fromRGB(210, 218, 232); titleLabel.Font = Enum.Font.GothamSemibold; titleLabel.TextSize = 11.5; titleLabel.TextXAlignment = Enum.TextXAlignment.Left; titleLabel.ZIndex = 12
     local titleGrad = Instance.new("UIGradient", titleLabel)
     titleGrad.Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
-        ColorSequenceKeypoint.new(0.55, Color3.fromRGB(165, 238, 255)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(215, 165, 255))
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(210, 218, 232)),
+        ColorSequenceKeypoint.new(0.55, Color3.fromRGB(152, 205, 224)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(184, 152, 220))
     })
 
     local subTitleLabel = Instance.new("TextLabel", header)
@@ -568,10 +568,10 @@ do
     headerStatText.RichText = true; headerStatText.Text = "<font color='#38CC88'>60 FPS</font> • <font color='#58B6F2'>0ms</font>"
     headerStatText.TextColor3 = Theme.TextTitle; headerStatText.Font = Enum.Font.GothamBold; headerStatText.TextSize = 9; headerStatText.ZIndex = 13
 
-    -- Huy hiệu V1.24 nền tối sâu, chữ sáng rõ nét trên Mobile
+    -- Huy hiệu V1.25 nền tối sâu, chữ sáng rõ nét trên Mobile
     local verBadge = Instance.new("TextLabel", header)
     verBadge.Size = UDim2.new(0, 48, 0, 21); verBadge.Position = UDim2.new(1, -83, 0.5, -10.5)
-    verBadge.BackgroundColor3 = Color3.fromRGB(18, 22, 36); verBadge.Text = "V1.24"; verBadge.TextColor3 = getSoftBrandColor(Theme.Brand)
+    verBadge.BackgroundColor3 = Color3.fromRGB(18, 22, 36); verBadge.Text = "V1.25"; verBadge.TextColor3 = getSoftBrandColor(Theme.Brand)
     verBadge.Font = Enum.Font.GothamBold; verBadge.TextSize = 9.5; verBadge.ZIndex = 12
     Instance.new("UICorner", verBadge).CornerRadius = UDim.new(0, 7)
     local verStroke = Instance.new("UIStroke", verBadge); verStroke.Color = Theme.Brand; verStroke.Thickness = 1.0; verStroke.Transparency = 0.25
@@ -1080,7 +1080,7 @@ do
     minBtn.MouseButton1Click:Connect(function() clickAnimate(minBtn); toggleMenuWindow() end)
 end
 -- ==========================================
--- COMPONENTS HỆ THỐNG 3D CYBER-GLASS NEON V1.24
+-- COMPONENTS HỆ THỐNG 3D CYBER-GLASS NEON V1.25
 -- ==========================================
 local function splitLeadingIcon(rawText)
     local str = tostring(rawText or "")
@@ -1148,21 +1148,15 @@ local function createDivider(parent, text)
     return dFrame
 end
 
--- Hàm dựng Biểu tượng 4 Mũi Tên Đóng/Mở 3D Băng Giá (theo đúng mẫu ảnh 1000085269.jpg: Trái = Mở ra ↖↗↙↘, Phải = Đóng lại ↘↙↗↖)
+-- Hàm dựng Biểu tượng 4 Mũi Tên Đóng/Mở (KHÔNG khung vuông bao quanh, màu dịu không chói sáng)
 local function createFourCornerArrowIcon(parent, sizePx, posUDim, anchorPt)
     local box = Instance.new("Frame", parent)
     box.Size = UDim2.new(0, sizePx, 0, sizePx)
     box.Position = posUDim
     if anchorPt then box.AnchorPoint = anchorPt end
-    box.BackgroundColor3 = Color3.fromRGB(11, 15, 28)
+    box.BackgroundTransparency = 1
     box.BorderSizePixel = 0
     box.ZIndex = 12
-    Instance.new("UICorner", box).CornerRadius = UDim.new(0, 6)
-
-    local boxStroke = Instance.new("UIStroke", box)
-    boxStroke.Color = Color3.fromRGB(58, 195, 255)
-    boxStroke.Thickness = 1.0
-    boxStroke.Transparency = 0.2
 
     local sc = sizePx / 22
     local expandLayer = Instance.new("Frame", box)
@@ -1182,41 +1176,22 @@ local function createFourCornerArrowIcon(parent, sizePx, posUDim, anchorPt)
         p.AnchorPoint = Vector2.new(0.5, 0.5)
         p.Position = UDim2.new(0.5, xOff * sc, 0.5, yOff * sc)
         if rot and rot ~= 0 then p.Rotation = rot end
-        p.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        p.BackgroundColor3 = isCollapse and Color3.fromRGB(168, 186, 218) or Color3.fromRGB(142, 192, 220)
         p.BorderSizePixel = 0
         p.ZIndex = 14
         Instance.new("UICorner", p).CornerRadius = UDim.new(0.45, 0)
-
-        local g = Instance.new("UIGradient", p)
-        g.Rotation = 90
-        if isCollapse then
-            g.Color = ColorSequence.new({
-                ColorSequenceKeypoint.new(0, Color3.fromRGB(245, 250, 255)),
-                ColorSequenceKeypoint.new(1, Color3.fromRGB(172, 198, 250))
-            })
-        else
-            g.Color = ColorSequence.new({
-                ColorSequenceKeypoint.new(0, Color3.fromRGB(242, 254, 255)),
-                ColorSequenceKeypoint.new(1, Color3.fromRGB(135, 218, 255))
-            })
-        end
-
-        local st = Instance.new("UIStroke", p)
-        st.Color = isCollapse and Color3.fromRGB(78, 112, 215) or Color3.fromRGB(32, 175, 255)
-        st.Thickness = 0.65
-        st.Transparency = 0.25
         return p
     end
 
     for _, sx in ipairs({-1, 1}) do
         for _, sy in ipairs({-1, 1}) do
             local diagRot = (sx * sy > 0) and 45 or -45
-            -- 1. Trạng thái ĐÓNG (4 mũi tên hướng RA NGOÀI 4 góc ↖ ↗ ↙ ↘ - bên trái ảnh 1000085269.jpg)
+            -- 1. Trạng thái ĐÓNG (4 mũi tên hướng RA NGOÀI 4 góc)
             makeArrowBar(expandLayer, 4.8, 1.9, sx * 5.0, sy * 6.5, 0, false)
             makeArrowBar(expandLayer, 1.9, 4.8, sx * 6.5, sy * 5.0, 0, false)
             makeArrowBar(expandLayer, 5.2, 1.9, sx * 4.1, sy * 4.1, diagRot, false)
 
-            -- 2. Trạng thái MỞ (4 mũi tên chụm VÀO TRONG tâm ↘ ↙ ↗ ↖ - bên phải ảnh 1000085269.jpg)
+            -- 2. Trạng thái MỞ (4 mũi tên chụm VÀO TRONG tâm)
             makeArrowBar(collapseLayer, 4.8, 1.9, sx * 3.8, sy * 2.2, 0, true)
             makeArrowBar(collapseLayer, 1.9, 4.8, sx * 2.2, sy * 3.8, 0, true)
             makeArrowBar(collapseLayer, 5.2, 1.9, sx * 4.8, sy * 4.8, diagRot, true)
@@ -1226,24 +1201,20 @@ local function createFourCornerArrowIcon(parent, sizePx, posUDim, anchorPt)
     local function setExpanded(isOpen)
         expandLayer.Visible = not isOpen
         collapseLayer.Visible = isOpen
-        box.BackgroundColor3 = isOpen and Color3.fromRGB(20, 26, 48) or Color3.fromRGB(11, 15, 28)
-        boxStroke.Color = isOpen and Color3.fromRGB(142, 168, 255) or Color3.fromRGB(58, 195, 255)
     end
 
     return box, setExpanded
 end
 
 local function createCycleBtn(parent, prefix, options, stateVar, callback)
-    local iconGlyph, cleanPrefix = splitLeadingIcon(prefix)
+    local _, cleanPrefix = splitLeadingIcon(prefix)
     local isOpen = false
 
     local cols = (#options >= 4) and 2 or 1
     local rows = math.ceil(#options / cols)
-    local subHeaderH = 22
     local cellH = 26
     local padY = 4
-    local subBodyH = rows * cellH + math.max(0, rows - 1) * padY + 10
-    local subTotalH = subHeaderH + subBodyH
+    local subTotalH = rows * cellH + math.max(0, rows - 1) * padY + 12
 
     local btnFrame = Instance.new("Frame", parent)
     btnFrame.Size = UDim2.new(0.94, 0, 0, 34)
@@ -1258,39 +1229,29 @@ local function createCycleBtn(parent, prefix, options, stateVar, callback)
     local stroke = Instance.new("UIStroke", btn); stroke.Color = Theme.Stroke; stroke.Thickness = 1.05; stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
     table.insert(RGBElements, {Type = "Button", Stroke = stroke, DefaultColor = Theme.Stroke, UseBrand = false})
 
-    local iconBox = Instance.new("Frame", btn)
-    iconBox.Size = UDim2.new(0, 24, 0, 24); iconBox.Position = UDim2.new(0, 8, 0.5, -12)
-    iconBox.BackgroundColor3 = Color3.fromRGB(14, 18, 30); iconBox.BorderSizePixel = 0; iconBox.ZIndex = 12
-    Instance.new("UICorner", iconBox).CornerRadius = UDim.new(0, 7)
-    local ibStroke = Instance.new("UIStroke", iconBox); ibStroke.Color = Theme.Brand; ibStroke.Thickness = 0.9; ibStroke.Transparency = 0.35
-
-    local iconLbl = Instance.new("TextLabel", iconBox)
-    iconLbl.Size = UDim2.new(1, 0, 1, 0); iconLbl.BackgroundTransparency = 1
-    iconLbl.Text = iconGlyph; iconLbl.TextColor3 = Theme.TextTitle; iconLbl.Font = Enum.Font.GothamBold; iconLbl.TextSize = 11; iconLbl.ZIndex = 13
-
     local prefixLbl = Instance.new("TextLabel", btn)
-    prefixLbl.Size = UDim2.new(0.48, -38, 1, 0); prefixLbl.Position = UDim2.new(0, 38, 0, 0)
+    prefixLbl.Size = UDim2.new(0.46, -12, 1, 0); prefixLbl.Position = UDim2.new(0, 12, 0, 0)
     prefixLbl.BackgroundTransparency = 1; prefixLbl.Text = cleanPrefix
-    prefixLbl.TextColor3 = Theme.TextTitle; prefixLbl.Font = Enum.Font.GothamSemibold; prefixLbl.TextSize = 9.8
+    prefixLbl.TextColor3 = Color3.fromRGB(198, 206, 222); prefixLbl.Font = Enum.Font.GothamSemibold; prefixLbl.TextSize = 9.8
     prefixLbl.TextXAlignment = Enum.TextXAlignment.Left; prefixLbl.TextTruncate = Enum.TextTruncate.AtEnd; prefixLbl.ZIndex = 12
 
-    -- Thanh hiển thị giá trị hiện tại + Nút 4 mũi tên Đóng/Mở (1000085269.jpg) ở bên phải
+    -- Thanh hiển thị giá trị hiện tại + Nút 4 mũi tên không khung vuông ở bên phải
     local valPill = Instance.new("Frame", btn)
-    valPill.Size = UDim2.new(0.50, -34, 0, 22); valPill.Position = UDim2.new(0.50, 0, 0.5, -11)
+    valPill.Size = UDim2.new(0.52, -32, 0, 22); valPill.Position = UDim2.new(0.48, 0, 0.5, -11)
     valPill.BackgroundColor3 = Color3.fromRGB(14, 18, 30); valPill.BorderSizePixel = 0; valPill.ZIndex = 12
     Instance.new("UICorner", valPill).CornerRadius = UDim.new(0, 7)
-    local vpStroke = Instance.new("UIStroke", valPill); vpStroke.Color = Theme.Brand; vpStroke.Thickness = 0.95; vpStroke.Transparency = 0.28
+    local vpStroke = Instance.new("UIStroke", valPill); vpStroke.Color = Theme.Stroke; vpStroke.Thickness = 0.9; vpStroke.Transparency = 0.25
 
     local valTxt = Instance.new("TextLabel", valPill)
     valTxt.Size = UDim2.new(1, -10, 1, 0); valTxt.Position = UDim2.new(0, 5, 0, 0)
-    valTxt.BackgroundTransparency = 1; valTxt.TextColor3 = getSoftBrandColor(Theme.Brand)
-    valTxt.Font = Enum.Font.GothamBold; valTxt.TextSize = 8.6; valTxt.TextTruncate = Enum.TextTruncate.AtEnd; valTxt.ZIndex = 13
+    valTxt.BackgroundTransparency = 1; valTxt.TextColor3 = Color3.fromRGB(168, 192, 218)
+    valTxt.Font = Enum.Font.GothamMedium; valTxt.TextSize = 8.6; valTxt.TextTruncate = Enum.TextTruncate.AtEnd; valTxt.ZIndex = 13
 
     local arrowIconBox, setArrowExpanded = createFourCornerArrowIcon(
-        btn, 22, UDim2.new(1, -28, 0.5, -11)
+        btn, 20, UDim2.new(1, -26, 0.5, -10)
     )
 
-    -- TAB NHỎ BÊN TRONG MENU (Sub-Tab Drawer mở ra khi bấm nút 4 mũi tên)
+    -- TAB NHỎ BÊN TRONG MENU (Gọn gàng, không chữ gợi ý, không icon thừa, màu chữ dịu)
     local subTab = Instance.new("Frame", btnFrame)
     subTab.Size = UDim2.new(1, -4, 0, subTotalH)
     subTab.Position = UDim2.new(0, 2, 0, 38)
@@ -1299,24 +1260,13 @@ local function createCycleBtn(parent, prefix, options, stateVar, callback)
     subTab.ZIndex = 11
     Instance.new("UICorner", subTab).CornerRadius = UDim.new(0, 9)
     local subStroke = Instance.new("UIStroke", subTab)
-    subStroke.Color = Color3.fromRGB(62, 185, 255)
+    subStroke.Color = Color3.fromRGB(58, 125, 175)
     subStroke.Thickness = 1.0
-    subStroke.Transparency = 0.22
-
-    local subHeader = Instance.new("TextLabel", subTab)
-    subHeader.Size = UDim2.new(1, -16, 0, subHeaderH)
-    subHeader.Position = UDim2.new(0, 8, 0, 0)
-    subHeader.BackgroundTransparency = 1
-    subHeader.Text = "◆ CHỌN " .. string.upper(cleanPrefix:gsub(":", "")) .. " (" .. tostring(#options) .. " MỤC)"
-    subHeader.TextColor3 = Color3.fromRGB(125, 215, 255)
-    subHeader.Font = Enum.Font.GothamBold
-    subHeader.TextSize = 8.0
-    subHeader.TextXAlignment = Enum.TextXAlignment.Left
-    subHeader.ZIndex = 12
+    subStroke.Transparency = 0.25
 
     local subGridHolder = Instance.new("Frame", subTab)
-    subGridHolder.Size = UDim2.new(1, -12, 0, subBodyH - 6)
-    subGridHolder.Position = UDim2.new(0, 6, 0, subHeaderH + 2)
+    subGridHolder.Size = UDim2.new(1, -12, 1, -12)
+    subGridHolder.Position = UDim2.new(0, 6, 0, 6)
     subGridHolder.BackgroundTransparency = 1
     subGridHolder.ZIndex = 12
 
@@ -1327,20 +1277,25 @@ local function createCycleBtn(parent, prefix, options, stateVar, callback)
 
     local optionCardRefs = {}
 
+    local function stripIconForOption(rawName)
+        local _, clean = splitLeadingIcon(tostring(rawName or ""))
+        return clean
+    end
+
     local function syncOptionSelectionVisuals()
         local curIdx = State[stateVar] or 1
         local curItem = options[curIdx] or options[1]
-        valTxt.Text = tostring(curItem.Name)
+        valTxt.Text = stripIconForOption(curItem.Name)
 
         for idx, ref in ipairs(optionCardRefs) do
             local isSel = (idx == curIdx)
-            ref.Btn.BackgroundColor3 = isSel and Color3.fromRGB(20, 48, 56) or Color3.fromRGB(19, 23, 36)
-            ref.Stroke.Color = isSel and Color3.fromRGB(68, 238, 190) or Color3.fromRGB(42, 50, 72)
-            ref.Stroke.Transparency = isSel and 0.1 or 0.45
-            ref.Dot.BackgroundColor3 = isSel and Color3.fromRGB(72, 245, 185) or (ref.SwatchColor or Color3.fromRGB(72, 82, 108))
-            ref.Label.TextColor3 = isSel and Color3.fromRGB(145, 255, 215) or Color3.fromRGB(195, 206, 228)
+            ref.Btn.BackgroundColor3 = isSel and Color3.fromRGB(22, 40, 48) or Color3.fromRGB(19, 23, 36)
+            ref.Stroke.Color = isSel and Color3.fromRGB(64, 152, 138) or Color3.fromRGB(42, 50, 72)
+            ref.Stroke.Transparency = isSel and 0.15 or 0.45
+            ref.Dot.BackgroundColor3 = isSel and Color3.fromRGB(92, 178, 148) or (ref.SwatchColor or Color3.fromRGB(72, 82, 108))
+            ref.Label.TextColor3 = isSel and Color3.fromRGB(142, 202, 180) or Color3.fromRGB(182, 192, 210)
             ref.Badge.Text = isSel and "ĐANG CHỌN" or "CHỌN"
-            ref.Badge.TextColor3 = isSel and Color3.fromRGB(85, 245, 185) or Color3.fromRGB(108, 120, 148)
+            ref.Badge.TextColor3 = isSel and Color3.fromRGB(115, 186, 160) or Color3.fromRGB(96, 108, 130)
         end
     end
 
@@ -1352,9 +1307,9 @@ local function createCycleBtn(parent, prefix, options, stateVar, callback)
         end
         setArrowExpanded(isOpen)
         if not State.RGB then
-            stroke.Color = isOpen and Color3.fromRGB(68, 215, 255) or Theme.Stroke
+            stroke.Color = isOpen and Color3.fromRGB(64, 148, 195) or Theme.Stroke
         end
-        vpStroke.Color = isOpen and Color3.fromRGB(85, 235, 255) or Theme.Brand
+        vpStroke.Color = isOpen and Color3.fromRGB(72, 156, 205) or Theme.Stroke
 
         if isOpen then
             subTab.Visible = true
@@ -1390,6 +1345,7 @@ local function createCycleBtn(parent, prefix, options, stateVar, callback)
     end
 
     for idx, opt in ipairs(options) do
+        local cleanOptName = stripIconForOption(opt.Name)
         local optBtn = Instance.new("TextButton", subGridHolder)
         optBtn.LayoutOrder = idx
         optBtn.Text = ""
@@ -1402,19 +1358,19 @@ local function createCycleBtn(parent, prefix, options, stateVar, callback)
 
         local swatchCol = opt.Value or opt.Brand
         local dot = Instance.new("Frame", optBtn)
-        dot.Size = UDim2.new(0, 8, 0, 8)
-        dot.Position = UDim2.new(0, 8, 0.5, -4)
+        dot.Size = UDim2.new(0, 7, 0, 7)
+        dot.Position = UDim2.new(0, 8, 0.5, -3.5)
         dot.BackgroundColor3 = swatchCol or Color3.fromRGB(72, 82, 108)
         dot.BorderSizePixel = 0
         dot.ZIndex = 14
         Instance.new("UICorner", dot).CornerRadius = UDim.new(1, 0)
 
         local oLbl = Instance.new("TextLabel", optBtn)
-        oLbl.Size = UDim2.new(1, -68, 1, 0)
-        oLbl.Position = UDim2.new(0, 22, 0, 0)
+        oLbl.Size = UDim2.new(1, -66, 1, 0)
+        oLbl.Position = UDim2.new(0, 20, 0, 0)
         oLbl.BackgroundTransparency = 1
-        oLbl.Text = tostring(opt.Name)
-        oLbl.Font = Enum.Font.GothamSemibold
+        oLbl.Text = cleanOptName
+        oLbl.Font = Enum.Font.GothamMedium
         oLbl.TextSize = 8.6
         oLbl.TextXAlignment = Enum.TextXAlignment.Left
         oLbl.TextTruncate = Enum.TextTruncate.AtEnd
@@ -1424,7 +1380,7 @@ local function createCycleBtn(parent, prefix, options, stateVar, callback)
         oBadge.Size = UDim2.new(0, 44, 1, 0)
         oBadge.Position = UDim2.new(1, -48, 0, 0)
         oBadge.BackgroundTransparency = 1
-        oBadge.Font = Enum.Font.GothamBold
+        oBadge.Font = Enum.Font.GothamSemibold
         oBadge.TextSize = 7.0
         oBadge.TextXAlignment = Enum.TextXAlignment.Right
         oBadge.ZIndex = 14
@@ -1443,17 +1399,11 @@ local function createCycleBtn(parent, prefix, options, stateVar, callback)
             State[stateVar] = idx
             syncOptionSelectionVisuals()
             if callback then pcall(callback, idx) end
-            MakeToast("Đã chọn " .. cleanPrefix:gsub(":", ""), tostring(opt.Name), Theme.AccentOn)
+            MakeToast("Đã chọn " .. cleanPrefix:gsub(":", ""), cleanOptName, Theme.AccentOn)
             if State.AutoSave then saveConfig() end
             toggleSubTab(false)
         end)
     end
-
-    registerBrandUpdater(function(newBrand)
-        if ibStroke and ibStroke.Parent then ibStroke.Color = newBrand end
-        if not isOpen and vpStroke and vpStroke.Parent then vpStroke.Color = newBrand end
-        if valTxt and valTxt.Parent then valTxt.TextColor3 = getSoftBrandColor(newBrand) end
-    end)
 
     syncOptionSelectionVisuals()
 
@@ -1517,7 +1467,7 @@ local function createToggle(parent, text, varName, callback)
 
     local switchStateTxt = Instance.new("TextLabel", switchTrack)
     switchStateTxt.Size = UDim2.new(0, 22, 1, 0); switchStateTxt.BackgroundTransparency = 1
-    switchStateTxt.Font = Enum.Font.GothamBlack; switchStateTxt.TextSize = 7.2; switchStateTxt.ZIndex = 12
+    switchStateTxt.Font = Enum.Font.GothamSemibold; switchStateTxt.TextSize = 7.2; switchStateTxt.ZIndex = 12
 
     local switchKnob = Instance.new("Frame", switchTrack)
     switchKnob.Size = UDim2.new(0, 14, 0, 14); switchKnob.BorderSizePixel = 0; switchKnob.ZIndex = 13
@@ -1542,7 +1492,7 @@ local function createToggle(parent, text, varName, callback)
 
         switchStateTxt.Text = isOn and "ON" or "OFF"
         switchStateTxt.Position = isOn and UDim2.new(0, 4, 0, 0) or UDim2.new(1, -24, 0, 0)
-        switchStateTxt.TextColor3 = isOn and Color3.fromRGB(145, 255, 210) or Color3.fromRGB(98, 110, 134)
+        switchStateTxt.TextColor3 = isOn and Color3.fromRGB(142, 206, 176) or Color3.fromRGB(98, 110, 134)
 
         TweenService:Create(switchTrack, tInfo, {BackgroundColor3 = trackCol}):Play()
         TweenService:Create(switchStroke, tInfo, {Color = isOn and Color3.fromRGB(72, 242, 178) or Color3.fromRGB(48, 58, 82)}):Play()
@@ -1551,7 +1501,7 @@ local function createToggle(parent, text, varName, callback)
         TweenService:Create(leftBar, tInfo, {BackgroundColor3 = barCol}):Play()
         TweenService:Create(iconBox, tInfo, {BackgroundColor3 = isOn and Color3.fromRGB(14, 36, 38) or Color3.fromRGB(14, 18, 30)}):Play()
         TweenService:Create(iconStroke, tInfo, {Color = isOn and Color3.fromRGB(68, 238, 175) or Color3.fromRGB(58, 115, 195)}):Play()
-        TweenService:Create(title, tInfo, {TextColor3 = isOn and Color3.fromRGB(245, 252, 255) or Color3.fromRGB(215, 225, 242)}):Play()
+        TweenService:Create(title, tInfo, {TextColor3 = isOn and Color3.fromRGB(205, 216, 228) or Color3.fromRGB(186, 196, 214)}):Play()
         if not State.RGB then
             TweenService:Create(stroke, tInfo, {Color = borderCol}):Play()
         end
@@ -1780,7 +1730,7 @@ local function createCombinedToggleSlider(parent, toggleText, toggleVar, sliderT
 
     local switchStateTxt = Instance.new("TextLabel", switchTrack)
     switchStateTxt.Size = UDim2.new(0, 22, 1, 0); switchStateTxt.BackgroundTransparency = 1
-    switchStateTxt.Font = Enum.Font.GothamBlack; switchStateTxt.TextSize = 7.2; switchStateTxt.ZIndex = 13
+    switchStateTxt.Font = Enum.Font.GothamSemibold; switchStateTxt.TextSize = 7.2; switchStateTxt.ZIndex = 13
 
     local switchKnob = Instance.new("Frame", switchTrack)
     switchKnob.Size = UDim2.new(0, 13, 0, 13); switchKnob.BorderSizePixel = 0; switchKnob.ZIndex = 14
@@ -1845,7 +1795,7 @@ local function createCombinedToggleSlider(parent, toggleText, toggleVar, sliderT
 
         switchStateTxt.Text = isOn and "ON" or "OFF"
         switchStateTxt.Position = isOn and UDim2.new(0, 4, 0, 0) or UDim2.new(1, -24, 0, 0)
-        switchStateTxt.TextColor3 = isOn and Color3.fromRGB(145, 255, 210) or Color3.fromRGB(98, 110, 134)
+        switchStateTxt.TextColor3 = isOn and Color3.fromRGB(142, 206, 176) or Color3.fromRGB(98, 110, 134)
 
         applyCyberSliderFillGrad(fill, isOn)
 
@@ -4458,7 +4408,7 @@ do
     local tpMethodLabel = Instance.new("TextLabel", tpMethodBtn)
     tpMethodLabel.Size = UDim2.new(1, -28, 1, 0); tpMethodLabel.Position = UDim2.new(0, 6, 0, 0)
     tpMethodLabel.BackgroundTransparency = 1; tpMethodLabel.RichText = true
-    tpMethodLabel.Font = Enum.Font.GothamBold; tpMethodLabel.TextSize = 8.6; tpMethodLabel.TextXAlignment = Enum.TextXAlignment.Left
+    tpMethodLabel.Font = Enum.Font.GothamSemibold; tpMethodLabel.TextSize = 8.6; tpMethodLabel.TextXAlignment = Enum.TextXAlignment.Left
     tpMethodLabel.TextTruncate = Enum.TextTruncate.AtEnd; tpMethodLabel.ZIndex = 12
 
     local methodArrowBox, setMethodArrowExpanded = createFourCornerArrowIcon(
@@ -4475,7 +4425,7 @@ do
     local tpPosLabel = Instance.new("TextLabel", tpPosBtn)
     tpPosLabel.Size = UDim2.new(1, -28, 1, 0); tpPosLabel.Position = UDim2.new(0, 6, 0, 0)
     tpPosLabel.BackgroundTransparency = 1; tpPosLabel.RichText = true
-    tpPosLabel.Font = Enum.Font.GothamBold; tpPosLabel.TextSize = 8.6; tpPosLabel.TextXAlignment = Enum.TextXAlignment.Left
+    tpPosLabel.Font = Enum.Font.GothamSemibold; tpPosLabel.TextSize = 8.6; tpPosLabel.TextXAlignment = Enum.TextXAlignment.Left
     tpPosLabel.TextTruncate = Enum.TextTruncate.AtEnd; tpPosLabel.ZIndex = 12
 
     local posArrowBox, setPosArrowExpanded = createFourCornerArrowIcon(
@@ -4497,28 +4447,18 @@ do
     tpSubStroke.Thickness = 1.05
     tpSubStroke.Transparency = 0.15
 
-    local tpSubHeader = Instance.new("TextLabel", tpSubTabDrawer)
-    tpSubHeader.Size = UDim2.new(1, -16, 0, 20)
-    tpSubHeader.Position = UDim2.new(0, 8, 0, 2)
-    tpSubHeader.BackgroundTransparency = 1
-    tpSubHeader.TextColor3 = Color3.fromRGB(125, 222, 255)
-    tpSubHeader.Font = Enum.Font.GothamBold
-    tpSubHeader.TextSize = 8.0
-    tpSubHeader.TextXAlignment = Enum.TextXAlignment.Left
-    tpSubHeader.ZIndex = 16
-
     local tpSubGridHolder = Instance.new("Frame", tpSubTabDrawer)
-    tpSubGridHolder.Size = UDim2.new(1, -12, 1, -26)
-    tpSubGridHolder.Position = UDim2.new(0, 6, 0, 22)
+    tpSubGridHolder.Size = UDim2.new(1, -12, 1, -12)
+    tpSubGridHolder.Position = UDim2.new(0, 6, 0, 6)
     tpSubGridHolder.BackgroundTransparency = 1
     tpSubGridHolder.ZIndex = 16
 
     local function syncTpSelectorTexts()
         local mItem = TpMoveMethods[State.TpMoveMethodIdx] or TpMoveMethods[1]
-        tpMethodLabel.Text = "<font color='#9AA8C4'>Kiểu:</font> <font color='#68E8FF'>" .. mItem.Icon .. " " .. mItem.Name .. "</font>"
+        tpMethodLabel.Text = "<font color='#8E9BAE'>Kiểu:</font> <font color='#92C5DA'>" .. mItem.Name .. "</font>"
 
         local pItem = TpPositions[State.TpPositionIdx] or TpPositions[1]
-        tpPosLabel.Text = "<font color='#9AA8C4'>Vị trí:</font> <font color='#F0C868'>" .. pItem.Upper .. "</font>"
+        tpPosLabel.Text = "<font color='#8E9BAE'>Vị trí:</font> <font color='#C9B27C'>" .. pItem.Upper .. "</font>"
 
         if updateTpActionButtonsUI then updateTpActionButtonsUI() end
     end
@@ -4534,8 +4474,8 @@ do
             activeTpSubTabMode = nil
             setMethodArrowExpanded(false)
             setPosArrowExpanded(false)
-            tpMethodStroke.Color = Theme.Brand
-            tpPosStroke.Color = Theme.Brand
+            tpMethodStroke.Color = Theme.Stroke
+            tpPosStroke.Color = Theme.Stroke
             tpSubTabDrawer.Visible = false
             tpSubTabDrawer.Size = UDim2.new(0.94, 0, 0, 0)
             updatePlayerListHeight()
@@ -4545,8 +4485,8 @@ do
         activeTpSubTabMode = mode
         setMethodArrowExpanded(mode == "method")
         setPosArrowExpanded(mode == "position")
-        tpMethodStroke.Color = (mode == "method") and Color3.fromRGB(75, 235, 255) or Theme.Brand
-        tpPosStroke.Color = (mode == "position") and Color3.fromRGB(75, 235, 255) or Theme.Brand
+        tpMethodStroke.Color = (mode == "method") and Color3.fromRGB(72, 152, 195) or Theme.Stroke
+        tpPosStroke.Color = (mode == "position") and Color3.fromRGB(72, 152, 195) or Theme.Stroke
 
         for _, ch in ipairs(tpSubGridHolder:GetChildren()) do
             if not ch:IsA("UIGridLayout") then ch:Destroy() end
@@ -4555,25 +4495,24 @@ do
         grid.SortOrder = Enum.SortOrder.LayoutOrder
 
         if mode == "method" then
-            tpSubHeader.Text = "◆ CHỌN KIỂU DI CHUYỂN ĐẾN NGƯỜI CHƠI (3 CHẾ ĐỘ) ◆"
             grid.CellSize = UDim2.new(0.32, 0, 0, 26)
             grid.CellPadding = UDim2.new(0.02, 0, 0, 4)
-            tpSubTabDrawer.Size = UDim2.new(0.94, 0, 0, 54)
+            tpSubTabDrawer.Size = UDim2.new(0.94, 0, 0, 38)
 
             for idx, mInfo in ipairs(TpMoveMethods) do
                 local isSel = (State.TpMoveMethodIdx == idx)
                 local ob = Instance.new("TextButton", tpSubGridHolder)
                 ob.LayoutOrder = idx
-                ob.BackgroundColor3 = isSel and Color3.fromRGB(20, 48, 58) or Color3.fromRGB(19, 23, 36)
-                ob.Text = mInfo.Icon .. " " .. mInfo.Name .. (isSel and " ✓" or "")
-                ob.TextColor3 = isSel and Color3.fromRGB(115, 252, 215) or Color3.fromRGB(195, 206, 228)
-                ob.Font = Enum.Font.GothamBold
-                ob.TextSize = 8.6
+                ob.BackgroundColor3 = isSel and Color3.fromRGB(22, 42, 52) or Color3.fromRGB(19, 23, 36)
+                ob.Text = mInfo.Name
+                ob.TextColor3 = isSel and Color3.fromRGB(132, 198, 186) or Color3.fromRGB(180, 190, 208)
+                ob.Font = Enum.Font.GothamSemibold
+                ob.TextSize = 8.8
                 ob.AutoButtonColor = false
                 ob.ZIndex = 17
                 Instance.new("UICorner", ob).CornerRadius = UDim.new(0, 6)
                 local ost = Instance.new("UIStroke", ob)
-                ost.Color = isSel and Color3.fromRGB(68, 238, 190) or Color3.fromRGB(42, 50, 72)
+                ost.Color = isSel and Color3.fromRGB(68, 158, 148) or Color3.fromRGB(42, 50, 72)
                 ost.Thickness = 0.95
 
                 ob.MouseButton1Click:Connect(function()
@@ -4581,31 +4520,30 @@ do
                     stopManualApproach()
                     State.TpMoveMethodIdx = idx
                     syncTpSelectorTexts()
-                    MakeToast("Kiểu Di Chuyển", "Đã chọn: " .. mInfo.Icon .. " " .. mInfo.Name, Theme.AccentOn)
+                    MakeToast("Kiểu Di Chuyển", "Đã chọn: " .. mInfo.Name, Theme.AccentOn)
                     if State.AutoSave then saveConfig() end
-                    openOrToggleTpSubTab(mode) -- đóng tab nhỏ sau khi chọn
+                    openOrToggleTpSubTab(mode)
                 end)
             end
         else
-            tpSubHeader.Text = "◆ CHỌN VỊ TRÍ ĐỨNG SO VỚI MỤC TIÊU (4 VỊ TRÍ) ◆"
             grid.CellSize = UDim2.new(0.488, 0, 0, 25)
             grid.CellPadding = UDim2.new(0.024, 0, 0, 4)
-            tpSubTabDrawer.Size = UDim2.new(0.94, 0, 0, 80)
+            tpSubTabDrawer.Size = UDim2.new(0.94, 0, 0, 66)
 
             for idx, pInfo in ipairs(TpPositions) do
                 local isSel = (State.TpPositionIdx == idx)
                 local ob = Instance.new("TextButton", tpSubGridHolder)
                 ob.LayoutOrder = idx
-                ob.BackgroundColor3 = isSel and Color3.fromRGB(20, 48, 58) or Color3.fromRGB(19, 23, 36)
-                ob.Text = "📍 " .. pInfo.Upper .. (isSel and " ✓" or "")
-                ob.TextColor3 = isSel and Color3.fromRGB(248, 215, 115) or Color3.fromRGB(195, 206, 228)
-                ob.Font = Enum.Font.GothamBold
-                ob.TextSize = 8.4
+                ob.BackgroundColor3 = isSel and Color3.fromRGB(24, 40, 48) or Color3.fromRGB(19, 23, 36)
+                ob.Text = pInfo.Upper
+                ob.TextColor3 = isSel and Color3.fromRGB(205, 182, 124) or Color3.fromRGB(180, 190, 208)
+                ob.Font = Enum.Font.GothamSemibold
+                ob.TextSize = 8.6
                 ob.AutoButtonColor = false
                 ob.ZIndex = 17
                 Instance.new("UICorner", ob).CornerRadius = UDim.new(0, 6)
                 local ost = Instance.new("UIStroke", ob)
-                ost.Color = isSel and Color3.fromRGB(240, 195, 88) or Color3.fromRGB(42, 50, 72)
+                ost.Color = isSel and Color3.fromRGB(168, 146, 92) or Color3.fromRGB(42, 50, 72)
                 ost.Thickness = 0.95
 
                 ob.MouseButton1Click:Connect(function()
@@ -4711,7 +4649,7 @@ do
 
     local tpOnceBtn = Instance.new("TextButton", tpActionRow)
     tpOnceBtn.Size = UDim2.new(0.486, 0, 1, 0); tpOnceBtn.BackgroundColor3 = Color3.fromRGB(19, 24, 34)
-    tpOnceBtn.Text = "⚡ TP ĐẾN (1 LẦN)"; tpOnceBtn.TextColor3 = getSoftBrandColor(Theme.Brand); tpOnceBtn.Font = Enum.Font.GothamBold; tpOnceBtn.TextSize = 9.0
+    tpOnceBtn.Text = "⚡ TP ĐẾN (1 LẦN)"; tpOnceBtn.TextColor3 = getSoftBrandColor(Theme.Brand); tpOnceBtn.Font = Enum.Font.GothamSemibold; tpOnceBtn.TextSize = 9.0
     tpOnceBtn.AutoButtonColor = false; tpOnceBtn.ZIndex = 10
     Instance.new("UICorner", tpOnceBtn).CornerRadius = UDim.new(0, 6)
     local tpOnceStroke = Instance.new("UIStroke", tpOnceBtn); tpOnceStroke.Color = Theme.Brand; tpOnceStroke.Thickness = 1; tpOnceStroke.Transparency = 0.35
@@ -4720,7 +4658,7 @@ do
     local autoTpBtn = Instance.new("TextButton", tpActionRow)
     autoTpBtn.Size = UDim2.new(0.486, 0, 1, 0); autoTpBtn.Position = UDim2.new(0.514, 0, 0, 0)
     autoTpBtn.BackgroundColor3 = Color3.fromRGB(22, 20, 28); autoTpBtn.Text = "🔁 AUTO TP [TẮT]"
-    autoTpBtn.TextColor3 = Color3.fromRGB(185, 115, 126); autoTpBtn.Font = Enum.Font.GothamBold; autoTpBtn.TextSize = 9.0
+    autoTpBtn.TextColor3 = Color3.fromRGB(185, 115, 126); autoTpBtn.Font = Enum.Font.GothamSemibold; autoTpBtn.TextSize = 9.0
     autoTpBtn.AutoButtonColor = false; autoTpBtn.ZIndex = 10
     Instance.new("UICorner", autoTpBtn).CornerRadius = UDim.new(0, 6)
     local autoTpStroke = Instance.new("UIStroke", autoTpBtn); autoTpStroke.Color = Color3.fromRGB(165, 85, 98); autoTpStroke.Thickness = 1; autoTpStroke.Transparency = 0.45
@@ -6545,7 +6483,7 @@ do
         local s = execTime % 60
 
         sysBody.Text = string.format(
-            "<font color='#78B4DC'>• Executor:</font> <font color='#38CC88'>%s</font>   |   <font color='#78B4DC'>Phiên bản:</font> <font color='#E09F67'>V1.24.0</font>\n" ..
+            "<font color='#78B4DC'>• Executor:</font> <font color='#38CC88'>%s</font>   |   <font color='#78B4DC'>Phiên bản:</font> <font color='#E09F67'>V1.25.0</font>\n" ..
             "<font color='#78B4DC'>• Treo máy:</font> %02d:%02d:%02d   |   <font color='#78B4DC'>Giờ hệ thống:</font> %s",
             execName, h, m, s, os.date("%H:%M:%S")
         )
