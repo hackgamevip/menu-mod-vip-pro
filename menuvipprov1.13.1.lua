@@ -2261,6 +2261,48 @@ do
     end
 
     local syncPlayPauseBtnVisual
+    local renderSavedMusic
+    local saveMusicData
+
+    local function markSongStatusById(soundId, newStatus)
+        local changed = false
+        for _, item in ipairs(savedMusicList) do
+            if tostring(item.id) == tostring(soundId) and item.status ~= newStatus then
+                item.status = newStatus
+                changed = true
+            end
+        end
+        if changed then
+            if saveMusicData then saveMusicData() end
+            if renderSavedMusic then renderSavedMusic() end
+        end
+    end
+
+    local function probeSongStatus(songData)
+        if not songData or not songData.id then return end
+        songData.status = "checking"
+        if renderSavedMusic then renderSavedMusic() end
+        task.spawn(function()
+            local probe = Instance.new("Sound")
+            probe.Name = "MenuVipProbe_" .. tostring(songData.id)
+            probe.SoundId = "rbxassetid://" .. tostring(songData.id)
+            probe.Volume = 0
+            probe.Parent = SoundService
+            local elapsed = 0
+            while elapsed < 2.8 do
+                if probe.IsLoaded and probe.TimeLength > 0 then
+                    break
+                end
+                task.wait(0.2)
+                elapsed = elapsed + 0.2
+            end
+            local isPublic = (probe.IsLoaded and probe.TimeLength > 0)
+            pcall(function() probe:Destroy() end)
+            songData.status = isPublic and "public" or "private"
+            if saveMusicData then saveMusicData() end
+            if renderSavedMusic then renderSavedMusic() end
+        end)
+    end
 
     local function stopMusic()
         if currentSound then
@@ -2283,11 +2325,15 @@ do
             return
         end
         currentMusicId = soundId; isMusicPaused = false
-        nowPlayingLabel.Text = "<font color='#C2CCDC'>⏳ Đang tải bài hát...</font>"
+        nowPlayingLabel.Text = "<font color='#C2CCDC'>⏳ Đang kiểm tra & tải nhạc...</font>"
+        local songTitle = "Ẩn danh"
         task.spawn(function()
-            local name = getSongName(soundId)
-            if currentMusicId == soundId then
-                nowPlayingLabel.Text = "<font color='#9AA4B8'>🎵 Đang phát:</font> <font color='#D8B868'>" .. name .. "</font>"
+            songTitle = getSongName(soundId)
+            if currentMusicId == soundId and currentSound then
+                local stTag = (currentSound.IsLoaded and currentSound.TimeLength > 0)
+                    and "<font color='#56E39F'>[PUBLIC]</font> "
+                    or "<font color='#9AA4B8'>[ĐANG TẢI]</font> "
+                nowPlayingLabel.Text = stTag .. "<font color='#D8B868'>" .. songTitle .. "</font>"
             end
         end)
         local soundObj = Instance.new("Sound")
@@ -2298,6 +2344,16 @@ do
         soundObj.Looped = State.MusicLoop
         soundObj.Parent = SoundService
         currentSound = soundObj
+
+        soundObj.Loaded:Connect(function()
+            if currentSound == soundObj and currentMusicId == soundId then
+                if soundObj.TimeLength > 0 then
+                    nowPlayingLabel.Text = "<font color='#56E39F'>[PUBLIC]</font> <font color='#D8B868'>" .. songTitle .. "</font>"
+                    markSongStatusById(soundId, "public")
+                end
+            end
+        end)
+
         soundObj.Ended:Connect(function()
             if not State.MusicLoop then
                 if #savedMusicList > 0 then
@@ -2316,8 +2372,12 @@ do
             if currentSound == soundObj and currentMusicId == soundId then
                 if not soundObj.IsLoaded or soundObj.TimeLength <= 0 then
                     stopMusic()
-                    nowPlayingLabel.Text = "<font color='#E05666'>⚠️ Không phát được (ID Private hoặc bị khóa)</font>"
-                    MakeToast("⚠️ ID Private / Bị Khóa", "Bài nhạc này là ID Private nên không phát được ở game này!", Theme.AccentOff)
+                    markSongStatusById(soundId, "private")
+                    nowPlayingLabel.Text = "<font color='#FF7882'>[PRIVATE]</font> <font color='#E05666'>Bị khóa ở game này (" .. songTitle .. ")</font>"
+                    MakeToast("⚠️ ID Private / Bị Khóa", "Bài '" .. songTitle .. "' là ID Private (chỉ dùng cho game gốc/Boombox)!", Theme.AccentOff)
+                else
+                    markSongStatusById(soundId, "public")
+                    nowPlayingLabel.Text = "<font color='#56E39F'>[PUBLIC]</font> <font color='#D8B868'>" .. songTitle .. "</font>"
                 end
             end
         end)
@@ -2659,26 +2719,73 @@ do
         if input == volDragInput then volDragInput = nil end
     end)
 
-    -- 3. KHUNG DANH SÁCH NHẠC ĐÃ LƯU
+    -- 3. KHUNG DANH SÁCH NHẠC ĐÃ LƯU (PHÂN LOẠI ID PUBLIC & ID PRIVATE + BỘ LỌC NHANH)
+    local currentMusicFilter = "all" -- "all" | "public" | "private"
+
     local musicListCard = Instance.new("Frame", page5)
     musicListCard.Size = UDim2.new(0.94, 0, 1, -128); musicListCard.BackgroundColor3 = Color3.fromRGB(20, 22, 31); musicListCard.LayoutOrder = 3; musicListCard.ZIndex = 10
     Instance.new("UICorner", musicListCard).CornerRadius = UDim.new(0, 8)
     local mlStroke = Instance.new("UIStroke", musicListCard); mlStroke.Color = Theme.Stroke; mlStroke.Thickness = 1; table.insert(RGBElements, {Type = "Info", Stroke = mlStroke})
 
     local mlHeader = Instance.new("TextLabel", musicListCard)
-    mlHeader.Size = UDim2.new(1, -16, 0, 18); mlHeader.Position = UDim2.new(0, 10, 0, 4); mlHeader.BackgroundTransparency = 1
-    mlHeader.Text = "🎵 DANH SÁCH NHẠC ĐÃ LƯU"; mlHeader.TextColor3 = getSoftBrandColor(Theme.Brand); mlHeader.Font = Enum.Font.GothamSemibold; mlHeader.TextSize = 9; mlHeader.TextXAlignment = Enum.TextXAlignment.Left; mlHeader.ZIndex = 10
+    mlHeader.Size = UDim2.new(0.42, 0, 0, 20); mlHeader.Position = UDim2.new(0, 10, 0, 4); mlHeader.BackgroundTransparency = 1
+    mlHeader.Text = "🎵 KHO NHẠC (0)"; mlHeader.TextColor3 = getSoftBrandColor(Theme.Brand); mlHeader.Font = Enum.Font.GothamSemibold; mlHeader.TextSize = 8.8
+    mlHeader.TextXAlignment = Enum.TextXAlignment.Left; mlHeader.TextTruncate = Enum.TextTruncate.AtEnd; mlHeader.ZIndex = 11
+
+    -- 3 nút lọc: Tất cả | Public | Private trên góc phải tiêu đề
+    local filterBar = Instance.new("Frame", musicListCard)
+    filterBar.Size = UDim2.new(0, 174, 0, 18); filterBar.Position = UDim2.new(1, -180, 0, 5)
+    filterBar.BackgroundTransparency = 1; filterBar.ZIndex = 11
+
+    local function makeMusicFilterBtn(xPos, width, txt, filterKey, activeCol)
+        local b = Instance.new("TextButton", filterBar)
+        b.Size = UDim2.new(0, width, 1, 0); b.Position = UDim2.new(0, xPos, 0, 0)
+        b.BackgroundColor3 = Color3.fromRGB(16, 19, 28); b.Text = txt
+        b.TextColor3 = Theme.TextDim; b.Font = Enum.Font.GothamSemibold; b.TextSize = 7.8
+        b.AutoButtonColor = false; b.ZIndex = 12
+        Instance.new("UICorner", b).CornerRadius = UDim.new(1, 0)
+        local st = Instance.new("UIStroke", b); st.Color = Theme.Stroke; st.Thickness = 0.8; st.Transparency = 0.35
+        return b, st, filterKey, activeCol
+    end
+
+    local fBtnAll, fStAll = makeMusicFilterBtn(0, 52, "Tất cả", "all", Theme.Brand)
+    local fBtnPub, fStPub = makeMusicFilterBtn(56, 57, "🟢 Public", "public", Color3.fromRGB(72, 225, 148))
+    local fBtnPriv, fStPriv = makeMusicFilterBtn(117, 57, "🔴 Private", "private", Color3.fromRGB(235, 95, 112))
+
+    local function syncMusicFilterTabs()
+        local pubCount, privCount = 0, 0
+        for _, item in ipairs(savedMusicList) do
+            if item.status == "public" then pubCount = pubCount + 1
+            elseif item.status == "private" then privCount = privCount + 1 end
+        end
+        fBtnAll.Text = "Tất cả (" .. #savedMusicList .. ")"
+        fBtnPub.Text = "Public (" .. pubCount .. ")"
+        fBtnPriv.Text = "Private (" .. privCount .. ")"
+
+        local tabs = {
+            {btn = fBtnAll, st = fStAll, key = "all", col = getSoftBrandColor(Theme.Brand), bg = Color3.fromRGB(28, 36, 54)},
+            {btn = fBtnPub, st = fStPub, key = "public", col = Color3.fromRGB(92, 240, 168), bg = Color3.fromRGB(20, 48, 38)},
+            {btn = fBtnPriv, st = fStPriv, key = "private", col = Color3.fromRGB(255, 125, 138), bg = Color3.fromRGB(52, 22, 30)}
+        }
+        for _, t in ipairs(tabs) do
+            local isSel = (currentMusicFilter == t.key)
+            t.btn.BackgroundColor3 = isSel and t.bg or Color3.fromRGB(16, 19, 28)
+            t.btn.TextColor3 = isSel and t.col or Theme.TextDim
+            t.st.Color = isSel and t.col or Theme.Stroke
+            t.st.Transparency = isSel and 0.15 or 0.45
+        end
+    end
 
     local emptyMusicState = Instance.new("TextLabel", musicListCard)
-    emptyMusicState.Size = UDim2.new(1, -24, 1, -26); emptyMusicState.Position = UDim2.new(0, 12, 0, 22)
+    emptyMusicState.Size = UDim2.new(1, -24, 1, -28); emptyMusicState.Position = UDim2.new(0, 12, 0, 24)
     emptyMusicState.BackgroundTransparency = 1; emptyMusicState.RichText = true
     emptyMusicState.Text = "🎶 Chưa có bài nhạc nào được lưu.\n<font color='#7E889E'>Nhập ID Nhạc ở trên rồi bấm nút Lưu đĩa mềm bên phải để thêm!</font>"
-    emptyMusicState.TextColor3 = Theme.TextDim; emptyMusicState.Font = Enum.Font.GothamSemibold; emptyMusicState.TextSize = 9.5
+    emptyMusicState.TextColor3 = Theme.TextDim; emptyMusicState.Font = Enum.Font.GothamSemibold; emptyMusicState.TextSize = 9.2
     emptyMusicState.LineHeight = 1.25; emptyMusicState.TextWrapped = true
     emptyMusicState.TextXAlignment = Enum.TextXAlignment.Center; emptyMusicState.TextYAlignment = Enum.TextYAlignment.Center; emptyMusicState.ZIndex = 11
 
     local savedMusicContent = Instance.new("ScrollingFrame", musicListCard)
-    savedMusicContent.Size = UDim2.new(1, -10, 1, -26); savedMusicContent.Position = UDim2.new(0, 5, 0, 24)
+    savedMusicContent.Size = UDim2.new(1, -10, 1, -28); savedMusicContent.Position = UDim2.new(0, 5, 0, 26)
     savedMusicContent.BackgroundTransparency = 1; savedMusicContent.ScrollBarThickness = 3; savedMusicContent.ScrollBarImageColor3 = Theme.Brand; savedMusicContent.BorderSizePixel = 0; savedMusicContent.ZIndex = 10
     local sLayout = Instance.new("UIListLayout", savedMusicContent); sLayout.SortOrder = Enum.SortOrder.LayoutOrder; sLayout.Padding = UDim.new(0, 5)
     local sPad = Instance.new("UIPadding", savedMusicContent); sPad.PaddingTop = UDim.new(0, 2); sPad.PaddingBottom = UDim.new(0, 6); sPad.PaddingLeft = UDim.new(0, 2); sPad.PaddingRight = UDim.new(0, 4)
@@ -2687,60 +2794,142 @@ do
     registerBrandUpdater(function(newBrand)
         if mlHeader and mlHeader.Parent then mlHeader.TextColor3 = getSoftBrandColor(newBrand) end
         if savedMusicContent and savedMusicContent.Parent then savedMusicContent.ScrollBarImageColor3 = newBrand end
+        syncMusicFilterTabs()
     end)
 
     local fileName = "MenuVipProMax_SavedMusic.json"
     pcall(function() if isfile and isfile(fileName) then local decoded = HttpService:JSONDecode(readfile(fileName)); if type(decoded) == "table" then savedMusicList = decoded end end end)
-    local function saveMusicData() pcall(function() if writefile then writefile(fileName, HttpService:JSONEncode(savedMusicList)) end end) end
-    local function renderSavedMusic()
+    saveMusicData = function() pcall(function() if writefile then writefile(fileName, HttpService:JSONEncode(savedMusicList)) end end) end
+
+    renderSavedMusic = function()
         for _, child in pairs(savedMusicContent:GetChildren()) do if child:IsA("Frame") then child:Destroy() end end
         cleanRGBElements()
-        mlHeader.Text = "🎵 DANH SÁCH NHẠC ĐÃ LƯU (" .. #savedMusicList .. ")"
-        emptyMusicState.Visible = (#savedMusicList == 0)
-        if #savedMusicList == 0 then return end
+        mlHeader.Text = "🎵 KHO NHẠC (" .. #savedMusicList .. ")"
+        syncMusicFilterTabs()
 
+        local visibleCount = 0
         for i, data in ipairs(savedMusicList) do
-            local rowOuter, rowInner = createGlossyPillFrame(savedMusicContent, UDim2.new(1, -2, 0, 32), nil, i)
+            local st = data.status or "checking"
+            local matchFilter = (currentMusicFilter == "all")
+                or (currentMusicFilter == "public" and st == "public")
+                or (currentMusicFilter == "private" and st == "private")
 
-            local songIconBtn, songIconHolder = createGlossyCircleBtn(rowInner, 22, UDim2.new(0, 3, 0.5, 0), Vector2.new(0, 0.5))
-            drawGlossyIcon(songIconHolder, "MusicNote", 0.68)
+            if matchFilter then
+                visibleCount = visibleCount + 1
+                local rowOuter, rowInner = createGlossyPillFrame(savedMusicContent, UDim2.new(1, -2, 0, 32), nil, i)
 
-            local nameBox = Instance.new("TextBox", rowInner)
-            nameBox.Size = UDim2.new(1, -84, 1, 0); nameBox.Position = UDim2.new(0, 30, 0, 0)
-            nameBox.Text = data.name; nameBox.TextColor3 = GlossPalette.IconWhite
-            nameBox.Font = Enum.Font.GothamSemibold; nameBox.TextSize = 9.5
-            nameBox.BackgroundTransparency = 1; nameBox.TextXAlignment = Enum.TextXAlignment.Left
-            nameBox.ClearTextOnFocus = false; nameBox.ZIndex = 13
-            nameBox.FocusLost:Connect(function()
-                if nameBox.Text ~= "" then data.name = nameBox.Text; saveMusicData() else nameBox.Text = data.name end
-            end)
+                local songIconBtn, songIconHolder = createGlossyCircleBtn(rowInner, 22, UDim2.new(0, 3, 0.5, 0), Vector2.new(0, 0.5))
+                drawGlossyIcon(songIconHolder, "MusicNote", 0.68)
 
-            local playItemBtn, playItemHolder = createGlossyCircleBtn(rowInner, 22, UDim2.new(1, -50, 0.5, 0), Vector2.new(0, 0.5))
-            drawGlossyIcon(playItemHolder, "Play", 0.68)
+                local nameBox = Instance.new("TextBox", rowInner)
+                nameBox.Size = UDim2.new(1, -138, 1, 0); nameBox.Position = UDim2.new(0, 29, 0, 0)
+                nameBox.Text = data.name; nameBox.TextColor3 = GlossPalette.IconWhite
+                nameBox.Font = Enum.Font.GothamSemibold; nameBox.TextSize = 9.2
+                nameBox.BackgroundTransparency = 1; nameBox.TextXAlignment = Enum.TextXAlignment.Left
+                nameBox.TextTruncate = Enum.TextTruncate.AtEnd
+                nameBox.ClearTextOnFocus = false; nameBox.ZIndex = 13
+                nameBox.FocusLost:Connect(function()
+                    if nameBox.Text ~= "" then data.name = nameBox.Text; saveMusicData() else nameBox.Text = data.name end
+                end)
 
-            local delItemBtn, delItemHolder = createGlossyCircleBtn(rowInner, 22, UDim2.new(1, -25, 0.5, 0), Vector2.new(0, 0.5))
-            drawGlossyIcon(delItemHolder, "Cross", 0.68)
+                -- Huy hiệu phân loại PUBLIC / PRIVATE (bấm vào để chuyển đổi hoặc kiểm tra lại)
+                local statusBadge = Instance.new("TextButton", rowInner)
+                statusBadge.Size = UDim2.new(0, 50, 0, 18)
+                statusBadge.Position = UDim2.new(1, -104, 0.5, -9)
+                statusBadge.AutoButtonColor = false
+                statusBadge.Font = Enum.Font.GothamBold
+                statusBadge.TextSize = 7.5
+                statusBadge.ZIndex = 14
+                Instance.new("UICorner", statusBadge).CornerRadius = UDim.new(1, 0)
+                local sbStroke = Instance.new("UIStroke", statusBadge)
+                sbStroke.Thickness = 0.9
 
-            songIconBtn.MouseButton1Click:Connect(function() clickAnimate(songIconBtn); musicIdBox.Text = data.id; playMusic(data.id) end)
-            playItemBtn.MouseButton1Click:Connect(function() clickAnimate(playItemBtn); musicIdBox.Text = data.id; playMusic(data.id) end)
-            delItemBtn.MouseButton1Click:Connect(function() clickAnimate(delItemBtn); table.remove(savedMusicList, i); saveMusicData(); renderSavedMusic() end)
+                if st == "public" then
+                    statusBadge.Text = "PUBLIC"
+                    statusBadge.BackgroundColor3 = Color3.fromRGB(20, 58, 44)
+                    statusBadge.TextColor3 = Color3.fromRGB(92, 240, 168)
+                    sbStroke.Color = Color3.fromRGB(72, 215, 145)
+                elseif st == "private" then
+                    statusBadge.Text = "PRIVATE"
+                    statusBadge.BackgroundColor3 = Color3.fromRGB(58, 22, 30)
+                    statusBadge.TextColor3 = Color3.fromRGB(255, 125, 138)
+                    sbStroke.Color = Color3.fromRGB(215, 75, 92)
+                else
+                    statusBadge.Text = "⏳ ĐO..."
+                    statusBadge.BackgroundColor3 = Color3.fromRGB(42, 38, 24)
+                    statusBadge.TextColor3 = Color3.fromRGB(240, 200, 95)
+                    sbStroke.Color = Color3.fromRGB(185, 150, 65)
+                end
+
+                statusBadge.MouseButton1Click:Connect(function()
+                    clickAnimate(statusBadge)
+                    if data.status == "public" then
+                        data.status = "private"
+                        MakeToast("Phân loại ID", "Đã chuyển '" .. data.name .. "' sang PRIVATE", Theme.AccentOff)
+                    else
+                        data.status = "public"
+                        MakeToast("Phân loại ID", "Đã chuyển '" .. data.name .. "' sang PUBLIC", Theme.AccentOn)
+                    end
+                    saveMusicData()
+                    renderSavedMusic()
+                end)
+
+                local playItemBtn, playItemHolder = createGlossyCircleBtn(rowInner, 22, UDim2.new(1, -50, 0.5, 0), Vector2.new(0, 0.5))
+                drawGlossyIcon(playItemHolder, "Play", 0.68)
+
+                local delItemBtn, delItemHolder = createGlossyCircleBtn(rowInner, 22, UDim2.new(1, -25, 0.5, 0), Vector2.new(0, 0.5))
+                drawGlossyIcon(delItemHolder, "Cross", 0.68)
+
+                songIconBtn.MouseButton1Click:Connect(function() clickAnimate(songIconBtn); musicIdBox.Text = data.id; playMusic(data.id) end)
+                playItemBtn.MouseButton1Click:Connect(function() clickAnimate(playItemBtn); musicIdBox.Text = data.id; playMusic(data.id) end)
+                delItemBtn.MouseButton1Click:Connect(function() clickAnimate(delItemBtn); table.remove(savedMusicList, i); saveMusicData(); renderSavedMusic() end)
+            end
+        end
+
+        if #savedMusicList == 0 then
+            emptyMusicState.Text = "🎶 Chưa có bài nhạc nào được lưu.\n<font color='#7E889E'>Nhập ID Nhạc ở trên rồi bấm nút Lưu đĩa mềm bên phải để thêm!</font>"
+            emptyMusicState.Visible = true
+        elseif visibleCount == 0 then
+            local filterName = currentMusicFilter == "public" and "PUBLIC" or "PRIVATE"
+            emptyMusicState.Text = "🔎 Không có bài nhạc nào thuộc nhóm <font color='#F0C868'>" .. filterName .. "</font>.\n<font color='#7E889E'>Bấm sang mục 'Tất cả' để xem toàn bộ danh sách!</font>"
+            emptyMusicState.Visible = true
+        else
+            emptyMusicState.Visible = false
         end
     end
+
+    fBtnAll.MouseButton1Click:Connect(function() clickAnimate(fBtnAll); currentMusicFilter = "all"; renderSavedMusic() end)
+    fBtnPub.MouseButton1Click:Connect(function() clickAnimate(fBtnPub); currentMusicFilter = "public"; renderSavedMusic() end)
+    fBtnPriv.MouseButton1Click:Connect(function() clickAnimate(fBtnPriv); currentMusicFilter = "private"; renderSavedMusic() end)
+
     saveIdBtn.MouseButton1Click:Connect(function()
         clickAnimate(saveIdBtn)
         local rawId = musicIdBox.Text:match("%d+")
         if rawId and rawId ~= "" then
             task.spawn(function()
                 local name = getSongName(rawId)
-                table.insert(savedMusicList, {id = rawId, name = name})
+                local newSong = {id = rawId, name = name, status = "checking"}
+                table.insert(savedMusicList, newSong)
                 saveMusicData(); renderSavedMusic()
-                MakeToast("Đã lưu bài nhạc", name, Theme.AccentOn)
+                MakeToast("Đã lưu & Đang kiểm tra", "Đang phân loại Public/Private cho: " .. name, Theme.Brand)
+                probeSongStatus(newSong)
             end)
         else
             MakeToast("Chưa có ID", "Hãy nhập ID Nhạc trước khi bấm nút Lưu!", Theme.AccentOff)
         end
     end)
+
     renderSavedMusic()
+
+    -- Tự động kiểm tra phân loại Public / Private cho các bài đã lưu từ trước nhưng chưa có nhãn
+    task.spawn(function()
+        for _, item in ipairs(savedMusicList) do
+            if not item.status or item.status == "checking" then
+                probeSongStatus(item)
+                task.wait(0.35)
+            end
+        end
+    end)
 end
 
 -- ==========================================
