@@ -529,7 +529,7 @@ do
 
     titleLabel = Instance.new("TextLabel", header)
     titleLabel.Size = UDim2.new(0, 175, 0, 16); titleLabel.Position = UDim2.new(0, 43, 0, 5); titleLabel.BackgroundTransparency = 1
-    titleLabel.Text = "🇻🇳 MENU VIP PRO MAX"
+    titleLabel.Text = "✨ MENU VIP PRO MAX"
     titleLabel.TextColor3 = Theme.TextTitle; titleLabel.Font = Enum.Font.GothamBlack; titleLabel.TextSize = 11.5; titleLabel.TextXAlignment = Enum.TextXAlignment.Left; titleLabel.ZIndex = 12
 
     local subTitleLabel = Instance.new("TextLabel", header)
@@ -616,9 +616,130 @@ do
         tabBar.CanvasSize = UDim2.new(0, 0, 0, tabLayout.AbsoluteContentSize.Y + 8)
     end)
 
+    -- Bộ vẽ 9 Biểu Tượng 3D Neon cho Sidebar theo đúng mẫu ảnh 3x3 (1000085240.png)
+    local function drawSidebarNeonIcon(box, iconKey)
+        local function part(xS, yS, wS, hS, col1, col2, rot, rad, zOff)
+            local f = Instance.new("Frame", box)
+            f.Size = UDim2.new(wS, 0, hS, 0)
+            f.AnchorPoint = Vector2.new(0.5, 0.5)
+            f.Position = UDim2.new(xS, 0, yS, 0)
+            if rot and rot ~= 0 then f.Rotation = rot end
+            f.BackgroundColor3 = col2 and Color3.fromRGB(255, 255, 255) or col1
+            f.BorderSizePixel = 0
+            f.ZIndex = 13 + (zOff or 0)
+            Instance.new("UICorner", f).CornerRadius = UDim.new(rad or 0.35, 0)
+            if col2 then addSoftGradient(f, col1, col2, 90) end
+            return f
+        end
+
+        local function ring(xS, yS, wS, hS, strokeCol, thick, rot, zOff)
+            local r = Instance.new("Frame", box)
+            r.Size = UDim2.new(wS, 0, hS, 0)
+            r.AnchorPoint = Vector2.new(0.5, 0.5)
+            r.Position = UDim2.new(xS, 0, yS, 0)
+            if rot and rot ~= 0 then r.Rotation = rot end
+            r.BackgroundTransparency = 1
+            r.ZIndex = 13 + (zOff or 0)
+            Instance.new("UICorner", r).CornerRadius = UDim.new(1, 0)
+            local st = Instance.new("UIStroke", r)
+            st.Color = strokeCol; st.Thickness = thick or 1.2
+            return r
+        end
+
+        if iconKey == "Info" then
+            -- 1. THÔNG TIN: Bảng biểu đồ 4 cột cầu vồng + vòng chữ (i) xanh dương + quầng tím-xanh
+            ring(0.5, 0.62, 0.92, 0.42, Color3.fromRGB(165, 95, 255), 1.2, -14, 0)
+            local board = part(0.5, 0.48, 0.80, 0.68, Color3.fromRGB(20, 52, 115), Color3.fromRGB(12, 26, 68), -6, 0.22, 1)
+            local bSt = Instance.new("UIStroke", board); bSt.Color = Color3.fromRGB(65, 195, 255); bSt.Thickness = 1.1
+            ring(0.30, 0.44, 0.28, 0.28, Color3.fromRGB(85, 215, 255), 1.1, 0, 2)
+            part(0.30, 0.46, 0.07, 0.14, Color3.fromRGB(160, 235, 255), nil, 0, 0.5, 3)
+            part(0.46, 0.62, 0.10, 0.18, Color3.fromRGB(55, 210, 255), Color3.fromRGB(25, 135, 235), 0, 0.25, 2)
+            part(0.58, 0.56, 0.10, 0.30, Color3.fromRGB(85, 245, 120), Color3.fromRGB(25, 175, 75), 0, 0.25, 2)
+            part(0.70, 0.49, 0.10, 0.44, Color3.fromRGB(255, 225, 65), Color3.fromRGB(235, 145, 20), 0, 0.25, 2)
+            part(0.82, 0.42, 0.10, 0.56, Color3.fromRGB(255, 95, 85), Color3.fromRGB(215, 25, 45), 0, 0.25, 2)
+        elseif iconKey == "Feature" then
+            -- 2. TÍNH NĂNG: Tia sét vàng cam giữa vòng xoáy điện xanh lam
+            ring(0.5, 0.54, 0.86, 0.52, Color3.fromRGB(55, 185, 255), 1.4, -22, 0)
+            ring(0.5, 0.48, 0.68, 0.68, Color3.fromRGB(35, 115, 235), 1.0, 15, 0)
+            part(0.54, 0.32, 0.22, 0.48, Color3.fromRGB(255, 238, 85), Color3.fromRGB(245, 140, 20), 26, 0.3, 2)
+            part(0.50, 0.49, 0.44, 0.17, Color3.fromRGB(255, 215, 55), Color3.fromRGB(240, 120, 15), -12, 0.3, 3)
+            part(0.45, 0.67, 0.20, 0.48, Color3.fromRGB(255, 195, 45), Color3.fromRGB(230, 75, 15), 26, 0.3, 2)
+        elseif iconKey == "Character" then
+            -- 3. NHÂN VẬT: Người vàng chạy tốc độ + vệt gió vàng cam
+            ring(0.52, 0.60, 0.88, 0.46, Color3.fromRGB(255, 155, 25), 1.3, -16, 0)
+            part(0.24, 0.36, 0.32, 0.08, Color3.fromRGB(255, 215, 65), Color3.fromRGB(240, 125, 15), 0, 1, 1)
+            part(0.20, 0.50, 0.36, 0.08, Color3.fromRGB(255, 195, 50), Color3.fromRGB(235, 105, 15), 0, 1, 1)
+            part(0.24, 0.64, 0.28, 0.08, Color3.fromRGB(255, 175, 40), Color3.fromRGB(225, 85, 15), 0, 1, 1)
+            -- Đầu, thân, tay & chân đang chạy
+            part(0.68, 0.22, 0.24, 0.24, Color3.fromRGB(255, 235, 80), Color3.fromRGB(245, 155, 20), 0, 1, 3)
+            part(0.56, 0.46, 0.18, 0.34, Color3.fromRGB(255, 215, 65), Color3.fromRGB(240, 130, 18), 28, 0.45, 2)
+            part(0.72, 0.38, 0.24, 0.11, Color3.fromRGB(255, 220, 70), Color3.fromRGB(240, 135, 20), -35, 0.5, 2)
+            part(0.42, 0.38, 0.22, 0.11, Color3.fromRGB(255, 205, 55), Color3.fromRGB(235, 115, 15), 35, 0.5, 2)
+            part(0.66, 0.68, 0.14, 0.30, Color3.fromRGB(255, 205, 55), Color3.fromRGB(235, 110, 15), -28, 0.45, 2)
+            part(0.40, 0.72, 0.30, 0.13, Color3.fromRGB(255, 190, 45), Color3.fromRGB(225, 95, 15), -32, 0.45, 2)
+        elseif iconKey == "TpPlayer" then
+            -- 4. TP PLAYER: Avatar người xanh dương trong vòng tròn + nút tam giác vàng cam góc phải dưới
+            ring(0.48, 0.50, 0.84, 0.84, Color3.fromRGB(55, 195, 255), 1.3, 0, 0)
+            part(0.44, 0.36, 0.32, 0.32, Color3.fromRGB(135, 225, 255), Color3.fromRGB(35, 135, 235), 0, 1, 2)
+            part(0.44, 0.68, 0.54, 0.30, Color3.fromRGB(115, 210, 255), Color3.fromRGB(25, 115, 220), 0, 0.5, 2)
+            -- Huy hiệu tam giác vàng cam góc dưới phải
+            part(0.74, 0.66, 0.34, 0.34, Color3.fromRGB(255, 215, 65), Color3.fromRGB(235, 95, 15), 15, 0.3, 3)
+            part(0.75, 0.66, 0.18, 0.18, Color3.fromRGB(255, 245, 155), nil, 45, 0.25, 4)
+        elseif iconKey == "TpSave" then
+            -- 5. TP SAVE: Ghim vị trí đỏ bóng (Pin) trên vòng tâm đỏ-cam-xanh
+            ring(0.5, 0.74, 0.88, 0.34, Color3.fromRGB(65, 195, 255), 1.1, 0, 0)
+            ring(0.5, 0.72, 0.62, 0.22, Color3.fromRGB(255, 135, 35), 1.2, 0, 1)
+            part(0.5, 0.56, 0.24, 0.28, Color3.fromRGB(245, 55, 55), Color3.fromRGB(175, 15, 25), 45, 0.2, 2)
+            part(0.5, 0.36, 0.46, 0.46, Color3.fromRGB(255, 85, 75), Color3.fromRGB(195, 18, 28), 0, 1, 3)
+            part(0.42, 0.28, 0.14, 0.10, Color3.fromRGB(255, 215, 215), nil, -25, 1, 4)
+        elseif iconKey == "AutoSkill" then
+            -- 6. AUTO SKILL: Bàn phím RGB nghiêng viền xanh-tím
+            ring(0.5, 0.56, 0.92, 0.44, Color3.fromRGB(215, 75, 255), 1.2, -16, 0)
+            local kb = part(0.5, 0.50, 0.84, 0.56, Color3.fromRGB(28, 42, 95), Color3.fromRGB(16, 20, 52), -8, 0.22, 1)
+            local kSt = Instance.new("UIStroke", kb); kSt.Color = Color3.fromRGB(65, 205, 255); kSt.Thickness = 1.1
+            -- Hàng phím nhỏ & thanh Space cầu vồng
+            part(0.28, 0.40, 0.13, 0.11, Color3.fromRGB(75, 215, 255), nil, -8, 0.25, 2)
+            part(0.45, 0.38, 0.13, 0.11, Color3.fromRGB(95, 185, 255), nil, -8, 0.25, 2)
+            part(0.62, 0.36, 0.13, 0.11, Color3.fromRGB(165, 115, 255), nil, -8, 0.25, 2)
+            part(0.77, 0.34, 0.12, 0.11, Color3.fromRGB(225, 85, 245), nil, -8, 0.25, 2)
+            part(0.54, 0.60, 0.46, 0.11, Color3.fromRGB(95, 245, 165), Color3.fromRGB(255, 185, 55), -8, 0.3, 2)
+        elseif iconKey == "Music" then
+            -- 7. NHẠC ID: Nốt nhạc đôi trắng-tím (♫) giữa vòng xoáy tím-xanh
+            ring(0.5, 0.56, 0.90, 0.50, Color3.fromRGB(215, 75, 255), 1.3, -20, 0)
+            ring(0.5, 0.48, 0.78, 0.44, Color3.fromRGB(55, 205, 255), 1.0, 18, 0)
+            part(0.32, 0.70, 0.28, 0.22, Color3.fromRGB(250, 245, 255), Color3.fromRGB(195, 135, 255), -18, 1, 3)
+            part(0.68, 0.64, 0.28, 0.22, Color3.fromRGB(250, 245, 255), Color3.fromRGB(195, 135, 255), -18, 1, 3)
+            part(0.41, 0.46, 0.11, 0.46, Color3.fromRGB(250, 245, 255), Color3.fromRGB(205, 155, 255), 0, 0.3, 2)
+            part(0.77, 0.40, 0.11, 0.46, Color3.fromRGB(250, 245, 255), Color3.fromRGB(205, 155, 255), 0, 0.3, 2)
+            part(0.59, 0.24, 0.48, 0.16, Color3.fromRGB(255, 250, 255), Color3.fromRGB(210, 165, 255), -12, 0.35, 3)
+        elseif iconKey == "Utility" then
+            -- 8. TIỆN ÍCH: Cờ lê bạc chéo tua vít cán vàng trên nền bánh răng xanh
+            ring(0.5, 0.5, 0.76, 0.76, Color3.fromRGB(55, 145, 235), 1.6, 0, 0)
+            -- Tua vít chéo (45 độ) với cán vàng cam
+            part(0.62, 0.38, 0.12, 0.52, Color3.fromRGB(185, 220, 255), nil, 45, 0.3, 1)
+            part(0.34, 0.66, 0.24, 0.38, Color3.fromRGB(255, 205, 45), Color3.fromRGB(235, 105, 15), 45, 0.35, 2)
+            -- Cờ lê bạc chéo ngược (-45 độ)
+            part(0.52, 0.52, 0.18, 0.72, Color3.fromRGB(240, 248, 255), Color3.fromRGB(145, 175, 215), -45, 0.35, 3)
+            part(0.30, 0.30, 0.28, 0.24, Color3.fromRGB(245, 250, 255), Color3.fromRGB(165, 195, 230), -45, 1, 3)
+        elseif iconKey == "Config" then
+            -- 9. CẤU HÌNH: Tên lửa trắng-đỏ phun lửa vàng cam trong vòng xoáy xanh
+            ring(0.52, 0.56, 0.88, 0.46, Color3.fromRGB(45, 195, 255), 1.2, -25, 0)
+            -- Lửa đuôi tên lửa
+            part(0.26, 0.74, 0.26, 0.34, Color3.fromRGB(255, 235, 75), Color3.fromRGB(245, 85, 20), 45, 0.5, 1)
+            -- Cánh đỏ 2 bên & mũi đỏ
+            part(0.36, 0.44, 0.26, 0.14, Color3.fromRGB(245, 45, 75), nil, 15, 0.35, 1)
+            part(0.56, 0.64, 0.14, 0.26, Color3.fromRGB(245, 45, 75), nil, 15, 0.35, 1)
+            -- Thân tên lửa trắng bạc & mũi đỏ
+            part(0.56, 0.44, 0.28, 0.58, Color3.fromRGB(248, 252, 255), Color3.fromRGB(185, 205, 235), 45, 0.45, 2)
+            part(0.73, 0.27, 0.22, 0.24, Color3.fromRGB(255, 55, 65), Color3.fromRGB(195, 15, 35), 45, 0.4, 3)
+            -- Cửa sổ tròn xanh dương
+            part(0.58, 0.42, 0.17, 0.17, Color3.fromRGB(65, 185, 255), Color3.fromRGB(20, 75, 185), 0, 1, 4)
+        end
+    end
+
     local allTabs = {}
     local currentActiveTab = nil
-    local function createTab(icon, name)
+    local function createTab(iconKey, name)
         local btn = Instance.new("TextButton", tabBar)
         btn.Size = UDim2.new(1, 0, 0, 23)
         btn.Text = ""; btn.BackgroundColor3 = Theme.BrandSoft
@@ -633,32 +754,32 @@ do
         Instance.new("UICorner", indicator).CornerRadius = UDim.new(1, 0)
 
         local iconBox = Instance.new("Frame", btn)
-        iconBox.Size = UDim2.new(0, 17, 0, 17); iconBox.Position = UDim2.new(0, 7, 0.5, -8.5)
-        iconBox.BackgroundColor3 = Color3.fromRGB(22, 26, 38); iconBox.BorderSizePixel = 0; iconBox.ZIndex = 12
+        iconBox.Size = UDim2.new(0, 18, 0, 18); iconBox.Position = UDim2.new(0, 6, 0.5, -9)
+        iconBox.BackgroundColor3 = Color3.fromRGB(18, 22, 34); iconBox.BorderSizePixel = 0; iconBox.ZIndex = 12
         Instance.new("UICorner", iconBox).CornerRadius = UDim.new(0, 5)
+        local ibStroke = Instance.new("UIStroke", iconBox)
+        ibStroke.Color = Theme.Brand; ibStroke.Thickness = 0.9; ibStroke.Transparency = 0.65
 
-        local iconLbl = Instance.new("TextLabel", iconBox)
-        iconLbl.Size = UDim2.new(1, 0, 1, 0)
-        iconLbl.BackgroundTransparency = 1; iconLbl.Text = icon; iconLbl.TextSize = 10.5; iconLbl.Font = Enum.Font.GothamBold; iconLbl.ZIndex = 13
+        drawSidebarNeonIcon(iconBox, iconKey)
 
         local txtLbl = Instance.new("TextLabel", btn)
         txtLbl.Size = UDim2.new(1, -30, 1, 0); txtLbl.Position = UDim2.new(0, 28, 0, 0)
         txtLbl.BackgroundTransparency = 1; txtLbl.Text = name; txtLbl.TextColor3 = Theme.TextDim
         txtLbl.Font = Enum.Font.GothamBold; txtLbl.TextSize = 9.2; txtLbl.TextXAlignment = Enum.TextXAlignment.Left; txtLbl.ZIndex = 12
 
-        table.insert(allTabs, {Btn = btn, Ind = indicator, Txt = txtLbl, IconBox = iconBox, Stroke = tStroke})
+        table.insert(allTabs, {Btn = btn, Ind = indicator, Txt = txtLbl, IconBox = iconBox, IconStroke = ibStroke, Stroke = tStroke})
         return btn, indicator, txtLbl
     end
 
-    local tab1, ind1 = createTab("📊", "THÔNG TIN")
-    local tab2, ind2 = createTab("⚡", "TÍNH NĂNG")
-    local tab3, ind3 = createTab("🏃", "NHÂN VẬT")
-    local tab7, ind7 = createTab("🎯", "TP PLAYER")
-    local tab6, ind6 = createTab("📍", "TP SAVE")
-    local tab8, ind8 = createTab("⌨️", "AUTO SKILL")
-    local tab5, ind5 = createTab("🎵", "NHẠC ID")
-    local tab4, ind4 = createTab("🛠️", "TIỆN ÍCH")
-    local tab9, ind9 = createTab("🚀", "CẤU HÌNH")
+    local tab1, ind1 = createTab("Info", "THÔNG TIN")
+    local tab2, ind2 = createTab("Feature", "TÍNH NĂNG")
+    local tab3, ind3 = createTab("Character", "NHÂN VẬT")
+    local tab7, ind7 = createTab("TpPlayer", "TP PLAYER")
+    local tab6, ind6 = createTab("TpSave", "TP SAVE")
+    local tab8, ind8 = createTab("AutoSkill", "AUTO SKILL")
+    local tab5, ind5 = createTab("Music", "NHẠC ID")
+    local tab4, ind4 = createTab("Utility", "TIỆN ÍCH")
+    local tab9, ind9 = createTab("Config", "CẤU HÌNH")
 
     -- Tự động giãn đều chiều cao & khoảng cách 9 Tab bên Sidebar khi kéo phóng to/thu nhỏ Menu
     local function updateSidebarProportions()
@@ -730,8 +851,14 @@ do
                 BackgroundColor3 = Theme.BrandSoft
             }):Play()
             TweenService:Create(item.IconBox, TweenInfo.new(0.18), {
-                BackgroundColor3 = isSel and Theme.Brand or Color3.fromRGB(22, 26, 38)
+                BackgroundColor3 = isSel and Color3.fromRGB(14, 18, 28) or Color3.fromRGB(20, 24, 36)
             }):Play()
+            if item.IconStroke then
+                TweenService:Create(item.IconStroke, TweenInfo.new(0.18), {
+                    Transparency = isSel and 0.15 or 0.7,
+                    Color = Theme.Brand
+                }):Play()
+            end
             TweenService:Create(item.Stroke, TweenInfo.new(0.18), {
                 Transparency = isSel and 0.45 or 1,
                 Color = Theme.Brand
@@ -780,7 +907,11 @@ do
             item.Btn.BackgroundColor3 = Theme.BrandSoft
             item.Ind.BackgroundColor3 = Theme.Brand
             item.Stroke.Color = Theme.Brand
-            item.IconBox.BackgroundColor3 = isSel and Theme.Brand or Color3.fromRGB(22, 26, 38)
+            item.IconBox.BackgroundColor3 = isSel and Color3.fromRGB(14, 18, 28) or Color3.fromRGB(20, 24, 36)
+            if item.IconStroke then
+                item.IconStroke.Color = Theme.Brand
+                item.IconStroke.Transparency = isSel and 0.15 or 0.7
+            end
         end
         cleanRGBElements()
         for _, obj in ipairs(RGBElements) do
