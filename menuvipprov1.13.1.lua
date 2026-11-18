@@ -1,5 +1,5 @@
 -- ==========================================
--- MENU VIP PRO MAX V1.17.0 (LUXURY CYBER-GLASS & BENTO SIDEBAR EDITION)
+-- MENU VIP PRO MAX V1.18.0 (LUXURY CYBER-GLASS & BENTO SIDEBAR EDITION)
 -- ==========================================
 repeat task.wait() until game:IsLoaded()
 
@@ -448,7 +448,6 @@ do
     end
     syncDragonButtonState(true)
 end
-
 local function clickAnimate(obj)
     local scale = obj:FindFirstChildOfClass("UIScale") or Instance.new("UIScale", obj)
     TweenService:Create(scale, TweenInfo.new(0.08, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Scale = 0.95}):Play()
@@ -475,7 +474,6 @@ do
         if input == btnDragInput then btnDragInput = nil end
     end)
 end
-
 local OPEN_POS = UDim2.new(0.5, -220, 0.5, -146)
 local CLOSE_POS = UDim2.new(0.5, -220, 1.25, 0)
 
@@ -548,10 +546,10 @@ do
     headerStatText.RichText = true; headerStatText.Text = "<font color='#38CC88'>60 FPS</font> • <font color='#58B6F2'>0ms</font>"
     headerStatText.TextColor3 = Theme.TextTitle; headerStatText.Font = Enum.Font.GothamBold; headerStatText.TextSize = 9; headerStatText.ZIndex = 13
 
-    -- Huy hiệu V1.17 nền tối dịu mắt, chữ thanh rõ nét không bị chói sáng trên Mobile
+    -- Huy hiệu V1.18 nền tối dịu mắt, chữ thanh rõ nét không bị chói sáng trên Mobile
     local verBadge = Instance.new("TextLabel", header)
     verBadge.Size = UDim2.new(0, 48, 0, 20); verBadge.Position = UDim2.new(1, -83, 0.5, -10)
-    verBadge.BackgroundColor3 = Color3.fromRGB(18, 21, 30); verBadge.Text = "V1.17"; verBadge.TextColor3 = getSoftBrandColor(Theme.Brand)
+    verBadge.BackgroundColor3 = Color3.fromRGB(18, 21, 30); verBadge.Text = "V1.18"; verBadge.TextColor3 = getSoftBrandColor(Theme.Brand)
     verBadge.Font = Enum.Font.GothamSemibold; verBadge.TextSize = 9.5; verBadge.ZIndex = 12
     Instance.new("UICorner", verBadge).CornerRadius = UDim.new(0, 7)
     local verStroke = Instance.new("UIStroke", verBadge); verStroke.Color = Theme.Brand; verStroke.Thickness = 0.8; verStroke.Transparency = 0.45
@@ -1047,7 +1045,6 @@ do
     openBtn.MouseButton1Click:Connect(function() clickAnimate(openBtn); toggleMenuWindow() end)
     minBtn.MouseButton1Click:Connect(function() clickAnimate(minBtn); toggleMenuWindow() end)
 end
-
 -- ==========================================
 -- COMPONENTS HỆ THỐNG
 -- ==========================================
@@ -1502,6 +1499,7 @@ end)
 -- [TAB 2: TÍNH NĂNG (SẮP XẾP THEO NHÓM RÕ RÀNG)]
 -- ==========================================
 local wasHorizontalTp = false
+do
 
 -- Sửa lỗi không bật lại trạng thái FallingDown/Ragdoll khi tắt AntiStun
 createToggle(page2, "🛡️ Chống ngã & Chống văng xa", "AntiStun", function(v)
@@ -1676,6 +1674,8 @@ createDualButtons(
     end
 )
 
+end
+
 -- ==========================================
 -- [TAB 3: NHÂN VẬT (DI CHUYỂN, CHIẾN ĐẤU & ÁNH SÁNG)]
 -- ==========================================
@@ -1754,10 +1754,11 @@ end)
 createSlider(page3, "• Độ sáng đèn", 0, 5, "LightBrightness")
 createCycleBtn(page3, "🎨 Đổi màu sáng:", PlayerLightColors, "LightColorIdx")
 end
-
 -- ==========================================
 -- [TAB 4 (SIDEBAR #8): TIỆN ÍCH (GỌN GÀNG & ĐẦY ĐỦ)]
 -- ==========================================
+local miniHudFrame, hudLabel
+do
 local function hopServer(sortOrder)
     local api = "https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=" .. sortOrder .. "&limit=100"
     local function getServers(cursor)
@@ -1848,7 +1849,7 @@ createToggle(page4, "🌈 Chế độ viền RGB", "RGB", function(v)
     end
 end)
 
-local miniHudFrame = Instance.new("Frame", gui)
+miniHudFrame = Instance.new("Frame", gui)
 miniHudFrame.Size = UDim2.new(0, 128, 0, 26); miniHudFrame.Position = UDim2.new(0, 65, 0.05, 9)
 miniHudFrame.BackgroundColor3 = Theme.MainBg; miniHudFrame.BackgroundTransparency = 0.12
 miniHudFrame.Visible = State.MiniHUD; miniHudFrame.ZIndex = 10
@@ -1856,7 +1857,7 @@ Instance.new("UICorner", miniHudFrame).CornerRadius = UDim.new(1, 0)
 local hudStroke = Instance.new("UIStroke", miniHudFrame); hudStroke.Color = Theme.Brand; hudStroke.Thickness = 1.2
 table.insert(RGBElements, {Type = "Button", Stroke = hudStroke, DefaultColor = Theme.Brand, UseBrand = true})
 
-local hudLabel = Instance.new("TextLabel", miniHudFrame)
+hudLabel = Instance.new("TextLabel", miniHudFrame)
 hudLabel.Size = UDim2.new(1, 0, 1, 0); hudLabel.BackgroundTransparency = 1; hudLabel.RichText = true
 hudLabel.Text = "⚡ 60 FPS | 🌐 0 ms"; hudLabel.TextColor3 = Theme.TextTitle
 hudLabel.Font = Enum.Font.GothamBold; hudLabel.TextSize = 10; hudLabel.ZIndex = 10
@@ -1877,7 +1878,6 @@ do
         if inp == hudDragInput then hudDragInput = nil end
     end)
 end
-
 createToggle(page4, "📟 Đồng hồ FPS & Ping Mini ngoài màn hình", "MiniHUD", function(v) miniHudFrame.Visible = v end)
 createToggle(page4, "💫 Mở khóa ShiftLock Mobile", "ShiftLock", function(v) pcall(function() player.DevEnableMouseLock = v end) end)
 
@@ -1935,11 +1935,13 @@ createDualButtons(
     function() pcall(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/haudeptrai2k6/hack.lua/refs/heads/main/menu-tp-play.lua"))() end) end
 )
 
+end
+
 -- ==========================================
 -- [TAB 5: NHẠC ID (GỘP PLAY/PAUSE 1 NÚT + XOÁ NÚT VUÔNG + Ô NHẬP HẸN GIỜ TỐI ĐA 90 PHÚT)]
 -- ==========================================
-local currentSound = nil; local currentMusicId = ""; local savedMusicList = {}; local isMusicPaused = false
 do
+    local currentSound = nil; local currentMusicId = ""; local savedMusicList = {}; local isMusicPaused = false
     local GlossPalette = {
         RimWhite = Color3.fromRGB(234, 240, 248),
         RimActive = Color3.fromRGB(92, 235, 168),
@@ -2228,6 +2230,14 @@ do
     end
 
     -- 1. KHUNG TRÊN CÙNG: NÚT NỐT NHẠC + PILL NHẬP ID + NÚT LƯU ĐĨA MỀM + THANH TUA NHẠC
+    local musicIdBox, saveIdBtn, nowPlayingLabel, musicTimeLabel, seekFill, seekKnob
+    local seekDragInput = nil
+    local prevTrackBtn, nextTrackBtn, noteBadge
+    local function formatTime(sec)
+        sec = math.max(0, math.floor(tonumber(sec) or 0))
+        return string.format("%02d:%02d", math.floor(sec / 60), sec % 60)
+    end
+    do
     local topMusicCard = Instance.new("Frame", page5)
     topMusicCard.Size = UDim2.new(0.94, 0, 0, 68)
     topMusicCard.BackgroundColor3 = Theme.ItemBg
@@ -2236,11 +2246,11 @@ do
     local tmStroke = Instance.new("UIStroke", topMusicCard); tmStroke.Color = Theme.Stroke; tmStroke.Thickness = 1
     table.insert(RGBElements, {Type = "Info", Stroke = tmStroke})
 
-    local noteBadge, noteHolder = createGlossyCircleBtn(topMusicCard, 28, UDim2.new(0, 6, 0, 4))
+    local noteHolder; noteBadge, noteHolder = createGlossyCircleBtn(topMusicCard, 28, UDim2.new(0, 6, 0, 4))
     drawGlossyIcon(noteHolder, "MusicNote", 0.85)
 
     local inputPillOuter, inputPillInner = createGlossyPillFrame(topMusicCard, UDim2.new(1, -76, 0, 28), UDim2.new(0, 38, 0, 4))
-    local musicIdBox = Instance.new("TextBox", inputPillInner)
+    musicIdBox = Instance.new("TextBox", inputPillInner)
     musicIdBox.Size = UDim2.new(1, -20, 1, 0); musicIdBox.Position = UDim2.new(0, 10, 0, 0)
     musicIdBox.BackgroundTransparency = 1; musicIdBox.PlaceholderText = "Nhập hoặc dán ID Nhạc..."
     musicIdBox.PlaceholderColor3 = Color3.fromRGB(168, 184, 204); musicIdBox.Text = ""
@@ -2249,10 +2259,10 @@ do
     musicIdBox.TextXAlignment = Enum.TextXAlignment.Left
     musicIdBox.ClearTextOnFocus = false; musicIdBox.ZIndex = 13
 
-    local saveIdBtn, saveHolder = createGlossyCircleBtn(topMusicCard, 28, UDim2.new(1, -34, 0, 4))
+    local saveHolder; saveIdBtn, saveHolder = createGlossyCircleBtn(topMusicCard, 28, UDim2.new(1, -34, 0, 4))
     drawGlossyIcon(saveHolder, "Floppy", 0.86)
 
-    local nowPlayingLabel = Instance.new("TextLabel", topMusicCard)
+    nowPlayingLabel = Instance.new("TextLabel", topMusicCard)
     nowPlayingLabel.Size = UDim2.new(1, -138, 0, 16); nowPlayingLabel.Position = UDim2.new(0, 10, 0, 34)
     nowPlayingLabel.BackgroundTransparency = 1; nowPlayingLabel.RichText = true
     nowPlayingLabel.Text = "<font color='#9AA4B8'>🎵 Chưa có nhạc phát</font>"
@@ -2261,17 +2271,17 @@ do
     nowPlayingLabel.TextTruncate = Enum.TextTruncate.AtEnd; nowPlayingLabel.ZIndex = 11
 
     -- 2 nút Lùi bài (⏮) & Qua bài (⏭) 3D Cyan->Blue->Purple theo mẫu 1000085250.png
-    local prevTrackBtn = Instance.new("TextButton", topMusicCard)
+    prevTrackBtn = Instance.new("TextButton", topMusicCard)
     prevTrackBtn.Size = UDim2.new(0, 18, 0, 16); prevTrackBtn.Position = UDim2.new(1, -124, 0, 34)
     prevTrackBtn.BackgroundTransparency = 1; prevTrackBtn.Text = ""; prevTrackBtn.AutoButtonColor = false; prevTrackBtn.ZIndex = 14
     drawGlossyIcon(prevTrackBtn, "PrevTrack", 0.72)
 
-    local nextTrackBtn = Instance.new("TextButton", topMusicCard)
+    nextTrackBtn = Instance.new("TextButton", topMusicCard)
     nextTrackBtn.Size = UDim2.new(0, 18, 0, 16); nextTrackBtn.Position = UDim2.new(1, -104, 0, 34)
     nextTrackBtn.BackgroundTransparency = 1; nextTrackBtn.Text = ""; nextTrackBtn.AutoButtonColor = false; nextTrackBtn.ZIndex = 14
     drawGlossyIcon(nextTrackBtn, "NextTrack", 0.72)
 
-    local musicTimeLabel = Instance.new("TextLabel", topMusicCard)
+    musicTimeLabel = Instance.new("TextLabel", topMusicCard)
     musicTimeLabel.Size = UDim2.new(0, 74, 0, 16); musicTimeLabel.Position = UDim2.new(1, -84, 0, 34)
     musicTimeLabel.BackgroundTransparency = 1; musicTimeLabel.Text = "00:00 / 00:00"
     musicTimeLabel.TextColor3 = getSoftBrandColor(Theme.Brand)
@@ -2290,11 +2300,11 @@ do
     seekTrack.BackgroundColor3 = Color3.fromRGB(16, 22, 30); seekTrack.BorderSizePixel = 0; seekTrack.ZIndex = 11
     Instance.new("UICorner", seekTrack).CornerRadius = UDim.new(1, 0)
 
-    local seekFill = Instance.new("Frame", seekTrack)
+    seekFill = Instance.new("Frame", seekTrack)
     seekFill.Size = UDim2.new(0, 0, 1, 0); seekFill.BackgroundColor3 = Theme.Brand; seekFill.BorderSizePixel = 0; seekFill.ZIndex = 12
     Instance.new("UICorner", seekFill).CornerRadius = UDim.new(1, 0)
 
-    local seekKnob = Instance.new("Frame", seekTrack)
+    seekKnob = Instance.new("Frame", seekTrack)
     seekKnob.Size = UDim2.new(0, 10, 0, 10); seekKnob.AnchorPoint = Vector2.new(0.5, 0.5)
     seekKnob.Position = UDim2.new(0, 0, 0.5, 0); seekKnob.BackgroundColor3 = GlossPalette.IconWhite; seekKnob.ZIndex = 13
     Instance.new("UICorner", seekKnob).CornerRadius = UDim.new(1, 0)
@@ -2305,12 +2315,6 @@ do
         if seekKnobStroke and seekKnobStroke.Parent then seekKnobStroke.Color = newBrand end
     end)
 
-    local function formatTime(sec)
-        sec = math.max(0, math.floor(tonumber(sec) or 0))
-        return string.format("%02d:%02d", math.floor(sec / 60), sec % 60)
-    end
-
-    local seekDragInput = nil
     local function scrubMusicToInput(input)
         local pos = math.clamp((input.Position.X - seekTrack.AbsolutePosition.X) / math.max(1, seekTrack.AbsoluteSize.X), 0, 1)
         seekFill.Size = UDim2.new(pos, 0, 1, 0)
@@ -2333,6 +2337,7 @@ do
     UIS.InputEnded:Connect(function(input)
         if input == seekDragInput then seekDragInput = nil end
     end)
+    end
 
     local function getCurrentSpeedPreset()
         return MusicSpeedPresets[State.MusicSpeedIdx] or MusicSpeedPresets[2]
@@ -2510,6 +2515,7 @@ do
     local dockRow = Instance.new("Frame", page5)
     dockRow.Size = UDim2.new(0.94, 0, 0, 44); dockRow.BackgroundTransparency = 1; dockRow.LayoutOrder = 2
 
+    do
     local btnDock = Instance.new("Frame", dockRow)
     btnDock.Size = UDim2.new(0, 108, 1, 0); btnDock.Position = UDim2.new(0, 0, 0, 0)
     btnDock.BackgroundTransparency = 1
@@ -2775,7 +2781,10 @@ do
         end
     end)
 
+    end
+
     -- Cụm 5: Thanh Pill 3D chỉnh Âm lượng tích hợp Biểu tượng Loa 3D động (🔊 / 🔉 / 🔇 theo mẫu 1000085250.png)
+    do
     local volGroup = Instance.new("Frame", dockRow)
     volGroup.Size = UDim2.new(1, -202, 1, 0); volGroup.Position = UDim2.new(0, 202, 0, 0)
     volGroup.BackgroundTransparency = 1
@@ -2901,8 +2910,10 @@ do
     UIS.InputEnded:Connect(function(input)
         if input == volDragInput then volDragInput = nil end
     end)
+    end
 
     -- 3. KHUNG DANH SÁCH NHẠC ĐÃ LƯU (LOGO 3D PUBLIC XANH BĂNG & PRIVATE LỬA VÀNG THEO MẪU 1000085248.png)
+    do
     local currentMusicFilter = "all" -- "all" | "public" | "private"
 
     -- Hàm dựng Logo 3D PUBLIC (Năng lượng Xanh Băng - Tím) và PRIVATE (Hào quang Lửa Đỏ - Chữ Vàng Cam)
@@ -3251,8 +3262,8 @@ do
             end
         end
     end)
+    end
 end
-
 -- ==========================================
 -- [TAB 6: TP SAVE (NÂNG CẤP ESP ĐIỂM LƯU + AUTO LOOP TP + CẬP NHẬT VỊ TRÍ)]
 -- ==========================================
@@ -3351,7 +3362,6 @@ do
     end
     renderSavedTps()
 end
-
 -- ==========================================
 -- [TAB 7: TP NGƯỜI CHƠI (CUỘN MƯỢT KHÔNG GIẬT + KHÔNG KẸT TƯ THẾ TP 1 LẦN)]
 -- ==========================================
@@ -3360,6 +3370,9 @@ local autoTpPlayerEnabled = false
 local spectatePlayerEnabled = false
 local spectateProxyPart = nil
 local lastSpectateStreamTick = 0
+local teleportToSelectedPlayer
+
+do
 local playerListContainer, playerListScroll
 local playerDistLabels = {}
 local playerCardRefs = {}
@@ -3391,7 +3404,7 @@ local function restoreNormalPosture()
 end
 
 local lastStreamRequest = 0
-local function teleportToSelectedPlayer(isManualClick)
+teleportToSelectedPlayer = function(isManualClick)
     if not targetTpPlayer or not targetTpPlayer.Character then return false end
     local targetCF = getCharacterCFrame(targetTpPlayer.Character)
     local targetHum = targetTpPlayer.Character:FindFirstChildOfClass("Humanoid")
@@ -3471,7 +3484,6 @@ local function resetCameraSubject()
     end)
 end
 
-do
     local tpControlCard = Instance.new("Frame", page7)
     tpControlCard.Size = UDim2.new(0.94, 0, 0, 88); tpControlCard.BackgroundColor3 = Theme.ItemBg
     tpControlCard.LayoutOrder = 1; tpControlCard.ZIndex = 10
@@ -3868,7 +3880,6 @@ do
         updatePlayerList()
     end)
 end
-
 -- ==========================================
 -- [TAB 8: AUTO SKILL (NÂNG CẤP BẬT/TẮT NHANH & PHÍM Q, R)]
 -- ==========================================
@@ -4019,7 +4030,6 @@ task.spawn(function()
     end
 end)
 end
-
 -- ==========================================
 -- [TAB 9: CẤU HÌNH & GIẢM LAG CHUYÊN SÂU (HỢP NHẤT TOÀN BỘ)]
 -- ==========================================
@@ -4635,7 +4645,6 @@ do
 
     createButton(page9, "🧹 Dọn rác bản đồ & Giải phóng RAM ngay", Theme.AccentOff, function() cleanDebrisAndRAM(false) end)
 end
-
 -- ==========================================
 -- [TAB 1: DASHBOARD BENTO + QUẢN LÝ SERVER (SỬA LỖI UTF-8 & CÂN ĐỐI KHUNG)]
 -- ==========================================
@@ -5115,7 +5124,7 @@ do
         local s = execTime % 60
 
         sysBody.Text = string.format(
-            "<font color='#78B4DC'>• Executor:</font> <font color='#38CC88'>%s</font>   |   <font color='#78B4DC'>Phiên bản:</font> <font color='#E09F67'>V1.17.0</font>\n" ..
+            "<font color='#78B4DC'>• Executor:</font> <font color='#38CC88'>%s</font>   |   <font color='#78B4DC'>Phiên bản:</font> <font color='#E09F67'>V1.18.0</font>\n" ..
             "<font color='#78B4DC'>• Treo máy:</font> %02d:%02d:%02d   |   <font color='#78B4DC'>Giờ hệ thống:</font> %s",
             execName, h, m, s, os.date("%H:%M:%S")
         )
@@ -5128,10 +5137,10 @@ do
         end
     end)
 end
-
 -- ==========================================
 -- [HỆ THỐNG AUTO CLICK, AUTO COLLECT, MAGNET & MINI HUD]
 -- ==========================================
+do
 task.spawn(function()
     while task.wait(0.1) do
         if State.AutoClick and player.Character then
@@ -5594,3 +5603,4 @@ RunService.Heartbeat:Connect(function()
         originalToolSizes = {}
     end
 end)
+end
