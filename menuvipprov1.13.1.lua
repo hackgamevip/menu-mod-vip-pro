@@ -2331,7 +2331,7 @@ do
             songTitle = getSongName(soundId)
             if currentMusicId == soundId and currentSound then
                 local stTag = (currentSound.IsLoaded and currentSound.TimeLength > 0)
-                    and "<font color='#56E39F'>[PUBLIC]</font> "
+                    and "<font color='#58D5FF'>[PUBLIC]</font> "
                     or "<font color='#9AA4B8'>[ĐANG TẢI]</font> "
                 nowPlayingLabel.Text = stTag .. "<font color='#D8B868'>" .. songTitle .. "</font>"
             end
@@ -2348,7 +2348,7 @@ do
         soundObj.Loaded:Connect(function()
             if currentSound == soundObj and currentMusicId == soundId then
                 if soundObj.TimeLength > 0 then
-                    nowPlayingLabel.Text = "<font color='#56E39F'>[PUBLIC]</font> <font color='#D8B868'>" .. songTitle .. "</font>"
+                    nowPlayingLabel.Text = "<font color='#58D5FF'>[PUBLIC]</font> <font color='#D8B868'>" .. songTitle .. "</font>"
                     markSongStatusById(soundId, "public")
                 end
             end
@@ -2373,11 +2373,11 @@ do
                 if not soundObj.IsLoaded or soundObj.TimeLength <= 0 then
                     stopMusic()
                     markSongStatusById(soundId, "private")
-                    nowPlayingLabel.Text = "<font color='#FF7882'>[PRIVATE]</font> <font color='#E05666'>Bị khóa ở game này (" .. songTitle .. ")</font>"
+                    nowPlayingLabel.Text = "<font color='#FFB838'>[PRIVATE]</font> <font color='#E05666'>Bị khóa ở game này (" .. songTitle .. ")</font>"
                     MakeToast("⚠️ ID Private / Bị Khóa", "Bài '" .. songTitle .. "' là ID Private (chỉ dùng cho game gốc/Boombox)!", Theme.AccentOff)
                 else
                     markSongStatusById(soundId, "public")
-                    nowPlayingLabel.Text = "<font color='#56E39F'>[PUBLIC]</font> <font color='#D8B868'>" .. songTitle .. "</font>"
+                    nowPlayingLabel.Text = "<font color='#58D5FF'>[PUBLIC]</font> <font color='#D8B868'>" .. songTitle .. "</font>"
                 end
             end
         end)
@@ -2719,8 +2719,147 @@ do
         if input == volDragInput then volDragInput = nil end
     end)
 
-    -- 3. KHUNG DANH SÁCH NHẠC ĐÃ LƯU (PHÂN LOẠI ID PUBLIC & ID PRIVATE + BỘ LỌC NHANH)
+    -- 3. KHUNG DANH SÁCH NHẠC ĐÃ LƯU (LOGO 3D PUBLIC XANH BĂNG & PRIVATE LỬA VÀNG THEO MẪU 1000085248.png)
     local currentMusicFilter = "all" -- "all" | "public" | "private"
+
+    -- Hàm dựng Logo 3D PUBLIC (Năng lượng Xanh Băng - Tím) và PRIVATE (Hào quang Lửa Đỏ - Chữ Vàng Cam)
+    local function createStatusLogoEmblem(parent, statusType, posUDim, sizeUDim)
+        local btn = Instance.new("TextButton", parent)
+        btn.Size = sizeUDim or UDim2.new(0, 58, 0, 20)
+        btn.Position = posUDim or UDim2.new(1, -112, 0.5, -10)
+        btn.BackgroundTransparency = 1
+        btn.Text = ""
+        btn.AutoButtonColor = false
+        btn.ZIndex = 14
+
+        -- Quầng xoáy năng lượng / lửa phía sau (2 vòng elip nghiêng ngược chiều)
+        local aura1 = Instance.new("Frame", btn)
+        aura1.Size = UDim2.new(1, 0, 0.78, 0)
+        aura1.AnchorPoint = Vector2.new(0.5, 0.5)
+        aura1.Position = UDim2.new(0.5, 0, 0.5, 0)
+        aura1.Rotation = -11
+        aura1.BackgroundTransparency = 1
+        aura1.ZIndex = 14
+        Instance.new("UICorner", aura1).CornerRadius = UDim.new(1, 0)
+        local aura1Stroke = Instance.new("UIStroke", aura1)
+        aura1Stroke.Thickness = 1.4
+        local aura1Grad = Instance.new("UIGradient", aura1Stroke)
+
+        local aura2 = Instance.new("Frame", btn)
+        aura2.Size = UDim2.new(0.92, 0, 0.68, 0)
+        aura2.AnchorPoint = Vector2.new(0.5, 0.5)
+        aura2.Position = UDim2.new(0.5, 0, 0.5, 0)
+        aura2.Rotation = 10
+        aura2.BackgroundTransparency = 1
+        aura2.ZIndex = 14
+        Instance.new("UICorner", aura2).CornerRadius = UDim.new(1, 0)
+        local aura2Stroke = Instance.new("UIStroke", aura2)
+        aura2Stroke.Thickness = 1.1
+
+        -- Nền khiên tối sâu giúp chữ 3D nổi bật sắc nét
+        local coreShield = Instance.new("Frame", btn)
+        coreShield.Size = UDim2.new(0.94, 0, 0.76, 0)
+        coreShield.AnchorPoint = Vector2.new(0.5, 0.5)
+        coreShield.Position = UDim2.new(0.5, 0, 0.5, 0)
+        coreShield.Rotation = -3
+        coreShield.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        coreShield.BorderSizePixel = 0
+        coreShield.ZIndex = 15
+        Instance.new("UICorner", coreShield).CornerRadius = UDim.new(0.45, 0)
+        local shieldGrad = Instance.new("UIGradient", coreShield)
+        shieldGrad.Rotation = 90
+        local shieldStroke = Instance.new("UIStroke", coreShield)
+        shieldStroke.Thickness = 1.0
+
+        -- Lớp bóng đổ khối 3D (Extrusion Shadow) phía dưới chữ
+        local shadowTxt = Instance.new("TextLabel", btn)
+        shadowTxt.Size = UDim2.new(1, 4, 1, 0)
+        shadowTxt.AnchorPoint = Vector2.new(0.5, 0.5)
+        shadowTxt.Position = UDim2.new(0.5, 1, 0.5, 1.5)
+        shadowTxt.Rotation = -4
+        shadowTxt.BackgroundTransparency = 1
+        shadowTxt.Font = Enum.Font.GothamBlack
+        shadowTxt.ZIndex = 16
+
+        -- Lớp chữ 3D ánh kim chính ở trên
+        local mainTxt = Instance.new("TextLabel", btn)
+        mainTxt.Size = UDim2.new(1, 4, 1, 0)
+        mainTxt.AnchorPoint = Vector2.new(0.5, 0.5)
+        mainTxt.Position = UDim2.new(0.5, 0, 0.5, 0)
+        mainTxt.Rotation = -4
+        mainTxt.BackgroundTransparency = 1
+        mainTxt.TextColor3 = Color3.fromRGB(255, 255, 255)
+        mainTxt.Font = Enum.Font.GothamBlack
+        mainTxt.ZIndex = 17
+        local txtGrad = Instance.new("UIGradient", mainTxt)
+        txtGrad.Rotation = 90
+        local txtStroke = Instance.new("UIStroke", mainTxt)
+        txtStroke.Thickness = 1.15
+
+        if statusType == "public" then
+            -- Logo PUBLIC: Hào quang Xanh Băng - Tím + Chữ 3D Trắng Băng -> Xanh Lam (giống bên phải ảnh 1000085248.png)
+            aura1Grad.Color = ColorSequence.new({
+                ColorSequenceKeypoint.new(0, Color3.fromRGB(55, 235, 255)),
+                ColorSequenceKeypoint.new(0.5, Color3.fromRGB(35, 115, 255)),
+                ColorSequenceKeypoint.new(1, Color3.fromRGB(205, 55, 255))
+            })
+            aura2Stroke.Color = Color3.fromRGB(65, 215, 255)
+            shieldGrad.Color = ColorSequence.new({
+                ColorSequenceKeypoint.new(0, Color3.fromRGB(16, 38, 88)),
+                ColorSequenceKeypoint.new(1, Color3.fromRGB(10, 14, 38))
+            })
+            shieldStroke.Color = Color3.fromRGB(65, 210, 255)
+            shadowTxt.Text = "PUBLIC"
+            shadowTxt.TextSize = 8.4
+            shadowTxt.TextColor3 = Color3.fromRGB(6, 12, 34)
+            mainTxt.Text = "PUBLIC"
+            mainTxt.TextSize = 8.4
+            txtStroke.Color = Color3.fromRGB(10, 24, 62)
+            txtGrad.Color = ColorSequence.new({
+                ColorSequenceKeypoint.new(0, Color3.fromRGB(248, 254, 255)),
+                ColorSequenceKeypoint.new(0.52, Color3.fromRGB(95, 218, 255)),
+                ColorSequenceKeypoint.new(1, Color3.fromRGB(42, 118, 255))
+            })
+        elseif statusType == "private" then
+            -- Logo PRIVATE: Hào quang Lửa Đỏ Cam + Chữ 3D Vàng Kim -> Cam Đỏ (giống bên trái ảnh 1000085248.png)
+            aura1Grad.Color = ColorSequence.new({
+                ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 230, 65)),
+                ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 95, 18)),
+                ColorSequenceKeypoint.new(1, Color3.fromRGB(205, 18, 15))
+            })
+            aura2Stroke.Color = Color3.fromRGB(255, 135, 25)
+            shieldGrad.Color = ColorSequence.new({
+                ColorSequenceKeypoint.new(0, Color3.fromRGB(78, 16, 10)),
+                ColorSequenceKeypoint.new(1, Color3.fromRGB(24, 6, 6))
+            })
+            shieldStroke.Color = Color3.fromRGB(255, 145, 30)
+            shadowTxt.Text = "PRIVATE"
+            shadowTxt.TextSize = 7.8
+            shadowTxt.TextColor3 = Color3.fromRGB(28, 4, 4)
+            mainTxt.Text = "PRIVATE"
+            mainTxt.TextSize = 7.8
+            txtStroke.Color = Color3.fromRGB(48, 10, 6)
+            txtGrad.Color = ColorSequence.new({
+                ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 250, 125)),
+                ColorSequenceKeypoint.new(0.52, Color3.fromRGB(255, 182, 28)),
+                ColorSequenceKeypoint.new(1, Color3.fromRGB(235, 68, 14))
+            })
+        else
+            aura1Grad.Color = ColorSequence.new(Color3.fromRGB(185, 155, 75))
+            aura2Stroke.Color = Color3.fromRGB(145, 120, 60)
+            shieldGrad.Color = ColorSequence.new(Color3.fromRGB(34, 30, 20))
+            shieldStroke.Color = Color3.fromRGB(175, 145, 65)
+            shadowTxt.Text = "ĐO..."
+            shadowTxt.TextSize = 7.8
+            shadowTxt.TextColor3 = Color3.fromRGB(15, 12, 8)
+            mainTxt.Text = "ĐO..."
+            mainTxt.TextSize = 7.8
+            txtStroke.Color = Color3.fromRGB(25, 20, 12)
+            txtGrad.Color = ColorSequence.new(Color3.fromRGB(240, 205, 110))
+        end
+
+        return btn
+    end
 
     local musicListCard = Instance.new("Frame", page5)
     musicListCard.Size = UDim2.new(0.94, 0, 1, -128); musicListCard.BackgroundColor3 = Color3.fromRGB(20, 22, 31); musicListCard.LayoutOrder = 3; musicListCard.ZIndex = 10
@@ -2728,29 +2867,30 @@ do
     local mlStroke = Instance.new("UIStroke", musicListCard); mlStroke.Color = Theme.Stroke; mlStroke.Thickness = 1; table.insert(RGBElements, {Type = "Info", Stroke = mlStroke})
 
     local mlHeader = Instance.new("TextLabel", musicListCard)
-    mlHeader.Size = UDim2.new(0.42, 0, 0, 20); mlHeader.Position = UDim2.new(0, 10, 0, 4); mlHeader.BackgroundTransparency = 1
-    mlHeader.Text = "🎵 KHO NHẠC (0)"; mlHeader.TextColor3 = getSoftBrandColor(Theme.Brand); mlHeader.Font = Enum.Font.GothamSemibold; mlHeader.TextSize = 8.8
+    mlHeader.Size = UDim2.new(0.38, 0, 0, 20); mlHeader.Position = UDim2.new(0, 10, 0, 4); mlHeader.BackgroundTransparency = 1
+    mlHeader.Text = "🎵 KHO NHẠC (0)"; mlHeader.TextColor3 = Color3.fromRGB(178, 190, 210); mlHeader.Font = Enum.Font.GothamSemibold; mlHeader.TextSize = 8.6
     mlHeader.TextXAlignment = Enum.TextXAlignment.Left; mlHeader.TextTruncate = Enum.TextTruncate.AtEnd; mlHeader.ZIndex = 11
 
-    -- 3 nút lọc: Tất cả | Public | Private trên góc phải tiêu đề
+    -- 3 nút lọc: Tất cả | Public | Private (Đã làm dịu chữ & nền tối sâu chống chói lóa)
     local filterBar = Instance.new("Frame", musicListCard)
-    filterBar.Size = UDim2.new(0, 174, 0, 18); filterBar.Position = UDim2.new(1, -180, 0, 5)
+    filterBar.Size = UDim2.new(0, 184, 0, 19); filterBar.Position = UDim2.new(1, -188, 0, 4)
     filterBar.BackgroundTransparency = 1; filterBar.ZIndex = 11
 
-    local function makeMusicFilterBtn(xPos, width, txt, filterKey, activeCol)
+    local function makeMusicFilterBtn(xPos, width, txt)
         local b = Instance.new("TextButton", filterBar)
         b.Size = UDim2.new(0, width, 1, 0); b.Position = UDim2.new(0, xPos, 0, 0)
-        b.BackgroundColor3 = Color3.fromRGB(16, 19, 28); b.Text = txt
-        b.TextColor3 = Theme.TextDim; b.Font = Enum.Font.GothamSemibold; b.TextSize = 7.8
+        b.BackgroundColor3 = Color3.fromRGB(14, 16, 23); b.Text = txt
+        b.TextColor3 = Color3.fromRGB(132, 142, 162); b.Font = Enum.Font.GothamMedium; b.TextSize = 8
+        b.TextStrokeColor3 = Color3.fromRGB(8, 10, 16); b.TextStrokeTransparency = 0.45
         b.AutoButtonColor = false; b.ZIndex = 12
-        Instance.new("UICorner", b).CornerRadius = UDim.new(1, 0)
-        local st = Instance.new("UIStroke", b); st.Color = Theme.Stroke; st.Thickness = 0.8; st.Transparency = 0.35
-        return b, st, filterKey, activeCol
+        Instance.new("UICorner", b).CornerRadius = UDim.new(0, 6)
+        local st = Instance.new("UIStroke", b); st.Color = Color3.fromRGB(42, 48, 66); st.Thickness = 0.8; st.Transparency = 0.45
+        return b, st
     end
 
-    local fBtnAll, fStAll = makeMusicFilterBtn(0, 52, "Tất cả", "all", Theme.Brand)
-    local fBtnPub, fStPub = makeMusicFilterBtn(56, 57, "🟢 Public", "public", Color3.fromRGB(72, 225, 148))
-    local fBtnPriv, fStPriv = makeMusicFilterBtn(117, 57, "🔴 Private", "private", Color3.fromRGB(235, 95, 112))
+    local fBtnAll, fStAll = makeMusicFilterBtn(0, 56, "Tất cả")
+    local fBtnPub, fStPub = makeMusicFilterBtn(60, 60, "Public")
+    local fBtnPriv, fStPriv = makeMusicFilterBtn(124, 60, "Private")
 
     local function syncMusicFilterTabs()
         local pubCount, privCount = 0, 0
@@ -2763,16 +2903,31 @@ do
         fBtnPriv.Text = "Private (" .. privCount .. ")"
 
         local tabs = {
-            {btn = fBtnAll, st = fStAll, key = "all", col = getSoftBrandColor(Theme.Brand), bg = Color3.fromRGB(28, 36, 54)},
-            {btn = fBtnPub, st = fStPub, key = "public", col = Color3.fromRGB(92, 240, 168), bg = Color3.fromRGB(20, 48, 38)},
-            {btn = fBtnPriv, st = fStPriv, key = "private", col = Color3.fromRGB(255, 125, 138), bg = Color3.fromRGB(52, 22, 30)}
+            {
+                btn = fBtnAll, st = fStAll, key = "all",
+                col = Color3.fromRGB(198, 208, 224),
+                bg = Color3.fromRGB(22, 26, 38),
+                border = Color3.fromRGB(88, 102, 132)
+            },
+            {
+                btn = fBtnPub, st = fStPub, key = "public",
+                col = Color3.fromRGB(125, 198, 240),
+                bg = Color3.fromRGB(16, 28, 44),
+                border = Color3.fromRGB(58, 138, 195)
+            },
+            {
+                btn = fBtnPriv, st = fStPriv, key = "private",
+                col = Color3.fromRGB(228, 178, 95),
+                bg = Color3.fromRGB(34, 22, 18),
+                border = Color3.fromRGB(175, 105, 42)
+            }
         }
         for _, t in ipairs(tabs) do
             local isSel = (currentMusicFilter == t.key)
-            t.btn.BackgroundColor3 = isSel and t.bg or Color3.fromRGB(16, 19, 28)
-            t.btn.TextColor3 = isSel and t.col or Theme.TextDim
-            t.st.Color = isSel and t.col or Theme.Stroke
-            t.st.Transparency = isSel and 0.15 or 0.45
+            t.btn.BackgroundColor3 = isSel and t.bg or Color3.fromRGB(14, 16, 23)
+            t.btn.TextColor3 = isSel and t.col or Color3.fromRGB(124, 134, 154)
+            t.st.Color = isSel and t.border or Color3.fromRGB(40, 46, 62)
+            t.st.Transparency = isSel and 0.25 or 0.55
         end
     end
 
@@ -2792,7 +2947,6 @@ do
     sLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function() savedMusicContent.CanvasSize = UDim2.new(0, 0, 0, sLayout.AbsoluteContentSize.Y + 10) end)
 
     registerBrandUpdater(function(newBrand)
-        if mlHeader and mlHeader.Parent then mlHeader.TextColor3 = getSoftBrandColor(newBrand) end
         if savedMusicContent and savedMusicContent.Parent then savedMusicContent.ScrollBarImageColor3 = newBrand end
         syncMusicFilterTabs()
     end)
@@ -2822,7 +2976,7 @@ do
                 drawGlossyIcon(songIconHolder, "MusicNote", 0.68)
 
                 local nameBox = Instance.new("TextBox", rowInner)
-                nameBox.Size = UDim2.new(1, -138, 1, 0); nameBox.Position = UDim2.new(0, 29, 0, 0)
+                nameBox.Size = UDim2.new(1, -146, 1, 0); nameBox.Position = UDim2.new(0, 29, 0, 0)
                 nameBox.Text = data.name; nameBox.TextColor3 = GlossPalette.IconWhite
                 nameBox.Font = Enum.Font.GothamSemibold; nameBox.TextSize = 9.2
                 nameBox.BackgroundTransparency = 1; nameBox.TextXAlignment = Enum.TextXAlignment.Left
@@ -2832,34 +2986,13 @@ do
                     if nameBox.Text ~= "" then data.name = nameBox.Text; saveMusicData() else nameBox.Text = data.name end
                 end)
 
-                -- Huy hiệu phân loại PUBLIC / PRIVATE (bấm vào để chuyển đổi hoặc kiểm tra lại)
-                local statusBadge = Instance.new("TextButton", rowInner)
-                statusBadge.Size = UDim2.new(0, 50, 0, 18)
-                statusBadge.Position = UDim2.new(1, -104, 0.5, -9)
-                statusBadge.AutoButtonColor = false
-                statusBadge.Font = Enum.Font.GothamBold
-                statusBadge.TextSize = 7.5
-                statusBadge.ZIndex = 14
-                Instance.new("UICorner", statusBadge).CornerRadius = UDim.new(1, 0)
-                local sbStroke = Instance.new("UIStroke", statusBadge)
-                sbStroke.Thickness = 0.9
-
-                if st == "public" then
-                    statusBadge.Text = "PUBLIC"
-                    statusBadge.BackgroundColor3 = Color3.fromRGB(20, 58, 44)
-                    statusBadge.TextColor3 = Color3.fromRGB(92, 240, 168)
-                    sbStroke.Color = Color3.fromRGB(72, 215, 145)
-                elseif st == "private" then
-                    statusBadge.Text = "PRIVATE"
-                    statusBadge.BackgroundColor3 = Color3.fromRGB(58, 22, 30)
-                    statusBadge.TextColor3 = Color3.fromRGB(255, 125, 138)
-                    sbStroke.Color = Color3.fromRGB(215, 75, 92)
-                else
-                    statusBadge.Text = "⏳ ĐO..."
-                    statusBadge.BackgroundColor3 = Color3.fromRGB(42, 38, 24)
-                    statusBadge.TextColor3 = Color3.fromRGB(240, 200, 95)
-                    sbStroke.Color = Color3.fromRGB(185, 150, 65)
-                end
+                -- Logo 3D PUBLIC (Xanh Băng) / PRIVATE (Lửa Vàng) theo đúng mẫu 1000085248.png
+                local statusBadge = createStatusLogoEmblem(
+                    rowInner,
+                    st,
+                    UDim2.new(1, -112, 0.5, -10),
+                    UDim2.new(0, 58, 0, 20)
+                )
 
                 statusBadge.MouseButton1Click:Connect(function()
                     clickAnimate(statusBadge)
