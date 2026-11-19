@@ -1,5 +1,5 @@
 -- ==========================================
--- MENU VIP PRO MAX V1.26.0 (LUXURY CYBER-GLASS & BENTO SIDEBAR EDITION)
+-- MENU VIP PRO MAX V1.27.0 (LUXURY CYBER-GLASS & BENTO SIDEBAR EDITION)
 -- ==========================================
 repeat task.wait() until game:IsLoaded()
 
@@ -88,7 +88,7 @@ local State = {
     TpPositionIdx = 1, TpMoveMethodIdx = 1, TpDistance = 4,
     TpSaveESP = false, TpSaveLoop = false, TpSaveLoopDelay = 2,
     AirWalk = false,
-    HidePopups = false, MuteSFX = false, DisableAnims = false, DarkMap = false,
+    HidePopups = false, MuteSFX = false, DisableAnims = false, DarkMap = false, DisableLights = false, GfxQualityLevel = 3,
     MiniHUD = false, AutoReconnect = true, MagnetOrbs = false
 }
 local DefaultStateSnapshot = {}
@@ -619,10 +619,10 @@ do
     headerStatText.RichText = true; headerStatText.Text = "<font color='#38CC88'>60 FPS</font> • <font color='#58B6F2'>0ms</font>"
     headerStatText.TextColor3 = Theme.TextTitle; headerStatText.Font = Enum.Font.GothamBold; headerStatText.TextSize = 9; headerStatText.ZIndex = 13
 
-    -- Huy hiệu V1.26 nền tối sâu, chữ sáng rõ nét trên Mobile
+    -- Huy hiệu V1.27 nền tối sâu, chữ sáng rõ nét trên Mobile
     local verBadge = Instance.new("TextLabel", header)
     verBadge.Size = UDim2.new(0, 46, 0, 21); verBadge.Position = UDim2.new(1, -110, 0.5, -10.5)
-    verBadge.BackgroundColor3 = Color3.fromRGB(18, 22, 36); verBadge.Text = "V1.26"; verBadge.TextColor3 = getSoftBrandColor(Theme.Brand)
+    verBadge.BackgroundColor3 = Color3.fromRGB(18, 22, 36); verBadge.Text = "V1.27"; verBadge.TextColor3 = getSoftBrandColor(Theme.Brand)
     verBadge.Font = Enum.Font.GothamBold; verBadge.TextSize = 9.5; verBadge.ZIndex = 12
     Instance.new("UICorner", verBadge).CornerRadius = UDim.new(0, 7)
     local verStroke = Instance.new("UIStroke", verBadge); verStroke.Color = Theme.Brand; verStroke.Thickness = 1.0; verStroke.Transparency = 0.25
@@ -1242,7 +1242,7 @@ do
     minBtn.MouseButton1Click:Connect(function() clickAnimate(minBtn); toggleMenuWindow() end)
 end
 -- ==========================================
--- COMPONENTS HỆ THỐNG 3D CYBER-GLASS NEON V1.26
+-- COMPONENTS HỆ THỐNG 3D CYBER-GLASS NEON V1.27
 -- ==========================================
 local function splitLeadingIcon(rawText)
     local str = tostring(rawText or "")
@@ -5596,14 +5596,15 @@ do
     end)
 end
 -- ==========================================
--- [TAB 9: CẤU HÌNH & GIẢM LAG CHUYÊN SÂU (HỢP NHẤT TOÀN BỘ)]
+-- [TAB 9: CẤU HÌNH & GIẢM LAG PRO MAX V1.27 (3 CHẾ ĐỘ + TẮT ĐÈN + CHẤT LƯỢNG ĐỒ HỌA + KHÔI PHỤC CHUẨN)]
 -- ==========================================
 do
     local Cache = {
         Particles = {}, PostEffects = {}, Shadows = {}, Players = {}, Pets = {},
-        Popups = {}, Sounds = {}, Anims = {}, DarkParts = {}, LightingOrig = nil,
+        Popups = {}, Sounds = {}, Anims = {}, DarkParts = {}, Lights = {},
+        LightingOrig = nil, FogOrig = nil, AtmoOrig = nil, TerrainOrig = nil,
         Toggles = {}, PartCount = 0,
-        Tickets = {LowGfx = 0, Particle = 0, Pet = 0, Player = 0, Shadow = 0, Popup = 0, Sound = 0, Anim = 0, Dark = 0}
+        Tickets = {LowGfx = 0, Particle = 0, Pet = 0, Player = 0, Shadow = 0, Popup = 0, Sound = 0, Anim = 0, Dark = 0, Light = 0}
     }
 
     local function createTab9Toggle(parent, text, varName, callback)
@@ -5618,26 +5619,32 @@ do
         return frameItem
     end
 
+    -- 1. BẢNG GIÁM SÁT HIỆU NĂNG THỜI GIAN THỰC (LIVE MONITOR - MÀU DỊU RÕ NÉT)
     local liveMonitorCard = Instance.new("Frame", page9)
-    liveMonitorCard.Size = UDim2.new(0.94, 0, 0, 52); liveMonitorCard.BackgroundColor3 = Color3.fromRGB(255, 255, 255); liveMonitorCard.ZIndex = 10
-    Instance.new("UICorner", liveMonitorCard).CornerRadius = UDim.new(0, 8)
-    addSoftGradient(liveMonitorCard, Color3.fromRGB(25, 32, 46), Color3.fromRGB(19, 22, 32), 0)
-    local monitorStroke = Instance.new("UIStroke", liveMonitorCard); monitorStroke.Color = Theme.Brand; monitorStroke.Thickness = 1.1; monitorStroke.Transparency = 0.25
-    table.insert(RGBElements, {Type = "Button", Stroke = monitorStroke, DefaultColor = Theme.Brand, UseBrand = true})
+    liveMonitorCard.Size = UDim2.new(0.94, 0, 0, 54); liveMonitorCard.BackgroundColor3 = Color3.fromRGB(255, 255, 255); liveMonitorCard.ZIndex = 10
+    Instance.new("UICorner", liveMonitorCard).CornerRadius = UDim.new(0, 9)
+    addSoftGradient(liveMonitorCard, Color3.fromRGB(24, 30, 44), Color3.fromRGB(16, 19, 30), 90)
+    local monitorStroke = Instance.new("UIStroke", liveMonitorCard); monitorStroke.Color = Color3.fromRGB(58, 125, 175); monitorStroke.Thickness = 1.05; monitorStroke.Transparency = 0.25
+    table.insert(RGBElements, {Type = "Button", Stroke = monitorStroke, DefaultColor = Color3.fromRGB(58, 125, 175), UseBrand = false})
 
     local monitorTitle = Instance.new("TextLabel", liveMonitorCard)
     monitorTitle.Size = UDim2.new(1, -16, 0, 15); monitorTitle.Position = UDim2.new(0, 10, 0, 4)
-    monitorTitle.BackgroundTransparency = 1; monitorTitle.Text = "📊 THÔNG SỐ HIỆU NĂNG THỜI GIAN THỰC (LIVE MONITOR)"
-    monitorTitle.TextColor3 = Theme.Brand; monitorTitle.Font = Enum.Font.GothamBold; monitorTitle.TextSize = 9; monitorTitle.TextXAlignment = Enum.TextXAlignment.Left; monitorTitle.ZIndex = 10
-    registerBrandUpdater(function(newBrand)
-        if monitorTitle and monitorTitle.Parent then monitorTitle.TextColor3 = newBrand end
-    end)
+    monitorTitle.BackgroundTransparency = 1; monitorTitle.Text = "📊 THÔNG SỐ HIỆU NĂNG THỜI GIAN THỰC"
+    monitorTitle.TextColor3 = Color3.fromRGB(132, 188, 218); monitorTitle.Font = Enum.Font.GothamSemibold; monitorTitle.TextSize = 8.8; monitorTitle.TextXAlignment = Enum.TextXAlignment.Left; monitorTitle.ZIndex = 10
 
     local monitorStatsLabel = Instance.new("TextLabel", liveMonitorCard)
-    monitorStatsLabel.Size = UDim2.new(1, -20, 0, 28); monitorStatsLabel.Position = UDim2.new(0, 10, 0, 20)
-    monitorStatsLabel.BackgroundTransparency = 1; monitorStatsLabel.RichText = true; monitorStatsLabel.TextColor3 = Theme.TextTitle
-    monitorStatsLabel.Font = Enum.Font.GothamSemibold; monitorStatsLabel.TextSize = 10; monitorStatsLabel.LineHeight = 1.15
+    monitorStatsLabel.Size = UDim2.new(1, -20, 0, 30); monitorStatsLabel.Position = UDim2.new(0, 10, 0, 20)
+    monitorStatsLabel.BackgroundTransparency = 1; monitorStatsLabel.RichText = true; monitorStatsLabel.TextColor3 = Color3.fromRGB(192, 202, 218)
+    monitorStatsLabel.Font = Enum.Font.GothamMedium; monitorStatsLabel.TextSize = 9.5; monitorStatsLabel.LineHeight = 1.18
     monitorStatsLabel.TextXAlignment = Enum.TextXAlignment.Left; monitorStatsLabel.TextYAlignment = Enum.TextYAlignment.Top; monitorStatsLabel.ZIndex = 10
+
+    local function countActiveBoosts()
+        local activeN = 0
+        for _, k in ipairs({"LowGfx", "DisableParticles", "DisablePostEffects", "NoFog", "NoShadows", "OptimizeTerrain", "HidePetsAccessories", "HidePlayers", "HidePopups", "MuteSFX", "DisableAnims", "DarkMap", "DisableLights"}) do
+            if State[k] then activeN = activeN + 1 end
+        end
+        return activeN
+    end
 
     local function refreshLiveMonitor()
         local pingStr, ramMB = "0 ms", 0
@@ -5652,29 +5659,41 @@ do
         end)
         pcall(function() ramMB = math.floor(Stats:GetTotalMemoryUsageMb()) end)
         if ramMB == 0 then pcall(function() ramMB = math.floor(collectgarbage("count") / 1024) end) end
-        local fpsColor = fps >= 45 and "#38CC88" or (fps >= 25 and "#E5B85B" or "#E05666")
+        local fpsColor = fps >= 45 and "#68C496" or (fps >= 25 and "#CCA862" or "#CC6E7A")
+        local activeBoosts = countActiveBoosts()
         monitorStatsLabel.Text = string.format(
-            "⚡ FPS: <font color='%s'>%d</font>   |   🌐 Ping: <font color='#58B6F2'>%s</font>\n🧠 RAM: <font color='#E5A55D'>%d MB</font>   |   🧱 Vật thể (Parts): <font color='#A89EE8'>%d</font>",
-            fpsColor, fps, pingStr, ramMB, Cache.PartCount
+            "⚡ FPS: <font color='%s'>%d</font>  |  🌐 Ping: <font color='#7EB4DC'>%s</font>  |  🚀 Tối ưu: <font color='#8CC8B2'>%d bật</font>\n🧠 RAM: <font color='#CFA26E'>%d MB</font>  |  🧱 Vật thể (Parts): <font color='#A69ED8'>%d</font>",
+            fpsColor, fps, pingStr, activeBoosts, ramMB, Cache.PartCount
         )
     end
 
     onTab9Shown = refreshLiveMonitor
     refreshLiveMonitor()
 
-    task.spawn(function()
-        for i, v in ipairs(workspace:GetDescendants()) do
-            if v:IsA("BasePart") then Cache.PartCount = Cache.PartCount + 1 end
-            if i % 500 == 0 then task.wait() end
-        end
-        refreshLiveMonitor()
-    end)
-    workspace.DescendantAdded:Connect(function(v) if v:IsA("BasePart") then Cache.PartCount = Cache.PartCount + 1 end end)
-    workspace.DescendantRemoving:Connect(function(v) if v:IsA("BasePart") then Cache.PartCount = math.max(0, Cache.PartCount - 1) end end)
+    local function recountWorkspaceParts()
+        task.spawn(function()
+            local total = 0
+            for i, v in ipairs(workspace:GetDescendants()) do
+                if not ScriptActive then return end
+                if v:IsA("BasePart") then total = total + 1 end
+                if i % 600 == 0 then task.wait() end
+            end
+            Cache.PartCount = total
+            if page9.Visible then refreshLiveMonitor() end
+        end)
+    end
+    recountWorkspaceParts()
+
+    trackConn(workspace.DescendantAdded:Connect(function(v)
+        if v:IsA("BasePart") then Cache.PartCount = Cache.PartCount + 1 end
+    end))
+    trackConn(workspace.DescendantRemoving:Connect(function(v)
+        if v:IsA("BasePart") then Cache.PartCount = math.max(0, Cache.PartCount - 1) end
+    end))
 
     task.spawn(function()
-        while ScriptActive and task.wait(0.6) do
-            if page9.Visible then refreshLiveMonitor() end
+        while ScriptActive and task.wait(0.8) do
+            if opened and page9.Visible then refreshLiveMonitor() end
         end
     end)
 
@@ -5732,6 +5751,16 @@ do
             end
         end
 
+        if State.DisableLights then
+            if (obj:IsA("PointLight") or obj:IsA("SpotLight") or obj:IsA("SurfaceLight")) and obj.Enabled then
+                local isChar, owner = isPlayerCharDescendant(obj)
+                if not (isChar and owner == player and obj.Name == "PlayerPointLight") then
+                    if Cache.Lights[obj] == nil then Cache.Lights[obj] = obj.Enabled end
+                    obj.Enabled = false
+                end
+            end
+        end
+
         if State.NoShadows and obj:IsA("BasePart") and obj.CastShadow then
             if Cache.Shadows[obj] == nil then Cache.Shadows[obj] = obj.CastShadow end
             obj.CastShadow = false
@@ -5779,7 +5808,8 @@ do
         task.spawn(function()
             local descendants = workspace:GetDescendants()
             for i, obj in ipairs(descendants) do
-                if i % 400 == 0 then task.wait() end
+                if not ScriptActive then return end
+                if i % 450 == 0 then task.wait() end
                 pcall(function()
                     if obj and obj.Parent and obj.Name ~= "VipAirWalk" and obj.Name ~= "VipSpectateProxy" and not string.find(obj.Name, "^ESPAnchor_") and not string.find(obj.Name, "^TpSaveAnchor_") then
                         if (not player.Character or not obj:IsDescendantOf(player.Character)) and (not obj.Parent:FindFirstChild("Humanoid")) then
@@ -5793,45 +5823,83 @@ do
                 end)
             end
             pcall(function() collectgarbage("collect") end)
+            recountWorkspaceParts()
             if not silent then MakeToast("Dọn Rác & RAM", "Đã dọn " .. count .. " rác & giải phóng bộ nhớ đệm!", Theme.Brand) end
         end)
     end
 
-    createDivider(page9, "TỐI ƯU HIỆU SUẤT TỐI ĐA")
-    local allBoostKeys = {"LowGfx", "DisableParticles", "DisablePostEffects", "NoFog", "NoShadows", "OptimizeTerrain", "HidePetsAccessories", "HidePopups"}
-    createDualButtons(
-        page9, "🥔 SIÊU KHOAI TÂY", Color3.fromRGB(230, 185, 70),
-        function()
+    createDivider(page9, "CHẾ ĐỘ TỐI ƯU NHANH (3 CẤP ĐỘ)")
+    local allBoostKeys = {"LowGfx", "DisableParticles", "DisablePostEffects", "NoFog", "NoShadows", "OptimizeTerrain", "HidePetsAccessories", "HidePopups", "DisableLights"}
+    local balancedBoostKeys = {"DisableParticles", "DisablePostEffects", "NoFog", "NoShadows", "OptimizeTerrain", "HidePopups"}
+
+    -- Hàng 3 nút Preset gọn đẹp: Siêu Khoai Tây | Cân Bằng | Khôi Phục Gốc
+    do
+        local presetRow = Instance.new("Frame", page9)
+        presetRow.Size = UDim2.new(0.94, 0, 0, 32); presetRow.BackgroundTransparency = 1; presetRow.ZIndex = 10
+
+        local function makePresetBtn(idx, titleTxt, bgCol, txtCol, borderCol, onClick)
+            local b = Instance.new("TextButton", presetRow)
+            b.Size = UDim2.new(0.322, 0, 1, 0)
+            b.Position = UDim2.new((idx - 1) * 0.339, 0, 0, 0)
+            b.BackgroundColor3 = bgCol; b.Text = titleTxt; b.TextColor3 = txtCol
+            b.Font = Enum.Font.GothamSemibold; b.TextSize = 8.8; b.AutoButtonColor = false; b.ZIndex = 11
+            Instance.new("UICorner", b).CornerRadius = UDim.new(0, 8)
+            local st = Instance.new("UIStroke", b); st.Color = borderCol; st.Thickness = 1.0; st.Transparency = 0.25
+            b.MouseButton1Click:Connect(function()
+                clickAnimate(b)
+                onClick()
+                refreshLiveMonitor()
+            end)
+        end
+
+        makePresetBtn(1, "🥔 Siêu Nhẹ", Color3.fromRGB(36, 30, 20), Color3.fromRGB(205, 178, 114), Color3.fromRGB(165, 136, 72), function()
             pcall(function() settings().Rendering.QualityLevel = Enum.QualityLevel.Level01 end)
             for _, key in ipairs(allBoostKeys) do
                 if Cache.Toggles[key] then Cache.Toggles[key](true) end
             end
             if State.AutoSave then saveConfig() end
             cleanDebrisAndRAM(true)
-            MakeToast("🥔 Siêu Khoai Tây", "Đã bật toàn bộ cấu hình giảm lag mạnh nhất!", Theme.AccentOn)
-        end,
-        "🔄 KHÔI PHỤC GỐC", Theme.Brand,
-        function()
+            MakeToast("🥔 Siêu Khoai Tây", "Đã bật toàn bộ cấu hình giảm lag tối đa!", Theme.AccentOn)
+        end)
+
+        makePresetBtn(2, "⚖️ Cân Bằng", Color3.fromRGB(20, 34, 46), Color3.fromRGB(132, 192, 218), Color3.fromRGB(64, 142, 185), function()
+            pcall(function() settings().Rendering.QualityLevel = Enum.QualityLevel.Level03 end)
+            for _, key in ipairs(allBoostKeys) do
+                local shouldOn = table.find(balancedBoostKeys, key) ~= nil
+                if Cache.Toggles[key] then Cache.Toggles[key](shouldOn) end
+            end
+            if State.AutoSave then saveConfig() end
+            MakeToast("⚖️ Cân Bằng", "Giảm lag mượt mà mà vẫn giữ vật liệu bản đồ đẹp!", Theme.Brand)
+        end)
+
+        makePresetBtn(3, "🔄 Mặc Định", Color3.fromRGB(24, 28, 42), Color3.fromRGB(186, 198, 218), Color3.fromRGB(72, 86, 116), function()
+            pcall(function() settings().Rendering.QualityLevel = Enum.QualityLevel.Automatic end)
             for _, key in ipairs(allBoostKeys) do
                 if Cache.Toggles[key] then Cache.Toggles[key](false) end
             end
-            if Cache.Toggles["DarkMap"] then Cache.Toggles["DarkMap"](false) end
-            if Cache.Toggles["DisableAnims"] then Cache.Toggles["DisableAnims"](false) end
-            if Cache.Toggles["HidePlayers"] then Cache.Toggles["HidePlayers"](false) end
+            for _, extraKey in ipairs({"DarkMap", "DisableAnims", "HidePlayers", "MuteSFX"}) do
+                if Cache.Toggles[extraKey] then Cache.Toggles[extraKey](false) end
+            end
             if State.AutoSave then saveConfig() end
-            MakeToast("Khôi Phục Đồ Họa", "Đã trả lại đồ họa mặc định của game!", Theme.Brand)
-        end
-    )
+            MakeToast("🔄 Khôi Phục Đồ Họa", "Đã trả lại đồ họa mặc định của game!", Theme.Brand)
+        end)
+    end
 
-    createSlider(page9, "Giới hạn FPS (Chống nóng máy)", 10, 120, "FpsCapValue", function(val) pcall(function() setfpscap(val) end) end)
+    createSlider(page9, "🌡️ Giới hạn FPS (Chống nóng máy)", 10, 120, "FpsCapValue", function(val) pcall(function() setfpscap(val) end) end)
+    createSlider(page9, "🎨 Mức chất lượng đồ họa (1 - 10)", 1, 10, "GfxQualityLevel", function(val)
+        pcall(function()
+            local lvl = Enum.QualityLevel["Level" .. string.format("%02d", math.clamp(val, 1, 10))]
+            if lvl then settings().Rendering.QualityLevel = lvl end
+        end)
+    end)
 
-    createTab9Toggle(page9, "Tắt Render 3D (Màn trắng + Giảm CPU)", "Disable3D", function(v)
+    createTab9Toggle(page9, "⚡ Tắt Render 3D (Màn trắng + Giảm CPU)", "Disable3D", function(v)
         pcall(function() RunService:Set3dRenderingEnabled(not v) end)
         if v then screenOverlay.BackgroundColor3 = Color3.new(1, 1, 1); screenOverlay.Visible = true
         elseif not State.AfkModeScreen then screenOverlay.Visible = false end
     end)
 
-    createTab9Toggle(page9, "Chế độ AFK Ngủ (Màn đen + 10 FPS)", "AfkModeScreen", function(v)
+    createTab9Toggle(page9, "🌙 Chế độ AFK Ngủ (Màn đen + 10 FPS)", "AfkModeScreen", function(v)
         if v then
             pcall(function() setfpscap(10) end)
             screenOverlay.BackgroundColor3 = Color3.new(0, 0, 0); screenOverlay.Visible = true
@@ -5847,7 +5915,7 @@ do
         end
     end)
 
-    createDivider(page9, "CÁC CHỨC NĂNG HỦY DIỆT ĐỒ HỌA")
+    createDivider(page9, "CÁC CHỨC NĂNG GIẢM LAG ĐỒ HỌA")
     createTab9Toggle(page9, "📉 Giảm Lag (Xóa toàn bộ hiệu ứng)", "LowGfx", function(v)
         Cache.Tickets.LowGfx = Cache.Tickets.LowGfx + 1
         local myTicket = Cache.Tickets.LowGfx
@@ -5855,7 +5923,7 @@ do
             Lighting.GlobalShadows = false
             task.spawn(function()
                 for i, obj in ipairs(workspace:GetDescendants()) do
-                    if myTicket ~= Cache.Tickets.LowGfx then return end
+                    if not ScriptActive or myTicket ~= Cache.Tickets.LowGfx then return end
                     pcall(applyObjectOptimizations, obj)
                     if i % 350 == 0 then task.wait() end
                 end
@@ -5865,13 +5933,13 @@ do
             task.spawn(function()
                 local count = 0
                 for obj, props in pairs(OriginalGFX) do
-                    if myTicket ~= Cache.Tickets.LowGfx then return end
+                    if not ScriptActive or myTicket ~= Cache.Tickets.LowGfx then return end
                     pcall(function() if obj and obj.Parent then for k, val in pairs(props) do obj[k] = val end end end)
                     count = count + 1; if count % 350 == 0 then task.wait() end
                 end
                 if myTicket == Cache.Tickets.LowGfx then OriginalGFX = {} end
             end)
-            restoreParticlesIfBothOff(function() return myTicket == Cache.Tickets.LowGfx end)
+            restoreParticlesIfBothOff(function() return ScriptActive and myTicket == Cache.Tickets.LowGfx end)
         end
     end)
 
@@ -5881,13 +5949,37 @@ do
         if v then
             task.spawn(function()
                 for i, obj in ipairs(workspace:GetDescendants()) do
-                    if myTicket ~= Cache.Tickets.Particle then return end
+                    if not ScriptActive or myTicket ~= Cache.Tickets.Particle then return end
                     pcall(applyObjectOptimizations, obj)
                     if i % 350 == 0 then task.wait() end
                 end
             end)
         else
-            restoreParticlesIfBothOff(function() return myTicket == Cache.Tickets.Particle end)
+            restoreParticlesIfBothOff(function() return ScriptActive and myTicket == Cache.Tickets.Particle end)
+        end
+    end)
+
+    createTab9Toggle(page9, "💡 Tắt nguồn sáng đèn (Point / SpotLight)", "DisableLights", function(v)
+        Cache.Tickets.Light = Cache.Tickets.Light + 1
+        local myTicket = Cache.Tickets.Light
+        if v then
+            task.spawn(function()
+                for i, obj in ipairs(workspace:GetDescendants()) do
+                    if not ScriptActive or myTicket ~= Cache.Tickets.Light then return end
+                    pcall(applyObjectOptimizations, obj)
+                    if i % 350 == 0 then task.wait() end
+                end
+            end)
+        else
+            task.spawn(function()
+                local count = 0
+                for obj, origEnabled in pairs(Cache.Lights) do
+                    if not ScriptActive or myTicket ~= Cache.Tickets.Light then return end
+                    pcall(function() if obj and obj.Parent then obj.Enabled = origEnabled end end)
+                    count = count + 1; if count % 350 == 0 then task.wait() end
+                end
+                if myTicket == Cache.Tickets.Light then Cache.Lights = {} end
+            end)
         end
     end)
 
@@ -5901,9 +5993,9 @@ do
             end
         end
     end
-    Lighting.DescendantAdded:Connect(function(eff)
+    trackConn(Lighting.DescendantAdded:Connect(function(eff)
         if State.DisablePostEffects then task.defer(function() pcall(handlePostEffect, eff, true) end) end
-    end)
+    end))
 
     createTab9Toggle(page9, "✨ Xóa hiệu ứng hậu kỳ (Post-Effects)", "DisablePostEffects", function(v)
         pcall(function()
@@ -5915,11 +6007,34 @@ do
         end)
     end)
 
-    createTab9Toggle(page9, "☀️ Xóa sương mù (Ép tắt 100%)", "NoFog", function(v)
-        if not v then Lighting.FogEnd = 100000; Lighting.FogStart = 0 end
+    createTab9Toggle(page9, "☀️ Xóa sương mù (Khôi phục chuẩn)", "NoFog", function(v)
+        pcall(function()
+            if v then
+                if not Cache.FogOrig then
+                    Cache.FogOrig = {FogEnd = Lighting.FogEnd, FogStart = Lighting.FogStart}
+                end
+                local atmo = Lighting:FindFirstChildOfClass("Atmosphere")
+                if atmo and not Cache.AtmoOrig then
+                    Cache.AtmoOrig = {Inst = atmo, Density = atmo.Density, Offset = atmo.Offset}
+                end
+                Lighting.FogEnd = 100000; Lighting.FogStart = 0
+                if atmo then atmo.Density = 0; atmo.Offset = 0 end
+            else
+                if Cache.FogOrig then
+                    Lighting.FogEnd = Cache.FogOrig.FogEnd
+                    Lighting.FogStart = Cache.FogOrig.FogStart
+                    Cache.FogOrig = nil
+                end
+                if Cache.AtmoOrig and Cache.AtmoOrig.Inst and Cache.AtmoOrig.Inst.Parent then
+                    Cache.AtmoOrig.Inst.Density = Cache.AtmoOrig.Density
+                    Cache.AtmoOrig.Inst.Offset = Cache.AtmoOrig.Offset
+                    Cache.AtmoOrig = nil
+                end
+            end
+        end)
     end)
     task.spawn(function()
-        while ScriptActive and task.wait(0.25) do
+        while ScriptActive and task.wait(0.35) do
             if State.NoFog then
                 Lighting.FogEnd = 100000; Lighting.FogStart = 0
                 local atmo = Lighting:FindFirstChildOfClass("Atmosphere")
@@ -5934,7 +6049,7 @@ do
         if v then
             task.spawn(function()
                 for i, obj in ipairs(workspace:GetDescendants()) do
-                    if myTicket ~= Cache.Tickets.Pet then return end
+                    if not ScriptActive or myTicket ~= Cache.Tickets.Pet then return end
                     pcall(applyObjectOptimizations, obj)
                     if i % 350 == 0 then task.wait() end
                 end
@@ -5943,7 +6058,7 @@ do
             task.spawn(function()
                 local count = 0
                 for obj, origVal in pairs(Cache.Pets) do
-                    if myTicket ~= Cache.Tickets.Pet then return end
+                    if not ScriptActive or myTicket ~= Cache.Tickets.Pet then return end
                     pcall(function()
                         if obj and obj.Parent then
                             if typeof(origVal) == "boolean" then obj.Enabled = origVal else obj.Transparency = origVal end
@@ -5962,7 +6077,7 @@ do
         if v then
             task.spawn(function()
                 for _, p in ipairs(Players:GetPlayers()) do
-                    if myTicket ~= Cache.Tickets.Player then return end
+                    if not ScriptActive or myTicket ~= Cache.Tickets.Player then return end
                     if p ~= player and p.Character then
                         for _, obj in ipairs(p.Character:GetDescendants()) do pcall(applyObjectOptimizations, obj) end
                     end
@@ -5973,7 +6088,7 @@ do
             task.spawn(function()
                 local count = 0
                 for obj, trans in pairs(Cache.Players) do
-                    if myTicket ~= Cache.Tickets.Player then return end
+                    if not ScriptActive or myTicket ~= Cache.Tickets.Player then return end
                     pcall(function() if obj and obj.Parent then obj.Transparency = trans end end)
                     count = count + 1; if count % 350 == 0 then task.wait() end
                 end
@@ -5982,14 +6097,32 @@ do
         end
     end)
 
-    createTab9Toggle(page9, "🌊 Tối ưu Địa hình & Nước", "OptimizeTerrain", function(v)
+    createTab9Toggle(page9, "🌊 Tối ưu Địa hình, Cỏ & Nước", "OptimizeTerrain", function(v)
         pcall(function()
+            local ter = workspace.Terrain
+            if not ter then return end
             if v then
-                workspace.Terrain.WaterWaveSize = 0; workspace.Terrain.WaterWaveSpeed = 0
-                workspace.Terrain.WaterReflectance = 0; workspace.Terrain.WaterTransparency = 1
-            else
-                workspace.Terrain.WaterWaveSize = 0.15; workspace.Terrain.WaterWaveSpeed = 10
-                workspace.Terrain.WaterReflectance = 1; workspace.Terrain.WaterTransparency = 0.3
+                if not Cache.TerrainOrig then
+                    Cache.TerrainOrig = {
+                        WaterWaveSize = ter.WaterWaveSize,
+                        WaterWaveSpeed = ter.WaterWaveSpeed,
+                        WaterReflectance = ter.WaterReflectance,
+                        WaterTransparency = ter.WaterTransparency
+                    }
+                    pcall(function() Cache.TerrainOrig.Decoration = ter.Decoration end)
+                end
+                ter.WaterWaveSize = 0; ter.WaterWaveSpeed = 0
+                ter.WaterReflectance = 0; ter.WaterTransparency = 1
+                pcall(function() ter.Decoration = false end)
+            elseif Cache.TerrainOrig then
+                ter.WaterWaveSize = Cache.TerrainOrig.WaterWaveSize
+                ter.WaterWaveSpeed = Cache.TerrainOrig.WaterWaveSpeed
+                ter.WaterReflectance = Cache.TerrainOrig.WaterReflectance
+                ter.WaterTransparency = Cache.TerrainOrig.WaterTransparency
+                if Cache.TerrainOrig.Decoration ~= nil then
+                    pcall(function() ter.Decoration = Cache.TerrainOrig.Decoration end)
+                end
+                Cache.TerrainOrig = nil
             end
         end)
     end)
@@ -6000,7 +6133,7 @@ do
         if v then
             task.spawn(function()
                 for i, obj in ipairs(workspace:GetDescendants()) do
-                    if myTicket ~= Cache.Tickets.Shadow then return end
+                    if not ScriptActive or myTicket ~= Cache.Tickets.Shadow then return end
                     pcall(applyObjectOptimizations, obj)
                     if i % 350 == 0 then task.wait() end
                 end
@@ -6009,7 +6142,7 @@ do
             task.spawn(function()
                 local count = 0
                 for obj, origShadow in pairs(Cache.Shadows) do
-                    if myTicket ~= Cache.Tickets.Shadow then return end
+                    if not ScriptActive or myTicket ~= Cache.Tickets.Shadow then return end
                     pcall(function() if obj and obj.Parent then obj.CastShadow = origShadow end end)
                     count = count + 1; if count % 350 == 0 then task.wait() end
                 end
@@ -6044,7 +6177,7 @@ do
         if v then
             task.spawn(function()
                 for i, obj in ipairs(workspace:GetDescendants()) do
-                    if myTicket ~= Cache.Tickets.Popup then return end
+                    if not ScriptActive or myTicket ~= Cache.Tickets.Popup then return end
                     pcall(processPopupObj, obj)
                     if i % 350 == 0 then task.wait() end
                 end
@@ -6053,7 +6186,7 @@ do
             task.spawn(function()
                 local c = 0
                 for obj, orig in pairs(Cache.Popups) do
-                    if myTicket ~= Cache.Tickets.Popup then return end
+                    if not ScriptActive or myTicket ~= Cache.Tickets.Popup then return end
                     pcall(function()
                         if obj and obj.Parent then
                             if obj:IsA("BillboardGui") then obj.Enabled = orig else obj.Visible = orig end
@@ -6068,7 +6201,7 @@ do
 
     local function processSoundObj(obj)
         if not State.MuteSFX or not obj or not obj.Parent then return end
-        if obj:IsA("Sound") and obj ~= currentSound and obj.Volume > 0 then
+        if obj:IsA("Sound") and not string.find(obj.Name, "^MenuVip") and obj.Volume > 0 then
             if Cache.Sounds[obj] == nil then Cache.Sounds[obj] = obj.Volume end
             obj.Volume = 0
         end
@@ -6082,7 +6215,7 @@ do
                 for _, container in ipairs({workspace, SoundService, player:FindFirstChild("PlayerGui")}) do
                     if container then
                         for i, obj in ipairs(container:GetDescendants()) do
-                            if myTicket ~= Cache.Tickets.Sound then return end
+                            if not ScriptActive or myTicket ~= Cache.Tickets.Sound then return end
                             pcall(processSoundObj, obj)
                             if i % 350 == 0 then task.wait() end
                         end
@@ -6093,7 +6226,7 @@ do
             task.spawn(function()
                 local c = 0
                 for s, vol in pairs(Cache.Sounds) do
-                    if myTicket ~= Cache.Tickets.Sound then return end
+                    if not ScriptActive or myTicket ~= Cache.Tickets.Sound then return end
                     pcall(function() if s and s.Parent then s.Volume = vol end end)
                     c = c + 1; if c % 350 == 0 then task.wait() end
                 end
@@ -6117,7 +6250,7 @@ do
         if v then
             task.spawn(function()
                 for i, obj in ipairs(workspace:GetDescendants()) do
-                    if myTicket ~= Cache.Tickets.Anim then return end
+                    if not ScriptActive or myTicket ~= Cache.Tickets.Anim then return end
                     pcall(stopAnimator, obj)
                     if i % 350 == 0 then task.wait() end
                 end
@@ -6158,7 +6291,7 @@ do
             end)
             task.spawn(function()
                 for i, obj in ipairs(workspace:GetDescendants()) do
-                    if myTicket ~= Cache.Tickets.Dark then return end
+                    if not ScriptActive or myTicket ~= Cache.Tickets.Dark then return end
                     pcall(processDarkPart, obj)
                     if i % 350 == 0 then task.wait() end
                 end
@@ -6175,7 +6308,7 @@ do
             task.spawn(function()
                 local c = 0
                 for part, col in pairs(Cache.DarkParts) do
-                    if myTicket ~= Cache.Tickets.Dark then return end
+                    if not ScriptActive or myTicket ~= Cache.Tickets.Dark then return end
                     pcall(function() if part and part.Parent then part.Color = col end end)
                     c = c + 1; if c % 350 == 0 then task.wait() end
                 end
@@ -6184,21 +6317,21 @@ do
         end
     end)
 
-    workspace.DescendantAdded:Connect(function(obj)
-        if State.LowGfx or State.DisableParticles or State.NoShadows or State.HidePlayers or State.HidePetsAccessories or State.HidePopups or State.MuteSFX or State.DisableAnims or State.DarkMap then
+    trackConn(workspace.DescendantAdded:Connect(function(obj)
+        if State.LowGfx or State.DisableParticles or State.NoShadows or State.HidePlayers or State.HidePetsAccessories or State.HidePopups or State.MuteSFX or State.DisableAnims or State.DarkMap or State.DisableLights then
             task.defer(function()
                 pcall(applyObjectOptimizations, obj)
                 pcall(processPopupObj, obj); pcall(processSoundObj, obj)
                 pcall(stopAnimator, obj); pcall(processDarkPart, obj)
             end)
         end
-    end)
+    end))
     pcall(function()
-        player:WaitForChild("PlayerGui").DescendantAdded:Connect(function(obj)
+        trackConn(player:WaitForChild("PlayerGui").DescendantAdded:Connect(function(obj)
             if State.HidePopups or State.MuteSFX then
                 task.defer(function() pcall(processPopupObj, obj); pcall(processSoundObj, obj) end)
             end
-        end)
+        end))
     end)
 
     createTab9Toggle(page9, "🔄 Tự động dọn rác & Giải phóng RAM (30s)", "AutoClearRAM")
@@ -6689,7 +6822,7 @@ do
         local s = execTime % 60
 
         sysBody.Text = string.format(
-            "<font color='#78B4DC'>• Executor:</font> <font color='#38CC88'>%s</font>   |   <font color='#78B4DC'>Phiên bản:</font> <font color='#E09F67'>V1.26.0</font>\n" ..
+            "<font color='#78B4DC'>• Executor:</font> <font color='#38CC88'>%s</font>   |   <font color='#78B4DC'>Phiên bản:</font> <font color='#E09F67'>V1.27.0</font>\n" ..
             "<font color='#78B4DC'>• Treo máy:</font> %02d:%02d:%02d   |   <font color='#78B4DC'>Giờ hệ thống:</font> %s",
             execName, h, m, s, os.date("%H:%M:%S")
         )
