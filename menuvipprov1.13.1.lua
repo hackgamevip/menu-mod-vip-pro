@@ -1,5 +1,5 @@
 -- ==========================================
--- MENU VIP PRO MAX V1.27.0 (LUXURY CYBER-GLASS & BENTO SIDEBAR EDITION)
+-- MENU VIP PRO MAX V1.28.0 (LUXURY CYBER-GLASS & BENTO SIDEBAR EDITION)
 -- ==========================================
 repeat task.wait() until game:IsLoaded()
 
@@ -89,6 +89,7 @@ local State = {
     TpSaveESP = false, TpSaveLoop = false, TpSaveLoopDelay = 2,
     AirWalk = false,
     HidePopups = false, MuteSFX = false, DisableAnims = false, DarkMap = false, DisableLights = false, GfxQualityLevel = 3,
+    DistanceCulling = false, DistanceCullRange = 200, DisableHighlights = false,
     MiniHUD = false, AutoReconnect = true, MagnetOrbs = false
 }
 local DefaultStateSnapshot = {}
@@ -619,10 +620,10 @@ do
     headerStatText.RichText = true; headerStatText.Text = "<font color='#38CC88'>60 FPS</font> • <font color='#58B6F2'>0ms</font>"
     headerStatText.TextColor3 = Theme.TextTitle; headerStatText.Font = Enum.Font.GothamBold; headerStatText.TextSize = 9; headerStatText.ZIndex = 13
 
-    -- Huy hiệu V1.27 nền tối sâu, chữ sáng rõ nét trên Mobile
+    -- Huy hiệu V1.28 nền tối sâu, chữ sáng rõ nét trên Mobile
     local verBadge = Instance.new("TextLabel", header)
     verBadge.Size = UDim2.new(0, 46, 0, 21); verBadge.Position = UDim2.new(1, -110, 0.5, -10.5)
-    verBadge.BackgroundColor3 = Color3.fromRGB(18, 22, 36); verBadge.Text = "V1.27"; verBadge.TextColor3 = getSoftBrandColor(Theme.Brand)
+    verBadge.BackgroundColor3 = Color3.fromRGB(18, 22, 36); verBadge.Text = "V1.28"; verBadge.TextColor3 = getSoftBrandColor(Theme.Brand)
     verBadge.Font = Enum.Font.GothamBold; verBadge.TextSize = 9.5; verBadge.ZIndex = 12
     Instance.new("UICorner", verBadge).CornerRadius = UDim.new(0, 7)
     local verStroke = Instance.new("UIStroke", verBadge); verStroke.Color = Theme.Brand; verStroke.Thickness = 1.0; verStroke.Transparency = 0.25
@@ -1242,7 +1243,7 @@ do
     minBtn.MouseButton1Click:Connect(function() clickAnimate(minBtn); toggleMenuWindow() end)
 end
 -- ==========================================
--- COMPONENTS HỆ THỐNG 3D CYBER-GLASS NEON V1.27
+-- COMPONENTS HỆ THỐNG 3D CYBER-GLASS NEON V1.28
 -- ==========================================
 local function splitLeadingIcon(rawText)
     local str = tostring(rawText or "")
@@ -5601,10 +5602,10 @@ end
 do
     local Cache = {
         Particles = {}, PostEffects = {}, Shadows = {}, Players = {}, Pets = {},
-        Popups = {}, Sounds = {}, Anims = {}, DarkParts = {}, Lights = {},
+        Popups = {}, Sounds = {}, Anims = {}, DarkParts = {}, Lights = {}, Highlights = {}, CulledParts = {},
         LightingOrig = nil, FogOrig = nil, AtmoOrig = nil, TerrainOrig = nil,
         Toggles = {}, PartCount = 0,
-        Tickets = {LowGfx = 0, Particle = 0, Pet = 0, Player = 0, Shadow = 0, Popup = 0, Sound = 0, Anim = 0, Dark = 0, Light = 0}
+        Tickets = {LowGfx = 0, Particle = 0, Pet = 0, Player = 0, Shadow = 0, Popup = 0, Sound = 0, Anim = 0, Dark = 0, Light = 0, Highlight = 0}
     }
 
     local function createTab9Toggle(parent, text, varName, callback)
@@ -5640,7 +5641,7 @@ do
 
     local function countActiveBoosts()
         local activeN = 0
-        for _, k in ipairs({"LowGfx", "DisableParticles", "DisablePostEffects", "NoFog", "NoShadows", "OptimizeTerrain", "HidePetsAccessories", "HidePlayers", "HidePopups", "MuteSFX", "DisableAnims", "DarkMap", "DisableLights"}) do
+        for _, k in ipairs({"LowGfx", "DisableParticles", "DisablePostEffects", "NoFog", "NoShadows", "OptimizeTerrain", "HidePetsAccessories", "HidePlayers", "HidePopups", "MuteSFX", "DisableAnims", "DarkMap", "DisableLights", "DisableHighlights", "DistanceCulling"}) do
             if State[k] then activeN = activeN + 1 end
         end
         return activeN
@@ -5761,6 +5762,16 @@ do
             end
         end
 
+        if State.DisableHighlights then
+            if obj:IsA("Highlight") and not string.find(obj.Name, "^MobileESP_") and not string.find(obj.Name, "^TpSaveESP_") and obj.Enabled then
+                if Cache.Highlights[obj] == nil then Cache.Highlights[obj] = obj.Enabled end
+                obj.Enabled = false
+            elseif obj:IsA("SelectionBox") and not string.find(obj.Name, "^MobileESP_") and obj.Visible then
+                if Cache.Highlights[obj] == nil then Cache.Highlights[obj] = obj.Visible end
+                obj.Visible = false
+            end
+        end
+
         if State.NoShadows and obj:IsA("BasePart") and obj.CastShadow then
             if Cache.Shadows[obj] == nil then Cache.Shadows[obj] = obj.CastShadow end
             obj.CastShadow = false
@@ -5829,7 +5840,7 @@ do
     end
 
     createDivider(page9, "CHẾ ĐỘ TỐI ƯU NHANH (3 CẤP ĐỘ)")
-    local allBoostKeys = {"LowGfx", "DisableParticles", "DisablePostEffects", "NoFog", "NoShadows", "OptimizeTerrain", "HidePetsAccessories", "HidePopups", "DisableLights"}
+    local allBoostKeys = {"LowGfx", "DisableParticles", "DisablePostEffects", "NoFog", "NoShadows", "OptimizeTerrain", "HidePetsAccessories", "HidePopups", "DisableLights", "DisableHighlights"}
     local balancedBoostKeys = {"DisableParticles", "DisablePostEffects", "NoFog", "NoShadows", "OptimizeTerrain", "HidePopups"}
 
     -- Hàng 3 nút Preset gọn đẹp: Siêu Khoai Tây | Cân Bằng | Khôi Phục Gốc
@@ -5956,6 +5967,83 @@ do
             end)
         else
             restoreParticlesIfBothOff(function() return ScriptActive and myTicket == Cache.Tickets.Particle end)
+        end
+    end)
+
+    createTab9Toggle(page9, "💠 Tắt viền phát sáng (Highlight / SelectionBox)", "DisableHighlights", function(v)
+        Cache.Tickets.Highlight = Cache.Tickets.Highlight + 1
+        local myTicket = Cache.Tickets.Highlight
+        if v then
+            task.spawn(function()
+                for i, obj in ipairs(workspace:GetDescendants()) do
+                    if not ScriptActive or myTicket ~= Cache.Tickets.Highlight then return end
+                    pcall(applyObjectOptimizations, obj)
+                    if i % 350 == 0 then task.wait() end
+                end
+            end)
+        else
+            task.spawn(function()
+                local count = 0
+                for obj, origVal in pairs(Cache.Highlights) do
+                    if not ScriptActive or myTicket ~= Cache.Tickets.Highlight then return end
+                    pcall(function()
+                        if obj and obj.Parent then
+                            if obj:IsA("Highlight") then obj.Enabled = origVal
+                            elseif obj:IsA("SelectionBox") then obj.Visible = origVal end
+                        end
+                    end)
+                    count = count + 1; if count % 350 == 0 then task.wait() end
+                end
+                if myTicket == Cache.Tickets.Highlight then Cache.Highlights = {} end
+            end)
+        end
+    end)
+
+    createCombinedToggleSlider(page9, "🔭 Ẩn vật thể ở xa (Distance Culling)", "DistanceCulling", "Bán kính hiển thị (Studs)", 50, 600, "DistanceCullRange", function(v)
+        if not v then
+            task.spawn(function()
+                local count = 0
+                for part, _ in pairs(Cache.CulledParts) do
+                    pcall(function()
+                        if part and part.Parent and part:IsA("BasePart") then
+                            part.LocalTransparencyModifier = 0
+                        end
+                    end)
+                    count = count + 1; if count % 350 == 0 then task.wait() end
+                end
+                Cache.CulledParts = {}
+            end)
+        end
+    end)
+
+    task.spawn(function()
+        while ScriptActive and task.wait(0.6) do
+            if State.DistanceCulling and player.Character then
+                local root = getUniversalRoot(player.Character)
+                if root then
+                    local origin = root.Position
+                    local maxDist = math.clamp(tonumber(State.DistanceCullRange) or 200, 50, 600)
+                    local list = workspace:GetDescendants()
+                    for i, obj in ipairs(list) do
+                        if not ScriptActive or not State.DistanceCulling then break end
+                        if obj:IsA("BasePart") and obj.Name ~= "Terrain" and obj.Name ~= "VipAirWalk" and obj.Name ~= "VipSpectateProxy" and not string.find(obj.Name, "^ESPAnchor_") and not string.find(obj.Name, "^TpSaveAnchor_") then
+                            if not obj:IsDescendantOf(player.Character) then
+                                local d = (obj.Position - origin).Magnitude
+                                if d > maxDist then
+                                    if obj.LocalTransparencyModifier < 1 then
+                                        obj.LocalTransparencyModifier = 1
+                                        Cache.CulledParts[obj] = true
+                                    end
+                                elseif Cache.CulledParts[obj] then
+                                    obj.LocalTransparencyModifier = 0
+                                    Cache.CulledParts[obj] = nil
+                                end
+                            end
+                        end
+                        if i % 400 == 0 then task.wait() end
+                    end
+                end
+            end
         end
     end)
 
@@ -6318,7 +6406,7 @@ do
     end)
 
     trackConn(workspace.DescendantAdded:Connect(function(obj)
-        if State.LowGfx or State.DisableParticles or State.NoShadows or State.HidePlayers or State.HidePetsAccessories or State.HidePopups or State.MuteSFX or State.DisableAnims or State.DarkMap or State.DisableLights then
+        if State.LowGfx or State.DisableParticles or State.NoShadows or State.HidePlayers or State.HidePetsAccessories or State.HidePopups or State.MuteSFX or State.DisableAnims or State.DarkMap or State.DisableLights or State.DisableHighlights then
             task.defer(function()
                 pcall(applyObjectOptimizations, obj)
                 pcall(processPopupObj, obj); pcall(processSoundObj, obj)
@@ -6822,7 +6910,7 @@ do
         local s = execTime % 60
 
         sysBody.Text = string.format(
-            "<font color='#78B4DC'>• Executor:</font> <font color='#38CC88'>%s</font>   |   <font color='#78B4DC'>Phiên bản:</font> <font color='#E09F67'>V1.27.0</font>\n" ..
+            "<font color='#78B4DC'>• Executor:</font> <font color='#38CC88'>%s</font>   |   <font color='#78B4DC'>Phiên bản:</font> <font color='#E09F67'>V1.28.0</font>\n" ..
             "<font color='#78B4DC'>• Treo máy:</font> %02d:%02d:%02d   |   <font color='#78B4DC'>Giờ hệ thống:</font> %s",
             execName, h, m, s, os.date("%H:%M:%S")
         )
