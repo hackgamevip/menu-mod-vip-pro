@@ -1,5 +1,5 @@
 -- ==========================================
--- MENU VIP PRO MAX V1.29.0 (LUXURY CYBER-GLASS & BENTO SIDEBAR EDITION)
+-- MENU VIP PRO MAX V1.30.0 (LUXURY CYBER-GLASS & BENTO SIDEBAR EDITION)
 -- ==========================================
 repeat task.wait() until game:IsLoaded()
 
@@ -94,7 +94,7 @@ local State = {
     CustomGravity = false, GravityValue = 196, CustomFOV = false, FovValue = 70,
     LookAtTarget = false, ProximityAlert = false, ProximityRange = 50,
     SafeSpotRetreat = false, SafeSpotHpPct = 30,
-    QuickShortcuts = false, MenuTransparency = 2, MenuScalePct = 100,
+    QuickShortcuts = false, MenuTransparency = 2, MenuScalePct = 100, IncludeMatchBots = true,
     MiniHUD = false, AutoReconnect = true, MagnetOrbs = false
 }
 local DefaultStateSnapshot = {}
@@ -625,10 +625,10 @@ do
     headerStatText.RichText = true; headerStatText.Text = "<font color='#38CC88'>60 FPS</font> • <font color='#58B6F2'>0ms</font>"
     headerStatText.TextColor3 = Theme.TextTitle; headerStatText.Font = Enum.Font.GothamBold; headerStatText.TextSize = 9; headerStatText.ZIndex = 13
 
-    -- Huy hiệu V1.29 nền tối sâu, chữ sáng rõ nét trên Mobile
+    -- Huy hiệu V1.30 nền tối sâu, chữ sáng rõ nét trên Mobile
     local verBadge = Instance.new("TextLabel", header)
     verBadge.Size = UDim2.new(0, 46, 0, 21); verBadge.Position = UDim2.new(1, -110, 0.5, -10.5)
-    verBadge.BackgroundColor3 = Color3.fromRGB(18, 22, 36); verBadge.Text = "V1.29"; verBadge.TextColor3 = getSoftBrandColor(Theme.Brand)
+    verBadge.BackgroundColor3 = Color3.fromRGB(18, 22, 36); verBadge.Text = "V1.30"; verBadge.TextColor3 = getSoftBrandColor(Theme.Brand)
     verBadge.Font = Enum.Font.GothamBold; verBadge.TextSize = 9.5; verBadge.ZIndex = 12
     Instance.new("UICorner", verBadge).CornerRadius = UDim.new(0, 7)
     local verStroke = Instance.new("UIStroke", verBadge); verStroke.Color = Theme.Brand; verStroke.Thickness = 1.0; verStroke.Transparency = 0.25
@@ -1248,7 +1248,7 @@ do
     minBtn.MouseButton1Click:Connect(function() clickAnimate(minBtn); toggleMenuWindow() end)
 end
 -- ==========================================
--- COMPONENTS HỆ THỐNG 3D CYBER-GLASS NEON V1.29
+-- COMPONENTS HỆ THỐNG 3D CYBER-GLASS NEON V1.30
 -- ==========================================
 local function splitLeadingIcon(rawText)
     local str = tostring(rawText or "")
@@ -4648,7 +4648,113 @@ do
     renderSavedTps()
 end
 -- ==========================================
--- [TAB 7: TP NGƯỜI CHƠI V1.23 (CHỌN KIỂU: TP ĐẾN / BAY ĐẾN / CHẠY ĐẾN + CUỘN MƯỢT)]
+-- [HỆ THỐNG QUÉT NGƯỜI CHƠI & BOT MAP PHỤ DÙNG CHUNG CHO ESP & TP PLAYER (V1.30)]
+-- ==========================================
+local function resolveTargetCharacter(target)
+    if not target then return nil end
+    if typeof(target) == "Instance" then
+        if target:IsA("Player") then
+            if target.Character and target.Character.Parent then
+                return target.Character
+            end
+            -- Fallback khi game map phụ di chuyển model nhân vật vào thư mục riêng trong workspace
+            local direct = workspace:FindFirstChild(target.Name)
+            if direct and direct:IsA("Model") then return direct end
+            for _, folderName in ipairs({"Players", "Alive", "Characters", "InGame", "Entities"}) do
+                local f = workspace:FindFirstChild(folderName)
+                if f then
+                    local m = f:FindFirstChild(target.Name)
+                    if m and m:IsA("Model") then return m end
+                end
+            end
+            return nil
+        elseif target:IsA("Model") and target.Parent then
+            return target
+        end
+    end
+    return nil
+end
+
+local function getTargetInfoText(target)
+    if not target or typeof(target) ~= "Instance" then return "Ẩn danh", "" end
+    if target:IsA("Player") then
+        return target.DisplayName, "@" .. target.Name
+    else
+        return target.Name, "[BOT / AI Map Phụ]"
+    end
+end
+
+local function isTargetStillValid(target)
+    if not target or typeof(target) ~= "Instance" then return false end
+    if target:IsA("Player") then
+        return target.Parent == Players
+    elseif target:IsA("Model") then
+        if not target.Parent or not target:IsDescendantOf(workspace) then return false end
+        local hum = target:FindFirstChildOfClass("Humanoid")
+        return hum ~= nil and hum.Health > 0
+    end
+    return false
+end
+
+local function getAllMatchTargets(includeBots)
+    local results = {}
+    local playerCharSet = {}
+    local playerNameSet = {}
+
+    if player.Character then playerCharSet[player.Character] = true end
+    playerNameSet[player.Name] = true
+    playerNameSet[player.Name .. "_Clone"] = true
+
+    for _, p in ipairs(Players:GetPlayers()) do
+        if p.Character then playerCharSet[p.Character] = true end
+        playerNameSet[p.Name] = true
+        if p ~= player then
+            table.insert(results, {
+                Key = p,
+                IsPlayer = true,
+                DisplayName = p.DisplayName,
+                SubName = "@" .. p.Name,
+                UserId = p.UserId
+            })
+        end
+    end
+
+    if includeBots then
+        local seenModels = {}
+        local containers = {workspace}
+        for _, fName in ipairs({"Players", "Alive", "Bots", "AI", "Characters", "InGame", "Match", "Competitors", "Runners", "Survivors", "Killers", "NPCs", "Enemies"}) do
+            local folder = workspace:FindFirstChild(fName)
+            if folder then table.insert(containers, folder) end
+        end
+
+        for _, container in ipairs(containers) do
+            for _, child in ipairs(container:GetChildren()) do
+                if child:IsA("Model") and not seenModels[child] and not playerCharSet[child] and not playerNameSet[child.Name] then
+                    local hum = child:FindFirstChildOfClass("Humanoid")
+                    local root = getUniversalRoot(child)
+                    if hum and hum.Health > 0 and root and child:FindFirstChild("Head") then
+                        -- Loại bỏ tượng/NPC đứng yên bị khóa cứng (Anchored) trừ khi nằm trong thư mục trận đấu
+                        if (not root.Anchored) or (container ~= workspace) then
+                            seenModels[child] = true
+                            table.insert(results, {
+                                Key = child,
+                                IsPlayer = false,
+                                DisplayName = child.Name,
+                                SubName = "[BOT / AI]",
+                                UserId = nil
+                            })
+                        end
+                    end
+                end
+            end
+        end
+    end
+
+    return results
+end
+
+-- ==========================================
+-- [TAB 7: TP NGƯỜI CHƠI V1.30 (TỰ ĐỒNG BỘ MAP PHỤ + HỖ TRỢ BOT THAY THẾ + LÀM MỚI TỨC THÌ)]
 -- ==========================================
 local targetTpPlayer = nil
 local autoTpPlayerEnabled = false
@@ -4707,9 +4813,10 @@ do
 
     -- Hàm tính toán CFrame đích dựa theo Vị trí đứng (Sau lưng / Trước mặt / Trên đầu / Dưới chân) & Khoảng cách
     local function computeTargetDestination(isInstantMode, isManualClick)
-        if not targetTpPlayer or not targetTpPlayer.Character then return nil, nil, nil end
-        local targetCF = getCharacterCFrame(targetTpPlayer.Character)
-        local targetHum = targetTpPlayer.Character:FindFirstChildOfClass("Humanoid")
+        local tChar = resolveTargetCharacter(targetTpPlayer)
+        if not tChar then return nil, nil, nil end
+        local targetCF = getCharacterCFrame(tChar)
+        local targetHum = tChar:FindFirstChildOfClass("Humanoid")
         if not targetCF or (targetHum and targetHum.Health <= 0) then return nil, nil, nil end
 
         local mode = TpPositions[State.TpPositionIdx] or TpPositions[1]
@@ -4742,7 +4849,8 @@ do
         local distToDest = (destPos - curPos).Magnitude
         local distToTarget = (rawTargetPos - curPos).Magnitude
 
-        if (distToTarget > 250 or not getUniversalRoot(targetTpPlayer.Character)) and (tick() - lastStreamRequest > 0.6) then
+        local tCharStream = resolveTargetCharacter(targetTpPlayer)
+        if (distToTarget > 250 or (tCharStream and not getUniversalRoot(tCharStream))) and (tick() - lastStreamRequest > 0.6) then
             lastStreamRequest = tick()
             task.spawn(function() pcall(function() player:RequestStreamAroundAsync(rawTargetPos, 3) end) end)
         end
@@ -4806,7 +4914,7 @@ do
                     -- Tự động nhảy nếu phía trước có vật cản hoặc mục tiêu ở vị trí cao hơn
                     local moveDir = (Vector3.new(destPos.X, curPos.Y, destPos.Z) - curPos)
                     if moveDir.Magnitude > 1.5 then
-                        walkRayParams.FilterDescendantsInstances = {myChar, targetTpPlayer.Character}
+                        walkRayParams.FilterDescendantsInstances = {myChar, resolveTargetCharacter(targetTpPlayer)}
                         local hit = workspace:Raycast(curPos, moveDir.Unit * 4.5, walkRayParams)
                         if hit or (destPos.Y - curPos.Y > 3.5) then
                             myHum.Jump = true
@@ -4821,7 +4929,8 @@ do
     end
 
     teleportToSelectedPlayer = function(isManualClick)
-        if not targetTpPlayer or not targetTpPlayer.Character then return false end
+        local tCharNow = resolveTargetCharacter(targetTpPlayer)
+        if not tCharNow then return false end
         local methodIdx = State.TpMoveMethodIdx or 1
 
         -- Khi đang ở trong vòng lặp Heartbeat của Auto TP / Auto Bay / Auto Chạy
@@ -4837,12 +4946,12 @@ do
             if ok then
                 local myChar = player.Character
                 local myRoot = getUniversalRoot(myChar)
-                local tCF = getCharacterCFrame(targetTpPlayer.Character)
+                local tCF = getCharacterCFrame(resolveTargetCharacter(targetTpPlayer))
                 if myRoot and tCF and (myRoot.Position - tCF.Position).Magnitude > 500 then
                     task.spawn(function()
                         for _ = 1, 6 do
                             task.wait(0.1)
-                            if not targetTpPlayer or not targetTpPlayer.Character then break end
+                            if not resolveTargetCharacter(targetTpPlayer) then break end
                             stepApproachToTarget(0.1, true)
                         end
                     end)
@@ -4864,7 +4973,7 @@ do
             task.spawn(function()
                 local startTick = tick()
                 while manualApproachActive and manualApproachTicket == myTicket do
-                    if not targetTpPlayer or not targetTpPlayer.Character then break end
+                    if not resolveTargetCharacter(targetTpPlayer) then break end
                     local myChar = player.Character
                     local myHum = myChar and myChar:FindFirstChildOfClass("Humanoid")
                     if not myChar or not myHum or myHum.Health <= 0 then break end
@@ -5175,12 +5284,17 @@ do
     end)
 
     local function updateTargetLabel()
-        if targetTpPlayer then
-            targetStatusLabel.Text = string.format("🎯 <font color='#56C28B'>%s</font> <font color='#C8AF68'>(@%s)</font>", targetTpPlayer.DisplayName, targetTpPlayer.Name)
+        if targetTpPlayer and isTargetStillValid(targetTpPlayer) then
+            local dName, sName = getTargetInfoText(targetTpPlayer)
+            targetStatusLabel.Text = string.format("🎯 <font color='#68C496'>%s</font> <font color='#BFA872'>(%s)</font>", dName, sName)
             selAvaStroke.Color = Color3.fromRGB(86, 194, 139)
-            task.spawn(function()
-                pcall(function() selectedAvatarImg.Image = Players:GetUserThumbnailAsync(targetTpPlayer.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size420x420) end)
-            end)
+            if targetTpPlayer:IsA("Player") then
+                task.spawn(function()
+                    pcall(function() selectedAvatarImg.Image = Players:GetUserThumbnailAsync(targetTpPlayer.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size420x420) end)
+                end)
+            else
+                selectedAvatarImg.Image = "rbxassetid://0"
+            end
         else
             targetStatusLabel.Text = "🎯 <font color='#C97A86'>Chưa chọn mục tiêu</font>"
             selAvaStroke.Color = Color3.fromRGB(185, 115, 126)
@@ -5218,7 +5332,7 @@ do
         fireSync("LookAtTarget", State.LookAtTarget, false)
         MakeToast(
             State.LookAtTarget and "🎯 Tự Xoay Mặt [BẬT]" or "🎯 Tự Xoay Mặt [TẮT]",
-            State.LookAtTarget and ("Đang tự động hướng mặt về " .. targetTpPlayer.DisplayName) or "Đã tắt tự xoay mặt",
+            State.LookAtTarget and ("Đang tự động hướng mặt về " .. (select(1, getTargetInfoText(targetTpPlayer)))) or "Đã tắt tự xoay mặt",
             State.LookAtTarget and Theme.AccentOn or Theme.AccentOff
         )
         if State.AutoSave then saveConfig() end
@@ -5282,7 +5396,7 @@ do
             if not wasActive then
                 local mInfo = TpMoveMethods[State.TpMoveMethodIdx] or TpMoveMethods[1]
                 local posName = (TpPositions[State.TpPositionIdx] or TpPositions[1]).Name
-                MakeToast(mInfo.Icon .. " " .. mInfo.Name, "Đến " .. targetTpPlayer.DisplayName .. " (" .. posName .. ")", Theme.Brand)
+                MakeToast(mInfo.Icon .. " " .. mInfo.Name, "Đến " .. (select(1, getTargetInfoText(targetTpPlayer))) .. " (" .. posName .. ")", Theme.Brand)
             end
         else
             MakeToast("Lỗi", "Người chơi chưa tải nhân vật hoặc đã chết!", Theme.AccentOff)
@@ -5297,7 +5411,7 @@ do
         updateTpActionButtonsUI()
         local mInfo = TpMoveMethods[State.TpMoveMethodIdx] or TpMoveMethods[1]
         if autoTpPlayerEnabled then
-            MakeToast("Đã Bật " .. mInfo.BtnAuto, "Đang " .. string.lower(mInfo.Name) .. " bám theo " .. targetTpPlayer.DisplayName, Theme.AccentOn)
+            MakeToast("Đã Bật " .. mInfo.BtnAuto, "Đang " .. string.lower(mInfo.Name) .. " bám theo " .. (select(1, getTargetInfoText(targetTpPlayer))), Theme.AccentOn)
         else
             restoreNormalPosture()
             MakeToast("Đã Tắt " .. mInfo.BtnAuto, "Đã dừng bám theo mục tiêu", Theme.AccentOff)
@@ -5310,7 +5424,7 @@ do
         spectatePlayerEnabled = not spectatePlayerEnabled
         updateSpectateBtnUI()
         if spectatePlayerEnabled then
-            MakeToast("Đã Bật Spectate", "Đang xem góc nhìn của " .. targetTpPlayer.DisplayName, Theme.AccentOn)
+            MakeToast("Đã Bật Spectate", "Đang xem góc nhìn của " .. (select(1, getTargetInfoText(targetTpPlayer))), Theme.AccentOn)
         else
             resetCameraSubject()
             MakeToast("Đã Tắt Spectate", "Đã trả góc nhìn về nhân vật của bạn", Theme.AccentOff)
@@ -5332,11 +5446,27 @@ do
     table.insert(RGBElements, {Type = "Button", Stroke = sStroke, DefaultColor = Theme.Brand, UseBrand = true})
 
     local searchBox = Instance.new("TextBox", searchBar)
-    searchBox.Size = UDim2.new(1, -16, 1, 0); searchBox.Position = UDim2.new(0, 8, 0, 0)
-    searchBox.BackgroundTransparency = 1; searchBox.PlaceholderText = "🔍 Nhập tên hoặc @username để lọc nhanh..."
+    searchBox.Size = UDim2.new(1, -96, 1, 0); searchBox.Position = UDim2.new(0, 8, 0, 0)
+    searchBox.BackgroundTransparency = 1; searchBox.PlaceholderText = "🔍 Tìm tên người chơi / bot..."
     searchBox.PlaceholderColor3 = Theme.TextDim; searchBox.Text = ""; searchBox.TextColor3 = Theme.TextTitle
-    searchBox.Font = Enum.Font.GothamSemibold; searchBox.TextSize = 9.5; searchBox.TextXAlignment = Enum.TextXAlignment.Left
+    searchBox.Font = Enum.Font.GothamSemibold; searchBox.TextSize = 9.2; searchBox.TextXAlignment = Enum.TextXAlignment.Left
     searchBox.ClearTextOnFocus = false; searchBox.ZIndex = 11
+
+    local botFilterBtn = Instance.new("TextButton", searchBar)
+    botFilterBtn.Size = UDim2.new(0, 56, 0, 16); botFilterBtn.Position = UDim2.new(1, -84, 0.5, -8)
+    botFilterBtn.BackgroundColor3 = Color3.fromRGB(22, 40, 48); botFilterBtn.Text = "BOT: BẬT"
+    botFilterBtn.TextColor3 = Color3.fromRGB(132, 198, 180); botFilterBtn.Font = Enum.Font.GothamSemibold; botFilterBtn.TextSize = 7.4
+    botFilterBtn.AutoButtonColor = false; botFilterBtn.ZIndex = 12
+    Instance.new("UICorner", botFilterBtn).CornerRadius = UDim.new(0, 4)
+    local bfStroke = Instance.new("UIStroke", botFilterBtn); bfStroke.Color = Color3.fromRGB(64, 148, 138); bfStroke.Thickness = 0.8
+
+    local refreshListBtn = Instance.new("TextButton", searchBar)
+    refreshListBtn.Size = UDim2.new(0, 22, 0, 16); refreshListBtn.Position = UDim2.new(1, -25, 0.5, -8)
+    refreshListBtn.BackgroundColor3 = Color3.fromRGB(22, 28, 44); refreshListBtn.Text = "🔄"
+    refreshListBtn.TextColor3 = Color3.fromRGB(168, 196, 220); refreshListBtn.Font = Enum.Font.GothamSemibold; refreshListBtn.TextSize = 8.5
+    refreshListBtn.AutoButtonColor = false; refreshListBtn.ZIndex = 12
+    Instance.new("UICorner", refreshListBtn).CornerRadius = UDim.new(0, 4)
+    local rlStroke = Instance.new("UIStroke", refreshListBtn); rlStroke.Color = Color3.fromRGB(64, 118, 175); rlStroke.Thickness = 0.8
 
     playerListScroll = Instance.new("ScrollingFrame", playerListContainer)
     playerListScroll.Size = UDim2.new(1, -6, 1, -30); playerListScroll.Position = UDim2.new(0, 3, 0, 28)
@@ -5375,22 +5505,47 @@ do
     end
     searchBox:GetPropertyChangedSignal("Text"):Connect(filterPlayerCards)
 
+    local function syncBotFilterBtnUI()
+        local on = (State.IncludeMatchBots ~= false)
+        botFilterBtn.Text = on and "BOT: BẬT" or "BOT: TẮT"
+        botFilterBtn.BackgroundColor3 = on and Color3.fromRGB(22, 40, 48) or Color3.fromRGB(22, 24, 34)
+        botFilterBtn.TextColor3 = on and Color3.fromRGB(132, 198, 180) or Color3.fromRGB(132, 142, 162)
+        bfStroke.Color = on and Color3.fromRGB(64, 148, 138) or Color3.fromRGB(52, 58, 76)
+    end
+    syncBotFilterBtnUI()
+
     local function refreshPlayerSelectionVisuals()
-        for p, ref in pairs(playerCardRefs) do
+        for keyObj, ref in pairs(playerCardRefs) do
             if ref and ref.Btn and ref.Btn.Parent then
-                local isSelected = (targetTpPlayer == p)
+                local isSelected = (targetTpPlayer == keyObj)
                 ref.Btn.BackgroundColor3 = isSelected and Theme.ItemActive or Theme.ItemBg
                 if not State.RGB then
                     ref.Stroke.Color = isSelected and Theme.AccentOn or Theme.Stroke
-                    ref.AvaStroke.Color = isSelected and Theme.AccentOn or Theme.Brand
+                    ref.AvaStroke.Color = isSelected and Theme.AccentOn or (ref.IsPlayer and Theme.Brand or Color3.fromRGB(195, 162, 88))
                 end
-                ref.NameLabel.Text = (isSelected and "✅ " or "") .. p.DisplayName
-                ref.NameLabel.TextColor3 = isSelected and Theme.AccentOn or Theme.TextTitle
+                ref.NameLabel.Text = (isSelected and "✅ " or "") .. ref.DisplayName
+                ref.NameLabel.TextColor3 = isSelected and Color3.fromRGB(125, 202, 164) or (ref.IsPlayer and Color3.fromRGB(198, 208, 224) or Color3.fromRGB(210, 186, 128))
             end
         end
     end
 
-    local function updatePlayerList()
+    local lastRosterSignature = ""
+    local function buildRosterSignature(targets)
+        local parts = {}
+        for _, t in ipairs(targets) do
+            table.insert(parts, (t.IsPlayer and "P:" or "B:") .. tostring(t.DisplayName) .. ":" .. tostring(t.Key))
+        end
+        return table.concat(parts, "|")
+    end
+
+    local function updatePlayerList(forceRebuild)
+        local targets = getAllMatchTargets(State.IncludeMatchBots ~= false)
+        local sig = buildRosterSignature(targets)
+        if not forceRebuild and sig == lastRosterSignature then
+            return
+        end
+        lastRosterSignature = sig
+
         local savedCanvasPos = playerListScroll.CanvasPosition
         playerDistLabels = {}
         playerCardRefs = {}
@@ -5399,63 +5554,72 @@ do
         end
         cleanRGBElements()
 
-        for _, p in pairs(Players:GetPlayers()) do
-            if p ~= player then
-                local isSelected = (targetTpPlayer == p)
-                local pFrame = Instance.new("Frame", playerListScroll)
-                pFrame.Name = "PaddingFrame"; pFrame.Size = UDim2.new(1, -2, 0, 32); pFrame.BackgroundTransparency = 1; pFrame.ZIndex = 10
+        for _, t in ipairs(targets) do
+            local keyObj = t.Key
+            local isSelected = (targetTpPlayer == keyObj)
+            local pFrame = Instance.new("Frame", playerListScroll)
+            pFrame.Name = "PaddingFrame"; pFrame.Size = UDim2.new(1, -2, 0, 32); pFrame.BackgroundTransparency = 1; pFrame.ZIndex = 10
 
-                local btn = Instance.new("TextButton", pFrame)
-                btn.Size = UDim2.new(1, 0, 1, 0); btn.BackgroundColor3 = isSelected and Theme.ItemActive or Theme.ItemBg
-                btn.Text = ""; btn.AutoButtonColor = false; btn.ZIndex = 10
-                Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 7)
+            local btn = Instance.new("TextButton", pFrame)
+            btn.Size = UDim2.new(1, 0, 1, 0); btn.BackgroundColor3 = isSelected and Theme.ItemActive or Theme.ItemBg
+            btn.Text = ""; btn.AutoButtonColor = false; btn.ZIndex = 10
+            Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 7)
 
-                local stroke = Instance.new("UIStroke", btn); stroke.Color = isSelected and Theme.AccentOn or Theme.Stroke; stroke.Thickness = 1
-                table.insert(RGBElements, {Type = "Info", Stroke = stroke})
+            local stroke = Instance.new("UIStroke", btn); stroke.Color = isSelected and Theme.AccentOn or Theme.Stroke; stroke.Thickness = 1
+            table.insert(RGBElements, {Type = "Info", Stroke = stroke})
 
-                local targetAvatar = Instance.new("ImageLabel", btn)
-                targetAvatar.Size = UDim2.new(0, 22, 0, 22); targetAvatar.Position = UDim2.new(0, 6, 0.5, -11)
-                targetAvatar.BackgroundColor3 = Color3.fromRGB(30, 34, 46); targetAvatar.ZIndex = 11
-                Instance.new("UICorner", targetAvatar).CornerRadius = UDim.new(1, 0)
+            local targetAvatar = Instance.new("ImageLabel", btn)
+            targetAvatar.Size = UDim2.new(0, 22, 0, 22); targetAvatar.Position = UDim2.new(0, 6, 0.5, -11)
+            targetAvatar.BackgroundColor3 = t.IsPlayer and Color3.fromRGB(30, 34, 46) or Color3.fromRGB(40, 34, 24); targetAvatar.ZIndex = 11
+            Instance.new("UICorner", targetAvatar).CornerRadius = UDim.new(1, 0)
 
-                local targetStroke = Instance.new("UIStroke", targetAvatar)
-                targetStroke.Color = isSelected and Theme.AccentOn or Theme.Brand; targetStroke.Thickness = 1
-                targetStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-                table.insert(RGBElements, {Type = "Info", Stroke = targetStroke})
+            local targetStroke = Instance.new("UIStroke", targetAvatar)
+            targetStroke.Color = isSelected and Theme.AccentOn or (t.IsPlayer and Theme.Brand or Color3.fromRGB(195, 162, 88)); targetStroke.Thickness = 1
+            targetStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+            table.insert(RGBElements, {Type = "Info", Stroke = targetStroke})
 
-                local nLabel = Instance.new("TextLabel", btn)
-                nLabel.Size = UDim2.new(1, -110, 0, 14); nLabel.Position = UDim2.new(0, 34, 0, 3)
-                nLabel.BackgroundTransparency = 1; nLabel.Text = (isSelected and "✅ " or "") .. p.DisplayName
-                nLabel.TextColor3 = isSelected and Theme.AccentOn or Theme.TextTitle; nLabel.Font = Enum.Font.GothamBold; nLabel.TextSize = 10
-                nLabel.TextTruncate = Enum.TextTruncate.AtEnd; nLabel.TextXAlignment = Enum.TextXAlignment.Left; nLabel.ZIndex = 11
+            if not t.IsPlayer then
+                local botIcon = Instance.new("TextLabel", targetAvatar)
+                botIcon.Size = UDim2.new(1, 0, 1, 0); botIcon.BackgroundTransparency = 1
+                botIcon.Text = "🤖"; botIcon.TextSize = 11; botIcon.ZIndex = 12
+            end
 
-                local subLabel = Instance.new("TextLabel", btn)
-                subLabel.Size = UDim2.new(1, -110, 0, 12); subLabel.Position = UDim2.new(0, 34, 0, 16)
-                subLabel.BackgroundTransparency = 1; subLabel.Text = "@" .. p.Name
-                subLabel.TextColor3 = Theme.TextDim; subLabel.Font = Enum.Font.GothamSemibold; subLabel.TextSize = 8.5
-                subLabel.TextTruncate = Enum.TextTruncate.AtEnd; subLabel.TextXAlignment = Enum.TextXAlignment.Left; subLabel.ZIndex = 11
+            local nLabel = Instance.new("TextLabel", btn)
+            nLabel.Size = UDim2.new(1, -110, 0, 14); nLabel.Position = UDim2.new(0, 34, 0, 3)
+            nLabel.BackgroundTransparency = 1; nLabel.Text = (isSelected and "✅ " or "") .. t.DisplayName
+            nLabel.TextColor3 = isSelected and Color3.fromRGB(125, 202, 164) or (t.IsPlayer and Color3.fromRGB(198, 208, 224) or Color3.fromRGB(210, 186, 128))
+            nLabel.Font = Enum.Font.GothamSemibold; nLabel.TextSize = 9.8
+            nLabel.TextTruncate = Enum.TextTruncate.AtEnd; nLabel.TextXAlignment = Enum.TextXAlignment.Left; nLabel.ZIndex = 11
 
-                local distPill = Instance.new("TextLabel", btn)
-                distPill.Size = UDim2.new(0, 68, 0, 18); distPill.Position = UDim2.new(1, -74, 0.5, -9)
-                distPill.BackgroundColor3 = Color3.fromRGB(18, 20, 29); distPill.RichText = true; distPill.Text = "-- m"
-                distPill.TextColor3 = Theme.Brand; distPill.Font = Enum.Font.GothamBold; distPill.TextSize = 8.5; distPill.ZIndex = 11
-                Instance.new("UICorner", distPill).CornerRadius = UDim.new(0, 5)
-                playerDistLabels[p] = distPill
-                playerCardRefs[p] = {Btn = btn, Stroke = stroke, AvaStroke = targetStroke, NameLabel = nLabel}
+            local subLabel = Instance.new("TextLabel", btn)
+            subLabel.Size = UDim2.new(1, -110, 0, 12); subLabel.Position = UDim2.new(0, 34, 0, 16)
+            subLabel.BackgroundTransparency = 1; subLabel.Text = t.SubName
+            subLabel.TextColor3 = t.IsPlayer and Theme.TextDim or Color3.fromRGB(185, 158, 98); subLabel.Font = Enum.Font.GothamMedium; subLabel.TextSize = 8.2
+            subLabel.TextTruncate = Enum.TextTruncate.AtEnd; subLabel.TextXAlignment = Enum.TextXAlignment.Left; subLabel.ZIndex = 11
 
+            local distPill = Instance.new("TextLabel", btn)
+            distPill.Size = UDim2.new(0, 68, 0, 18); distPill.Position = UDim2.new(1, -74, 0.5, -9)
+            distPill.BackgroundColor3 = Color3.fromRGB(18, 20, 29); distPill.RichText = true; distPill.Text = "-- m"
+            distPill.TextColor3 = Color3.fromRGB(132, 186, 215); distPill.Font = Enum.Font.GothamSemibold; distPill.TextSize = 8.2; distPill.ZIndex = 11
+            Instance.new("UICorner", distPill).CornerRadius = UDim.new(0, 5)
+            playerDistLabels[keyObj] = distPill
+            playerCardRefs[keyObj] = {Btn = btn, Stroke = stroke, AvaStroke = targetStroke, NameLabel = nLabel, DisplayName = t.DisplayName, IsPlayer = t.IsPlayer}
+
+            if t.IsPlayer and t.UserId then
                 task.spawn(function()
-                    pcall(function() targetAvatar.Image = Players:GetUserThumbnailAsync(p.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size420x420) end)
-                end)
-
-                btn.MouseButton1Click:Connect(function()
-                    clickAnimate(btn)
-                    targetTpPlayer = p
-                    updateTargetLabel()
-                    refreshPlayerSelectionVisuals()
-                    MakeToast("Đã chọn mục tiêu", p.DisplayName .. " (@" .. p.Name .. ")", Theme.AccentOn)
+                    pcall(function() targetAvatar.Image = Players:GetUserThumbnailAsync(t.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size420x420) end)
                 end)
             end
+
+            btn.MouseButton1Click:Connect(function()
+                clickAnimate(btn)
+                targetTpPlayer = keyObj
+                updateTargetLabel()
+                refreshPlayerSelectionVisuals()
+                MakeToast("Đã chọn mục tiêu", t.DisplayName .. " (" .. t.SubName .. ")", Theme.AccentOn)
+            end)
         end
+
         filterPlayerCards()
         task.defer(function()
             if playerListScroll and playerListScroll.Parent then
@@ -5463,21 +5627,57 @@ do
             end
         end)
     end
-    updatePlayerList()
+    updatePlayerList(true)
 
+    botFilterBtn.MouseButton1Click:Connect(function()
+        clickAnimate(botFilterBtn)
+        State.IncludeMatchBots = not (State.IncludeMatchBots ~= false)
+        syncBotFilterBtnUI()
+        updatePlayerList(true)
+        MakeToast("Lọc Bot / AI Map Phụ", State.IncludeMatchBots and "Đang hiển thị cả Người chơi + Bot thay thế!" or "Chỉ hiển thị Người chơi thật", Theme.Brand)
+        if State.AutoSave then saveConfig() end
+    end)
+
+    refreshListBtn.MouseButton1Click:Connect(function()
+        clickAnimate(refreshListBtn)
+        updatePlayerList(true)
+        MakeToast("🔄 Đã Làm Mới", "Đã quét lại toàn bộ người chơi & bot trong map!", Theme.Brand)
+    end)
+
+    -- Vòng lặp tự động đồng bộ danh sách người chơi & bot mới vào map phụ (tránh mất danh sách khi chuyển ván / có người thay thế)
     task.spawn(function()
+        local syncCounter = 0
         while ScriptActive and task.wait(0.5) do
-            if page7.Visible then
+            syncCounter = syncCounter + 1
+            -- Kiểm tra nếu mục tiêu hiện tại đã thoát/biến mất
+            if targetTpPlayer and not isTargetStillValid(targetTpPlayer) then
+                local oldName = select(1, getTargetInfoText(targetTpPlayer))
+                stopManualApproach()
+                targetTpPlayer = nil
+                if autoTpPlayerEnabled then autoTpPlayerEnabled = false; restoreNormalPosture() end
+                if spectatePlayerEnabled then spectatePlayerEnabled = false; resetCameraSubject(); updateSpectateBtnUI() end
+                updateTargetLabel(); updateTpActionButtonsUI()
+                MakeToast("Mục tiêu đã rời trận", oldName .. " không còn trong bản đồ!", Theme.AccentOff)
+                updatePlayerList(true)
+            end
+
+            -- Tự quét lại danh sách mỗi 1.5 giây để bắt ngay người chơi mới vào map phụ hoặc bot thay thế
+            if syncCounter % 3 == 0 then
+                updatePlayerList(false)
+            end
+
+            if opened and page7.Visible then
                 local myRoot = getUniversalRoot(player.Character)
-                for p, lbl in pairs(playerDistLabels) do
-                    if p and p.Parent and lbl and lbl.Parent then
-                        local tCF = getCharacterCFrame(p.Character)
-                        local tHum = p.Character and p.Character:FindFirstChildOfClass("Humanoid")
+                for keyObj, lbl in pairs(playerDistLabels) do
+                    if lbl and lbl.Parent then
+                        local tChar = resolveTargetCharacter(keyObj)
+                        local tCF = tChar and getCharacterCFrame(tChar)
+                        local tHum = tChar and tChar:FindFirstChildOfClass("Humanoid")
                         local hpPct = (tHum and tHum.MaxHealth > 0) and math.floor((tHum.Health / tHum.MaxHealth) * 100) or nil
                         if myRoot and tCF then
                             local d = math.floor((myRoot.Position - tCF.Position).Magnitude)
                             if hpPct then
-                                local hpCol = hpPct > 50 and "#38CC88" or (hpPct > 20 and "#E5B85B" or "#E05666")
+                                local hpCol = hpPct > 50 and "#68C496" or (hpPct > 20 and "#CCA862" or "#CC6E7A")
                                 lbl.Text = string.format("%dm • <font color='%s'>%d%%</font>", d, hpCol, hpPct)
                             else
                                 lbl.Text = tostring(d) .. " m"
@@ -5491,8 +5691,17 @@ do
         end
     end)
 
-    Players.PlayerAdded:Connect(function() task.wait(0.5); updatePlayerList() end)
-    Players.PlayerRemoving:Connect(function(leavingPlayer)
+    trackConn(Players.PlayerAdded:Connect(function(newP)
+        task.wait(0.4)
+        updatePlayerList(true)
+        -- Khi nhân vật của người chơi mới vừa spawn trong map phụ, cập nhật lại ngay
+        trackConn(newP.CharacterAdded:Connect(function()
+            task.wait(0.3)
+            updatePlayerList(false)
+        end))
+    end))
+
+    trackConn(Players.PlayerRemoving:Connect(function(leavingPlayer)
         if leavingPlayer == targetTpPlayer then
             stopManualApproach()
             targetTpPlayer = nil
@@ -5501,8 +5710,10 @@ do
             updateTargetLabel(); updateTpActionButtonsUI()
             MakeToast("Mục tiêu đã thoát", leavingPlayer.DisplayName .. " đã rời khỏi server!", Theme.AccentOff)
         end
-        updatePlayerList()
-    end)
+        task.delay(0.25, function()
+            if ScriptActive then updatePlayerList(true) end
+        end)
+    end))
 end
 -- ==========================================
 -- [TAB 8: AUTO SKILL PRO MAX V1.21 (BÀN PHÍM CƠ 3D CYBER-NEON 4 CỘT + CHẾ ĐỘ COMBO/BURST + HOLD CHIÊU)]
@@ -6136,7 +6347,7 @@ do
         end
 
         if State.DisableHighlights then
-            if obj:IsA("Highlight") and not string.find(obj.Name, "^MobileESP_") and not string.find(obj.Name, "^TpSaveESP_") and obj.Enabled then
+            if obj:IsA("Highlight") and not string.find(obj.Name, "^MobileESP_") and not string.find(obj.Name, "^TpSaveESP_") and not string.find(obj.Name, "^ESPHighlight_") and obj.Enabled then
                 if Cache.Highlights[obj] == nil then Cache.Highlights[obj] = obj.Enabled end
                 obj.Enabled = false
             elseif obj:IsA("SelectionBox") and not string.find(obj.Name, "^MobileESP_") and obj.Visible then
@@ -7283,7 +7494,7 @@ do
         local s = execTime % 60
 
         sysBody.Text = string.format(
-            "<font color='#78B4DC'>• Executor:</font> <font color='#38CC88'>%s</font>   |   <font color='#78B4DC'>Phiên bản:</font> <font color='#E09F67'>V1.29.0</font>\n" ..
+            "<font color='#78B4DC'>• Executor:</font> <font color='#38CC88'>%s</font>   |   <font color='#78B4DC'>Phiên bản:</font> <font color='#E09F67'>V1.30.0</font>\n" ..
             "<font color='#78B4DC'>• Treo máy:</font> %02d:%02d:%02d   |   <font color='#78B4DC'>Giờ hệ thống:</font> %s",
             execName, h, m, s, os.date("%H:%M:%S")
         )
@@ -7517,74 +7728,83 @@ local function updateESP_Hitbox()
     end
 
     if not State.ESP then
-        for p, _ in pairs(ActiveESPs) do clearSingleESP(p) end
+        for keyObj, _ in pairs(ActiveESPs) do clearSingleESP(keyObj) end
         return
     end
 
-    for _, p in ipairs(Players:GetPlayers()) do
-        if p ~= player then
-            pcall(function()
-                local tChar = p.Character
-                if not tChar then clearSingleESP(p); return end
+    local activeKeySet = {}
+    local matchTargets = getAllMatchTargets(State.IncludeMatchBots ~= false)
 
-                local espPart = getUniversalRoot(tChar)
-                local targetCF = getCharacterCFrame(tChar)
-                if not targetCF then clearSingleESP(p); return end
-                local targetPos = targetCF.Position
+    for _, t in ipairs(matchTargets) do
+        local keyObj = t.Key
+        activeKeySet[keyObj] = true
+        pcall(function()
+            local tChar = resolveTargetCharacter(keyObj)
+            if not tChar then clearSingleESP(keyObj); return end
 
-                if not ActiveESPs[p] then ActiveESPs[p] = {} end
-                local data = ActiveESPs[p]
+            local espPart = getUniversalRoot(tChar)
+            local targetCF = getCharacterCFrame(tChar)
+            if not targetCF then clearSingleESP(keyObj); return end
+            local targetPos = targetCF.Position
 
-                if not espPart then
-                    if not data.Anchor or not data.Anchor.Parent then
-                        local anchor = Instance.new("Part")
-                        anchor.Name = "ESPAnchor_" .. p.Name; anchor.Size = Vector3.new(1, 1, 1)
-                        anchor.Transparency = 1; anchor.Anchored = true; anchor.CanCollide = false
-                        anchor.CanQuery = false; anchor.CanTouch = false; anchor.Parent = workspace
-                        data.Anchor = anchor
-                    end
-                    data.Anchor.Position = targetPos
-                    espPart = data.Anchor
-                elseif data.Anchor then
-                    data.Anchor:Destroy(); data.Anchor = nil
+            if not ActiveESPs[keyObj] then ActiveESPs[keyObj] = {} end
+            local data = ActiveESPs[keyObj]
+            local safeTag = tostring(t.DisplayName):gsub("[^%w_]", "")
+
+            if not espPart then
+                if not data.Anchor or not data.Anchor.Parent then
+                    local anchor = Instance.new("Part")
+                    anchor.Name = "ESPAnchor_" .. safeTag; anchor.Size = Vector3.new(1, 1, 1)
+                    anchor.Transparency = 1; anchor.Anchored = true; anchor.CanCollide = false
+                    anchor.CanQuery = false; anchor.CanTouch = false; anchor.Parent = workspace
+                    data.Anchor = anchor
                 end
+                data.Anchor.Position = targetPos
+                espPart = data.Anchor
+            elseif data.Anchor then
+                data.Anchor:Destroy(); data.Anchor = nil
+            end
 
-                if not data.Billboard or not data.Billboard.Parent then
-                    local bgui = Instance.new("BillboardGui")
-                    bgui.Name = "MobileESP_" .. p.Name; bgui.Size = UDim2.new(0, 200, 0, 50)
-                    bgui.StudsOffset = Vector3.new(0, 3.5, 0); bgui.AlwaysOnTop = true
-                    bgui.MaxDistance = math.huge; bgui.LightInfluence = 0; bgui.Parent = guiParent
+            if not data.Billboard or not data.Billboard.Parent then
+                local bgui = Instance.new("BillboardGui")
+                bgui.Name = "MobileESP_" .. safeTag; bgui.Size = UDim2.new(0, 200, 0, 50)
+                bgui.StudsOffset = Vector3.new(0, 3.5, 0); bgui.AlwaysOnTop = true
+                bgui.MaxDistance = math.huge; bgui.LightInfluence = 0; bgui.Parent = guiParent
 
-                    local tLabel = Instance.new("TextLabel", bgui)
-                    tLabel.Name = "NameLabel"; tLabel.Size = UDim2.new(1, 0, 1, 0)
-                    tLabel.BackgroundTransparency = 1; tLabel.TextColor3 = Color3.fromRGB(255, 75, 85)
-                    tLabel.TextStrokeTransparency = 0.15; tLabel.TextStrokeColor3 = Color3.new(0, 0, 0)
-                    tLabel.Font = Enum.Font.GothamBold; tLabel.TextSize = 12; tLabel.RichText = true
-                    data.Billboard = bgui
-                end
-                data.Billboard.Adornee = espPart
+                local tLabel = Instance.new("TextLabel", bgui)
+                tLabel.Name = "NameLabel"; tLabel.Size = UDim2.new(1, 0, 1, 0)
+                tLabel.BackgroundTransparency = 1
+                tLabel.TextColor3 = t.IsPlayer and Color3.fromRGB(235, 92, 102) or Color3.fromRGB(228, 184, 96)
+                tLabel.TextStrokeTransparency = 0.15; tLabel.TextStrokeColor3 = Color3.new(0, 0, 0)
+                tLabel.Font = Enum.Font.GothamSemibold; tLabel.TextSize = 11.5; tLabel.RichText = true
+                data.Billboard = bgui
+            end
+            data.Billboard.Adornee = espPart
 
-                if not data.Highlight or not data.Highlight.Parent then
-                    local hl = Instance.new("Highlight")
-                    hl.Name = "ESPHighlight_" .. p.Name; hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-                    hl.FillColor = Color3.fromRGB(255, 65, 75); hl.FillTransparency = 0.65
-                    hl.OutlineColor = Color3.new(1, 1, 1); hl.OutlineTransparency = 0.1; hl.Parent = guiParent
-                    data.Highlight = hl
-                end
-                data.Highlight.Adornee = tChar
+            if not data.Highlight or not data.Highlight.Parent then
+                local hl = Instance.new("Highlight")
+                hl.Name = "ESPHighlight_" .. safeTag; hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+                hl.FillColor = t.IsPlayer and Color3.fromRGB(235, 78, 88) or Color3.fromRGB(228, 178, 72)
+                hl.FillTransparency = 0.68
+                hl.OutlineColor = Color3.fromRGB(220, 228, 240); hl.OutlineTransparency = 0.18; hl.Parent = guiParent
+                data.Highlight = hl
+            end
+            data.Highlight.Adornee = tChar
 
-                if myPos then
-                    local dist = math.floor((myPos - targetPos).Magnitude)
-                    data.Billboard.NameLabel.Text = p.DisplayName .. '\n<font color="#78D2FF">[' .. dist .. 'm]</font>'
-                else
-                    data.Billboard.NameLabel.Text = p.DisplayName
-                end
-            end)
-        end
+            local titlePrefix = t.IsPlayer and t.DisplayName or ("[BOT] " .. t.DisplayName)
+            if myPos then
+                local dist = math.floor((myPos - targetPos).Magnitude)
+                data.Billboard.NameLabel.Text = titlePrefix .. '\n<font color="#92C8E8">[' .. dist .. 'm]</font>'
+            else
+                data.Billboard.NameLabel.Text = titlePrefix
+            end
+        end)
     end
 
-    for p, _ in pairs(ActiveESPs) do
-        if not Players:FindFirstChild(p.Name) then clearSingleESP(p) end
+    for keyObj, _ in pairs(ActiveESPs) do
+        if not activeKeySet[keyObj] or not isTargetStillValid(keyObj) then
+            clearSingleESP(keyObj)
+        end
     end
 end
 
@@ -7616,9 +7836,10 @@ trackConn(RunService.Heartbeat:Connect(function()
         teleportToSelectedPlayer(false)
     end
 
-    if spectatePlayerEnabled and targetTpPlayer and targetTpPlayer.Character then
+    local specChar = resolveTargetCharacter(targetTpPlayer)
+    if spectatePlayerEnabled and specChar then
         local cam = workspace.CurrentCamera
-        local tChar = targetTpPlayer.Character
+        local tChar = specChar
         local targetHum = tChar:FindFirstChildOfClass("Humanoid")
         local targetRoot = getUniversalRoot(tChar)
         local targetCF = getCharacterCFrame(tChar)
@@ -7655,8 +7876,8 @@ trackConn(RunService.Heartbeat:Connect(function()
     if hum and root then
         if State.LockPosition then root.Anchored = true end
         if State.AntiSit and hum.Sit then hum.Sit = false end
-        if State.LookAtTarget and targetTpPlayer and targetTpPlayer.Character and not State.Fly and not State.SpinBot then
-            local tCF = getCharacterCFrame(targetTpPlayer.Character)
+        if State.LookAtTarget and targetTpPlayer and not State.Fly and not State.SpinBot then
+            local tCF = getCharacterCFrame(resolveTargetCharacter(targetTpPlayer))
             if tCF then
                 local flatTarget = Vector3.new(tCF.Position.X, root.Position.Y, tCF.Position.Z)
                 if (flatTarget - root.Position).Magnitude > 0.2 then
