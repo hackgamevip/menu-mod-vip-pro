@@ -1,5 +1,5 @@
 -- ==========================================
--- MENU VIP PRO MAX V1.28.0 (LUXURY CYBER-GLASS & BENTO SIDEBAR EDITION)
+-- MENU VIP PRO MAX V1.29.0 (LUXURY CYBER-GLASS & BENTO SIDEBAR EDITION)
 -- ==========================================
 repeat task.wait() until game:IsLoaded()
 
@@ -90,6 +90,11 @@ local State = {
     AirWalk = false,
     HidePopups = false, MuteSFX = false, DisableAnims = false, DarkMap = false, DisableLights = false, GfxQualityLevel = 3,
     DistanceCulling = false, DistanceCullRange = 200, DisableHighlights = false,
+    Freecam = false, FreecamSpeed = 60, AntiVoid = false, AntiVoidY = -120, AntiSit = false,
+    CustomGravity = false, GravityValue = 196, CustomFOV = false, FovValue = 70,
+    LookAtTarget = false, ProximityAlert = false, ProximityRange = 50,
+    SafeSpotRetreat = false, SafeSpotHpPct = 30,
+    QuickShortcuts = false, MenuTransparency = 2, MenuScalePct = 100,
     MiniHUD = false, AutoReconnect = true, MagnetOrbs = false
 }
 local DefaultStateSnapshot = {}
@@ -556,8 +561,8 @@ local avatarStroke, titleLabel, headerStatText, refreshThemeVisuals
 local page1, page2, page3, page4, page5, page6, page7, page8, page9
 local onTab9Shown = nil
 local opened = true
+local frameScale = Instance.new("UIScale", frame)
 do
-    local frameScale = Instance.new("UIScale", frame)
     -- HEADER 3D CYBER-GLASS SANG TRỌNG VỚI DẢI LASER NEON ĐA SẮC
     local header = Instance.new("Frame", frame)
     header.Size = UDim2.new(1, 0, 0, 38); header.BackgroundColor3 = Color3.fromRGB(255, 255, 255); header.BackgroundTransparency = 0; header.BorderSizePixel = 0; header.ZIndex = 11
@@ -620,10 +625,10 @@ do
     headerStatText.RichText = true; headerStatText.Text = "<font color='#38CC88'>60 FPS</font> • <font color='#58B6F2'>0ms</font>"
     headerStatText.TextColor3 = Theme.TextTitle; headerStatText.Font = Enum.Font.GothamBold; headerStatText.TextSize = 9; headerStatText.ZIndex = 13
 
-    -- Huy hiệu V1.28 nền tối sâu, chữ sáng rõ nét trên Mobile
+    -- Huy hiệu V1.29 nền tối sâu, chữ sáng rõ nét trên Mobile
     local verBadge = Instance.new("TextLabel", header)
     verBadge.Size = UDim2.new(0, 46, 0, 21); verBadge.Position = UDim2.new(1, -110, 0.5, -10.5)
-    verBadge.BackgroundColor3 = Color3.fromRGB(18, 22, 36); verBadge.Text = "V1.28"; verBadge.TextColor3 = getSoftBrandColor(Theme.Brand)
+    verBadge.BackgroundColor3 = Color3.fromRGB(18, 22, 36); verBadge.Text = "V1.29"; verBadge.TextColor3 = getSoftBrandColor(Theme.Brand)
     verBadge.Font = Enum.Font.GothamBold; verBadge.TextSize = 9.5; verBadge.ZIndex = 12
     Instance.new("UICorner", verBadge).CornerRadius = UDim.new(0, 7)
     local verStroke = Instance.new("UIStroke", verBadge); verStroke.Color = Theme.Brand; verStroke.Thickness = 1.0; verStroke.Transparency = 0.25
@@ -1243,7 +1248,7 @@ do
     minBtn.MouseButton1Click:Connect(function() clickAnimate(minBtn); toggleMenuWindow() end)
 end
 -- ==========================================
--- COMPONENTS HỆ THỐNG 3D CYBER-GLASS NEON V1.28
+-- COMPONENTS HỆ THỐNG 3D CYBER-GLASS NEON V1.29
 -- ==========================================
 local function splitLeadingIcon(rawText)
     local str = tostring(rawText or "")
@@ -2194,6 +2199,191 @@ createToggle(page2, "👀 Nhìn xuyên bản đồ (Xray)", "XRay", function(v)
     end)
 end)
 
+createDivider(page2, "KHÁM PHÁ & BẢO VỆ NHÂN VẬT")
+do
+    -- 1. Camera Tự Do (Freecam - Hỗ trợ cả Joystick Mobile & PC WASD)
+    local freecamCF = nil
+    local freecamConn = nil
+    local freecamOrigAnchor = false
+
+    createCombinedToggleSlider(page2, "🎥 Camera Tự Do (Freecam)", "Freecam", "Tốc độ bay Camera", 15, 250, "FreecamSpeed", function(v)
+        local cam = workspace.CurrentCamera
+        local char = player.Character
+        local root = char and getUniversalRoot(char)
+        if v then
+            if cam then
+                freecamCF = cam.CFrame
+                cam.CameraType = Enum.CameraType.Scriptable
+            end
+            if root then
+                freecamOrigAnchor = root.Anchored
+                root.Anchored = true
+            end
+            if freecamConn then freecamConn:Disconnect() end
+            freecamConn = trackConn(RunService.RenderStepped:Connect(function(dt)
+                if not ScriptActive or not State.Freecam then return end
+                local c = workspace.CurrentCamera
+                if not c then return end
+                if not freecamCF then freecamCF = c.CFrame end
+
+                local moveVec = Vector3.zero
+                local hum = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
+                if hum and hum.MoveDirection.Magnitude > 0 then
+                    local camLook = freecamCF.LookVector
+                    local camRight = freecamCF.RightVector
+                    local flatLook = Vector3.new(camLook.X, 0, camLook.Z)
+                    local flatRight = Vector3.new(camRight.X, 0, camRight.Z)
+                    local fUnit = flatLook.Magnitude > 0.001 and flatLook.Unit or Vector3.zero
+                    local rUnit = flatRight.Magnitude > 0.001 and flatRight.Unit or Vector3.zero
+                    moveVec = (camLook * hum.MoveDirection:Dot(fUnit)) + (camRight * hum.MoveDirection:Dot(rUnit))
+                end
+                if UIS:IsKeyDown(Enum.KeyCode.E) or UIS:IsKeyDown(Enum.KeyCode.Space) then
+                    moveVec = moveVec + Vector3.new(0, 1, 0)
+                end
+                if UIS:IsKeyDown(Enum.KeyCode.Q) or UIS:IsKeyDown(Enum.KeyCode.LeftControl) then
+                    moveVec = moveVec - Vector3.new(0, 1, 0)
+                end
+
+                local spd = math.clamp(tonumber(State.FreecamSpeed) or 60, 15, 250)
+                if moveVec.Magnitude > 0.001 then
+                    freecamCF = freecamCF + (moveVec.Unit * spd * dt)
+                end
+                -- Giữ góc xoay camera theo hướng người dùng vuốt màn hình
+                local rotOnly = c.CFrame - c.CFrame.Position
+                freecamCF = CFrame.new(freecamCF.Position) * rotOnly
+                c.CFrame = freecamCF
+            end))
+        else
+            if freecamConn then freecamConn:Disconnect(); freecamConn = nil end
+            if cam then
+                cam.CameraType = Enum.CameraType.Custom
+                local hum = char and char:FindFirstChildOfClass("Humanoid")
+                if hum then cam.CameraSubject = hum end
+            end
+            if root and not State.LockPosition then
+                root.Anchored = freecamOrigAnchor
+            end
+            freecamCF = nil
+        end
+    end)
+
+    -- 2. Chống rơi vực (Anti-Void)
+    local lastSafeGroundCF = nil
+    createCombinedToggleSlider(page2, "🛡️ Chống rơi vực (Anti-Void)", "AntiVoid", "Độ cao kích hoạt (Y)", -300, 0, "AntiVoidY")
+
+    task.spawn(function()
+        while ScriptActive and task.wait(0.2) do
+            if State.AntiVoid and player.Character then
+                local root = getUniversalRoot(player.Character)
+                local hum = player.Character:FindFirstChildOfClass("Humanoid")
+                if root and hum and hum.Health > 0 then
+                    local limitY = tonumber(State.AntiVoidY) or -120
+                    if hum.FloorMaterial ~= Enum.Material.Air and root.Position.Y > (limitY + 15) then
+                        lastSafeGroundCF = root.CFrame + Vector3.new(0, 3, 0)
+                    elseif root.Position.Y < limitY then
+                        root.AssemblyLinearVelocity = Vector3.zero
+                        root.AssemblyAngularVelocity = Vector3.zero
+                        if lastSafeGroundCF then
+                            root.CFrame = lastSafeGroundCF
+                        else
+                            root.CFrame = CFrame.new(root.Position.X, math.max(50, limitY + 120), root.Position.Z)
+                        end
+                        MakeToast("🛡️ Anti-Void", "Đã kéo nhân vật trở lại vị trí an toàn!", Theme.AccentOn)
+                    end
+                end
+            end
+        end
+    end)
+
+    -- 3. Chống ngồi ghế (Anti-Sit)
+    createToggle(page2, "🪑 Chống ngồi ghế (Anti-Sit)", "AntiSit", function(v)
+        local hum = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
+        if hum then
+            pcall(function() hum:SetStateEnabled(Enum.HumanoidStateType.Seated, not v) end)
+            if v and hum.Sit then hum.Sit = false end
+        end
+    end)
+
+    -- 4. Cảnh báo người chơi lại gần (Proximity Alert)
+    local lastProxToastByPlayer = {}
+    createCombinedToggleSlider(page2, "🚨 Cảnh báo người chơi lại gần", "ProximityAlert", "Bán kính cảnh báo (Studs)", 15, 200, "ProximityRange")
+
+    task.spawn(function()
+        while ScriptActive and task.wait(0.6) do
+            if State.ProximityAlert and player.Character then
+                local myRoot = getUniversalRoot(player.Character)
+                if myRoot then
+                    local maxR = tonumber(State.ProximityRange) or 50
+                    local nowT = tick()
+                    for _, other in ipairs(Players:GetPlayers()) do
+                        if other ~= player and other.Character then
+                            local oCF = getCharacterCFrame(other.Character)
+                            if oCF then
+                                local dist = (myRoot.Position - oCF.Position).Magnitude
+                                if dist <= maxR and (nowT - (lastProxToastByPlayer[other] or 0) > 6) then
+                                    lastProxToastByPlayer[other] = nowT
+                                    MakeToast("🚨 Có Người Lại Gần!", other.DisplayName .. " cách bạn " .. tostring(math.floor(dist)) .. "m!", Theme.AccentOff)
+                                    pcall(function()
+                                        local beep = Instance.new("Sound")
+                                        beep.Name = "MenuVipAlertBeep"
+                                        beep.SoundId = "rbxassetid://9118823101"
+                                        beep.Volume = 0.6
+                                        beep.Parent = SoundService
+                                        beep:Play()
+                                        task.delay(1.5, function() pcall(function() beep:Destroy() end) end)
+                                    end)
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end)
+
+    -- 5. Chế độ An toàn tự rút lui khi yếu máu (Safe Spot / Auto Retreat)
+    local retreatActive = false
+    local retreatOrigCF = nil
+    createCombinedToggleSlider(page2, "🛟 Tự rút lui khi yếu máu (Safe Spot)", "SafeSpotRetreat", "Ngưỡng máu rút lui (%)", 10, 80, "SafeSpotHpPct", function(v)
+        if not v then
+            retreatActive = false
+            retreatOrigCF = nil
+        end
+    end)
+
+    task.spawn(function()
+        while ScriptActive and task.wait(0.3) do
+            if State.SafeSpotRetreat and player.Character then
+                local hum = player.Character:FindFirstChildOfClass("Humanoid")
+                local root = getUniversalRoot(player.Character)
+                if hum and root and hum.MaxHealth > 0 and hum.Health > 0 then
+                    local hpPct = (hum.Health / hum.MaxHealth) * 100
+                    local threshold = tonumber(State.SafeSpotHpPct) or 30
+                    if not retreatActive and hpPct <= threshold then
+                        retreatActive = true
+                        retreatOrigCF = root.CFrame
+                        root.AssemblyLinearVelocity = Vector3.zero
+                        if savedTpList and #savedTpList > 0 and savedTpList[1].cframe then
+                            root.CFrame = CFrame.new(table.unpack(savedTpList[1].cframe))
+                            MakeToast("🛟 Đã Rút Lui An Toàn", "Máu dưới " .. tostring(threshold) .. "%! Đã TP về " .. tostring(savedTpList[1].name), Theme.AccentOn)
+                        else
+                            root.CFrame = root.CFrame + Vector3.new(0, 120, 0)
+                            MakeToast("🛟 Đã Rút Lui An Toàn", "Máu dưới " .. tostring(threshold) .. "%! Đã bay lên cao tránh đòn", Theme.AccentOn)
+                        end
+                    elseif retreatActive and hpPct >= math.min(95, threshold + 40) then
+                        retreatActive = false
+                        if retreatOrigCF then
+                            root.CFrame = retreatOrigCF
+                            retreatOrigCF = nil
+                            MakeToast("💚 Đã Hồi Máu", "Máu đã hồi ổn định, quay lại vị trí cũ!", Theme.Brand)
+                        end
+                    end
+                end
+            end
+        end
+    end)
+end
+
 createDivider(page2, "CÔNG CỤ HỖ TRỢ ĐẶC BIỆT")
 createButton(page2, "⚡ NHẬN GẬY CLICK TP", Theme.Brand, function()
     local backpack = player:FindFirstChildOfClass("Backpack")
@@ -2323,6 +2513,31 @@ createToggle(page3, "🖱️ Auto Click Vũ Khí", "AutoClick")
 createCombinedToggleSlider(page3, "⚔️ Đánh xa (Reach Vũ Khí)", "Reach", "Kích thước vũ khí", 0, 300, "ReachSize")
 createCombinedToggleSlider(page3, "🎯 Mở rộng Hitbox", "Hitbox", "Kích thước Hitbox", 0, 100, "HitboxSize")
 createCombinedToggleSlider(page3, "🌪️ Xoay vòng tròn (SpinBot)", "SpinBot", "Tốc độ xoay", 0, 100, "SpinSpeed")
+
+createDivider(page3, "TRỌNG LỰC & GÓC NHÌN CAMERA")
+do
+    local origGravity = workspace.Gravity
+    createCombinedToggleSlider(page3, "🪐 Chỉnh Trọng lực (Gravity)", "CustomGravity", "Mức trọng lực (Chuẩn 196)", 10, 300, "GravityValue", function(v)
+        if v then
+            workspace.Gravity = State.GravityValue
+        else
+            workspace.Gravity = origGravity
+        end
+    end, function(val)
+        if State.CustomGravity then workspace.Gravity = val end
+    end)
+
+    createCombinedToggleSlider(page3, "👁️ Chỉnh Góc nhìn rộng (FOV)", "CustomFOV", "Độ rộng góc nhìn (FOV)", 50, 120, "FovValue", function(v)
+        local cam = workspace.CurrentCamera
+        if cam then
+            cam.FieldOfView = v and State.FovValue or 70
+        end
+    end, function(val)
+        if State.CustomFOV and workspace.CurrentCamera then
+            workspace.CurrentCamera.FieldOfView = val
+        end
+    end)
+end
 
 createDivider(page3, "HIỆU ỨNG ÁNH SÁNG NHÂN VẬT")
 createCombinedToggleSlider(page3, "💡 Ánh sáng quanh người", "PlayerLight", "Phạm vi sáng (Max 60)", 0, 60, "LightRange", function(v)
@@ -2469,6 +2684,129 @@ createDualButtons(
 )
 createDualButtons(page4, "🔄 VÀO LẠI SV", Theme.Brand, rejoinServer, "🎲 ĐỔI SV NGẪU NHIÊN", Theme.Brand, function() hopServer("Desc") end)
 createDualButtons(page4, "📉 ĐỔI SV ÍT NGƯỜI", Theme.Brand, function() hopServer("Asc") end, "📈 ĐỔI SV ĐÔNG NGƯỜI", Theme.Brand, function() hopServer("Desc") end)
+
+-- Cụm Nút Bật/Tắt Nhanh Ngoài Màn Hình (Quick Floating Shortcuts: Fly / Noclip / Auto TP)
+do
+    local quickDock = Instance.new("Frame", gui)
+    quickDock.Name = "QuickShortcutsDock"
+    quickDock.Size = UDim2.new(0, 174, 0, 28)
+    quickDock.Position = UDim2.new(0, 14, 0.05, 54)
+    quickDock.BackgroundColor3 = Color3.fromRGB(16, 20, 32)
+    quickDock.BackgroundTransparency = 0.12
+    quickDock.Visible = State.QuickShortcuts
+    quickDock.ZIndex = 12
+    Instance.new("UICorner", quickDock).CornerRadius = UDim.new(1, 0)
+    local qdStroke = Instance.new("UIStroke", quickDock); qdStroke.Color = Color3.fromRGB(68, 128, 185); qdStroke.Thickness = 1
+
+    local qDragInput, qDragStart, qStartPos = nil, nil, nil
+    quickDock.InputBegan:Connect(function(inp)
+        if not qDragInput and (inp.UserInputType == Enum.UserInputType.MouseButton1 or inp.UserInputType == Enum.UserInputType.Touch) then
+            qDragInput = inp; qDragStart = inp.Position; qStartPos = quickDock.Position
+        end
+    end)
+    registerDragHandler(
+        function() return qDragInput end,
+        function(inp)
+            quickDock.Position = UDim2.new(qStartPos.X.Scale, qStartPos.X.Offset + (inp.Position.X - qDragStart.X), qStartPos.Y.Scale, qStartPos.Y.Offset + (inp.Position.Y - qDragStart.Y))
+        end,
+        function() qDragInput = nil end
+    )
+
+    local function makeQuickShortcutBtn(idx, labelTxt, stateVar, customToggleFn)
+        local b = Instance.new("TextButton", quickDock)
+        b.Size = UDim2.new(0, 52, 0, 20)
+        b.Position = UDim2.new(0, 5 + (idx - 1) * 56, 0.5, -10)
+        b.BackgroundColor3 = Color3.fromRGB(22, 26, 40)
+        b.Text = labelTxt
+        b.TextColor3 = Color3.fromRGB(178, 190, 210)
+        b.Font = Enum.Font.GothamSemibold
+        b.TextSize = 8.4
+        b.AutoButtonColor = false
+        b.ZIndex = 13
+        Instance.new("UICorner", b).CornerRadius = UDim.new(1, 0)
+        local st = Instance.new("UIStroke", b); st.Color = Color3.fromRGB(52, 62, 86); st.Thickness = 0.9
+
+        local function syncBtn(isOn)
+            b.BackgroundColor3 = isOn and Color3.fromRGB(22, 48, 44) or Color3.fromRGB(22, 26, 40)
+            b.TextColor3 = isOn and Color3.fromRGB(132, 206, 174) or Color3.fromRGB(178, 190, 210)
+            st.Color = isOn and Color3.fromRGB(64, 165, 132) or Color3.fromRGB(52, 62, 86)
+        end
+
+        if stateVar then
+            syncBtn(State[stateVar] and true or false)
+            registerSync(stateVar, syncBtn)
+            b.MouseButton1Click:Connect(function()
+                clickAnimate(b)
+                State[stateVar] = not State[stateVar]
+                fireSync(stateVar, State[stateVar], false)
+                MakeToast(State[stateVar] and "Đã Bật Nhanh" or "Đã Tắt Nhanh", labelTxt, State[stateVar] and Theme.AccentOn or Theme.AccentOff)
+                if State.AutoSave then saveConfig() end
+            end)
+        elseif customToggleFn then
+            b.MouseButton1Click:Connect(function()
+                clickAnimate(b)
+                local nowOn = customToggleFn()
+                syncBtn(nowOn)
+            end)
+        end
+    end
+
+    makeQuickShortcutBtn(1, "Fly", "Fly", nil)
+    makeQuickShortcutBtn(2, "Noclip", "Noclip", nil)
+    makeQuickShortcutBtn(3, "AntiVoid", "AntiVoid", nil)
+
+    createToggle(page4, "📌 Nút Bật/Tắt nhanh ngoài màn hình", "QuickShortcuts", function(v)
+        quickDock.Visible = v
+    end)
+
+    createSlider(page4, "🪟 Độ trong suốt nền Menu (%)", 0, 65, "MenuTransparency", function(val)
+        frame.BackgroundTransparency = math.clamp(val / 100, 0, 0.65)
+    end)
+
+    createSlider(page4, "🔍 Cỡ hiển thị Menu (%)", 70, 130, "MenuScalePct", function(val)
+        if frameScale then
+            frameScale.Scale = math.clamp(val / 100, 0.70, 1.30)
+        end
+    end)
+
+    createDualButtons(
+        page4, "📤 XUẤT CẤU HÌNH", Theme.Brand,
+        function()
+            local ok, encoded = pcall(function() return HttpService:JSONEncode(State) end)
+            if ok and encoded then
+                if setclipboard then
+                    pcall(setclipboard, encoded)
+                    MakeToast("📤 Đã Xuất Cấu Hình", "Đã copy chuỗi cấu hình vào bộ nhớ tạm!", Theme.AccentOn)
+                else
+                    MakeToast("⚠️ Không Hỗ Trợ Clipboard", "Trình chạy không có hàm setclipboard!", Theme.AccentOff)
+                end
+            end
+        end,
+        "📥 NHẬP CẤU HÌNH", Theme.AccentOn,
+        function()
+            local raw = nil
+            pcall(function() if getclipboard then raw = getclipboard() end end)
+            if not raw or raw == "" then
+                MakeToast("⚠️ Bộ Nhớ Trống", "Hãy copy chuỗi cấu hình JSON trước khi bấm Nhập!", Theme.AccentOff)
+                return
+            end
+            local ok, decoded = pcall(function() return HttpService:JSONDecode(raw) end)
+            if ok and type(decoded) == "table" then
+                for k, v in pairs(decoded) do
+                    if State[k] ~= nil then
+                        State[k] = v
+                        fireSync(k, v, false)
+                    end
+                end
+                if refreshThemeVisuals then refreshThemeVisuals() end
+                if State.AutoSave then saveConfig() end
+                MakeToast("📥 Đã Nhập Cấu Hình", "Đã áp dụng toàn bộ thiết lập từ chuỗi JSON!", Theme.AccentOn)
+            else
+                MakeToast("⚠️ Chuỗi Không Hợp Lệ", "Dữ liệu trong bộ nhớ tạm không phải JSON cấu hình!", Theme.AccentOff)
+            end
+        end
+    )
+end
 
 createButton(page4, "🔄 KHÔI PHỤC CÀI ĐẶT MẶC ĐỊNH", Theme.AccentOff, function()
     for k, v in pairs(DefaultStateSnapshot) do
@@ -4851,6 +5189,41 @@ do
     end
 
     -- Hàng nút hành động (TP 1 LẦN / BAY ĐẾN / CHẠY ĐẾN + AUTO BÁM THEO)
+    -- Nút Bật/Tắt Tự xoay mặt về mục tiêu (Aim / Look At Target) gọn gàng ngay trong Tab TP Player
+    local lookAtBtn = Instance.new("TextButton", tpControlCard)
+    lookAtBtn.Size = UDim2.new(0, 72, 0, 21); lookAtBtn.Position = UDim2.new(1, -156, 0, 8.5)
+    lookAtBtn.BackgroundColor3 = Color3.fromRGB(22, 20, 28); lookAtBtn.Text = "🎯 XOAY [TẮT]"
+    lookAtBtn.TextColor3 = Color3.fromRGB(185, 115, 126); lookAtBtn.Font = Enum.Font.GothamSemibold; lookAtBtn.TextSize = 8.0
+    lookAtBtn.AutoButtonColor = false; lookAtBtn.ZIndex = 12
+    Instance.new("UICorner", lookAtBtn).CornerRadius = UDim.new(0, 5)
+    local lookAtStroke = Instance.new("UIStroke", lookAtBtn); lookAtStroke.Color = Color3.fromRGB(165, 85, 98); lookAtStroke.Thickness = 0.9; lookAtStroke.Transparency = 0.45
+
+    -- Thu gọn width của targetStatusLabel để chừa chỗ cho nút XOAY + XEM
+    targetStatusLabel.Size = UDim2.new(1, -190, 1, 0)
+
+    local function syncLookAtBtnUI()
+        local on = State.LookAtTarget
+        lookAtBtn.Text = on and "🎯 XOAY [BẬT]" or "🎯 XOAY [TẮT]"
+        lookAtBtn.TextColor3 = on and Color3.fromRGB(115, 198, 158) or Color3.fromRGB(185, 115, 126)
+        lookAtBtn.BackgroundColor3 = on and Color3.fromRGB(18, 32, 26) or Color3.fromRGB(22, 20, 28)
+        lookAtStroke.Color = on and Color3.fromRGB(70, 165, 115) or Color3.fromRGB(165, 85, 98)
+    end
+    syncLookAtBtnUI()
+    registerSync("LookAtTarget", syncLookAtBtnUI)
+
+    lookAtBtn.MouseButton1Click:Connect(function()
+        clickAnimate(lookAtBtn)
+        if not targetTpPlayer then MakeToast("⚠️ Chưa chọn ai", "Hãy chọn 1 mục tiêu ở danh sách dưới trước!", Theme.AccentOff); return end
+        State.LookAtTarget = not State.LookAtTarget
+        fireSync("LookAtTarget", State.LookAtTarget, false)
+        MakeToast(
+            State.LookAtTarget and "🎯 Tự Xoay Mặt [BẬT]" or "🎯 Tự Xoay Mặt [TẮT]",
+            State.LookAtTarget and ("Đang tự động hướng mặt về " .. targetTpPlayer.DisplayName) or "Đã tắt tự xoay mặt",
+            State.LookAtTarget and Theme.AccentOn or Theme.AccentOff
+        )
+        if State.AutoSave then saveConfig() end
+    end)
+
     local tpActionRow = Instance.new("Frame", page7)
     tpActionRow.Size = UDim2.new(0.94, 0, 0, 26); tpActionRow.BackgroundTransparency = 1; tpActionRow.LayoutOrder = 3
 
@@ -6910,7 +7283,7 @@ do
         local s = execTime % 60
 
         sysBody.Text = string.format(
-            "<font color='#78B4DC'>• Executor:</font> <font color='#38CC88'>%s</font>   |   <font color='#78B4DC'>Phiên bản:</font> <font color='#E09F67'>V1.28.0</font>\n" ..
+            "<font color='#78B4DC'>• Executor:</font> <font color='#38CC88'>%s</font>   |   <font color='#78B4DC'>Phiên bản:</font> <font color='#E09F67'>V1.29.0</font>\n" ..
             "<font color='#78B4DC'>• Treo máy:</font> %02d:%02d:%02d   |   <font color='#78B4DC'>Giờ hệ thống:</font> %s",
             execName, h, m, s, os.date("%H:%M:%S")
         )
@@ -7281,6 +7654,16 @@ trackConn(RunService.Heartbeat:Connect(function()
 
     if hum and root then
         if State.LockPosition then root.Anchored = true end
+        if State.AntiSit and hum.Sit then hum.Sit = false end
+        if State.LookAtTarget and targetTpPlayer and targetTpPlayer.Character and not State.Fly and not State.SpinBot then
+            local tCF = getCharacterCFrame(targetTpPlayer.Character)
+            if tCF then
+                local flatTarget = Vector3.new(tCF.Position.X, root.Position.Y, tCF.Position.Z)
+                if (flatTarget - root.Position).Magnitude > 0.2 then
+                    root.CFrame = CFrame.lookAt(root.Position, flatTarget)
+                end
+            end
+        end
         if State.Jump then hum.UseJumpPower = true; hum.JumpPower = State.JumpValue end
 
         if not State.Fly and (not autoTpPlayerEnabled or State.TpMoveMethodIdx == 3) then
