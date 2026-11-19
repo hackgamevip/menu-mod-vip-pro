@@ -1,6 +1,28 @@
--- ==========================================
--- MENU VIP PRO MAX V1.35.0 (LUXURY CYBER-GLASS & BENTO SIDEBAR EDITION)
--- ==========================================
+-- ============================================================================
+-- MENU VIP PRO MAX V1.36.0 (LUXURY CYBER-GLASS & BENTO SIDEBAR EDITION)
+-- ============================================================================
+-- MỤC LỤC CẤU TRÚC CODE:
+--   [PHẦN 01] Khởi tạo Services & Người chơi
+--   [PHẦN 02] Quản lý vòng đời, Drag Manager, State, Theme & Config
+--   [PHẦN 03] Giao diện chính (ScreenGui, Nút Rồng, Header, Sidebar & Tìm kiếm)
+--   [PHẦN 04] Bộ Component UI 3D Cyber-Glass Neon (Toggle, Slider, Sub-Tab...)
+--   [PHẦN 05] Tab 2 - Tính năng (Chống choáng, Freecam, Safe Spot, ESP, XRay...)
+--   [PHẦN 06] Tab 3 - Nhân vật (Bay, Tốc độ, Nhảy cao, Hitbox, FOV, Đèn...)
+--   [PHẦN 07] Tab 4 - Tiện ích (Chủ đề & RGB, Anti-AFK, Server, Phím tắt nổi...)
+--   [PHẦN 08] Tab 5 - Nhạc ID (Thùng rác 3 chế độ, Đổi bài, Âm lượng 0-10, Tự lọc)
+--   [PHẦN 09] Tab 6 - TP Save (Lưu tọa độ theo PlaceId, ESP 3D & Auto Loop)
+--   [PHẦN 10] Hệ thống quét Người chơi & Bot Map phụ (Dùng chung ESP & TP Player)
+--   [PHẦN 11] Tab 7 - TP Người chơi (TP / Bay / Chạy đến, Xoay mặt, Xem góc nhìn)
+--   [PHẦN 12] Tab 8 - Auto Skill (Bàn phím cơ 3D 4 cột, Combo/Burst, Hold chiêu)
+--   [PHẦN 13] Tab 9 - Cấu hình & Giảm Lag (3 Preset, FPS Cap, Đồ họa, Culling)
+--   [PHẦN 14] Tab 1 - Dashboard Bento & Quản lý Server
+--   [PHẦN 15] Vòng lặp nền: Auto Click, Instant Prompt & Auto Collect
+--   [PHẦN 16] Vòng lặp ESP, Hitbox & Vật lý chuyển động (Stepped / Heartbeat)
+-- ============================================================================
+
+-- ============================================================================
+-- [PHẦN 01] KHỞI TẠO SERVICES & NGƯỜI CHƠI
+-- ============================================================================
 repeat task.wait() until game:IsLoaded()
 
 local Players = game:GetService("Players")
@@ -19,9 +41,9 @@ local SoundService = game:GetService("SoundService")
 
 local player = Players.LocalPlayer
 
--- ==========================================
--- [QUẢN LÝ VÒNG ĐỜI & CHỐNG RÒ RỈ BỘ NHỚ + DRAG MANAGER V1.26]
--- ==========================================
+-- ============================================================================
+-- [PHẦN 02] QUẢN LÝ VÒNG ĐỜI, DRAG MANAGER, STATE, THEME & CONFIG
+-- ============================================================================
 pcall(function()
     if getgenv and type(getgenv) == "function" then
         local env = getgenv()
@@ -97,7 +119,6 @@ local State = {
     QuickShortcuts = false, IncludeMatchBots = true,
     AutoReconnect = true
 }
-
 
 local Theme = {
     MainBg = Color3.fromRGB(12, 14, 22),
@@ -289,9 +310,9 @@ local function getCharacterCFrame(char)
     return nil
 end
 
--- ==========================================
--- GIAO DIỆN CHÍNH & SIDEBAR HIỆN ĐẠI
--- ==========================================
+-- ============================================================================
+-- [PHẦN 03] GIAO DIỆN CHÍNH (SCREENGUI, NÚT RỒNG, HEADER, SIDEBAR & TÌM KIẾM)
+-- ============================================================================
 local gui = Instance.new("ScreenGui")
 gui.Name = "MenuVipProMax"
 gui.ResetOnSpawn = false
@@ -625,10 +646,10 @@ do
     headerStatText.RichText = true; headerStatText.Text = "<font color='#38CC88'>60 FPS</font> • <font color='#58B6F2'>0ms</font>"
     headerStatText.TextColor3 = Theme.TextTitle; headerStatText.Font = Enum.Font.GothamBold; headerStatText.TextSize = 9; headerStatText.ZIndex = 13
 
-    -- Huy hiệu V1.35 nền tối sâu, chữ sáng rõ nét trên Mobile
+    -- Huy hiệu V1.36 nền tối sâu, chữ sáng rõ nét trên Mobile
     local verBadge = Instance.new("TextLabel", header)
     verBadge.Size = UDim2.new(0, 46, 0, 21); verBadge.Position = UDim2.new(1, -110, 0.5, -10.5)
-    verBadge.BackgroundColor3 = Color3.fromRGB(18, 22, 36); verBadge.Text = "V1.35"; verBadge.TextColor3 = getSoftBrandColor(Theme.Brand)
+    verBadge.BackgroundColor3 = Color3.fromRGB(18, 22, 36); verBadge.Text = "V1.36"; verBadge.TextColor3 = getSoftBrandColor(Theme.Brand)
     verBadge.Font = Enum.Font.GothamBold; verBadge.TextSize = 9.5; verBadge.ZIndex = 12
     Instance.new("UICorner", verBadge).CornerRadius = UDim.new(0, 7)
     local verStroke = Instance.new("UIStroke", verBadge); verStroke.Color = Theme.Brand; verStroke.Thickness = 1.0; verStroke.Transparency = 0.25
@@ -1256,9 +1277,10 @@ do
     openBtn.MouseButton1Click:Connect(function() clickAnimate(openBtn); toggleMenuWindow() end)
     minBtn.MouseButton1Click:Connect(function() clickAnimate(minBtn); toggleMenuWindow() end)
 end
--- ==========================================
--- COMPONENTS HỆ THỐNG 3D CYBER-GLASS NEON V1.35
--- ==========================================
+
+-- ============================================================================
+-- [PHẦN 04] BỘ COMPONENT UI 3D CYBER-GLASS NEON (TOGGLE, SLIDER, SUB-TAB...)
+-- ============================================================================
 local function splitLeadingIcon(rawText)
     local str = tostring(rawText or "")
     local sp = string.find(str, " ")
@@ -2072,9 +2094,9 @@ task.spawn(function()
     end
 end)
 
--- ==========================================
--- [TAB 2: TÍNH NĂNG (SẮP XẾP THEO NHÓM RÕ RÀNG)]
--- ==========================================
+-- ============================================================================
+-- [PHẦN 05] TAB 2: TÍNH NĂNG (CHỐNG CHOÁNG, FREECAM, SAFE SPOT, ESP, XRAY)
+-- ============================================================================
 local wasHorizontalTp = false
 do
 
@@ -2379,9 +2401,9 @@ createDualButtons(
 
 end
 
--- ==========================================
--- [TAB 3: NHÂN VẬT (DI CHUYỂN, CHIẾN ĐẤU & ÁNH SÁNG)]
--- ==========================================
+-- ============================================================================
+-- [PHẦN 06] TAB 3: NHÂN VẬT (BAY, TỐC ĐỘ, NHẢY CAO, HITBOX, FOV & ĐÈN)
+-- ============================================================================
 do
 local defaultWalkSpeed = 16
 local defaultJumpPower = 50
@@ -2484,9 +2506,10 @@ end)
 createSlider(page3, "• Độ sáng đèn", 0, 5, "LightBrightness")
 createCycleBtn(page3, "🎨 Đổi màu sáng:", PlayerLightColors, "LightColorIdx")
 end
--- ==========================================
--- [TAB 4 (SIDEBAR #8): TIỆN ÍCH (GỌN GÀNG & ĐẦY ĐỦ)]
--- ==========================================
+
+-- ============================================================================
+-- [PHẦN 07] TAB 4: TIỆN ÍCH (CHỦ ĐỀ & RGB, ANTI-AFK, SERVER & PHÍM TẮT NỔI)
+-- ============================================================================
 do
 local function hopServer(sortOrder)
     local api = "https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=" .. sortOrder .. "&limit=100"
@@ -2715,9 +2738,9 @@ createDualButtons(
 
 end
 
--- ==========================================
--- [TAB 5: NHẠC ID V1.20 (LOA 3D CHUẨN MẪU + KIỂM TRA ID LOGO LOADING 3D + HẸN GIỜ & ÂM THANH 1)]
--- ==========================================
+-- ============================================================================
+-- [PHẦN 08] TAB 5: NHẠC ID (THÙNG RÁC 3 CHẾ ĐỘ, ĐỔI BÀI, ÂM LƯỢNG 0-10 & TỰ LỌC)
+-- ============================================================================
 do
     local currentSound = nil; local currentMusicId = ""; local savedMusicList = {}; local isMusicPaused = false
     local timerActive = false
@@ -3130,20 +3153,6 @@ do
             makeNeonPart(3.8, 2.4, 3.2, -3.4, 0, 0.5, 17, "cyan_blue", false)
             makeNeonPart(3.6, 2.1, 4.8, -4.5, 35, 0.45, 18, "cyan_blue", false)
             makeNeonPart(3.6, 2.1, 4.8, -2.3, -35, 0.45, 18, "cyan_blue", false)
-        elseif iconType == "SearchCheck" then
-            -- Icon Kính lúp Kiểm tra ID (🔍)
-            local ring = Instance.new("Frame", holder)
-            ring.Size = UDim2.new(0, 9.4 * sc, 0, 9.4 * sc)
-            ring.AnchorPoint = Vector2.new(0.5, 0.5)
-            ring.Position = UDim2.new(0.5, -1.5 * sc, 0.5, -1.5 * sc)
-            ring.BackgroundTransparency = 1
-            ring.ZIndex = 16
-            Instance.new("UICorner", ring).CornerRadius = UDim.new(1, 0)
-            local rSt = Instance.new("UIStroke", ring)
-            rSt.Color = Color3.fromRGB(255, 255, 255)
-            rSt.Thickness = 2.2 * sc
-            applyNeonTriGrad(rSt, 90)
-            makeNeonPart(5.4, 2.3, 3.5, 3.5, 45, 0.5, 16, "purple_magenta", false)
         elseif iconType == "Cross" then
             makeNeonPart(13.0, 3.2, 0, 0, 45, 0.5, 15, nil, false)
             makeNeonPart(13.0, 3.2, 0, 0, -45, 0.5, 15, nil, false)
@@ -4736,9 +4745,10 @@ do
         renderSavedMusic()
     end
 end
--- ==========================================
--- [TAB 6: TP SAVE (NÂNG CẤP ESP ĐIỂM LƯU + AUTO LOOP TP + CẬP NHẬT VỊ TRÍ)]
--- ==========================================
+
+-- ============================================================================
+-- [PHẦN 09] TAB 6: TP SAVE (LƯU TỌA ĐỘ THEO PLACEID, ESP 3D & AUTO LOOP)
+-- ============================================================================
 local savedTpList = {}
 local clearSavedTpESPs
 do
@@ -4834,9 +4844,10 @@ do
     end
     renderSavedTps()
 end
--- ==========================================
--- [HỆ THỐNG QUÉT NGƯỜI CHƠI & BOT MAP PHỤ DÙNG CHUNG CHO ESP & TP PLAYER (V1.30)]
--- ==========================================
+
+-- ============================================================================
+-- [PHẦN 10] HỆ THỐNG QUÉT NGƯỜI CHƠI & BOT MAP PHỤ (DÙNG CHUNG ESP & TP PLAYER)
+-- ============================================================================
 local function resolveTargetCharacter(target)
     if not target then return nil end
     if typeof(target) == "Instance" then
@@ -4940,9 +4951,9 @@ local function getAllMatchTargets(includeBots)
     return results
 end
 
--- ==========================================
--- [TAB 7: TP NGƯỜI CHƠI V1.30 (TỰ ĐỒNG BỘ MAP PHỤ + HỖ TRỢ BOT THAY THẾ + LÀM MỚI TỨC THÌ)]
--- ==========================================
+-- ============================================================================
+-- [PHẦN 11] TAB 7: TP NGƯỜI CHƠI (TP / BAY / CHẠY ĐẾN, XOAY MẶT & XEM GÓC NHÌN)
+-- ============================================================================
 local targetTpPlayer = nil
 local autoTpPlayerEnabled = false
 local spectatePlayerEnabled = false
@@ -5933,9 +5944,10 @@ do
         end)
     end))
 end
--- ==========================================
--- [TAB 8: AUTO SKILL PRO MAX V1.21 (BÀN PHÍM CƠ 3D CYBER-NEON 4 CỘT + CHẾ ĐỘ COMBO/BURST + HOLD CHIÊU)]
--- ==========================================
+
+-- ============================================================================
+-- [PHẦN 12] TAB 8: AUTO SKILL (BÀN PHÍM CƠ 3D 4 CỘT, COMBO/BURST & HOLD CHIÊU)
+-- ============================================================================
 do
     local SkillLetterDefs = {
         {Key = "Z", Var = "AutoSkillZ", Code = Enum.KeyCode.Z},
@@ -6398,9 +6410,10 @@ do
         end
     end)
 end
--- ==========================================
--- [TAB 9: CẤU HÌNH & GIẢM LAG PRO MAX V1.27 (3 CHẾ ĐỘ + TẮT ĐÈN + CHẤT LƯỢNG ĐỒ HỌA + KHÔI PHỤC CHUẨN)]
--- ==========================================
+
+-- ============================================================================
+-- [PHẦN 13] TAB 9: CẤU HÌNH & GIẢM LAG (3 PRESET, FPS CAP, ĐỒ HỌA & CULLING)
+-- ============================================================================
 do
     local Cache = {
         Particles = {}, PostEffects = {}, Shadows = {}, Players = {}, Pets = {},
@@ -7233,9 +7246,10 @@ do
 
     createButton(page9, "🧹 Dọn rác bản đồ & Giải phóng RAM ngay", Theme.AccentOff, function() cleanDebrisAndRAM(false) end)
 end
--- ==========================================
--- [TAB 1: DASHBOARD BENTO + QUẢN LÝ SERVER (SỬA LỖI UTF-8 & CÂN ĐỐI KHUNG)]
--- ==========================================
+
+-- ============================================================================
+-- [PHẦN 14] TAB 1: DASHBOARD BENTO & QUẢN LÝ SERVER
+-- ============================================================================
 do
     local savedServersFile = "MenuVipProMax_SavedServers.json"
     local savedServers = {}
@@ -7712,7 +7726,7 @@ do
         local s = execTime % 60
 
         sysBody.Text = string.format(
-            "<font color='#78B4DC'>• Executor:</font> <font color='#38CC88'>%s</font>   |   <font color='#78B4DC'>Phiên bản:</font> <font color='#E09F67'>V1.35.0</font>\n" ..
+            "<font color='#78B4DC'>• Executor:</font> <font color='#38CC88'>%s</font>   |   <font color='#78B4DC'>Phiên bản:</font> <font color='#E09F67'>V1.36.0</font>\n" ..
             "<font color='#78B4DC'>• Treo máy:</font> %02d:%02d:%02d   |   <font color='#78B4DC'>Giờ hệ thống:</font> %s",
             execName, h, m, s, os.date("%H:%M:%S")
         )
@@ -7725,9 +7739,10 @@ do
         end
     end)
 end
--- ==========================================
--- [HỆ THỐNG AUTO CLICK & AUTO COLLECT]
--- ==========================================
+
+-- ============================================================================
+-- [PHẦN 15] VÒNG LẶP NỀN: AUTO CLICK, INSTANT PROMPT & AUTO COLLECT
+-- ============================================================================
 do
 task.spawn(function()
     while ScriptActive and task.wait(0.1) do
@@ -7808,9 +7823,9 @@ task.spawn(function()
     end
 end)
 
--- ==========================================
--- [ESP NGƯỜI CHƠI + ESP ĐIỂM LƯU TP SAVE + HITBOX]
--- ==========================================
+-- ============================================================================
+-- [PHẦN 16A] VÒNG LẶP ESP NGƯỜI CHƠI, ESP ĐIỂM LƯU & HITBOX
+-- ============================================================================
 local function clearSingleESP(p)
     if ActiveESPs[p] then
         if ActiveESPs[p].Billboard then ActiveESPs[p].Billboard:Destroy() end
@@ -7976,9 +7991,9 @@ task.spawn(function()
     while ScriptActive and task.wait(0.1) do updateESP_Hitbox() end
 end)
 
--- ==========================================
--- VÒNG LẶP VẬT LÝ & CHUYỂN ĐỘNG
--- ==========================================
+-- ============================================================================
+-- [PHẦN 16B] VÒNG LẶP VẬT LÝ & CHUYỂN ĐỘNG (STEPPED / HEARTBEAT)
+-- ============================================================================
 trackConn(RunService.Stepped:Connect(function()
     if not ScriptActive then return end
     local char = player.Character
