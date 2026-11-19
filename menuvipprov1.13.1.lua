@@ -1,5 +1,5 @@
 -- ==========================================
--- MENU VIP PRO MAX V1.34.0 (LUXURY CYBER-GLASS & BENTO SIDEBAR EDITION)
+-- MENU VIP PRO MAX V1.35.0 (LUXURY CYBER-GLASS & BENTO SIDEBAR EDITION)
 -- ==========================================
 repeat task.wait() until game:IsLoaded()
 
@@ -625,10 +625,10 @@ do
     headerStatText.RichText = true; headerStatText.Text = "<font color='#38CC88'>60 FPS</font> • <font color='#58B6F2'>0ms</font>"
     headerStatText.TextColor3 = Theme.TextTitle; headerStatText.Font = Enum.Font.GothamBold; headerStatText.TextSize = 9; headerStatText.ZIndex = 13
 
-    -- Huy hiệu V1.34 nền tối sâu, chữ sáng rõ nét trên Mobile
+    -- Huy hiệu V1.35 nền tối sâu, chữ sáng rõ nét trên Mobile
     local verBadge = Instance.new("TextLabel", header)
     verBadge.Size = UDim2.new(0, 46, 0, 21); verBadge.Position = UDim2.new(1, -110, 0.5, -10.5)
-    verBadge.BackgroundColor3 = Color3.fromRGB(18, 22, 36); verBadge.Text = "V1.34"; verBadge.TextColor3 = getSoftBrandColor(Theme.Brand)
+    verBadge.BackgroundColor3 = Color3.fromRGB(18, 22, 36); verBadge.Text = "V1.35"; verBadge.TextColor3 = getSoftBrandColor(Theme.Brand)
     verBadge.Font = Enum.Font.GothamBold; verBadge.TextSize = 9.5; verBadge.ZIndex = 12
     Instance.new("UICorner", verBadge).CornerRadius = UDim.new(0, 7)
     local verStroke = Instance.new("UIStroke", verBadge); verStroke.Color = Theme.Brand; verStroke.Thickness = 1.0; verStroke.Transparency = 0.25
@@ -1257,7 +1257,7 @@ do
     minBtn.MouseButton1Click:Connect(function() clickAnimate(minBtn); toggleMenuWindow() end)
 end
 -- ==========================================
--- COMPONENTS HỆ THỐNG 3D CYBER-GLASS NEON V1.34
+-- COMPONENTS HỆ THỐNG 3D CYBER-GLASS NEON V1.35
 -- ==========================================
 local function splitLeadingIcon(rawText)
     local str = tostring(rawText or "")
@@ -3642,9 +3642,9 @@ do
         else
             MakeToast("🗑️ Ô ID Đang Trống", "Sẵn sàng nhập hoặc dán ID nhạc mới!", Theme.Brand)
         end
-        task.delay(0.06, function()
-            pcall(function() musicIdBox:CaptureFocus() end)
-        end)
+        if musicIdBox:IsFocused() then
+            pcall(function() musicIdBox:ReleaseFocus(false) end)
+        end
     end)
 
     topStatusBtn.MouseButton1Click:Connect(function()
@@ -4427,14 +4427,14 @@ do
         mlHeader.MouseButton1Click:Connect(function() clickAnimate(mlHeader); recheckAllSavedIds() end)
 
         local filterBar = Instance.new("Frame", musicListCard)
-        filterBar.Size = UDim2.new(0, 212, 0, 18); filterBar.Position = UDim2.new(1, -216, 0, 4)
+        filterBar.Size = UDim2.new(0, 184, 0, 18); filterBar.Position = UDim2.new(1, -188, 0, 4)
         filterBar.BackgroundTransparency = 1; filterBar.ZIndex = 11
 
         local function makeMusicFilterBtn(xPos, width, txt)
             local b = Instance.new("TextButton", filterBar)
             b.Size = UDim2.new(0, width, 1, 0); b.Position = UDim2.new(0, xPos, 0, 0)
             b.BackgroundColor3 = Color3.fromRGB(14, 16, 23); b.Text = txt
-            b.TextColor3 = Color3.fromRGB(132, 142, 162); b.Font = Enum.Font.GothamMedium; b.TextSize = 7.4
+            b.TextColor3 = Color3.fromRGB(132, 142, 162); b.Font = Enum.Font.GothamMedium; b.TextSize = 7.8
             b.TextStrokeColor3 = Color3.fromRGB(8, 10, 16); b.TextStrokeTransparency = 0.45
             b.AutoButtonColor = false; b.ZIndex = 12
             Instance.new("UICorner", b).CornerRadius = UDim.new(0, 6)
@@ -4442,14 +4442,9 @@ do
             return b, st
         end
 
-        local fBtnAll, fStAll = makeMusicFilterBtn(0, 52, "Tất cả")
-        local fBtnPub, fStPub = makeMusicFilterBtn(55, 55, "Public")
-        local fBtnPriv, fStPriv = makeMusicFilterBtn(113, 55, "Private")
-        local fBtnClean, fStClean = makeMusicFilterBtn(171, 41, "Lọc ID")
-        fBtnClean.BackgroundColor3 = Color3.fromRGB(18, 34, 42)
-        fBtnClean.TextColor3 = Color3.fromRGB(132, 206, 182)
-        fStClean.Color = Color3.fromRGB(62, 152, 134)
-        fStClean.Transparency = 0.25
+        local fBtnAll, fStAll = makeMusicFilterBtn(0, 56, "Tất cả")
+        local fBtnPub, fStPub = makeMusicFilterBtn(60, 60, "Public")
+        local fBtnPriv, fStPriv = makeMusicFilterBtn(124, 60, "Private")
 
         local function syncMusicFilterTabs()
             local pubCount, privCount = 0, 0
@@ -4643,60 +4638,74 @@ do
         fBtnPub.MouseButton1Click:Connect(function() clickAnimate(fBtnPub); currentMusicFilter = "public"; renderSavedMusic() end)
         fBtnPriv.MouseButton1Click:Connect(function() clickAnimate(fBtnPriv); currentMusicFilter = "private"; renderSavedMusic() end)
 
-        local isAutoFilteringMusic = false
-        fBtnClean.MouseButton1Click:Connect(function()
-            clickAnimate(fBtnClean)
-            if isAutoFilteringMusic then
-                MakeToast("⏳ Đang Lọc Kho Nhạc", "Vui lòng chờ quá trình lọc hoàn tất!", Theme.Brand)
-                return
-            end
-            if #savedMusicList == 0 then
-                MakeToast("Kho nhạc trống", "Chưa có ID nào để tự lọc!", Theme.AccentOff)
-                return
-            end
-            isAutoFilteringMusic = true
-            fBtnClean.Text = "Đang lọc"
-            MakeToast("🧹 Tự Lọc Kho Nhạc", "Đang kiểm tra, xóa ID trùng và loại bỏ ID lỗi/Private...", Theme.Brand)
+        -- Tự động lọc Kho Nhạc ngầm ĐÚNG 1 LẦN duy nhất khi mở Menu hoặc vào Tab Nhạc ID (không gây giật lag)
+        local hasAutoFilteredMusicOnce = false
+        local function runAutoFilterMusicOnce()
+            if hasAutoFilteredMusicOnce then return end
+            hasAutoFilteredMusicOnce = true
+            if #savedMusicList == 0 then return end
             task.spawn(function()
                 local d1, inv1 = autoFilterSavedMusicList(false)
-                renderSavedMusic()
-                for _, item in ipairs(savedMusicList) do
-                    if not ScriptActive then break end
-                    local isUrl = tostring(item.id):lower():match("^https?://") ~= nil
-                    if not isUrl then
-                        item.status = "checking"
-                        renderSavedMusic()
-                        local probe = Instance.new("Sound")
-                        probe.Name = "MenuVipFilterProbe_" .. tostring(item.id)
-                        probe.SoundId = "rbxassetid://" .. tostring(item.id)
-                        probe.Volume = 0
-                        probe.Parent = SoundService
-                        local elapsed = 0
-                        while ScriptActive and elapsed < 2.4 do
-                            if probe.IsLoaded and probe.TimeLength > 0 then break end
-                            task.wait(0.2)
-                            elapsed = elapsed + 0.2
+                local batchSize = 5
+                local i = 1
+                while ScriptActive and i <= #savedMusicList do
+                    local finished = 0
+                    local batchCount = 0
+                    for b = 0, batchSize - 1 do
+                        local item = savedMusicList[i + b]
+                        if not item then break end
+                        batchCount = batchCount + 1
+                        local isUrl = tostring(item.id):lower():match("^https?://") ~= nil
+                        if isUrl then
+                            item.status = "public"
+                            finished = finished + 1
+                        else
+                            task.spawn(function()
+                                local probe = Instance.new("Sound")
+                                probe.Name = "MenuVipAutoFilter_" .. tostring(item.id)
+                                probe.SoundId = "rbxassetid://" .. tostring(item.id)
+                                probe.Volume = 0
+                                probe.Parent = SoundService
+                                local elapsed = 0
+                                while ScriptActive and elapsed < 2.2 do
+                                    if probe.IsLoaded and probe.TimeLength > 0 then break end
+                                    task.wait(0.2)
+                                    elapsed = elapsed + 0.2
+                                end
+                                local isPublic = (probe.IsLoaded and probe.TimeLength > 0)
+                                pcall(function() probe:Destroy() end)
+                                item.status = isPublic and "public" or "private"
+                                finished = finished + 1
+                            end)
                         end
-                        local isPublic = (probe.IsLoaded and probe.TimeLength > 0)
-                        pcall(function() probe:Destroy() end)
-                        item.status = isPublic and "public" or "private"
-                    else
-                        item.status = "public"
                     end
+                    local waitT = 0
+                    while ScriptActive and finished < batchCount and waitT < 3.0 do
+                        task.wait(0.15)
+                        waitT = waitT + 0.15
+                    end
+                    i = i + batchSize
                 end
+                if not ScriptActive then return end
                 local d2, inv2, privRem = autoFilterSavedMusicList(true)
                 saveMusicData()
                 renderSavedMusic()
-                fBtnClean.Text = "Lọc ID"
-                isAutoFilteringMusic = false
                 local totalDup = d1 + d2 + inv1 + inv2
                 if totalDup > 0 or privRem > 0 then
-                    MakeToast("🧹 Đã Tự Lọc Xong", string.format("Đã xóa %d ID trùng/lỗi & %d ID Private! Còn %d bài Public.", totalDup, privRem, #savedMusicList), Theme.AccentOn)
-                else
-                    MakeToast("✅ Kho Nhạc Sạch", "Tất cả " .. tostring(#savedMusicList) .. " bài đều Public & không trùng lặp!", Theme.AccentOn)
+                    MakeToast("🧹 Đã Tự Lọc Kho Nhạc", string.format("Đã dọn %d ID trùng/lỗi & %d ID Private!", totalDup, privRem), Theme.AccentOn)
                 end
             end)
-        end)
+        end
+
+        trackConn(frame:GetPropertyChangedSignal("Visible"):Connect(function()
+            if frame.Visible then runAutoFilterMusicOnce() end
+        end))
+        trackConn(page5:GetPropertyChangedSignal("Visible"):Connect(function()
+            if page5.Visible then runAutoFilterMusicOnce() end
+        end))
+        if frame.Visible or page5.Visible then
+            task.delay(0.8, runAutoFilterMusicOnce)
+        end
 
         saveIdBtn.MouseButton1Click:Connect(function()
             clickAnimate(saveIdBtn)
@@ -4725,15 +4734,6 @@ do
         end)
 
         renderSavedMusic()
-
-        task.spawn(function()
-            for _, item in ipairs(savedMusicList) do
-                if not item.status or item.status == "checking" then
-                    probeSongStatus(item)
-                    task.wait(0.35)
-                end
-            end
-        end)
     end
 end
 -- ==========================================
@@ -7712,7 +7712,7 @@ do
         local s = execTime % 60
 
         sysBody.Text = string.format(
-            "<font color='#78B4DC'>• Executor:</font> <font color='#38CC88'>%s</font>   |   <font color='#78B4DC'>Phiên bản:</font> <font color='#E09F67'>V1.34.0</font>\n" ..
+            "<font color='#78B4DC'>• Executor:</font> <font color='#38CC88'>%s</font>   |   <font color='#78B4DC'>Phiên bản:</font> <font color='#E09F67'>V1.35.0</font>\n" ..
             "<font color='#78B4DC'>• Treo máy:</font> %02d:%02d:%02d   |   <font color='#78B4DC'>Giờ hệ thống:</font> %s",
             execName, h, m, s, os.date("%H:%M:%S")
         )
