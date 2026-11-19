@@ -1,5 +1,5 @@
 -- ==========================================
--- MENU VIP PRO MAX V1.31.0 (LUXURY CYBER-GLASS & BENTO SIDEBAR EDITION)
+-- MENU VIP PRO MAX V1.34.0 (LUXURY CYBER-GLASS & BENTO SIDEBAR EDITION)
 -- ==========================================
 repeat task.wait() until game:IsLoaded()
 
@@ -90,15 +90,13 @@ local State = {
     AirWalk = false,
     HidePopups = false, MuteSFX = false, DisableAnims = false, DarkMap = false, DisableLights = false, GfxQualityLevel = 3,
     DistanceCulling = false, DistanceCullRange = 200, DisableHighlights = false,
-    Freecam = false, FreecamSpeed = 60, AntiVoid = false, AntiVoidY = -120, AntiSit = false,
-    CustomGravity = false, GravityValue = 196, CustomFOV = false, FovValue = 70,
-    LookAtTarget = false, ProximityAlert = false, ProximityRange = 50,
+    Freecam = false, FreecamSpeed = 60, AntiSit = false,
+    CustomFOV = false, FovValue = 70,
+    LookAtTarget = false,
     SafeSpotRetreat = false, SafeSpotHpPct = 30,
-    QuickShortcuts = false, MenuTransparency = 2, MenuScalePct = 100, IncludeMatchBots = true,
-    MiniHUD = false, AutoReconnect = true, MagnetOrbs = false
+    QuickShortcuts = false, IncludeMatchBots = true,
+    AutoReconnect = true
 }
-local DefaultStateSnapshot = {}
-for k, v in pairs(State) do DefaultStateSnapshot[k] = v end
 
 
 local Theme = {
@@ -121,7 +119,8 @@ local ThemePresets = {
     {Name = "💜 Neon Purple", Brand = Color3.fromRGB(182, 120, 255), Soft = Color3.fromRGB(48, 32, 78), On = Color3.fromRGB(56, 204, 136), ActiveBg = Color3.fromRGB(24, 42, 40)},
     {Name = "💚 Emerald Matrix", Brand = Color3.fromRGB(56, 218, 148), Soft = Color3.fromRGB(24, 58, 44), On = Color3.fromRGB(56, 204, 136), ActiveBg = Color3.fromRGB(24, 42, 40)},
     {Name = "🌸 Crimson Rose", Brand = Color3.fromRGB(255, 105, 148), Soft = Color3.fromRGB(70, 28, 46), On = Color3.fromRGB(56, 204, 136), ActiveBg = Color3.fromRGB(24, 42, 40)},
-    {Name = "✨ Luxury Gold", Brand = Color3.fromRGB(245, 192, 78), Soft = Color3.fromRGB(68, 52, 24), On = Color3.fromRGB(56, 204, 136), ActiveBg = Color3.fromRGB(24, 42, 40)}
+    {Name = "✨ Luxury Gold", Brand = Color3.fromRGB(245, 192, 78), Soft = Color3.fromRGB(68, 52, 24), On = Color3.fromRGB(56, 204, 136), ActiveBg = Color3.fromRGB(24, 42, 40)},
+    {Name = "🌈 Viền RGB", Brand = Color3.fromRGB(165, 130, 245), Soft = Color3.fromRGB(40, 32, 68), On = Color3.fromRGB(56, 204, 136), ActiveBg = Color3.fromRGB(24, 42, 40), IsRGB = true}
 }
 
 local PlayerLightColors = {
@@ -249,10 +248,11 @@ local MusicSpeedPresets = {
     {Name = "2x (Siêu tốc)", Badge = "2x", Speed = 2.0}
 }
 if not MusicSpeedPresets[State.MusicSpeedIdx] then State.MusicSpeedIdx = 2 end
-State.MusicVolume = 1
+State.MusicVolume = math.clamp(math.floor((tonumber(State.MusicVolume) or 1) + 0.5), 0, 10)
 if not PlayerLightColors[State.LightColorIdx] then State.LightColorIdx = 1 end
+if State.RGB and (not ThemePresets[State.ThemeIdx] or not ThemePresets[State.ThemeIdx].IsRGB) then State.ThemeIdx = #ThemePresets end
 if not ThemePresets[State.ThemeIdx] then State.ThemeIdx = 1 end
-do local p = ThemePresets[State.ThemeIdx]; Theme.Brand = p.Brand; Theme.BrandSoft = p.Soft; Theme.AccentOn = p.On; Theme.ItemActive = p.ActiveBg end
+do local p = ThemePresets[State.ThemeIdx]; Theme.Brand = p.Brand; Theme.BrandSoft = p.Soft; Theme.AccentOn = p.On; Theme.ItemActive = p.ActiveBg; State.RGB = p.IsRGB and true or false end
 
 local function saveConfig()
     pcall(function() if writefile then writefile(configFileName, HttpService:JSONEncode(State)) end end)
@@ -625,10 +625,10 @@ do
     headerStatText.RichText = true; headerStatText.Text = "<font color='#38CC88'>60 FPS</font> • <font color='#58B6F2'>0ms</font>"
     headerStatText.TextColor3 = Theme.TextTitle; headerStatText.Font = Enum.Font.GothamBold; headerStatText.TextSize = 9; headerStatText.ZIndex = 13
 
-    -- Huy hiệu V1.31 nền tối sâu, chữ sáng rõ nét trên Mobile
+    -- Huy hiệu V1.34 nền tối sâu, chữ sáng rõ nét trên Mobile
     local verBadge = Instance.new("TextLabel", header)
     verBadge.Size = UDim2.new(0, 46, 0, 21); verBadge.Position = UDim2.new(1, -110, 0.5, -10.5)
-    verBadge.BackgroundColor3 = Color3.fromRGB(18, 22, 36); verBadge.Text = "V1.31"; verBadge.TextColor3 = getSoftBrandColor(Theme.Brand)
+    verBadge.BackgroundColor3 = Color3.fromRGB(18, 22, 36); verBadge.Text = "V1.34"; verBadge.TextColor3 = getSoftBrandColor(Theme.Brand)
     verBadge.Font = Enum.Font.GothamBold; verBadge.TextSize = 9.5; verBadge.ZIndex = 12
     Instance.new("UICorner", verBadge).CornerRadius = UDim.new(0, 7)
     local verStroke = Instance.new("UIStroke", verBadge); verStroke.Color = Theme.Brand; verStroke.Thickness = 1.0; verStroke.Transparency = 0.25
@@ -975,6 +975,7 @@ do
 
     refreshThemeVisuals = function()
         local preset = ThemePresets[State.ThemeIdx] or ThemePresets[1]
+        State.RGB = preset.IsRGB and true or false
         Theme.Brand = preset.Brand
         Theme.BrandSoft = preset.Soft
         Theme.AccentOn = preset.On
@@ -1013,8 +1014,16 @@ do
         for _, obj in ipairs(RGBElements) do
             if obj.UseBrand then
                 obj.DefaultColor = Theme.Brand
-                if not State.RGB and obj.Stroke and obj.Stroke.Parent then
+            end
+            if not State.RGB and obj.Stroke and obj.Stroke.Parent then
+                if obj.Type == "Frame" then
                     obj.Stroke.Color = Theme.Brand
+                elseif obj.Type == "Toggle" then
+                    obj.Stroke.Color = obj.State() and Color3.fromRGB(54, 140, 98) or Theme.Stroke
+                elseif obj.Type == "Button" then
+                    obj.Stroke.Color = obj.UseBrand and Theme.Brand or obj.DefaultColor
+                elseif obj.Type == "Slider" or obj.Type == "Info" or obj.Type == "Container" then
+                    obj.Stroke.Color = Theme.Stroke
                 end
             end
         end
@@ -1248,7 +1257,7 @@ do
     minBtn.MouseButton1Click:Connect(function() clickAnimate(minBtn); toggleMenuWindow() end)
 end
 -- ==========================================
--- COMPONENTS HỆ THỐNG 3D CYBER-GLASS NEON V1.31
+-- COMPONENTS HỆ THỐNG 3D CYBER-GLASS NEON V1.34
 -- ==========================================
 local function splitLeadingIcon(rawText)
     local str = tostring(rawText or "")
@@ -2171,7 +2180,6 @@ end)
 createDivider(page2, "THU THẬP TỰ ĐỘNG & QUAN SÁT BẢN ĐỒ")
 createToggle(page2, "⚡ Lấy đồ nhanh (Instant Prompt)", "Instant")
 createToggle(page2, "🧲 Auto nhặt đồ & Tool xung quanh", "AutoCollect")
-createToggle(page2, "💎 Hút Tiền, Ngọc & Vật phẩm rơi (Magnet)", "MagnetOrbs")
 
 createToggle(page2, "🔴 Định vị người chơi (ESP)", "ESP")
 
@@ -2267,77 +2275,12 @@ do
         end
     end)
 
-    -- 2. Chống rơi vực (Anti-Void)
-    local lastSafeGroundCF = nil
-    createCombinedToggleSlider(page2, "🛡️ Chống rơi vực (Anti-Void)", "AntiVoid", "Độ cao kích hoạt (Y)", -300, 0, "AntiVoidY")
-
-    task.spawn(function()
-        while ScriptActive and task.wait(0.2) do
-            if State.AntiVoid and player.Character then
-                local root = getUniversalRoot(player.Character)
-                local hum = player.Character:FindFirstChildOfClass("Humanoid")
-                if root and hum and hum.Health > 0 then
-                    local limitY = tonumber(State.AntiVoidY) or -120
-                    if hum.FloorMaterial ~= Enum.Material.Air and root.Position.Y > (limitY + 15) then
-                        lastSafeGroundCF = root.CFrame + Vector3.new(0, 3, 0)
-                    elseif root.Position.Y < limitY then
-                        root.AssemblyLinearVelocity = Vector3.zero
-                        root.AssemblyAngularVelocity = Vector3.zero
-                        if lastSafeGroundCF then
-                            root.CFrame = lastSafeGroundCF
-                        else
-                            root.CFrame = CFrame.new(root.Position.X, math.max(50, limitY + 120), root.Position.Z)
-                        end
-                        MakeToast("🛡️ Anti-Void", "Đã kéo nhân vật trở lại vị trí an toàn!", Theme.AccentOn)
-                    end
-                end
-            end
-        end
-    end)
-
     -- 3. Chống ngồi ghế (Anti-Sit)
     createToggle(page2, "🪑 Chống ngồi ghế (Anti-Sit)", "AntiSit", function(v)
         local hum = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
         if hum then
             pcall(function() hum:SetStateEnabled(Enum.HumanoidStateType.Seated, not v) end)
             if v and hum.Sit then hum.Sit = false end
-        end
-    end)
-
-    -- 4. Cảnh báo người chơi lại gần (Proximity Alert)
-    local lastProxToastByPlayer = {}
-    createCombinedToggleSlider(page2, "🚨 Cảnh báo người chơi lại gần", "ProximityAlert", "Bán kính cảnh báo (Studs)", 15, 200, "ProximityRange")
-
-    task.spawn(function()
-        while ScriptActive and task.wait(0.6) do
-            if State.ProximityAlert and player.Character then
-                local myRoot = getUniversalRoot(player.Character)
-                if myRoot then
-                    local maxR = tonumber(State.ProximityRange) or 50
-                    local nowT = tick()
-                    for _, other in ipairs(Players:GetPlayers()) do
-                        if other ~= player and other.Character then
-                            local oCF = getCharacterCFrame(other.Character)
-                            if oCF then
-                                local dist = (myRoot.Position - oCF.Position).Magnitude
-                                if dist <= maxR and (nowT - (lastProxToastByPlayer[other] or 0) > 6) then
-                                    lastProxToastByPlayer[other] = nowT
-                                    MakeToast("🚨 Có Người Lại Gần!", other.DisplayName .. " cách bạn " .. tostring(math.floor(dist)) .. "m!", Theme.AccentOff)
-                                    pcall(function()
-                                        local beep = Instance.new("Sound")
-                                        beep.Name = "MenuVipAlertBeep"
-                                        beep.SoundId = "rbxassetid://9118823101"
-                                        beep.Volume = 0.6
-                                        beep.Parent = SoundService
-                                        beep:Play()
-                                        task.delay(1.5, function() pcall(function() beep:Destroy() end) end)
-                                    end)
-                                end
-                            end
-                        end
-                    end
-                end
-            end
         end
     end)
 
@@ -2514,19 +2457,8 @@ createCombinedToggleSlider(page3, "⚔️ Đánh xa (Reach Vũ Khí)", "Reach", 
 createCombinedToggleSlider(page3, "🎯 Mở rộng Hitbox", "Hitbox", "Kích thước Hitbox", 0, 100, "HitboxSize")
 createCombinedToggleSlider(page3, "🌪️ Xoay vòng tròn (SpinBot)", "SpinBot", "Tốc độ xoay", 0, 100, "SpinSpeed")
 
-createDivider(page3, "TRỌNG LỰC & GÓC NHÌN CAMERA")
+createDivider(page3, "GÓC NHÌN CAMERA")
 do
-    local origGravity = workspace.Gravity
-    createCombinedToggleSlider(page3, "🪐 Chỉnh Trọng lực (Gravity)", "CustomGravity", "Mức trọng lực (Chuẩn 196)", 10, 300, "GravityValue", function(v)
-        if v then
-            workspace.Gravity = State.GravityValue
-        else
-            workspace.Gravity = origGravity
-        end
-    end, function(val)
-        if State.CustomGravity then workspace.Gravity = val end
-    end)
-
     createCombinedToggleSlider(page3, "👁️ Chỉnh Góc nhìn rộng (FOV)", "CustomFOV", "Độ rộng góc nhìn (FOV)", 50, 120, "FovValue", function(v)
         local cam = workspace.CurrentCamera
         if cam then
@@ -2555,7 +2487,6 @@ end
 -- ==========================================
 -- [TAB 4 (SIDEBAR #8): TIỆN ÍCH (GỌN GÀNG & ĐẦY ĐỦ)]
 -- ==========================================
-local miniHudFrame, hudLabel
 do
 local function hopServer(sortOrder)
     local api = "https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=" .. sortOrder .. "&limit=100"
@@ -2594,61 +2525,6 @@ createToggle(page4, "💾 Lưu Cài Đặt Tự Động", "AutoSave", function(v
     else pcall(function() if isfile and isfile(configFileName) then delfile(configFileName) end end); MakeToast("Đã Tắt", "Đã xóa cấu hình cũ!", Theme.AccentOff) end
 end)
 
--- Sửa lỗi mất màu viền chủ đề (Theme.Brand) khi tắt chế độ RGB
-createToggle(page4, "🌈 Chế độ viền RGB", "RGB", function(v)
-    if not v then
-        titleLabel.TextColor3 = Theme.TextTitle
-        frameStroke.Color = Theme.Brand
-        avatarStroke.Color = Theme.Brand
-        openStroke.Color = Color3.fromRGB(236, 242, 250)
-        cleanRGBElements()
-        for _, obj in pairs(RGBElements) do
-            if obj.Stroke and obj.Stroke.Parent then
-                if obj.Type == "Frame" then
-                    obj.Stroke.Color = Theme.Brand
-                elseif obj.Type == "Toggle" then
-                    obj.Stroke.Color = obj.State() and Color3.fromRGB(54, 140, 98) or Theme.Stroke
-                elseif obj.Type == "Button" then
-                    obj.Stroke.Color = obj.UseBrand and Theme.Brand or obj.DefaultColor
-                elseif obj.Type == "Slider" or obj.Type == "Info" or obj.Type == "Container" then
-                    obj.Stroke.Color = Theme.Stroke
-                end
-            end
-        end
-        if refreshThemeVisuals then refreshThemeVisuals() end
-    end
-end)
-
-miniHudFrame = Instance.new("Frame", gui)
-miniHudFrame.Size = UDim2.new(0, 128, 0, 26); miniHudFrame.Position = UDim2.new(0, 65, 0.05, 9)
-miniHudFrame.BackgroundColor3 = Theme.MainBg; miniHudFrame.BackgroundTransparency = 0.12
-miniHudFrame.Visible = State.MiniHUD; miniHudFrame.ZIndex = 10
-Instance.new("UICorner", miniHudFrame).CornerRadius = UDim.new(1, 0)
-local hudStroke = Instance.new("UIStroke", miniHudFrame); hudStroke.Color = Theme.Brand; hudStroke.Thickness = 1.2
-table.insert(RGBElements, {Type = "Button", Stroke = hudStroke, DefaultColor = Theme.Brand, UseBrand = true})
-
-hudLabel = Instance.new("TextLabel", miniHudFrame)
-hudLabel.Size = UDim2.new(1, 0, 1, 0); hudLabel.BackgroundTransparency = 1; hudLabel.RichText = true
-hudLabel.Text = "⚡ 60 FPS | 🌐 0 ms"; hudLabel.TextColor3 = Theme.TextTitle
-hudLabel.Font = Enum.Font.GothamBold; hudLabel.TextSize = 10; hudLabel.ZIndex = 10
-
-do
-    local hudDragInput, hudStart, hudPos = nil, nil, nil
-    miniHudFrame.InputBegan:Connect(function(inp)
-        if not hudDragInput and (inp.UserInputType == Enum.UserInputType.MouseButton1 or inp.UserInputType == Enum.UserInputType.Touch) then
-            hudDragInput = inp; hudStart = inp.Position; hudPos = miniHudFrame.Position
-        end
-    end)
-    UIS.InputChanged:Connect(function(inp)
-        if isDragUpdateInput(inp, hudDragInput) then
-            miniHudFrame.Position = UDim2.new(hudPos.X.Scale, hudPos.X.Offset + (inp.Position.X - hudStart.X), hudPos.Y.Scale, hudPos.Y.Offset + (inp.Position.Y - hudStart.Y))
-        end
-    end)
-    UIS.InputEnded:Connect(function(inp)
-        if inp == hudDragInput then hudDragInput = nil end
-    end)
-end
-createToggle(page4, "📟 Đồng hồ FPS & Ping Mini ngoài màn hình", "MiniHUD", function(v) miniHudFrame.Visible = v end)
 createToggle(page4, "💫 Mở khóa ShiftLock Mobile", "ShiftLock", function(v) pcall(function() player.DevEnableMouseLock = v end) end)
 
 createDivider(page4, "TREO MÁY AN TOÀN (AFK GUARD)")
@@ -2689,7 +2565,7 @@ createDualButtons(page4, "📉 ĐỔI SV ÍT NGƯỜI", Theme.Brand, function() 
 do
     local quickDock = Instance.new("Frame", gui)
     quickDock.Name = "QuickShortcutsDock"
-    quickDock.Size = UDim2.new(0, 174, 0, 28)
+    quickDock.Size = UDim2.new(0, 118, 0, 28)
     quickDock.Position = UDim2.new(0, 14, 0.05, 54)
     quickDock.BackgroundColor3 = Color3.fromRGB(16, 20, 32)
     quickDock.BackgroundTransparency = 0.12
@@ -2753,20 +2629,9 @@ do
 
     makeQuickShortcutBtn(1, "Fly", "Fly", nil)
     makeQuickShortcutBtn(2, "Noclip", "Noclip", nil)
-    makeQuickShortcutBtn(3, "AntiVoid", "AntiVoid", nil)
 
     createToggle(page4, "📌 Nút Bật/Tắt nhanh ngoài màn hình", "QuickShortcuts", function(v)
         quickDock.Visible = v
-    end)
-
-    createSlider(page4, "🪟 Độ trong suốt nền Menu (%)", 0, 65, "MenuTransparency", function(val)
-        frame.BackgroundTransparency = math.clamp(val / 100, 0, 0.65)
-    end)
-
-    createSlider(page4, "🔍 Cỡ hiển thị Menu (%)", 70, 130, "MenuScalePct", function(val)
-        if frameScale then
-            frameScale.Scale = math.clamp(val / 100, 0.70, 1.30)
-        end
     end)
 
     createDualButtons(
@@ -2807,16 +2672,6 @@ do
         end
     )
 end
-
-createButton(page4, "🔄 KHÔI PHỤC CÀI ĐẶT MẶC ĐỊNH", Theme.AccentOff, function()
-    for k, v in pairs(DefaultStateSnapshot) do
-        State[k] = v
-        fireSync(k, v, false)
-    end
-    if refreshThemeVisuals then refreshThemeVisuals() end
-    pcall(function() if isfile and isfile(configFileName) and delfile then delfile(configFileName) end end)
-    MakeToast("🔄 Đã Khôi Phục", "Toàn bộ cài đặt đã trở về mặc định!", Theme.AccentOn)
-end)
 
 local function runExternalScript(label, url)
     task.spawn(function()
@@ -3366,8 +3221,8 @@ do
         return string.format("%02d:%02d", mins, remSec)
     end
 
-    -- 1. KHUNG TRÊN CÙNG (LayoutOrder = 1): NÚT NỐT NHẠC + PILL NHẬP ID + NÚT KIỂM TRA ID (🔍) + NÚT LƯU (💾) + LOGO LOADING/PUBLIC/PRIVATE
-    local musicIdBox, checkIdBtn, saveIdBtn, nowPlayingLabel, musicTimeLabel, seekFill, seekKnob
+    -- 1. KHUNG TRÊN CÙNG (LayoutOrder = 1): NÚT NỐT NHẠC + PILL NHẬP ID + NÚT XÓA NHANH ID (THÙNG RÁC 3 CHẾ ĐỘ) + NÚT LƯU (💾) + LOGO LOADING/PUBLIC/PRIVATE
+    local musicIdBox, clearIdBtn, playTrashClearAnim, saveIdBtn, nowPlayingLabel, musicTimeLabel, seekFill, seekKnob
     local topStatusBtn, setTopStatusMode
     local seekDragInput = nil
     local noteBadge
@@ -3384,21 +3239,199 @@ do
         noteBadge, noteHolder = createGlossyCircleBtn(topMusicCard, 25, UDim2.new(0, 6, 0, 4))
         drawGlossyIcon(noteHolder, "MusicNote", 0.78)
 
-        -- Mở chỗ cho nút Kiểm tra ID (🔍) + nút Lưu (💾) ở bên phải thanh nhập ID
+        -- Mở chỗ cho nút Xóa ID nhanh (Thùng rác 3D 3 trạng thái) + nút Lưu (💾) ở bên phải thanh nhập ID
         local inputPillOuter, inputPillInner = createGlossyPillFrame(topMusicCard, UDim2.new(1, -96, 0, 25), UDim2.new(0, 34, 0, 4))
         musicIdBox = Instance.new("TextBox", inputPillInner)
         musicIdBox.Size = UDim2.new(1, -18, 1, 0); musicIdBox.Position = UDim2.new(0, 9, 0, 0)
-        musicIdBox.BackgroundTransparency = 1; musicIdBox.PlaceholderText = "Nhập ID Nhạc để phát hoặc kiểm tra..."
+        musicIdBox.BackgroundTransparency = 1; musicIdBox.PlaceholderText = "Nhập ID Nhạc để phát..."
         musicIdBox.PlaceholderColor3 = Color3.fromRGB(168, 184, 204); musicIdBox.Text = ""
         musicIdBox.TextColor3 = GlossPalette.IconWhite
         musicIdBox.Font = Enum.Font.GothamSemibold; musicIdBox.TextSize = 8.8
         musicIdBox.TextXAlignment = Enum.TextXAlignment.Left
         musicIdBox.ClearTextOnFocus = false; musicIdBox.ZIndex = 13
 
-        -- Nút Kiểm tra ID (🔍 Check ID) hiển thị hiệu ứng LOADING -> PUBLIC / PRIVATE
-        local checkHolder
-        checkIdBtn, checkHolder = createGlossyCircleBtn(topMusicCard, 25, UDim2.new(1, -59, 0, 4))
-        drawGlossyIcon(checkHolder, "SearchCheck", 0.78)
+        -- Nút Xóa ID Nhanh với Mô hình Thùng Rác 3D Cyber-Neon 3 Trạng Thái (Đóng -> Mở nắp tia sáng -> Nghiêng văng mảnh vỡ)
+        local clearHolder, clearRimStroke
+        clearIdBtn, clearHolder, clearRimStroke = createGlossyCircleBtn(topMusicCard, 25, UDim2.new(1, -59, 0, 4))
+        do
+            local canGroup = Instance.new("Frame", clearHolder)
+            canGroup.Size = UDim2.new(1, 0, 1, 0)
+            canGroup.AnchorPoint = Vector2.new(0.5, 0.5)
+            canGroup.Position = UDim2.new(0.5, 0, 0.5, 0)
+            canGroup.BackgroundTransparency = 1
+            canGroup.ZIndex = 15
+
+            -- Thân thùng rác (Cyan -> Blue -> Purple) + 3 khe dọc tối
+            local canBody = Instance.new("Frame", canGroup)
+            canBody.Size = UDim2.new(0, 9, 0, 8.5)
+            canBody.AnchorPoint = Vector2.new(0.5, 0.5)
+            canBody.Position = UDim2.new(0.5, 0, 0.5, 2.6)
+            canBody.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+            canBody.BorderSizePixel = 0
+            canBody.ZIndex = 15
+            Instance.new("UICorner", canBody).CornerRadius = UDim.new(0, 2)
+            applyNeonTriGrad(canBody, 135)
+            local cbStroke = Instance.new("UIStroke", canBody)
+            cbStroke.Color = NeonIconColors.DarkOutline; cbStroke.Thickness = 0.85
+
+            for _, xOff in ipairs({-2.5, 0, 2.5}) do
+                local slot = Instance.new("Frame", canBody)
+                slot.Size = UDim2.new(0, 1.3, 0, 5.2)
+                slot.AnchorPoint = Vector2.new(0.5, 0.5)
+                slot.Position = UDim2.new(0.5, xOff, 0.5, 0.2)
+                slot.BackgroundColor3 = Color3.fromRGB(14, 20, 56)
+                slot.BorderSizePixel = 0
+                slot.ZIndex = 16
+                Instance.new("UICorner", slot).CornerRadius = UDim.new(1, 0)
+            end
+
+            -- Miệng viền trên thân thùng
+            local canRim = Instance.new("Frame", canGroup)
+            canRim.Size = UDim2.new(0, 10.6, 0, 1.8)
+            canRim.AnchorPoint = Vector2.new(0.5, 0.5)
+            canRim.Position = UDim2.new(0.5, 0, 0.5, -2.0)
+            canRim.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+            canRim.BorderSizePixel = 0
+            canRim.ZIndex = 16
+            Instance.new("UICorner", canRim).CornerRadius = UDim.new(1, 0)
+            applyNeonTriGrad(canRim, 135)
+
+            -- Nhóm nắp thùng rác xoay quanh bản lề trái (Chế độ 1: đóng 0°, Chế độ 2: mở -34°, Chế độ 3: mở toang -56°)
+            local lidPivot = Instance.new("Frame", canGroup)
+            lidPivot.Size = UDim2.new(0, 11, 0, 4.4)
+            lidPivot.AnchorPoint = Vector2.new(0, 1)
+            lidPivot.Position = UDim2.new(0.5, -5.5, 0.5, -2.2)
+            lidPivot.BackgroundTransparency = 1
+            lidPivot.ZIndex = 17
+
+            local lidBar = Instance.new("Frame", lidPivot)
+            lidBar.Size = UDim2.new(1, 0, 0, 2.2)
+            lidBar.Position = UDim2.new(0, 0, 1, -2.2)
+            lidBar.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+            lidBar.BorderSizePixel = 0
+            lidBar.ZIndex = 17
+            Instance.new("UICorner", lidBar).CornerRadius = UDim.new(1, 0)
+            applyNeonTriGrad(lidBar, 135)
+            local lbStroke = Instance.new("UIStroke", lidBar)
+            lbStroke.Color = NeonIconColors.DarkOutline; lbStroke.Thickness = 0.75
+
+            local lidHandle = Instance.new("Frame", lidPivot)
+            lidHandle.Size = UDim2.new(0, 4.6, 0, 2.2)
+            lidHandle.AnchorPoint = Vector2.new(0.5, 1)
+            lidHandle.Position = UDim2.new(0.5, 0, 1, -1.8)
+            lidHandle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+            lidHandle.BorderSizePixel = 0
+            lidHandle.ZIndex = 16
+            Instance.new("UICorner", lidHandle).CornerRadius = UDim.new(0, 2)
+            applyNeonTriGrad(lidHandle, 90)
+            local lhHole = Instance.new("Frame", lidHandle)
+            lhHole.Size = UDim2.new(0, 2.2, 0, 1.0)
+            lhHole.AnchorPoint = Vector2.new(0.5, 1)
+            lhHole.Position = UDim2.new(0.5, 0, 1, -0.3)
+            lhHole.BackgroundColor3 = Color3.fromRGB(14, 20, 56)
+            lhHole.BorderSizePixel = 0
+            lhHole.ZIndex = 17
+            Instance.new("UICorner", lhHole).CornerRadius = UDim.new(1, 0)
+
+            -- Chế độ 2: 2 tia sáng neon bật ra bên phải khi mở nắp (theo mẫu 3)
+            local sparks = {}
+            for idx, spCfg in ipairs({
+                {x = 5.4, y = -5.6, rot = -38, w = 3.4, h = 1.6},
+                {x = 6.4, y = -3.4, rot = -12, w = 3.6, h = 1.5}
+            }) do
+                local sp = Instance.new("Frame", clearHolder)
+                sp.Size = UDim2.new(0, spCfg.w, 0, spCfg.h)
+                sp.AnchorPoint = Vector2.new(0.5, 0.5)
+                sp.Position = UDim2.new(0.5, spCfg.x, 0.5, spCfg.y)
+                sp.Rotation = spCfg.rot
+                sp.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+                sp.BorderSizePixel = 0
+                sp.Visible = false
+                sp.ZIndex = 18
+                Instance.new("UICorner", sp).CornerRadius = UDim.new(0, 1)
+                applyNeonTriGrad(sp, 90)
+                sparks[idx] = sp
+            end
+
+            -- Chế độ 3: 5 mảnh vuông/kim cương neon Cyan & Tím văng ra khi xóa (theo mẫu 2)
+            local burstBits = {}
+            local bitSpecs = {
+                {sx = -1.5, sy = -3.0, ex = -5.5, ey = -9.5, sz = 2.4, col = Color3.fromRGB(238, 120, 255)},
+                {sx = 0.5,  sy = -3.2, ex = 0.2,  ey = -10.5, sz = 2.6, col = Color3.fromRGB(115, 245, 255)},
+                {sx = 2.0,  sy = -3.0, ex = 5.8,  ey = -9.2, sz = 3.0, col = Color3.fromRGB(145, 220, 255)},
+                {sx = 3.0,  sy = -2.2, ex = 7.6,  ey = -5.4, sz = 2.2, col = Color3.fromRGB(220, 140, 255)},
+                {sx = -0.2, sy = -2.5, ex = -3.0, ey = -7.5, sz = 2.0, col = Color3.fromRGB(95, 225, 255)}
+            }
+            for idx, bs in ipairs(bitSpecs) do
+                local bit = Instance.new("Frame", clearHolder)
+                bit.Size = UDim2.new(0, bs.sz, 0, bs.sz)
+                bit.AnchorPoint = Vector2.new(0.5, 0.5)
+                bit.Position = UDim2.new(0.5, bs.sx, 0.5, bs.sy)
+                bit.Rotation = 45
+                bit.BackgroundColor3 = bs.col
+                bit.BorderSizePixel = 0
+                bit.Visible = false
+                bit.ZIndex = 19
+                Instance.new("UICorner", bit).CornerRadius = UDim.new(0, 1)
+                burstBits[idx] = {obj = bit, spec = bs}
+            end
+
+            local trashAnimTicket = 0
+            playTrashClearAnim = function()
+                trashAnimTicket = trashAnimTicket + 1
+                local myTicket = trashAnimTicket
+                task.spawn(function()
+                    -- Trạng thái 2: Mở nắp thùng + bật 2 tia sáng neon
+                    applyRimNeonGrad(clearRimStroke, true)
+                    TweenService:Create(lidPivot, TweenInfo.new(0.12, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+                        Rotation = -34,
+                        Position = UDim2.new(0.5, -6.0, 0.5, -3.0)
+                    }):Play()
+                    for _, sp in ipairs(sparks) do
+                        sp.Visible = true
+                        sp.BackgroundTransparency = 0
+                    end
+                    task.wait(0.14)
+                    if myTicket ~= trashAnimTicket then return end
+
+                    -- Trạng thái 3: Nghiêng thùng, mở toang nắp + văng các mảnh neon xóa ID
+                    for _, sp in ipairs(sparks) do sp.Visible = false end
+                    TweenService:Create(canGroup, TweenInfo.new(0.14, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                        Rotation = -11,
+                        Position = UDim2.new(0.5, 0, 0.5, 1)
+                    }):Play()
+                    TweenService:Create(lidPivot, TweenInfo.new(0.14, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                        Rotation = -56,
+                        Position = UDim2.new(0.5, -6.8, 0.5, -3.5)
+                    }):Play()
+                    for _, b in ipairs(burstBits) do
+                        b.obj.Position = UDim2.new(0.5, b.spec.sx, 0.5, b.spec.sy)
+                        b.obj.Rotation = 45
+                        b.obj.BackgroundTransparency = 0
+                        b.obj.Visible = true
+                        TweenService:Create(b.obj, TweenInfo.new(0.28, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                            Position = UDim2.new(0.5, b.spec.ex, 0.5, b.spec.ey),
+                            Rotation = 135,
+                            BackgroundTransparency = 1
+                        }):Play()
+                    end
+                    task.wait(0.30)
+                    if myTicket ~= trashAnimTicket then return end
+
+                    -- Trở về Trạng thái 1: Đóng nắp thùng gọn gàng
+                    for _, b in ipairs(burstBits) do b.obj.Visible = false end
+                    TweenService:Create(canGroup, TweenInfo.new(0.18, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+                        Rotation = 0,
+                        Position = UDim2.new(0.5, 0, 0.5, 0)
+                    }):Play()
+                    TweenService:Create(lidPivot, TweenInfo.new(0.18, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+                        Rotation = 0,
+                        Position = UDim2.new(0.5, -5.5, 0.5, -2.2)
+                    }):Play()
+                    applyRimNeonGrad(clearRimStroke, false)
+                end)
+            end
+        end
 
         local saveHolder
         saveIdBtn, saveHolder = createGlossyCircleBtn(topMusicCard, 25, UDim2.new(1, -31, 0, 4))
@@ -3416,7 +3449,7 @@ do
         nowPlayingLabel = Instance.new("TextLabel", topMusicCard)
         nowPlayingLabel.Size = UDim2.new(1, -96, 0, 14); nowPlayingLabel.Position = UDim2.new(0, 10, 0, 30)
         nowPlayingLabel.BackgroundTransparency = 1; nowPlayingLabel.RichText = true
-        nowPlayingLabel.Text = "<font color='#9AA4B8'>🎵 Chưa có nhạc phát (Bấm 🔍 để kiểm tra ID)</font>"
+        nowPlayingLabel.Text = "<font color='#9AA4B8'>🎵 Dán ID để tự phát • Bấm 🗑️ để xóa nhanh</font>"
         nowPlayingLabel.Font = Enum.Font.GothamSemibold; nowPlayingLabel.TextSize = 8.5
         nowPlayingLabel.TextXAlignment = Enum.TextXAlignment.Left
         nowPlayingLabel.TextTruncate = Enum.TextTruncate.AtEnd; nowPlayingLabel.ZIndex = 11
@@ -3594,9 +3627,24 @@ do
         end)
     end
 
-    checkIdBtn.MouseButton1Click:Connect(function()
-        clickAnimate(checkIdBtn)
-        checkInputIdStatus()
+    local setMusicIdBoxProgrammatically
+    clearIdBtn.MouseButton1Click:Connect(function()
+        clickAnimate(clearIdBtn)
+        if playTrashClearAnim then playTrashClearAnim() end
+        local hadText = tostring(musicIdBox.Text or "") ~= ""
+        if setMusicIdBoxProgrammatically then
+            setMusicIdBoxProgrammatically("")
+        else
+            musicIdBox.Text = ""
+        end
+        if hadText then
+            MakeToast("🗑️ Đã Xóa Nhanh ID", "Đã dọn sạch ô nhập ID nhạc!", Theme.AccentOn)
+        else
+            MakeToast("🗑️ Ô ID Đang Trống", "Sẵn sàng nhập hoặc dán ID nhạc mới!", Theme.Brand)
+        end
+        task.delay(0.06, function()
+            pcall(function() musicIdBox:CaptureFocus() end)
+        end)
     end)
 
     topStatusBtn.MouseButton1Click:Connect(function()
@@ -3712,24 +3760,40 @@ do
             MakeToast("Kho nhạc trống", "Hãy lưu ít nhất 1 bài nhạc vào danh sách!", Theme.AccentOff)
             return
         end
+        -- Ưu tiên chuyển trong các bài Public/chưa bị khóa (nếu có); nếu tất cả đều Private thì dùng toàn bộ
+        local pool = {}
+        for _, v in ipairs(savedMusicList) do
+            if v.status ~= "private" then table.insert(pool, v) end
+        end
+        if #pool == 0 then pool = savedMusicList end
+
         local curIdx = 0
-        for i, v in ipairs(savedMusicList) do
+        for i, v in ipairs(pool) do
             if tostring(v.id) == tostring(currentMusicId) then curIdx = i; break end
         end
         local nextIdx
-        if State.MusicShuffle and #savedMusicList > 1 then
+        if State.MusicShuffle and #pool > 1 then
             repeat
-                nextIdx = math.random(1, #savedMusicList)
+                nextIdx = math.random(1, #pool)
             until nextIdx ~= curIdx
         else
-            nextIdx = curIdx + dir
-            if nextIdx > #savedMusicList then nextIdx = 1 end
-            if nextIdx < 1 then nextIdx = #savedMusicList end
+            if curIdx == 0 then
+                nextIdx = (dir < 0) and #pool or 1
+            else
+                nextIdx = curIdx + dir
+                if nextIdx > #pool then nextIdx = 1 end
+                if nextIdx < 1 then nextIdx = #pool end
+            end
         end
-        local chosen = savedMusicList[nextIdx]
+        local chosen = pool[nextIdx]
         if chosen then
-            setMusicIdBoxProgrammatically(chosen.id)
+            if setMusicIdBoxProgrammatically then
+                setMusicIdBoxProgrammatically(chosen.id)
+            else
+                musicIdBox.Text = tostring(chosen.id or "")
+            end
             playMusic(chosen.id)
+            MakeToast(dir < 0 and "⏮ Lùi Bài" or "⏭ Qua Bài", tostring(chosen.name or chosen.id), Theme.Brand)
         end
     end
 
@@ -3749,7 +3813,7 @@ do
     local suppressAutoPlayOnTextChange = false
     local lastObservedInputText = ""
 
-    local function setMusicIdBoxProgrammatically(txt)
+    setMusicIdBoxProgrammatically = function(txt)
         suppressAutoPlayOnTextChange = true
         lastObservedInputText = tostring(txt or "")
         musicIdBox.Text = lastObservedInputText
@@ -4252,8 +4316,9 @@ do
         Instance.new("UICorner", volTrack).CornerRadius = UDim.new(1, 0)
 
         local function getVolFillRatio(val)
-            if val <= 0 then return 0 end
-            return math.clamp(val / 10, 0.1, 1)
+            local v = tonumber(val) or 0
+            if v <= 0 then return 0 end
+            return math.clamp(v / 10, 0, 1)
         end
 
         local initVolPos = getVolFillRatio(State.MusicVolume)
@@ -4300,7 +4365,7 @@ do
         local volDragInput = nil
         local function updateVolSlider(input)
             local pos = math.clamp((input.Position.X - volTrack.AbsolutePosition.X) / math.max(1, volTrack.AbsoluteSize.X), 0, 1)
-            local value = math.clamp(math.floor(1 + pos * 9 + 0.5), 1, 10)
+            local value = math.clamp(math.floor(pos * 10 + 0.5), 0, 10)
             applyVolValue(value)
         end
         volPillOuter.InputBegan:Connect(function(input)
@@ -4362,14 +4427,14 @@ do
         mlHeader.MouseButton1Click:Connect(function() clickAnimate(mlHeader); recheckAllSavedIds() end)
 
         local filterBar = Instance.new("Frame", musicListCard)
-        filterBar.Size = UDim2.new(0, 184, 0, 18); filterBar.Position = UDim2.new(1, -188, 0, 4)
+        filterBar.Size = UDim2.new(0, 212, 0, 18); filterBar.Position = UDim2.new(1, -216, 0, 4)
         filterBar.BackgroundTransparency = 1; filterBar.ZIndex = 11
 
         local function makeMusicFilterBtn(xPos, width, txt)
             local b = Instance.new("TextButton", filterBar)
             b.Size = UDim2.new(0, width, 1, 0); b.Position = UDim2.new(0, xPos, 0, 0)
             b.BackgroundColor3 = Color3.fromRGB(14, 16, 23); b.Text = txt
-            b.TextColor3 = Color3.fromRGB(132, 142, 162); b.Font = Enum.Font.GothamMedium; b.TextSize = 7.8
+            b.TextColor3 = Color3.fromRGB(132, 142, 162); b.Font = Enum.Font.GothamMedium; b.TextSize = 7.4
             b.TextStrokeColor3 = Color3.fromRGB(8, 10, 16); b.TextStrokeTransparency = 0.45
             b.AutoButtonColor = false; b.ZIndex = 12
             Instance.new("UICorner", b).CornerRadius = UDim.new(0, 6)
@@ -4377,9 +4442,14 @@ do
             return b, st
         end
 
-        local fBtnAll, fStAll = makeMusicFilterBtn(0, 56, "Tất cả")
-        local fBtnPub, fStPub = makeMusicFilterBtn(60, 60, "Public")
-        local fBtnPriv, fStPriv = makeMusicFilterBtn(124, 60, "Private")
+        local fBtnAll, fStAll = makeMusicFilterBtn(0, 52, "Tất cả")
+        local fBtnPub, fStPub = makeMusicFilterBtn(55, 55, "Public")
+        local fBtnPriv, fStPriv = makeMusicFilterBtn(113, 55, "Private")
+        local fBtnClean, fStClean = makeMusicFilterBtn(171, 41, "Lọc ID")
+        fBtnClean.BackgroundColor3 = Color3.fromRGB(18, 34, 42)
+        fBtnClean.TextColor3 = Color3.fromRGB(132, 206, 182)
+        fStClean.Color = Color3.fromRGB(62, 152, 134)
+        fStClean.Transparency = 0.25
 
         local function syncMusicFilterTabs()
             local pubCount, privCount = 0, 0
@@ -4443,6 +4513,61 @@ do
         local fileName = "MenuVipProMax_SavedMusic.json"
         pcall(function() if isfile and isfile(fileName) then local decoded = HttpService:JSONDecode(readfile(fileName)); if type(decoded) == "table" then savedMusicList = decoded end end end)
         saveMusicData = function() pcall(function() if writefile then writefile(fileName, HttpService:JSONEncode(savedMusicList)) end end) end
+
+        -- Cơ chế tự lọc & dọn trùng ID âm thanh đã lưu (Chuẩn hóa ID, xóa trùng, xóa ID lỗi/Private & sắp xếp Public lên đầu)
+        local function normalizeSavedAudioId(raw)
+            local s = tostring(raw or ""):gsub("^%s*(.-)%s*$", "%1")
+            if s == "" then return nil end
+            if s:lower():match("^https?://") then return s end
+            return s:match("%d+")
+        end
+
+        local function autoFilterSavedMusicList(removePrivate)
+            local seen = {}
+            local cleaned = {}
+            local removedDupes = 0
+            local removedInvalid = 0
+            local removedPriv = 0
+
+            for _, item in ipairs(savedMusicList) do
+                if type(item) == "table" then
+                    local normId = normalizeSavedAudioId(item.id)
+                    if not normId or normId == "" then
+                        removedInvalid = removedInvalid + 1
+                    elseif removePrivate and item.status == "private" then
+                        removedPriv = removedPriv + 1
+                    elseif seen[normId] then
+                        removedDupes = removedDupes + 1
+                        local prev = seen[normId]
+                        if prev.status ~= "public" and item.status == "public" then
+                            prev.status = "public"
+                        end
+                    else
+                        item.id = normId
+                        if not item.name or tostring(item.name) == "" then item.name = "ID " .. normId end
+                        if not item.status then item.status = "checking" end
+                        seen[normId] = item
+                        table.insert(cleaned, item)
+                    end
+                else
+                    removedInvalid = removedInvalid + 1
+                end
+            end
+
+            local rank = {public = 1, checking = 2, private = 3}
+            table.sort(cleaned, function(a, b)
+                return (rank[a.status] or 2) < (rank[b.status] or 2)
+            end)
+
+            savedMusicList = cleaned
+            if removedDupes > 0 or removedInvalid > 0 or removedPriv > 0 then
+                saveMusicData()
+            end
+            return removedDupes, removedInvalid, removedPriv
+        end
+
+        -- Tự động lọc trùng & chuẩn hóa danh sách ngay khi mở script
+        autoFilterSavedMusicList(false)
 
         renderSavedMusic = function()
             for _, child in pairs(savedMusicContent:GetChildren()) do if child:IsA("Frame") then child:Destroy() end end
@@ -4518,16 +4643,78 @@ do
         fBtnPub.MouseButton1Click:Connect(function() clickAnimate(fBtnPub); currentMusicFilter = "public"; renderSavedMusic() end)
         fBtnPriv.MouseButton1Click:Connect(function() clickAnimate(fBtnPriv); currentMusicFilter = "private"; renderSavedMusic() end)
 
+        local isAutoFilteringMusic = false
+        fBtnClean.MouseButton1Click:Connect(function()
+            clickAnimate(fBtnClean)
+            if isAutoFilteringMusic then
+                MakeToast("⏳ Đang Lọc Kho Nhạc", "Vui lòng chờ quá trình lọc hoàn tất!", Theme.Brand)
+                return
+            end
+            if #savedMusicList == 0 then
+                MakeToast("Kho nhạc trống", "Chưa có ID nào để tự lọc!", Theme.AccentOff)
+                return
+            end
+            isAutoFilteringMusic = true
+            fBtnClean.Text = "Đang lọc"
+            MakeToast("🧹 Tự Lọc Kho Nhạc", "Đang kiểm tra, xóa ID trùng và loại bỏ ID lỗi/Private...", Theme.Brand)
+            task.spawn(function()
+                local d1, inv1 = autoFilterSavedMusicList(false)
+                renderSavedMusic()
+                for _, item in ipairs(savedMusicList) do
+                    if not ScriptActive then break end
+                    local isUrl = tostring(item.id):lower():match("^https?://") ~= nil
+                    if not isUrl then
+                        item.status = "checking"
+                        renderSavedMusic()
+                        local probe = Instance.new("Sound")
+                        probe.Name = "MenuVipFilterProbe_" .. tostring(item.id)
+                        probe.SoundId = "rbxassetid://" .. tostring(item.id)
+                        probe.Volume = 0
+                        probe.Parent = SoundService
+                        local elapsed = 0
+                        while ScriptActive and elapsed < 2.4 do
+                            if probe.IsLoaded and probe.TimeLength > 0 then break end
+                            task.wait(0.2)
+                            elapsed = elapsed + 0.2
+                        end
+                        local isPublic = (probe.IsLoaded and probe.TimeLength > 0)
+                        pcall(function() probe:Destroy() end)
+                        item.status = isPublic and "public" or "private"
+                    else
+                        item.status = "public"
+                    end
+                end
+                local d2, inv2, privRem = autoFilterSavedMusicList(true)
+                saveMusicData()
+                renderSavedMusic()
+                fBtnClean.Text = "Lọc ID"
+                isAutoFilteringMusic = false
+                local totalDup = d1 + d2 + inv1 + inv2
+                if totalDup > 0 or privRem > 0 then
+                    MakeToast("🧹 Đã Tự Lọc Xong", string.format("Đã xóa %d ID trùng/lỗi & %d ID Private! Còn %d bài Public.", totalDup, privRem, #savedMusicList), Theme.AccentOn)
+                else
+                    MakeToast("✅ Kho Nhạc Sạch", "Tất cả " .. tostring(#savedMusicList) .. " bài đều Public & không trùng lặp!", Theme.AccentOn)
+                end
+            end)
+        end)
+
         saveIdBtn.MouseButton1Click:Connect(function()
             clickAnimate(saveIdBtn)
             local rawTxt = tostring(musicIdBox.Text):gsub("^%s*(.-)%s*$", "%1")
             local isUrlMp3 = rawTxt:lower():match("^https?://") ~= nil
             local rawId = isUrlMp3 and rawTxt or rawTxt:match("%d+")
             if rawId and rawId ~= "" then
+                for _, existing in ipairs(savedMusicList) do
+                    if tostring(existing.id) == tostring(rawId) then
+                        MakeToast("⚠️ ID Đã Có Sẵn", "Bài '" .. tostring(existing.name or rawId) .. "' đã có trong Kho Nhạc (tự chặn trùng)!", Theme.Brand)
+                        return
+                    end
+                end
                 task.spawn(function()
                     local name = isUrlMp3 and (rawTxt:match("([^/]+%.mp3)") or "Nhạc MP3 Trực Tuyến") or getSongName(rawId)
                     local newSong = {id = rawId, name = name, status = isUrlMp3 and "public" or "checking"}
                     table.insert(savedMusicList, newSong)
+                    autoFilterSavedMusicList(false)
                     saveMusicData(); renderSavedMusic()
                     MakeToast("Đã lưu & Đang kiểm tra", "Đang kiểm tra LOADING cho: " .. name, Theme.Brand)
                     if not isUrlMp3 then probeSongStatus(newSong) end
@@ -4769,35 +4956,62 @@ do
     local playerCardRefs = {}
     local manualApproachActive = false
     local manualApproachTicket = 0
+    local usedWalkMoveTo = false
+    local tpOrigCollide = {}
     local updateTpActionButtonsUI
+
+    local function disableCharCollisionForTp(myChar)
+        if not myChar then return end
+        for _, part in ipairs(myChar:GetDescendants()) do
+            if part:IsA("BasePart") and part.CanCollide then
+                if tpOrigCollide[part] == nil then
+                    tpOrigCollide[part] = true
+                end
+                part.CanCollide = false
+            end
+        end
+    end
 
     local function restoreNormalPosture()
         local myChar = player.Character
-        if not myChar then return end
+        if not myChar then
+            wasHorizontalTp = false
+            usedWalkMoveTo = false
+            tpOrigCollide = {}
+            return
+        end
         local myRoot = getUniversalRoot(myChar)
         local myHum = myChar:FindFirstChildOfClass("Humanoid")
         if myHum then
             if not State.Fly then myHum.PlatformStand = false end
             if not State.LookAtTarget then myHum.AutoRotate = true end
-            if myRoot then pcall(function() myHum:MoveTo(myRoot.Position) end) end
+            if usedWalkMoveTo and myRoot then
+                pcall(function() myHum:MoveTo(myRoot.Position) end)
+            end
         end
+        usedWalkMoveTo = false
         if myRoot then
             myRoot.AssemblyLinearVelocity = Vector3.zero
             myRoot.AssemblyAngularVelocity = Vector3.zero
-            local pos = myRoot.Position
-            local look = myRoot.CFrame.LookVector
-            local flatLook = Vector3.new(look.X, 0, look.Z)
-            if flatLook.Magnitude > 0.001 then
-                myRoot.CFrame = CFrame.lookAt(pos, pos + flatLook.Unit)
-            else
-                myRoot.CFrame = CFrame.new(pos)
+            if wasHorizontalTp then
+                local pos = myRoot.Position
+                local look = myRoot.CFrame.LookVector
+                local flatLook = Vector3.new(look.X, 0, look.Z)
+                if flatLook.Magnitude > 0.001 then
+                    myRoot.CFrame = CFrame.lookAt(pos, pos + flatLook.Unit)
+                else
+                    myRoot.CFrame = CFrame.new(pos)
+                end
             end
         end
         if not State.Noclip then
-            for _, part in ipairs(myChar:GetDescendants()) do
-                if part:IsA("BasePart") then part.CanCollide = true end
+            for part, orig in pairs(tpOrigCollide) do
+                if part and part.Parent and part:IsA("BasePart") then
+                    part.CanCollide = orig
+                end
             end
         end
+        tpOrigCollide = {}
         wasHorizontalTp = false
     end
 
@@ -4864,9 +5078,7 @@ do
             if posMode.IsHorizontal and autoTpPlayerEnabled then
                 if myHum then myHum.PlatformStand = true end
                 wasHorizontalTp = true
-                for _, part in ipairs(myChar:GetDescendants()) do
-                    if part:IsA("BasePart") and part.CanCollide then part.CanCollide = false end
-                end
+                disableCharCollisionForTp(myChar)
             elseif wasHorizontalTp then
                 restoreNormalPosture()
             end
@@ -4879,9 +5091,7 @@ do
 
         elseif methodIdx == 2 then
             -- KIỂU 2: 🕊️ BAY ĐẾN (Bay lướt mượt mà xuyên vật cản tới mục tiêu)
-            for _, part in ipairs(myChar:GetDescendants()) do
-                if part:IsA("BasePart") and part.CanCollide then part.CanCollide = false end
-            end
+            disableCharCollisionForTp(myChar)
             wasHorizontalTp = true
             myRoot.AssemblyLinearVelocity = Vector3.zero
             myRoot.AssemblyAngularVelocity = Vector3.zero
@@ -4913,6 +5123,7 @@ do
                 if distToDest > 2.8 then
                     if tick() - lastWalkMoveTick > 0.12 then
                         lastWalkMoveTick = tick()
+                        usedWalkMoveTo = true
                         myHum:MoveTo(destPos)
                     end
                     -- Tự động nhảy nếu phía trước có vật cản hoặc mục tiêu ở vị trí cao hơn
@@ -4952,11 +5163,13 @@ do
                 local myRoot = getUniversalRoot(myChar)
                 local tCF = getCharacterCFrame(resolveTargetCharacter(targetTpPlayer))
                 if myRoot and tCF and (myRoot.Position - tCF.Position).Magnitude > 500 then
+                    local myTpTicket = manualApproachTicket
                     task.spawn(function()
-                        for _ = 1, 6 do
-                            task.wait(0.1)
+                        for _ = 1, 4 do
+                            task.wait(0.12)
+                            if manualApproachTicket ~= myTpTicket or not ScriptActive then break end
                             if not resolveTargetCharacter(targetTpPlayer) then break end
-                            stepApproachToTarget(0.1, true)
+                            stepApproachToTarget(0.12, true)
                         end
                     end)
                 end
@@ -5417,6 +5630,7 @@ do
         if autoTpPlayerEnabled then
             MakeToast("Đã Bật " .. mInfo.BtnAuto, "Đang " .. string.lower(mInfo.Name) .. " bám theo " .. (select(1, getTargetInfoText(targetTpPlayer))), Theme.AccentOn)
         else
+            manualApproachTicket = manualApproachTicket + 1
             restoreNormalPosture()
             MakeToast("Đã Tắt " .. mInfo.BtnAuto, "Đã dừng bám theo mục tiêu", Theme.AccentOff)
         end
@@ -7498,7 +7712,7 @@ do
         local s = execTime % 60
 
         sysBody.Text = string.format(
-            "<font color='#78B4DC'>• Executor:</font> <font color='#38CC88'>%s</font>   |   <font color='#78B4DC'>Phiên bản:</font> <font color='#E09F67'>V1.31.0</font>\n" ..
+            "<font color='#78B4DC'>• Executor:</font> <font color='#38CC88'>%s</font>   |   <font color='#78B4DC'>Phiên bản:</font> <font color='#E09F67'>V1.34.0</font>\n" ..
             "<font color='#78B4DC'>• Treo máy:</font> %02d:%02d:%02d   |   <font color='#78B4DC'>Giờ hệ thống:</font> %s",
             execName, h, m, s, os.date("%H:%M:%S")
         )
@@ -7512,7 +7726,7 @@ do
     end)
 end
 -- ==========================================
--- [HỆ THỐNG AUTO CLICK, AUTO COLLECT, MAGNET & MINI HUD]
+-- [HỆ THỐNG AUTO CLICK & AUTO COLLECT]
 -- ==========================================
 do
 task.spawn(function()
@@ -7522,24 +7736,6 @@ task.spawn(function()
                 local tool = player.Character:FindFirstChildOfClass("Tool")
                 if tool then tool:Activate() end
             end)
-        end
-    end
-end)
-
-task.spawn(function()
-    while ScriptActive and task.wait(0.6) do
-        if State.MiniHUD and miniHudFrame.Visible then
-            local pingNum = 0
-            pcall(function()
-                if Stats and Stats:FindFirstChild("Network") and Stats.Network:FindFirstChild("ServerStatsItem") then
-                    local raw = Stats.Network.ServerStatsItem["Data Ping"]:GetValueString()
-                    pingNum = tonumber(raw and raw:match("%d+")) or math.floor(player:GetNetworkPing() * 1000)
-                else
-                    pingNum = math.floor(player:GetNetworkPing() * 1000)
-                end
-            end)
-            local fCol = fps >= 45 and "#38CC88" or (fps >= 25 and "#E5B85B" or "#E05666")
-            hudLabel.Text = string.format("⚡ <font color='%s'>%d FPS</font> | 🌐 <font color='#58B6F2'>%d ms</font>", fCol, fps, pingNum)
         end
     end
 end)
@@ -7609,42 +7805,6 @@ task.spawn(function()
                 end
             end
         end)
-    end
-end)
-
-local magnetKeywords = {"coin", "gem", "orb", "diamond", "cash", "money", "yen", "token", "drop", "star", "crystal", "gold", "silver", "emerald"}
-local function isMagnetItem(part)
-    if not part:IsA("BasePart") or (part.Anchored and part.Size.Magnitude > 8) then return false end
-    local name = string.lower(part.Name)
-    local pName = part.Parent and string.lower(part.Parent.Name) or ""
-    for _, kw in ipairs(magnetKeywords) do
-        if string.find(name, kw, 1, true) or string.find(pName, kw, 1, true) then return true end
-    end
-    return false
-end
-
-task.spawn(function()
-    while ScriptActive and task.wait(0.35) do
-        if State.MagnetOrbs and player.Character then
-            pcall(function()
-                local root = getUniversalRoot(player.Character)
-                if not root then return end
-                local overlap = OverlapParams.new()
-                overlap.FilterDescendantsInstances = {player.Character}
-                overlap.FilterType = Enum.RaycastFilterType.Exclude
-                local nearby = workspace:GetPartBoundsInRadius(root.Position, 85, overlap)
-                for _, part in ipairs(nearby) do
-                    if isMagnetItem(part) then
-                        part.CanCollide = false
-                        if firetouchinterest then
-                            firetouchinterest(root, part, 0)
-                            firetouchinterest(root, part, 1)
-                        end
-                        part.CFrame = root.CFrame
-                    end
-                end
-            end)
-        end
     end
 end)
 
@@ -7880,11 +8040,15 @@ trackConn(RunService.Heartbeat:Connect(function()
     if hum and root then
         if State.LockPosition then root.Anchored = true end
         if State.AntiSit and hum.Sit then hum.Sit = false end
+        local lookAtApplied = false
         if State.LookAtTarget and targetTpPlayer and not State.Fly and not State.SpinBot then
-            local tCF = getCharacterCFrame(resolveTargetCharacter(targetTpPlayer))
-            if tCF then
+            local tCharL = resolveTargetCharacter(targetTpPlayer)
+            local tHumL = tCharL and tCharL:FindFirstChildOfClass("Humanoid")
+            local tCF = tCharL and getCharacterCFrame(tCharL)
+            if tCF and (not tHumL or tHumL.Health > 0) then
                 local flatTarget = Vector3.new(tCF.Position.X, root.Position.Y, tCF.Position.Z)
-                if (flatTarget - root.Position).Magnitude > 0.3 then
+                if (flatTarget - root.Position).Magnitude > 0.5 then
+                    lookAtApplied = true
                     hum.AutoRotate = false
                     local lAtt = root:FindFirstChild("LookAtAttachment")
                     if not lAtt then
@@ -7896,12 +8060,13 @@ trackConn(RunService.Heartbeat:Connect(function()
                         lAo = Instance.new("AlignOrientation")
                         lAo.Name = "LookAtAlignOri"; lAo.Attachment0 = lAtt
                         lAo.Mode = Enum.OrientationAlignmentMode.OneAttachment
-                        lAo.MaxTorque = 100000; lAo.Responsiveness = 45; lAo.Parent = root
+                        lAo.MaxTorque = 45000; lAo.Responsiveness = 32; lAo.Parent = root
                     end
                     lAo.CFrame = CFrame.lookAt(root.Position, flatTarget)
                 end
             end
-        else
+        end
+        if not lookAtApplied then
             if root:FindFirstChild("LookAtAlignOri") then root.LookAtAlignOri:Destroy() end
             if root:FindFirstChild("LookAtAttachment") then root.LookAtAttachment:Destroy() end
             if not State.Fly and not hum.AutoRotate then hum.AutoRotate = true end
@@ -7980,8 +8145,8 @@ trackConn(RunService.Heartbeat:Connect(function()
             if root:FindFirstChild("FlyLinearVel") then root.FlyLinearVel:Destroy() end
             if root:FindFirstChild("FlyAlignOri") then root.FlyAlignOri:Destroy() end
             if root:FindFirstChild("FlyAttachment") then root.FlyAttachment:Destroy() end
-            if not State.AntiStun and not (autoTpPlayerEnabled and wasHorizontalTp) then
-                hum.PlatformStand = false
+            if not (autoTpPlayerEnabled and wasHorizontalTp) then
+                if hum.PlatformStand then hum.PlatformStand = false end
             end
         end
 
