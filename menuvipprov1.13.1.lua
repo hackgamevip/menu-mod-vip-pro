@@ -1,5 +1,5 @@
 -- ==========================================
--- MENU VIP PRO MAX V1.30.0 (LUXURY CYBER-GLASS & BENTO SIDEBAR EDITION)
+-- MENU VIP PRO MAX V1.31.0 (LUXURY CYBER-GLASS & BENTO SIDEBAR EDITION)
 -- ==========================================
 repeat task.wait() until game:IsLoaded()
 
@@ -625,10 +625,10 @@ do
     headerStatText.RichText = true; headerStatText.Text = "<font color='#38CC88'>60 FPS</font> • <font color='#58B6F2'>0ms</font>"
     headerStatText.TextColor3 = Theme.TextTitle; headerStatText.Font = Enum.Font.GothamBold; headerStatText.TextSize = 9; headerStatText.ZIndex = 13
 
-    -- Huy hiệu V1.30 nền tối sâu, chữ sáng rõ nét trên Mobile
+    -- Huy hiệu V1.31 nền tối sâu, chữ sáng rõ nét trên Mobile
     local verBadge = Instance.new("TextLabel", header)
     verBadge.Size = UDim2.new(0, 46, 0, 21); verBadge.Position = UDim2.new(1, -110, 0.5, -10.5)
-    verBadge.BackgroundColor3 = Color3.fromRGB(18, 22, 36); verBadge.Text = "V1.30"; verBadge.TextColor3 = getSoftBrandColor(Theme.Brand)
+    verBadge.BackgroundColor3 = Color3.fromRGB(18, 22, 36); verBadge.Text = "V1.31"; verBadge.TextColor3 = getSoftBrandColor(Theme.Brand)
     verBadge.Font = Enum.Font.GothamBold; verBadge.TextSize = 9.5; verBadge.ZIndex = 12
     Instance.new("UICorner", verBadge).CornerRadius = UDim.new(0, 7)
     local verStroke = Instance.new("UIStroke", verBadge); verStroke.Color = Theme.Brand; verStroke.Thickness = 1.0; verStroke.Transparency = 0.25
@@ -1248,7 +1248,7 @@ do
     minBtn.MouseButton1Click:Connect(function() clickAnimate(minBtn); toggleMenuWindow() end)
 end
 -- ==========================================
--- COMPONENTS HỆ THỐNG 3D CYBER-GLASS NEON V1.30
+-- COMPONENTS HỆ THỐNG 3D CYBER-GLASS NEON V1.31
 -- ==========================================
 local function splitLeadingIcon(rawText)
     local str = tostring(rawText or "")
@@ -4776,7 +4776,11 @@ do
         if not myChar then return end
         local myRoot = getUniversalRoot(myChar)
         local myHum = myChar:FindFirstChildOfClass("Humanoid")
-        if myHum and not State.Fly then myHum.PlatformStand = false end
+        if myHum then
+            if not State.Fly then myHum.PlatformStand = false end
+            if not State.LookAtTarget then myHum.AutoRotate = true end
+            if myRoot then pcall(function() myHum:MoveTo(myRoot.Position) end) end
+        end
         if myRoot then
             myRoot.AssemblyLinearVelocity = Vector3.zero
             myRoot.AssemblyAngularVelocity = Vector3.zero
@@ -7494,7 +7498,7 @@ do
         local s = execTime % 60
 
         sysBody.Text = string.format(
-            "<font color='#78B4DC'>• Executor:</font> <font color='#38CC88'>%s</font>   |   <font color='#78B4DC'>Phiên bản:</font> <font color='#E09F67'>V1.30.0</font>\n" ..
+            "<font color='#78B4DC'>• Executor:</font> <font color='#38CC88'>%s</font>   |   <font color='#78B4DC'>Phiên bản:</font> <font color='#E09F67'>V1.31.0</font>\n" ..
             "<font color='#78B4DC'>• Treo máy:</font> %02d:%02d:%02d   |   <font color='#78B4DC'>Giờ hệ thống:</font> %s",
             execName, h, m, s, os.date("%H:%M:%S")
         )
@@ -7880,10 +7884,27 @@ trackConn(RunService.Heartbeat:Connect(function()
             local tCF = getCharacterCFrame(resolveTargetCharacter(targetTpPlayer))
             if tCF then
                 local flatTarget = Vector3.new(tCF.Position.X, root.Position.Y, tCF.Position.Z)
-                if (flatTarget - root.Position).Magnitude > 0.2 then
-                    root.CFrame = CFrame.lookAt(root.Position, flatTarget)
+                if (flatTarget - root.Position).Magnitude > 0.3 then
+                    hum.AutoRotate = false
+                    local lAtt = root:FindFirstChild("LookAtAttachment")
+                    if not lAtt then
+                        lAtt = Instance.new("Attachment")
+                        lAtt.Name = "LookAtAttachment"; lAtt.Parent = root
+                    end
+                    local lAo = root:FindFirstChild("LookAtAlignOri")
+                    if not lAo then
+                        lAo = Instance.new("AlignOrientation")
+                        lAo.Name = "LookAtAlignOri"; lAo.Attachment0 = lAtt
+                        lAo.Mode = Enum.OrientationAlignmentMode.OneAttachment
+                        lAo.MaxTorque = 100000; lAo.Responsiveness = 45; lAo.Parent = root
+                    end
+                    lAo.CFrame = CFrame.lookAt(root.Position, flatTarget)
                 end
             end
+        else
+            if root:FindFirstChild("LookAtAlignOri") then root.LookAtAlignOri:Destroy() end
+            if root:FindFirstChild("LookAtAttachment") then root.LookAtAttachment:Destroy() end
+            if not State.Fly and not hum.AutoRotate then hum.AutoRotate = true end
         end
         if State.Jump then hum.UseJumpPower = true; hum.JumpPower = State.JumpValue end
 
@@ -8024,7 +8045,7 @@ pcall(function()
                     local char = player.Character
                     local root = char and getUniversalRoot(char)
                     if root then
-                        for _, n in ipairs({"FlyLinearVel", "FlyAlignOri", "FlyAttachment", "FlyBodyVelocity", "FlyBodyGyro"}) do
+                        for _, n in ipairs({"FlyLinearVel", "FlyAlignOri", "FlyAttachment", "FlyBodyVelocity", "FlyBodyGyro", "LookAtAlignOri", "LookAtAttachment"}) do
                             local f = root:FindFirstChild(n); if f then f:Destroy() end
                         end
                     end
