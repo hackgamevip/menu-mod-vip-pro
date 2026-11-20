@@ -1,5 +1,5 @@
 -- ============================================================================
--- MENU VIP PRO MAX V1.39.0 (LUXURY CYBER-GLASS & BENTO SIDEBAR EDITION)
+-- MENU VIP PRO MAX V1.41.0 (LUXURY CYBER-GLASS & BENTO SIDEBAR EDITION)
 -- ============================================================================
 -- MỤC LỤC CẤU TRÚC CODE:
 --   [PHẦN 01] Khởi tạo Services & Người chơi
@@ -16,6 +16,8 @@
 --   [PHẦN 12] Tab 8 - Auto Skill (Bàn phím cơ 3D 4 cột, Combo/Burst, Hold chiêu)
 --   [PHẦN 13] Tab 9 - Cấu hình & Giảm Lag (3 Preset, FPS Cap, Đồ họa, Culling)
 --   [PHẦN 14] Tab 1 - Dashboard Bento & Quản lý Server
+--   [PHẦN 14B] Tab 10 - Tab Mới 1 (Trống - chờ thêm tính năng)
+--   [PHẦN 14C] Tab 11 - Tab Mới 2 (Trống - chờ thêm tính năng)
 --   [PHẦN 15] Vòng lặp nền: Auto Click, Instant Prompt & Auto Collect
 --   [PHẦN 16] Vòng lặp ESP, Hitbox & Vật lý chuyển động (Stepped / Heartbeat)
 -- ============================================================================
@@ -579,7 +581,7 @@ local frameStroke = Instance.new("UIStroke", frame); frameStroke.Color = Theme.B
 table.insert(RGBElements, {Type = "Frame", Stroke = frameStroke})
 
 local avatarStroke, titleLabel, headerStatText, refreshThemeVisuals
-local page1, page2, page3, page4, page5, page6, page7, page8, page9
+local page1, page2, page3, page4, page5, page6, page7, page8, page9, page10, page11
 local onTab9Shown = nil
 local opened = true
 local frameScale = Instance.new("UIScale", frame)
@@ -646,10 +648,10 @@ do
     headerStatText.RichText = true; headerStatText.Text = "<font color='#38CC88'>60 FPS</font> • <font color='#58B6F2'>0ms</font>"
     headerStatText.TextColor3 = Theme.TextTitle; headerStatText.Font = Enum.Font.GothamBold; headerStatText.TextSize = 9; headerStatText.ZIndex = 13
 
-    -- Huy hiệu V1.39 nền tối sâu, chữ sáng rõ nét trên Mobile
+    -- Huy hiệu V1.41 nền tối sâu, chữ sáng rõ nét trên Mobile
     local verBadge = Instance.new("TextLabel", header)
     verBadge.Size = UDim2.new(0, 46, 0, 21); verBadge.Position = UDim2.new(1, -110, 0.5, -10.5)
-    verBadge.BackgroundColor3 = Color3.fromRGB(18, 22, 36); verBadge.Text = "V1.39"; verBadge.TextColor3 = getSoftBrandColor(Theme.Brand)
+    verBadge.BackgroundColor3 = Color3.fromRGB(18, 22, 36); verBadge.Text = "V1.41"; verBadge.TextColor3 = getSoftBrandColor(Theme.Brand)
     verBadge.Font = Enum.Font.GothamBold; verBadge.TextSize = 9.5; verBadge.ZIndex = 12
     Instance.new("UICorner", verBadge).CornerRadius = UDim.new(0, 7)
     local verStroke = Instance.new("UIStroke", verBadge); verStroke.Color = Theme.Brand; verStroke.Thickness = 1.0; verStroke.Transparency = 0.25
@@ -851,6 +853,17 @@ do
             part(0.73, 0.27, 0.22, 0.24, Color3.fromRGB(255, 55, 65), Color3.fromRGB(195, 15, 35), 45, 0.4, 3)
             -- Cửa sổ tròn xanh dương
             part(0.58, 0.42, 0.17, 0.17, Color3.fromRGB(65, 185, 255), Color3.fromRGB(20, 75, 185), 0, 1, 4)
+        elseif iconKey == "Extra1" then
+            -- 10. TAB MỚI 1: Ngôi sao tinh thể 4 cánh xanh ngọc - cyan
+            ring(0.5, 0.52, 0.86, 0.48, Color3.fromRGB(58, 225, 195), 1.2, -18, 0)
+            part(0.5, 0.5, 0.24, 0.72, Color3.fromRGB(135, 250, 225), Color3.fromRGB(42, 185, 165), 0, 1, 2)
+            part(0.5, 0.5, 0.72, 0.24, Color3.fromRGB(135, 250, 225), Color3.fromRGB(42, 185, 165), 0, 1, 2)
+            part(0.5, 0.5, 0.22, 0.22, Color3.fromRGB(245, 255, 255), nil, 45, 0.4, 3)
+        elseif iconKey == "Extra2" then
+            -- 11. TAB MỚI 2: Khối tinh thể 3D tím-hồng nổi bật
+            ring(0.5, 0.54, 0.86, 0.48, Color3.fromRGB(215, 95, 255), 1.2, 18, 0)
+            part(0.5, 0.5, 0.54, 0.54, Color3.fromRGB(235, 145, 255), Color3.fromRGB(132, 58, 235), 45, 0.24, 2)
+            part(0.5, 0.5, 0.26, 0.26, Color3.fromRGB(255, 235, 255), Color3.fromRGB(195, 125, 255), 45, 0.35, 3)
         end
     end
 
@@ -897,20 +910,23 @@ do
     local tab5, ind5 = createTab("Music", "NHẠC ID")
     local tab4, ind4 = createTab("Utility", "TIỆN ÍCH")
     local tab9, ind9 = createTab("Config", "CẤU HÌNH")
+    local tab10, ind10 = createTab("Extra1", "TAB MỚI 1")
+    local tab11, ind11 = createTab("Extra2", "TAB MỚI 2")
 
-    -- Tự động giãn đều chiều cao & khoảng cách 9 Tab bên Sidebar khi kéo phóng to/thu nhỏ Menu
+    -- Tự động giãn đều chiều cao & khoảng cách toàn bộ Tab bên Sidebar khi mở hoặc phóng to/thu nhỏ Menu
     local function updateSidebarProportions()
+        local tabCount = math.max(1, #allTabs)
         local availH = math.max(254, frame.Size.Y.Offset - 38)
-        local padY = math.clamp(math.floor((availH - 254) * 0.045) + 4, 4, 10)
+        local padY = math.clamp(math.floor((availH - 254) * 0.035) + 3, 3, 9)
         tabPad.PaddingTop = UDim.new(0, padY)
         tabPad.PaddingBottom = UDim.new(0, padY)
-        local spacing = math.clamp(2.5 + ((availH - 254) * 0.025), 2.5, 6.5)
+        local spacing = math.clamp(2.0 + ((availH - 254) * 0.015), 2.0, 5.5)
         tabLayout.Padding = UDim.new(0, spacing)
-        local totalUsable = availH - (padY * 2) - (spacing * 8) - 2
-        local btnH = math.clamp(math.floor(totalUsable / 9), 23, 36)
-        local boxSz = math.clamp(btnH - 6, 17, 22)
-        local indH = math.clamp(btnH - 10, 13, 18)
-        local txtSz = math.clamp(9.2 + ((btnH - 23) * 0.1), 9.2, 10.5)
+        local totalUsable = availH - (padY * 2) - (spacing * (tabCount - 1)) - 2
+        local btnH = math.clamp(math.floor(totalUsable / tabCount), 20, 34)
+        local boxSz = math.clamp(btnH - 5, 15, 22)
+        local indH = math.clamp(btnH - 9, 11, 18)
+        local txtSz = math.clamp(8.8 + ((btnH - 22) * 0.1), 8.6, 10.2)
         for _, item in ipairs(allTabs) do
             item.Btn.Size = UDim2.new(1, 0, 0, btnH)
             item.IconBox.Size = UDim2.new(0, boxSz, 0, boxSz)
@@ -925,6 +941,7 @@ do
         end
     end
     frame:GetPropertyChangedSignal("Size"):Connect(updateSidebarProportions)
+    updateSidebarProportions()
 
     local pageContainer = Instance.new("Frame", frame)
     pageContainer.Size = UDim2.new(1, -114, 1, -38); pageContainer.Position = UDim2.new(0, 114, 0, 38)
@@ -942,7 +959,7 @@ do
         return pg
     end
 
-    page1, page2, page3, page4, page8, page9 = createPage(), createPage(), createPage(), createPage(), createPage(), createPage()
+    page1, page2, page3, page4, page8, page9, page10, page11 = createPage(), createPage(), createPage(), createPage(), createPage(), createPage(), createPage(), createPage()
 
     page5 = Instance.new("Frame", pageContainer)
     page5.Size = UDim2.new(1, 0, 1, 0); page5.BackgroundTransparency = 1; page5.Visible = false; page5.ZIndex = 10
@@ -959,7 +976,7 @@ do
 
     local function showTab(pg, tb, ind)
         currentActiveTab = tb
-        for _, p in pairs({page1, page2, page3, page4, page5, page6, page7, page8, page9}) do p.Visible = false end
+        for _, p in pairs({page1, page2, page3, page4, page5, page6, page7, page8, page9, page10, page11}) do p.Visible = false end
         for _, item in ipairs(allTabs) do
             local isSel = (item.Btn == tb)
             item.Txt.TextColor3 = isSel and Theme.TextTitle or Theme.TextDim
@@ -1017,7 +1034,7 @@ do
             ColorSequenceKeypoint.new(0.5, Theme.AccentOn),
             ColorSequenceKeypoint.new(1, Color3.fromRGB(165, 115, 255))
         })
-        for _, pg in pairs({page1, page2, page3, page4, page8, page9}) do
+        for _, pg in pairs({page1, page2, page3, page4, page8, page9, page10, page11}) do
             pg.ScrollBarImageColor3 = Theme.Brand
         end
         for _, item in ipairs(allTabs) do
@@ -1065,6 +1082,8 @@ do
     tab7.MouseButton1Click:Connect(function() clickAnimate(tab7); showTab(page7, tab7, ind7) end)
     tab8.MouseButton1Click:Connect(function() clickAnimate(tab8); showTab(page8, tab8, ind8) end)
     tab9.MouseButton1Click:Connect(function() clickAnimate(tab9); showTab(page9, tab9, ind9) end)
+    tab10.MouseButton1Click:Connect(function() clickAnimate(tab10); showTab(page10, tab10, ind10) end)
+    tab11.MouseButton1Click:Connect(function() clickAnimate(tab11); showTab(page11, tab11, ind11) end)
 
     -- THANH TÌM KIẾM TÍNH NĂNG NHANH TOÀN MENU (Bấm 🔍 trên Header)
     local searchOverlay = Instance.new("Frame", pageContainer)
@@ -1109,7 +1128,9 @@ do
             {pg = page6, tb = tab6, ind = ind6, name = "TP SAVE"},
             {pg = page7, tb = tab7, ind = ind7, name = "TP PLAYER"},
             {pg = page8, tb = tab8, ind = ind8, name = "AUTO SKILL"},
-            {pg = page9, tb = tab9, ind = ind9, name = "CẤU HÌNH"}
+            {pg = page9, tb = tab9, ind = ind9, name = "CẤU HÌNH"},
+            {pg = page10, tb = tab10, ind = ind10, name = "TAB MỚI 1"},
+            {pg = page11, tb = tab11, ind = ind11, name = "TAB MỚI 2"}
         }
         local count = 0
         for _, tm in ipairs(tabMap) do
@@ -4565,18 +4586,92 @@ do
 
         local eqPillOuter, eqPillInner = createGlossyPillFrame(musicToolRow, UDim2.new(0, 95, 1, 0), UDim2.new(1, -95, 0, 0))
         local eqRimStroke = eqPillOuter:FindFirstChildOfClass("UIStroke")
+        local eqInnerGrad = eqPillInner:FindFirstChildOfClass("UIGradient")
+        if eqRimStroke then eqRimStroke.Thickness = 1.75 end
+
+        -- Biểu tượng 3 cột sóng Equalizer 3D nổi bật bên trái nút EQ (tự đổi độ cao theo chế độ)
+        local eqBarsHolder = Instance.new("Frame", eqPillInner)
+        eqBarsHolder.Size = UDim2.new(0, 14, 0, 11); eqBarsHolder.Position = UDim2.new(0, 7, 0.5, -5.5)
+        eqBarsHolder.BackgroundTransparency = 1; eqBarsHolder.ZIndex = 14
+        local eqBars = {}
+        local barColors = {
+            Color3.fromRGB(68, 232, 255),
+            Color3.fromRGB(108, 238, 178),
+            Color3.fromRGB(214, 128, 255)
+        }
+        for bIdx = 1, 3 do
+            local bar = Instance.new("Frame", eqBarsHolder)
+            bar.Size = UDim2.new(0, 2.8, 0, 6)
+            bar.AnchorPoint = Vector2.new(0, 1)
+            bar.Position = UDim2.new(0, (bIdx - 1) * 4.5, 1, 0)
+            bar.BackgroundColor3 = barColors[bIdx]
+            bar.BorderSizePixel = 0; bar.ZIndex = 15
+            Instance.new("UICorner", bar).CornerRadius = UDim.new(1, 0)
+            eqBars[bIdx] = bar
+        end
+
         local eqCycleBtn = Instance.new("TextButton", eqPillInner)
-        eqCycleBtn.Size = UDim2.new(1, 0, 1, 0); eqCycleBtn.BackgroundTransparency = 1
+        eqCycleBtn.Size = UDim2.new(1, -24, 1, 0); eqCycleBtn.Position = UDim2.new(0, 22, 0, 0)
+        eqCycleBtn.BackgroundTransparency = 1
         eqCycleBtn.Text = "EQ: Mặc định"
-        eqCycleBtn.TextColor3 = Color3.fromRGB(186, 198, 218); eqCycleBtn.Font = Enum.Font.GothamSemibold; eqCycleBtn.TextSize = 7.8
-        eqCycleBtn.AutoButtonColor = false; eqCycleBtn.ZIndex = 14
+        eqCycleBtn.TextColor3 = Color3.fromRGB(162, 214, 240); eqCycleBtn.Font = Enum.Font.GothamBold; eqCycleBtn.TextSize = 7.8
+        eqCycleBtn.TextXAlignment = Enum.TextXAlignment.Left; eqCycleBtn.AutoButtonColor = false; eqCycleBtn.ZIndex = 14
+
+        local eqModeStyles = {
+            [1] = {
+                top = Color3.fromRGB(28, 54, 108), bot = Color3.fromRGB(18, 26, 62),
+                txt = Color3.fromRGB(168, 216, 242),
+                rim = {Color3.fromRGB(68, 235, 255), Color3.fromRGB(98, 155, 255), Color3.fromRGB(215, 95, 255)},
+                heights = {6, 9, 5}
+            },
+            [2] = {
+                top = Color3.fromRGB(92, 46, 18), bot = Color3.fromRGB(44, 18, 14),
+                txt = Color3.fromRGB(238, 192, 102),
+                rim = {Color3.fromRGB(255, 215, 78), Color3.fromRGB(255, 125, 38), Color3.fromRGB(235, 62, 52)},
+                heights = {11, 7, 4}
+            },
+            [3] = {
+                top = Color3.fromRGB(18, 72, 66), bot = Color3.fromRGB(14, 38, 42),
+                txt = Color3.fromRGB(132, 218, 188),
+                rim = {Color3.fromRGB(78, 245, 205), Color3.fromRGB(52, 215, 165), Color3.fromRGB(72, 185, 255)},
+                heights = {5, 11, 9}
+            },
+            [4] = {
+                top = Color3.fromRGB(68, 28, 102), bot = Color3.fromRGB(32, 14, 58),
+                txt = Color3.fromRGB(212, 162, 240),
+                rim = {Color3.fromRGB(232, 128, 255), Color3.fromRGB(165, 88, 255), Color3.fromRGB(82, 218, 255)},
+                heights = {8, 6, 11}
+            }
+        }
 
         local function syncEqBtnVisual()
             local preset = MusicEqPresets[State.MusicEqIdx] or MusicEqPresets[1]
-            local isActive = (State.MusicEqIdx ~= 1)
+            local st = eqModeStyles[State.MusicEqIdx] or eqModeStyles[1]
             eqCycleBtn.Text = "EQ: " .. preset.Name
-            eqCycleBtn.TextColor3 = isActive and Color3.fromRGB(132, 208, 180) or Color3.fromRGB(186, 198, 218)
-            if eqRimStroke then applyRimNeonGrad(eqRimStroke, isActive) end
+            eqCycleBtn.TextColor3 = st.txt
+            if eqInnerGrad then
+                eqInnerGrad.Color = ColorSequence.new({
+                    ColorSequenceKeypoint.new(0, st.top),
+                    ColorSequenceKeypoint.new(1, st.bot)
+                })
+            end
+            if eqRimStroke then
+                local g = eqRimStroke:FindFirstChildOfClass("UIGradient") or Instance.new("UIGradient", eqRimStroke)
+                g.Rotation = 0
+                g.Color = ColorSequence.new({
+                    ColorSequenceKeypoint.new(0, st.rim[1]),
+                    ColorSequenceKeypoint.new(0.5, st.rim[2]),
+                    ColorSequenceKeypoint.new(1, st.rim[3])
+                })
+            end
+            for bIdx = 1, 3 do
+                if eqBars[bIdx] then
+                    TweenService:Create(eqBars[bIdx], TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                        Size = UDim2.new(0, 2.8, 0, st.heights[bIdx]),
+                        BackgroundColor3 = st.rim[bIdx]
+                    }):Play()
+                end
+            end
         end
         syncEqBtnVisual()
 
@@ -7891,7 +7986,7 @@ do
         local s = execTime % 60
 
         sysBody.Text = string.format(
-            "<font color='#78B4DC'>• Executor:</font> <font color='#38CC88'>%s</font>   |   <font color='#78B4DC'>Phiên bản:</font> <font color='#E09F67'>V1.39.0</font>\n" ..
+            "<font color='#78B4DC'>• Executor:</font> <font color='#38CC88'>%s</font>   |   <font color='#78B4DC'>Phiên bản:</font> <font color='#E09F67'>V1.41.0</font>\n" ..
             "<font color='#78B4DC'>• Treo máy:</font> %02d:%02d:%02d   |   <font color='#78B4DC'>Giờ hệ thống:</font> %s",
             execName, h, m, s, os.date("%H:%M:%S")
         )
@@ -7903,6 +7998,20 @@ do
             if page1.Visible then updateTab1Stats() end
         end
     end)
+end
+
+-- ============================================================================
+-- [PHẦN 14B] TAB 10: TAB MỚI 1 (TRỐNG - CHỜ THÊM TÍNH NĂNG SAU)
+-- ============================================================================
+do
+    -- Thêm các nút/tính năng của Tab Mới 1 vào `page10` tại đây
+end
+
+-- ============================================================================
+-- [PHẦN 14C] TAB 11: TAB MỚI 2 (TRỐNG - CHỜ THÊM TÍNH NĂNG SAU)
+-- ============================================================================
+do
+    -- Thêm các nút/tính năng của Tab Mới 2 vào `page11` tại đây
 end
 
 -- ============================================================================
