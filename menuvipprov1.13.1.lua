@@ -1,5 +1,5 @@
 -- ============================================================================
--- MENU VIP PRO MAX V1.38.0 (LUXURY CYBER-GLASS & BENTO SIDEBAR EDITION)
+-- MENU VIP PRO MAX V1.39.0 (LUXURY CYBER-GLASS & BENTO SIDEBAR EDITION)
 -- ============================================================================
 -- MỤC LỤC CẤU TRÚC CODE:
 --   [PHẦN 01] Khởi tạo Services & Người chơi
@@ -563,7 +563,7 @@ do
         if input == btnDragInput then btnDragInput = nil end
     end)
 end
-local OPEN_POS = UDim2.new(0.5, -220, 0.5, -146)
+local OPEN_POS = UDim2.new(0.5, -220, 0.5, -166)
 local CLOSE_POS = UDim2.new(0.5, -220, 1.25, 0)
 
 local frame = Instance.new("Frame", gui)
@@ -646,10 +646,10 @@ do
     headerStatText.RichText = true; headerStatText.Text = "<font color='#38CC88'>60 FPS</font> • <font color='#58B6F2'>0ms</font>"
     headerStatText.TextColor3 = Theme.TextTitle; headerStatText.Font = Enum.Font.GothamBold; headerStatText.TextSize = 9; headerStatText.ZIndex = 13
 
-    -- Huy hiệu V1.38 nền tối sâu, chữ sáng rõ nét trên Mobile
+    -- Huy hiệu V1.39 nền tối sâu, chữ sáng rõ nét trên Mobile
     local verBadge = Instance.new("TextLabel", header)
     verBadge.Size = UDim2.new(0, 46, 0, 21); verBadge.Position = UDim2.new(1, -110, 0.5, -10.5)
-    verBadge.BackgroundColor3 = Color3.fromRGB(18, 22, 36); verBadge.Text = "V1.38"; verBadge.TextColor3 = getSoftBrandColor(Theme.Brand)
+    verBadge.BackgroundColor3 = Color3.fromRGB(18, 22, 36); verBadge.Text = "V1.39"; verBadge.TextColor3 = getSoftBrandColor(Theme.Brand)
     verBadge.Font = Enum.Font.GothamBold; verBadge.TextSize = 9.5; verBadge.ZIndex = 12
     Instance.new("UICorner", verBadge).CornerRadius = UDim.new(0, 7)
     local verStroke = Instance.new("UIStroke", verBadge); verStroke.Color = Theme.Brand; verStroke.Thickness = 1.0; verStroke.Transparency = 0.25
@@ -1196,7 +1196,7 @@ do
     do
         local resizingInput = nil
         local resizeStartPos = nil
-        local startWidth, startHeight, startScale = 440, 292, 1
+        local startWidth, startHeight, startScale = 440, 332, 1
         local anchorAbsPos = nil
         local lastTapTick = 0
 
@@ -1208,7 +1208,9 @@ do
                     currentMenuScale = 1
                     frameScale.Scale = 1
                     frame.Size = UDim2.new(0, 440, 0, 332)
-                    MakeToast("Kích thước Menu", "Đã khôi phục kích thước mặc định (100%)", Theme.Brand)
+                    frame.Position = UDim2.new(0.5, -220, 0.5, -166)
+                    OPEN_POS = frame.Position
+                    MakeToast("Kích thước Menu", "Đã khôi phục kích thước & căn giữa menu!", Theme.Brand)
                     return
                 end
                 lastTapTick = now
@@ -1231,7 +1233,7 @@ do
 
                 if targetVisualW < 440 or targetVisualH < 270 then
                     local scaleW = targetVisualW / 440
-                    local scaleH = targetVisualH / 292
+                    local scaleH = targetVisualH / 332
                     currentMenuScale = math.clamp(math.min(scaleW, scaleH), 0.70, 1.0)
                     frameScale.Scale = currentMenuScale
                     local unscaledW = math.clamp(math.floor(targetVisualW / currentMenuScale), 440, 680)
@@ -4540,49 +4542,41 @@ do
             end
         end
 
-        -- Hàng công cụ nhanh: Ô tìm kiếm Kho Nhạc + Nút chuyển hiệu ứng EQ / Bass Boost
+        -- Hàng công cụ nhanh: Ô tìm kiếm Kho Nhạc 3D Cyber-Neon + Nút EQ / Bass Boost
         local musicSearchQuery = ""
         local musicToolRow = Instance.new("Frame", musicListCard)
-        musicToolRow.Size = UDim2.new(1, -12, 0, 20); musicToolRow.Position = UDim2.new(0, 6, 0, 25)
+        musicToolRow.Size = UDim2.new(1, -12, 0, 22); musicToolRow.Position = UDim2.new(0, 6, 0, 24)
         musicToolRow.BackgroundTransparency = 1; musicToolRow.ZIndex = 12
 
-        local mSearchFrame = Instance.new("Frame", musicToolRow)
-        mSearchFrame.Size = UDim2.new(1, -100, 1, 0); mSearchFrame.Position = UDim2.new(0, 0, 0, 0)
-        mSearchFrame.BackgroundColor3 = Color3.fromRGB(14, 16, 24); mSearchFrame.ZIndex = 12
-        Instance.new("UICorner", mSearchFrame).CornerRadius = UDim.new(1, 0)
-        local msStroke = Instance.new("UIStroke", mSearchFrame)
-        msStroke.Color = Color3.fromRGB(48, 58, 82); msStroke.Thickness = 0.85
-
-        local mSearchBox = Instance.new("TextBox", mSearchFrame)
-        mSearchBox.Size = UDim2.new(1, -24, 1, 0); mSearchBox.Position = UDim2.new(0, 8, 0, 0)
-        mSearchBox.BackgroundTransparency = 1; mSearchBox.PlaceholderText = "🔍 Tìm tên bài hoặc ID..."
-        mSearchBox.PlaceholderColor3 = Color3.fromRGB(122, 134, 158); mSearchBox.Text = ""
-        mSearchBox.TextColor3 = Color3.fromRGB(205, 215, 232)
-        mSearchBox.Font = Enum.Font.GothamMedium; mSearchBox.TextSize = 8.0
+        local mSearchOuter, mSearchInner = createGlossyPillFrame(musicToolRow, UDim2.new(1, -100, 1, 0), UDim2.new(0, 0, 0, 0))
+        local mSearchBox = Instance.new("TextBox", mSearchInner)
+        mSearchBox.Size = UDim2.new(1, -26, 1, 0); mSearchBox.Position = UDim2.new(0, 9, 0, 0)
+        mSearchBox.BackgroundTransparency = 1; mSearchBox.PlaceholderText = "🔍 Tìm tên bài hoặc ID nhạc..."
+        mSearchBox.PlaceholderColor3 = Color3.fromRGB(142, 156, 182); mSearchBox.Text = ""
+        mSearchBox.TextColor3 = Color3.fromRGB(205, 216, 232)
+        mSearchBox.Font = Enum.Font.GothamSemibold; mSearchBox.TextSize = 8.2
         mSearchBox.TextXAlignment = Enum.TextXAlignment.Left; mSearchBox.ClearTextOnFocus = false; mSearchBox.ZIndex = 13
 
-        local mSearchClear = Instance.new("TextButton", mSearchFrame)
-        mSearchClear.Size = UDim2.new(0, 16, 0, 16); mSearchClear.Position = UDim2.new(1, -18, 0.5, -8)
+        local mSearchClear = Instance.new("TextButton", mSearchInner)
+        mSearchClear.Size = UDim2.new(0, 16, 0, 16); mSearchClear.Position = UDim2.new(1, -19, 0.5, -8)
         mSearchClear.BackgroundTransparency = 1; mSearchClear.Text = "✕"
-        mSearchClear.TextColor3 = Color3.fromRGB(150, 162, 184); mSearchClear.Font = Enum.Font.GothamSemibold; mSearchClear.TextSize = 8.2
+        mSearchClear.TextColor3 = Color3.fromRGB(165, 178, 200); mSearchClear.Font = Enum.Font.GothamSemibold; mSearchClear.TextSize = 8.4
         mSearchClear.Visible = false; mSearchClear.ZIndex = 14
 
-        local eqCycleBtn = Instance.new("TextButton", musicToolRow)
-        eqCycleBtn.Size = UDim2.new(0, 95, 1, 0); eqCycleBtn.Position = UDim2.new(1, -95, 0, 0)
-        eqCycleBtn.BackgroundColor3 = Color3.fromRGB(16, 22, 36); eqCycleBtn.Text = "🎚️ EQ: Mặc định"
-        eqCycleBtn.TextColor3 = Color3.fromRGB(168, 192, 220); eqCycleBtn.Font = Enum.Font.GothamSemibold; eqCycleBtn.TextSize = 7.6
-        eqCycleBtn.AutoButtonColor = false; eqCycleBtn.ZIndex = 13
-        Instance.new("UICorner", eqCycleBtn).CornerRadius = UDim.new(1, 0)
-        local eqStroke = Instance.new("UIStroke", eqCycleBtn)
-        eqStroke.Color = Color3.fromRGB(58, 118, 175); eqStroke.Thickness = 0.85
+        local eqPillOuter, eqPillInner = createGlossyPillFrame(musicToolRow, UDim2.new(0, 95, 1, 0), UDim2.new(1, -95, 0, 0))
+        local eqRimStroke = eqPillOuter:FindFirstChildOfClass("UIStroke")
+        local eqCycleBtn = Instance.new("TextButton", eqPillInner)
+        eqCycleBtn.Size = UDim2.new(1, 0, 1, 0); eqCycleBtn.BackgroundTransparency = 1
+        eqCycleBtn.Text = "EQ: Mặc định"
+        eqCycleBtn.TextColor3 = Color3.fromRGB(186, 198, 218); eqCycleBtn.Font = Enum.Font.GothamSemibold; eqCycleBtn.TextSize = 7.8
+        eqCycleBtn.AutoButtonColor = false; eqCycleBtn.ZIndex = 14
 
         local function syncEqBtnVisual()
             local preset = MusicEqPresets[State.MusicEqIdx] or MusicEqPresets[1]
             local isActive = (State.MusicEqIdx ~= 1)
-            eqCycleBtn.Text = "🎚️ " .. preset.Name
-            eqCycleBtn.BackgroundColor3 = isActive and Color3.fromRGB(18, 38, 42) or Color3.fromRGB(16, 22, 36)
-            eqCycleBtn.TextColor3 = isActive and Color3.fromRGB(132, 212, 184) or Color3.fromRGB(168, 192, 220)
-            eqStroke.Color = isActive and Color3.fromRGB(64, 168, 140) or Color3.fromRGB(58, 118, 175)
+            eqCycleBtn.Text = "EQ: " .. preset.Name
+            eqCycleBtn.TextColor3 = isActive and Color3.fromRGB(132, 208, 180) or Color3.fromRGB(186, 198, 218)
+            if eqRimStroke then applyRimNeonGrad(eqRimStroke, isActive) end
         end
         syncEqBtnVisual()
 
@@ -4597,7 +4591,7 @@ do
         end)
 
         local emptyMusicState = Instance.new("TextLabel", musicListCard)
-        emptyMusicState.Size = UDim2.new(1, -24, 1, -48); emptyMusicState.Position = UDim2.new(0, 12, 0, 47)
+        emptyMusicState.Size = UDim2.new(1, -24, 1, -50); emptyMusicState.Position = UDim2.new(0, 12, 0, 49)
         emptyMusicState.BackgroundTransparency = 1; emptyMusicState.RichText = true
         emptyMusicState.Text = "🎶 Chưa có bài nhạc nào được lưu.\n<font color='#7E889E'>Nhập ID Nhạc ở trên rồi bấm nút Lưu đĩa mềm bên phải để thêm!</font>"
         emptyMusicState.TextColor3 = Theme.TextDim; emptyMusicState.Font = Enum.Font.GothamSemibold; emptyMusicState.TextSize = 8.8
@@ -4605,7 +4599,7 @@ do
         emptyMusicState.TextXAlignment = Enum.TextXAlignment.Center; emptyMusicState.TextYAlignment = Enum.TextYAlignment.Center; emptyMusicState.ZIndex = 11
 
         local savedMusicContent = Instance.new("ScrollingFrame", musicListCard)
-        savedMusicContent.Size = UDim2.new(1, -10, 1, -48); savedMusicContent.Position = UDim2.new(0, 5, 0, 47)
+        savedMusicContent.Size = UDim2.new(1, -10, 1, -50); savedMusicContent.Position = UDim2.new(0, 5, 0, 49)
         savedMusicContent.BackgroundTransparency = 1; savedMusicContent.ScrollBarThickness = 3; savedMusicContent.ScrollBarImageColor3 = Theme.Brand; savedMusicContent.BorderSizePixel = 0; savedMusicContent.ZIndex = 10
         local sLayout = Instance.new("UIListLayout", savedMusicContent); sLayout.SortOrder = Enum.SortOrder.LayoutOrder; sLayout.Padding = UDim.new(0, 4)
         local sPad = Instance.new("UIPadding", savedMusicContent); sPad.PaddingTop = UDim.new(0, 2); sPad.PaddingBottom = UDim.new(0, 6); sPad.PaddingLeft = UDim.new(0, 2); sPad.PaddingRight = UDim.new(0, 4)
@@ -4811,7 +4805,7 @@ do
         fBtnPub.MouseButton1Click:Connect(function() clickAnimate(fBtnPub); currentMusicFilter = "public"; renderSavedMusic() end)
         fBtnPriv.MouseButton1Click:Connect(function() clickAnimate(fBtnPriv); currentMusicFilter = "private"; renderSavedMusic() end)
 
-        -- Tự động lọc xóa ID trùng ĐÚNG 1 LẦN duy nhất khi mở Menu hoặc vào Tab Nhạc ID (giữ nguyên mọi bài Public & Private)
+        -- Tự động lọc trùng & phân loại lại toàn bộ ID thành Public / Private ĐÚNG 1 LẦN khi mở Menu hoặc vào Tab Nhạc ID (KHÔNG xóa bài Private)
         local hasAutoFilteredMusicOnce = false
         local function runAutoFilterMusicOnce()
             if hasAutoFilteredMusicOnce then return end
@@ -4819,24 +4813,61 @@ do
             if #savedMusicList == 0 then return end
             task.spawn(function()
                 local removedDupes = autoFilterSavedMusicList()
-                if removedDupes > 0 then
-                    renderSavedMusic()
-                    MakeToast("🧹 Đã Lọc Trùng Kho Nhạc", "Đã tự động xóa " .. tostring(removedDupes) .. " ID nhạc bị trùng!", Theme.AccentOn)
+                -- Quét phân loại lại Public / Private theo game hiện tại theo nhóm 5 bài (không vẽ lại liên tục để giữ mượt FPS)
+                local batchSize = 5
+                local idx = 1
+                while ScriptActive and idx <= #savedMusicList do
+                    local finished = 0
+                    local batchCount = 0
+                    for b = 0, batchSize - 1 do
+                        local item = savedMusicList[idx + b]
+                        if not item then break end
+                        batchCount = batchCount + 1
+                        local isUrl = tostring(item.id):lower():match("^https?://") ~= nil
+                        if isUrl then
+                            item.status = "public"
+                            finished = finished + 1
+                        else
+                            task.spawn(function()
+                                local probe = Instance.new("Sound")
+                                probe.Name = "MenuVipCheckGame_" .. tostring(item.id)
+                                probe.SoundId = "rbxassetid://" .. tostring(item.id)
+                                probe.Volume = 0
+                                probe.Parent = SoundService
+                                local elapsed = 0
+                                while ScriptActive and elapsed < 2.2 do
+                                    if probe.IsLoaded and probe.TimeLength > 0 then break end
+                                    task.wait(0.2)
+                                    elapsed = elapsed + 0.2
+                                end
+                                local isPublic = (probe.IsLoaded and probe.TimeLength > 0)
+                                pcall(function() probe:Destroy() end)
+                                item.status = isPublic and "public" or "private"
+                                finished = finished + 1
+                            end)
+                        end
+                    end
+                    local waitT = 0
+                    while ScriptActive and finished < batchCount and waitT < 2.8 do
+                        task.wait(0.15)
+                        waitT = waitT + 0.15
+                    end
+                    idx = idx + batchSize
                 end
-                -- Chỉ kiểm tra trạng thái cho các bài chưa phân loại (checking), tuyệt đối không xóa bài Private
-                local unchecked = {}
+                if not ScriptActive then return end
+
+                local pubCount, privCount = 0, 0
                 for _, item in ipairs(savedMusicList) do
-                    if not item.status or item.status == "checking" then
-                        table.insert(unchecked, item)
-                    end
+                    if item.status == "public" then pubCount = pubCount + 1
+                    elseif item.status == "private" then privCount = privCount + 1 end
                 end
-                if #unchecked > 0 then
-                    for _, item in ipairs(unchecked) do
-                        if not ScriptActive then break end
-                        probeSongStatus(item)
-                        task.wait(0.25)
-                    end
+                saveMusicData()
+                renderSavedMusic()
+                local msg = string.format("Public: %d • Private: %d", pubCount, privCount)
+                if removedDupes > 0 then
+                    msg = msg .. string.format(" (xóa %d trùng)", removedDupes)
                 end
+                MakeToast("🎵 Đã Phân Loại Kho Nhạc", msg, Theme.AccentOn)
             end)
         end
 
@@ -7860,7 +7891,7 @@ do
         local s = execTime % 60
 
         sysBody.Text = string.format(
-            "<font color='#78B4DC'>• Executor:</font> <font color='#38CC88'>%s</font>   |   <font color='#78B4DC'>Phiên bản:</font> <font color='#E09F67'>V1.38.0</font>\n" ..
+            "<font color='#78B4DC'>• Executor:</font> <font color='#38CC88'>%s</font>   |   <font color='#78B4DC'>Phiên bản:</font> <font color='#E09F67'>V1.39.0</font>\n" ..
             "<font color='#78B4DC'>• Treo máy:</font> %02d:%02d:%02d   |   <font color='#78B4DC'>Giờ hệ thống:</font> %s",
             execName, h, m, s, os.date("%H:%M:%S")
         )
