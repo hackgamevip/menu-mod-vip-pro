@@ -1,23 +1,5 @@
 -- ============================================================================
--- MENU VIP PRO MAX V1.36.0 (LUXURY CYBER-GLASS & BENTO SIDEBAR EDITION)
--- ============================================================================
--- MỤC LỤC CẤU TRÚC CODE:
---   [PHẦN 01] Khởi tạo Services & Người chơi
---   [PHẦN 02] Quản lý vòng đời, Drag Manager, State, Theme & Config
---   [PHẦN 03] Giao diện chính (ScreenGui, Nút Rồng, Header, Sidebar & Tìm kiếm)
---   [PHẦN 04] Bộ Component UI 3D Cyber-Glass Neon (Toggle, Slider, Sub-Tab...)
---   [PHẦN 05] Tab 2 - Tính năng (Chống choáng, Freecam, Safe Spot, ESP, XRay...)
---   [PHẦN 06] Tab 3 - Nhân vật (Bay, Tốc độ, Nhảy cao, Hitbox, FOV, Đèn...)
---   [PHẦN 07] Tab 4 - Tiện ích (Chủ đề & RGB, Anti-AFK, Server, Phím tắt nổi...)
---   [PHẦN 08] Tab 5 - Nhạc ID (Thùng rác 3 chế độ, Đổi bài, Âm lượng 0-10, Tự lọc)
---   [PHẦN 09] Tab 6 - TP Save (Lưu tọa độ theo PlaceId, ESP 3D & Auto Loop)
---   [PHẦN 10] Hệ thống quét Người chơi & Bot Map phụ (Dùng chung ESP & TP Player)
---   [PHẦN 11] Tab 7 - TP Người chơi (TP / Bay / Chạy đến, Xoay mặt, Xem góc nhìn)
---   [PHẦN 12] Tab 8 - Auto Skill (Bàn phím cơ 3D 4 cột, Combo/Burst, Hold chiêu)
---   [PHẦN 13] Tab 9 - Cấu hình & Giảm Lag (3 Preset, FPS Cap, Đồ họa, Culling)
---   [PHẦN 14] Tab 1 - Dashboard Bento & Quản lý Server
---   [PHẦN 15] Vòng lặp nền: Auto Click, Instant Prompt & Auto Collect
---   [PHẦN 16] Vòng lặp ESP, Hitbox & Vật lý chuyển động (Stepped / Heartbeat)
+-- MENU VIP PRO MAX V1.37.0 (LUXURY CYBER-GLASS & BENTO SIDEBAR EDITION)
 -- ============================================================================
 
 -- ============================================================================
@@ -646,10 +628,10 @@ do
     headerStatText.RichText = true; headerStatText.Text = "<font color='#38CC88'>60 FPS</font> • <font color='#58B6F2'>0ms</font>"
     headerStatText.TextColor3 = Theme.TextTitle; headerStatText.Font = Enum.Font.GothamBold; headerStatText.TextSize = 9; headerStatText.ZIndex = 13
 
-    -- Huy hiệu V1.36 nền tối sâu, chữ sáng rõ nét trên Mobile
+    -- Huy hiệu V1.37 nền tối sâu, chữ sáng rõ nét trên Mobile
     local verBadge = Instance.new("TextLabel", header)
     verBadge.Size = UDim2.new(0, 46, 0, 21); verBadge.Position = UDim2.new(1, -110, 0.5, -10.5)
-    verBadge.BackgroundColor3 = Color3.fromRGB(18, 22, 36); verBadge.Text = "V1.36"; verBadge.TextColor3 = getSoftBrandColor(Theme.Brand)
+    verBadge.BackgroundColor3 = Color3.fromRGB(18, 22, 36); verBadge.Text = "V1.37"; verBadge.TextColor3 = getSoftBrandColor(Theme.Brand)
     verBadge.Font = Enum.Font.GothamBold; verBadge.TextSize = 9.5; verBadge.ZIndex = 12
     Instance.new("UICorner", verBadge).CornerRadius = UDim.new(0, 7)
     local verStroke = Instance.new("UIStroke", verBadge); verStroke.Color = Theme.Brand; verStroke.Thickness = 1.0; verStroke.Transparency = 0.25
@@ -4518,7 +4500,7 @@ do
         pcall(function() if isfile and isfile(fileName) then local decoded = HttpService:JSONDecode(readfile(fileName)); if type(decoded) == "table" then savedMusicList = decoded end end end)
         saveMusicData = function() pcall(function() if writefile then writefile(fileName, HttpService:JSONEncode(savedMusicList)) end end) end
 
-        -- Cơ chế tự lọc & dọn trùng ID âm thanh đã lưu (Chuẩn hóa ID, xóa trùng, xóa ID lỗi/Private & sắp xếp Public lên đầu)
+        -- Cơ chế tự lọc trùng ID âm thanh đã lưu (CHỈ xóa ID bị trùng lặp, giữ nguyên toàn bộ bài Public & Private)
         local function normalizeSavedAudioId(raw)
             local s = tostring(raw or ""):gsub("^%s*(.-)%s*$", "%1")
             if s == "" then return nil end
@@ -4526,52 +4508,38 @@ do
             return s:match("%d+")
         end
 
-        local function autoFilterSavedMusicList(removePrivate)
+        local function autoFilterSavedMusicList()
             local seen = {}
             local cleaned = {}
             local removedDupes = 0
-            local removedInvalid = 0
-            local removedPriv = 0
 
             for _, item in ipairs(savedMusicList) do
                 if type(item) == "table" then
                     local normId = normalizeSavedAudioId(item.id)
-                    if not normId or normId == "" then
-                        removedInvalid = removedInvalid + 1
-                    elseif removePrivate and item.status == "private" then
-                        removedPriv = removedPriv + 1
-                    elseif seen[normId] then
-                        removedDupes = removedDupes + 1
-                        local prev = seen[normId]
-                        if prev.status ~= "public" and item.status == "public" then
-                            prev.status = "public"
+                    if normId and normId ~= "" then
+                        if seen[normId] then
+                            removedDupes = removedDupes + 1
+                            local prev = seen[normId]
+                            if prev.status ~= "public" and item.status == "public" then
+                                prev.status = "public"
+                            end
+                        else
+                            item.id = normId
+                            if not item.name or tostring(item.name) == "" then item.name = "ID " .. normId end
+                            if not item.status then item.status = "checking" end
+                            seen[normId] = item
+                            table.insert(cleaned, item)
                         end
-                    else
-                        item.id = normId
-                        if not item.name or tostring(item.name) == "" then item.name = "ID " .. normId end
-                        if not item.status then item.status = "checking" end
-                        seen[normId] = item
-                        table.insert(cleaned, item)
                     end
-                else
-                    removedInvalid = removedInvalid + 1
                 end
             end
 
-            local rank = {public = 1, checking = 2, private = 3}
-            table.sort(cleaned, function(a, b)
-                return (rank[a.status] or 2) < (rank[b.status] or 2)
-            end)
-
             savedMusicList = cleaned
-            if removedDupes > 0 or removedInvalid > 0 or removedPriv > 0 then
+            if removedDupes > 0 then
                 saveMusicData()
             end
-            return removedDupes, removedInvalid, removedPriv
+            return removedDupes
         end
-
-        -- Tự động lọc trùng & chuẩn hóa danh sách ngay khi mở script
-        autoFilterSavedMusicList(false)
 
         renderSavedMusic = function()
             for _, child in pairs(savedMusicContent:GetChildren()) do if child:IsA("Frame") then child:Destroy() end end
@@ -4647,61 +4615,31 @@ do
         fBtnPub.MouseButton1Click:Connect(function() clickAnimate(fBtnPub); currentMusicFilter = "public"; renderSavedMusic() end)
         fBtnPriv.MouseButton1Click:Connect(function() clickAnimate(fBtnPriv); currentMusicFilter = "private"; renderSavedMusic() end)
 
-        -- Tự động lọc Kho Nhạc ngầm ĐÚNG 1 LẦN duy nhất khi mở Menu hoặc vào Tab Nhạc ID (không gây giật lag)
+        -- Tự động lọc xóa ID trùng ĐÚNG 1 LẦN duy nhất khi mở Menu hoặc vào Tab Nhạc ID (giữ nguyên mọi bài Public & Private)
         local hasAutoFilteredMusicOnce = false
         local function runAutoFilterMusicOnce()
             if hasAutoFilteredMusicOnce then return end
             hasAutoFilteredMusicOnce = true
             if #savedMusicList == 0 then return end
             task.spawn(function()
-                local d1, inv1 = autoFilterSavedMusicList(false)
-                local batchSize = 5
-                local i = 1
-                while ScriptActive and i <= #savedMusicList do
-                    local finished = 0
-                    local batchCount = 0
-                    for b = 0, batchSize - 1 do
-                        local item = savedMusicList[i + b]
-                        if not item then break end
-                        batchCount = batchCount + 1
-                        local isUrl = tostring(item.id):lower():match("^https?://") ~= nil
-                        if isUrl then
-                            item.status = "public"
-                            finished = finished + 1
-                        else
-                            task.spawn(function()
-                                local probe = Instance.new("Sound")
-                                probe.Name = "MenuVipAutoFilter_" .. tostring(item.id)
-                                probe.SoundId = "rbxassetid://" .. tostring(item.id)
-                                probe.Volume = 0
-                                probe.Parent = SoundService
-                                local elapsed = 0
-                                while ScriptActive and elapsed < 2.2 do
-                                    if probe.IsLoaded and probe.TimeLength > 0 then break end
-                                    task.wait(0.2)
-                                    elapsed = elapsed + 0.2
-                                end
-                                local isPublic = (probe.IsLoaded and probe.TimeLength > 0)
-                                pcall(function() probe:Destroy() end)
-                                item.status = isPublic and "public" or "private"
-                                finished = finished + 1
-                            end)
-                        end
-                    end
-                    local waitT = 0
-                    while ScriptActive and finished < batchCount and waitT < 3.0 do
-                        task.wait(0.15)
-                        waitT = waitT + 0.15
-                    end
-                    i = i + batchSize
+                local removedDupes = autoFilterSavedMusicList()
+                if removedDupes > 0 then
+                    renderSavedMusic()
+                    MakeToast("🧹 Đã Lọc Trùng Kho Nhạc", "Đã tự động xóa " .. tostring(removedDupes) .. " ID nhạc bị trùng!", Theme.AccentOn)
                 end
-                if not ScriptActive then return end
-                local d2, inv2, privRem = autoFilterSavedMusicList(true)
-                saveMusicData()
-                renderSavedMusic()
-                local totalDup = d1 + d2 + inv1 + inv2
-                if totalDup > 0 or privRem > 0 then
-                    MakeToast("🧹 Đã Tự Lọc Kho Nhạc", string.format("Đã dọn %d ID trùng/lỗi & %d ID Private!", totalDup, privRem), Theme.AccentOn)
+                -- Chỉ kiểm tra trạng thái cho các bài chưa phân loại (checking), tuyệt đối không xóa bài Private
+                local unchecked = {}
+                for _, item in ipairs(savedMusicList) do
+                    if not item.status or item.status == "checking" then
+                        table.insert(unchecked, item)
+                    end
+                end
+                if #unchecked > 0 then
+                    for _, item in ipairs(unchecked) do
+                        if not ScriptActive then break end
+                        probeSongStatus(item)
+                        task.wait(0.25)
+                    end
                 end
             end)
         end
@@ -4732,7 +4670,7 @@ do
                     local name = isUrlMp3 and (rawTxt:match("([^/]+%.mp3)") or "Nhạc MP3 Trực Tuyến") or getSongName(rawId)
                     local newSong = {id = rawId, name = name, status = isUrlMp3 and "public" or "checking"}
                     table.insert(savedMusicList, newSong)
-                    autoFilterSavedMusicList(false)
+                    autoFilterSavedMusicList()
                     saveMusicData(); renderSavedMusic()
                     MakeToast("Đã lưu & Đang kiểm tra", "Đang kiểm tra LOADING cho: " .. name, Theme.Brand)
                     if not isUrlMp3 then probeSongStatus(newSong) end
@@ -7726,7 +7664,7 @@ do
         local s = execTime % 60
 
         sysBody.Text = string.format(
-            "<font color='#78B4DC'>• Executor:</font> <font color='#38CC88'>%s</font>   |   <font color='#78B4DC'>Phiên bản:</font> <font color='#E09F67'>V1.36.0</font>\n" ..
+            "<font color='#78B4DC'>• Executor:</font> <font color='#38CC88'>%s</font>   |   <font color='#78B4DC'>Phiên bản:</font> <font color='#E09F67'>V1.37.0</font>\n" ..
             "<font color='#78B4DC'>• Treo máy:</font> %02d:%02d:%02d   |   <font color='#78B4DC'>Giờ hệ thống:</font> %s",
             execName, h, m, s, os.date("%H:%M:%S")
         )
