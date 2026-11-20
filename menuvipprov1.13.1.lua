@@ -1,5 +1,23 @@
 -- ============================================================================
--- MENU VIP PRO MAX V1.37.0 (LUXURY CYBER-GLASS & BENTO SIDEBAR EDITION)
+-- MENU VIP PRO MAX V1.38.0 (LUXURY CYBER-GLASS & BENTO SIDEBAR EDITION)
+-- ============================================================================
+-- MỤC LỤC CẤU TRÚC CODE:
+--   [PHẦN 01] Khởi tạo Services & Người chơi
+--   [PHẦN 02] Quản lý vòng đời, Drag Manager, State, Theme & Config
+--   [PHẦN 03] Giao diện chính (ScreenGui, Nút Rồng, Header, Sidebar & Tìm kiếm)
+--   [PHẦN 04] Bộ Component UI 3D Cyber-Glass Neon (Toggle, Slider, Sub-Tab...)
+--   [PHẦN 05] Tab 2 - Tính năng (Chống choáng, Freecam, Safe Spot, ESP, XRay...)
+--   [PHẦN 06] Tab 3 - Nhân vật (Bay, Tốc độ, Nhảy cao, Hitbox, FOV, Đèn...)
+--   [PHẦN 07] Tab 4 - Tiện ích (Chủ đề & RGB, Anti-AFK, Server, Phím tắt nổi...)
+--   [PHẦN 08] Tab 5 - Nhạc ID (Thùng rác 3 chế độ, Đổi bài, Âm lượng 0-10, Tự lọc)
+--   [PHẦN 09] Tab 6 - TP Save (Lưu tọa độ theo PlaceId, ESP 3D & Auto Loop)
+--   [PHẦN 10] Hệ thống quét Người chơi & Bot Map phụ (Dùng chung ESP & TP Player)
+--   [PHẦN 11] Tab 7 - TP Người chơi (TP / Bay / Chạy đến, Xoay mặt, Xem góc nhìn)
+--   [PHẦN 12] Tab 8 - Auto Skill (Bàn phím cơ 3D 4 cột, Combo/Burst, Hold chiêu)
+--   [PHẦN 13] Tab 9 - Cấu hình & Giảm Lag (3 Preset, FPS Cap, Đồ họa, Culling)
+--   [PHẦN 14] Tab 1 - Dashboard Bento & Quản lý Server
+--   [PHẦN 15] Vòng lặp nền: Auto Click, Instant Prompt & Auto Collect
+--   [PHẦN 16] Vòng lặp ESP, Hitbox & Vật lý chuyển động (Stepped / Heartbeat)
 -- ============================================================================
 
 -- ============================================================================
@@ -10,7 +28,7 @@ repeat task.wait() until game:IsLoaded()
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
-local Lighting = game:GetService("Lighting")
+local Lighting = :GetService("Lighting")
 local UIS = game:GetService("UserInputService")
 local VirtualUser = game:GetService("VirtualUser")
 local Vim = game:GetService("VirtualInputManager")
@@ -78,7 +96,7 @@ local State = {
     SpinBot = false, SpinSpeed = 50, Hitbox = false, HitboxSize = 15, AutoClick = false, RGB = false,
     Reach = false, ReachSize = 15, AutoDash = false, DashSpeed = 10, AutoSave = false, Astral = false,
     ShiftLock = false, SpeedValue = 60, JumpValue = 120, LightRange = 60, LightBrightness = 3,
-    MusicVolume = 1, MusicLoop = false, MusicShuffle = false, MusicSpeedIdx = 2, LightColorIdx = 1, ThemeIdx = 1, NoFog = false,
+    MusicVolume = 1, MusicLoop = false, MusicShuffle = false, MusicSpeedIdx = 2, MusicEqIdx = 1, LightColorIdx = 1, ThemeIdx = 1, NoFog = false,
     FpsCapValue = 60, Disable3D = false, AfkModeScreen = false, RemoveTextures = false,
     HidePlayers = false, OptimizeTerrain = false, NoShadows = false,
     DisableParticles = false, DisablePostEffects = false, HidePetsAccessories = false, AutoClearRAM = false,
@@ -549,7 +567,7 @@ local OPEN_POS = UDim2.new(0.5, -220, 0.5, -146)
 local CLOSE_POS = UDim2.new(0.5, -220, 1.25, 0)
 
 local frame = Instance.new("Frame", gui)
-frame.Size = UDim2.new(0, 440, 0, 292)
+frame.Size = UDim2.new(0, 440, 0, 332)
 frame.Position = OPEN_POS
 frame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 frame.BackgroundTransparency = 0.02
@@ -628,10 +646,10 @@ do
     headerStatText.RichText = true; headerStatText.Text = "<font color='#38CC88'>60 FPS</font> • <font color='#58B6F2'>0ms</font>"
     headerStatText.TextColor3 = Theme.TextTitle; headerStatText.Font = Enum.Font.GothamBold; headerStatText.TextSize = 9; headerStatText.ZIndex = 13
 
-    -- Huy hiệu V1.37 nền tối sâu, chữ sáng rõ nét trên Mobile
+    -- Huy hiệu V1.38 nền tối sâu, chữ sáng rõ nét trên Mobile
     local verBadge = Instance.new("TextLabel", header)
     verBadge.Size = UDim2.new(0, 46, 0, 21); verBadge.Position = UDim2.new(1, -110, 0.5, -10.5)
-    verBadge.BackgroundColor3 = Color3.fromRGB(18, 22, 36); verBadge.Text = "V1.37"; verBadge.TextColor3 = getSoftBrandColor(Theme.Brand)
+    verBadge.BackgroundColor3 = Color3.fromRGB(18, 22, 36); verBadge.Text = "V1.38"; verBadge.TextColor3 = getSoftBrandColor(Theme.Brand)
     verBadge.Font = Enum.Font.GothamBold; verBadge.TextSize = 9.5; verBadge.ZIndex = 12
     Instance.new("UICorner", verBadge).CornerRadius = UDim.new(0, 7)
     local verStroke = Instance.new("UIStroke", verBadge); verStroke.Color = Theme.Brand; verStroke.Thickness = 1.0; verStroke.Transparency = 0.25
@@ -1189,7 +1207,7 @@ do
                     lastTapTick = 0
                     currentMenuScale = 1
                     frameScale.Scale = 1
-                    frame.Size = UDim2.new(0, 440, 0, 292)
+                    frame.Size = UDim2.new(0, 440, 0, 332)
                     MakeToast("Kích thước Menu", "Đã khôi phục kích thước mặc định (100%)", Theme.Brand)
                     return
                 end
@@ -3643,6 +3661,49 @@ do
         checkInputIdStatus()
     end)
 
+    local MusicEqPresets = {
+        {Name = "Mặc định", Low = 0, Mid = 0, High = 0, Reverb = false},
+        {Name = "Tăng Bass", Low = 10, Mid = -1, High = 1, Reverb = false},
+        {Name = "Trong trẻo", Low = -2, Mid = 6, High = 5, Reverb = false},
+        {Name = "Vang nhẹ", Low = 3, Mid = 1, High = 2, Reverb = true}
+    }
+    if not MusicEqPresets[State.MusicEqIdx] then State.MusicEqIdx = 1 end
+
+    local function applyMusicEQ(soundObj)
+        if not soundObj or not soundObj.Parent then return end
+        local preset = MusicEqPresets[State.MusicEqIdx] or MusicEqPresets[1]
+        pcall(function()
+            local eq = soundObj:FindFirstChild("MenuVipEQ")
+            if not eq then
+                eq = Instance.new("EqualizerSoundEffect")
+                eq.Name = "MenuVipEQ"
+                eq.Parent = soundObj
+            end
+            eq.LowGain = preset.Low
+            eq.MidGain = preset.Mid
+            eq.HighGain = preset.High
+            eq.Enabled = (State.MusicEqIdx ~= 1)
+
+            local rev = soundObj:FindFirstChild("MenuVipReverb")
+            if preset.Reverb then
+                if not rev then
+                    rev = Instance.new("ReverbSoundEffect")
+                    rev.Name = "MenuVipReverb"
+                    rev.DecayTime = 1.8
+                    rev.Density = 0.65
+                    rev.Diffusion = 0.7
+                    rev.DryLevel = 0
+                    rev.WetLevel = -8
+                    rev.Parent = soundObj
+                end
+                rev.Enabled = true
+            elseif rev then
+                rev.Enabled = false
+            end
+        end)
+    end
+
+    local syncPlayingRowHighlights
     local function stopMusic()
         if currentSound then
             currentSound:Stop(); currentSound:Destroy(); currentSound = nil
@@ -3653,6 +3714,7 @@ do
         seekKnob.Position = UDim2.new(0, 0, 0.5, 0)
         musicTimeLabel.Text = "00:00 / 00:00"
         if syncPlayPauseBtnVisual then syncPlayPauseBtnVisual() end
+        if syncPlayingRowHighlights then syncPlayingRowHighlights() end
     end
 
     local stepPlaylistTrack
@@ -3706,7 +3768,9 @@ do
         soundObj.PlaybackSpeed = getCurrentSpeedPreset().Speed
         soundObj.Looped = State.MusicLoop
         soundObj.Parent = SoundService
+        applyMusicEQ(soundObj)
         currentSound = soundObj
+        if syncPlayingRowHighlights then syncPlayingRowHighlights() end
 
         soundObj.Loaded:Connect(function()
             if currentSound == soundObj and currentMusicId == soundId then
@@ -4476,8 +4540,64 @@ do
             end
         end
 
+        -- Hàng công cụ nhanh: Ô tìm kiếm Kho Nhạc + Nút chuyển hiệu ứng EQ / Bass Boost
+        local musicSearchQuery = ""
+        local musicToolRow = Instance.new("Frame", musicListCard)
+        musicToolRow.Size = UDim2.new(1, -12, 0, 20); musicToolRow.Position = UDim2.new(0, 6, 0, 25)
+        musicToolRow.BackgroundTransparency = 1; musicToolRow.ZIndex = 12
+
+        local mSearchFrame = Instance.new("Frame", musicToolRow)
+        mSearchFrame.Size = UDim2.new(1, -100, 1, 0); mSearchFrame.Position = UDim2.new(0, 0, 0, 0)
+        mSearchFrame.BackgroundColor3 = Color3.fromRGB(14, 16, 24); mSearchFrame.ZIndex = 12
+        Instance.new("UICorner", mSearchFrame).CornerRadius = UDim.new(1, 0)
+        local msStroke = Instance.new("UIStroke", mSearchFrame)
+        msStroke.Color = Color3.fromRGB(48, 58, 82); msStroke.Thickness = 0.85
+
+        local mSearchBox = Instance.new("TextBox", mSearchFrame)
+        mSearchBox.Size = UDim2.new(1, -24, 1, 0); mSearchBox.Position = UDim2.new(0, 8, 0, 0)
+        mSearchBox.BackgroundTransparency = 1; mSearchBox.PlaceholderText = "🔍 Tìm tên bài hoặc ID..."
+        mSearchBox.PlaceholderColor3 = Color3.fromRGB(122, 134, 158); mSearchBox.Text = ""
+        mSearchBox.TextColor3 = Color3.fromRGB(205, 215, 232)
+        mSearchBox.Font = Enum.Font.GothamMedium; mSearchBox.TextSize = 8.0
+        mSearchBox.TextXAlignment = Enum.TextXAlignment.Left; mSearchBox.ClearTextOnFocus = false; mSearchBox.ZIndex = 13
+
+        local mSearchClear = Instance.new("TextButton", mSearchFrame)
+        mSearchClear.Size = UDim2.new(0, 16, 0, 16); mSearchClear.Position = UDim2.new(1, -18, 0.5, -8)
+        mSearchClear.BackgroundTransparency = 1; mSearchClear.Text = "✕"
+        mSearchClear.TextColor3 = Color3.fromRGB(150, 162, 184); mSearchClear.Font = Enum.Font.GothamSemibold; mSearchClear.TextSize = 8.2
+        mSearchClear.Visible = false; mSearchClear.ZIndex = 14
+
+        local eqCycleBtn = Instance.new("TextButton", musicToolRow)
+        eqCycleBtn.Size = UDim2.new(0, 95, 1, 0); eqCycleBtn.Position = UDim2.new(1, -95, 0, 0)
+        eqCycleBtn.BackgroundColor3 = Color3.fromRGB(16, 22, 36); eqCycleBtn.Text = "🎚️ EQ: Mặc định"
+        eqCycleBtn.TextColor3 = Color3.fromRGB(168, 192, 220); eqCycleBtn.Font = Enum.Font.GothamSemibold; eqCycleBtn.TextSize = 7.6
+        eqCycleBtn.AutoButtonColor = false; eqCycleBtn.ZIndex = 13
+        Instance.new("UICorner", eqCycleBtn).CornerRadius = UDim.new(1, 0)
+        local eqStroke = Instance.new("UIStroke", eqCycleBtn)
+        eqStroke.Color = Color3.fromRGB(58, 118, 175); eqStroke.Thickness = 0.85
+
+        local function syncEqBtnVisual()
+            local preset = MusicEqPresets[State.MusicEqIdx] or MusicEqPresets[1]
+            local isActive = (State.MusicEqIdx ~= 1)
+            eqCycleBtn.Text = "🎚️ " .. preset.Name
+            eqCycleBtn.BackgroundColor3 = isActive and Color3.fromRGB(18, 38, 42) or Color3.fromRGB(16, 22, 36)
+            eqCycleBtn.TextColor3 = isActive and Color3.fromRGB(132, 212, 184) or Color3.fromRGB(168, 192, 220)
+            eqStroke.Color = isActive and Color3.fromRGB(64, 168, 140) or Color3.fromRGB(58, 118, 175)
+        end
+        syncEqBtnVisual()
+
+        eqCycleBtn.MouseButton1Click:Connect(function()
+            clickAnimate(eqCycleBtn)
+            State.MusicEqIdx = (State.MusicEqIdx % #MusicEqPresets) + 1
+            syncEqBtnVisual()
+            if currentSound then applyMusicEQ(currentSound) end
+            if State.AutoSave then saveConfig() end
+            local preset = MusicEqPresets[State.MusicEqIdx] or MusicEqPresets[1]
+            MakeToast("🎚️ Hiệu Ứng Âm Thanh", "Chế độ EQ: " .. preset.Name, State.MusicEqIdx ~= 1 and Theme.AccentOn or Theme.Brand)
+        end)
+
         local emptyMusicState = Instance.new("TextLabel", musicListCard)
-        emptyMusicState.Size = UDim2.new(1, -24, 1, -26); emptyMusicState.Position = UDim2.new(0, 12, 0, 23)
+        emptyMusicState.Size = UDim2.new(1, -24, 1, -48); emptyMusicState.Position = UDim2.new(0, 12, 0, 47)
         emptyMusicState.BackgroundTransparency = 1; emptyMusicState.RichText = true
         emptyMusicState.Text = "🎶 Chưa có bài nhạc nào được lưu.\n<font color='#7E889E'>Nhập ID Nhạc ở trên rồi bấm nút Lưu đĩa mềm bên phải để thêm!</font>"
         emptyMusicState.TextColor3 = Theme.TextDim; emptyMusicState.Font = Enum.Font.GothamSemibold; emptyMusicState.TextSize = 8.8
@@ -4485,7 +4605,7 @@ do
         emptyMusicState.TextXAlignment = Enum.TextXAlignment.Center; emptyMusicState.TextYAlignment = Enum.TextYAlignment.Center; emptyMusicState.ZIndex = 11
 
         local savedMusicContent = Instance.new("ScrollingFrame", musicListCard)
-        savedMusicContent.Size = UDim2.new(1, -10, 1, -26); savedMusicContent.Position = UDim2.new(0, 5, 0, 24)
+        savedMusicContent.Size = UDim2.new(1, -10, 1, -48); savedMusicContent.Position = UDim2.new(0, 5, 0, 47)
         savedMusicContent.BackgroundTransparency = 1; savedMusicContent.ScrollBarThickness = 3; savedMusicContent.ScrollBarImageColor3 = Theme.Brand; savedMusicContent.BorderSizePixel = 0; savedMusicContent.ZIndex = 10
         local sLayout = Instance.new("UIListLayout", savedMusicContent); sLayout.SortOrder = Enum.SortOrder.LayoutOrder; sLayout.Padding = UDim.new(0, 4)
         local sPad = Instance.new("UIPadding", savedMusicContent); sPad.PaddingTop = UDim.new(0, 2); sPad.PaddingBottom = UDim.new(0, 6); sPad.PaddingLeft = UDim.new(0, 2); sPad.PaddingRight = UDim.new(0, 4)
@@ -4541,30 +4661,82 @@ do
             return removedDupes
         end
 
+        local renderedSongRows = {}
+        syncPlayingRowHighlights = function()
+            for _, ref in ipairs(renderedSongRows) do
+                if ref.outer and ref.outer.Parent then
+                    local isPlaying = (currentMusicId ~= "" and tostring(ref.id) == tostring(currentMusicId))
+                    if ref.rimStroke and ref.rimStroke.Parent then
+                        applyRimNeonGrad(ref.rimStroke, isPlaying)
+                    end
+                    if ref.nameBox and ref.nameBox.Parent then
+                        ref.nameBox.TextColor3 = isPlaying and Color3.fromRGB(132, 224, 186) or GlossPalette.IconWhite
+                    end
+                    if ref.innerGrad and ref.innerGrad.Parent then
+                        ref.innerGrad.Color = ColorSequence.new({
+                            ColorSequenceKeypoint.new(0, isPlaying and GlossPalette.InnerActiveTop or GlossPalette.InnerTop),
+                            ColorSequenceKeypoint.new(1, isPlaying and GlossPalette.InnerActiveBottom or GlossPalette.InnerBottom)
+                        })
+                    end
+                end
+            end
+        end
+
         renderSavedMusic = function()
             for _, child in pairs(savedMusicContent:GetChildren()) do if child:IsA("Frame") then child:Destroy() end end
+            renderedSongRows = {}
             cleanRGBElements()
             mlHeader.Text = "KHO NHẠC (" .. #savedMusicList .. ")"
             syncMusicFilterTabs()
 
-            local visibleCount = 0
+            -- Đưa các bài ghim yêu thích (★) lên đầu danh sách nhưng giữ nguyên thứ tự gốc trong mỗi nhóm
+            local orderedIndices = {}
             for i, data in ipairs(savedMusicList) do
+                if data.fav then table.insert(orderedIndices, i) end
+            end
+            for i, data in ipairs(savedMusicList) do
+                if not data.fav then table.insert(orderedIndices, i) end
+            end
+
+            local q = string.lower(tostring(musicSearchQuery or ""):gsub("^%s*(.-)%s*$", "%1"))
+            local visibleCount = 0
+            for orderPos, i in ipairs(orderedIndices) do
+                local data = savedMusicList[i]
                 local st = data.status or "checking"
                 local matchFilter = (currentMusicFilter == "all")
                     or (currentMusicFilter == "public" and st == "public")
                     or (currentMusicFilter == "private" and st == "private")
+                local matchQuery = (q == "")
+                    or string.find(string.lower(tostring(data.name or "")), q, 1, true) ~= nil
+                    or string.find(string.lower(tostring(data.id or "")), q, 1, true) ~= nil
 
-                if matchFilter then
+                if matchFilter and matchQuery then
                     visibleCount = visibleCount + 1
-                    local rowOuter, rowInner = createGlossyPillFrame(savedMusicContent, UDim2.new(1, -2, 0, 30), nil, i)
+                    local rowOuter, rowInner = createGlossyPillFrame(savedMusicContent, UDim2.new(1, -2, 0, 30), nil, orderPos)
+                    local rowRimStroke = rowOuter:FindFirstChildOfClass("UIStroke")
+                    local rowInnerGrad = rowInner:FindFirstChildOfClass("UIGradient")
 
                     local songIconBtn, songIconHolder = createGlossyCircleBtn(rowInner, 21, UDim2.new(0, 3, 0.5, 0), Vector2.new(0, 0.5))
                     drawGlossyIcon(songIconHolder, "MusicNote", 0.65)
 
+                    -- Nút Ghim Yêu Thích (★) đặt gọn ngay bên trái tên bài
+                    local favBtn = Instance.new("TextButton", rowInner)
+                    favBtn.Size = UDim2.new(0, 16, 0, 18); favBtn.Position = UDim2.new(0, 25, 0.5, -9)
+                    favBtn.BackgroundTransparency = 1
+                    favBtn.Text = data.fav and "★" or "☆"
+                    favBtn.TextColor3 = data.fav and Color3.fromRGB(238, 198, 92) or Color3.fromRGB(115, 128, 152)
+                    favBtn.Font = Enum.Font.GothamBold; favBtn.TextSize = 11.5; favBtn.ZIndex = 14
+                    favBtn.MouseButton1Click:Connect(function()
+                        clickAnimate(favBtn)
+                        data.fav = not data.fav
+                        saveMusicData()
+                        renderSavedMusic()
+                    end)
+
                     local nameBox = Instance.new("TextBox", rowInner)
-                    nameBox.Size = UDim2.new(1, -144, 1, 0); nameBox.Position = UDim2.new(0, 28, 0, 0)
+                    nameBox.Size = UDim2.new(1, -158, 1, 0); nameBox.Position = UDim2.new(0, 42, 0, 0)
                     nameBox.Text = data.name; nameBox.TextColor3 = GlossPalette.IconWhite
-                    nameBox.Font = Enum.Font.GothamSemibold; nameBox.TextSize = 8.8
+                    nameBox.Font = Enum.Font.GothamSemibold; nameBox.TextSize = 8.6
                     nameBox.BackgroundTransparency = 1; nameBox.TextXAlignment = Enum.TextXAlignment.Left
                     nameBox.TextTruncate = Enum.TextTruncate.AtEnd
                     nameBox.ClearTextOnFocus = false; nameBox.ZIndex = 13
@@ -4582,7 +4754,6 @@ do
 
                     statusBadge.MouseButton1Click:Connect(function()
                         clickAnimate(statusBadge)
-                        -- Bấm vào logo trạng thái để kiểm tra lại ID (hiện LOADING rồi phân loại PUBLIC/PRIVATE)
                         probeSongStatus(data)
                         MakeToast("🔍 Kiểm Tra Lại ID", "Đang kiểm tra lại bài '" .. data.name .. "'...", Theme.Brand)
                     end)
@@ -4593,23 +4764,48 @@ do
                     local delItemBtn, delItemHolder = createGlossyCircleBtn(rowInner, 21, UDim2.new(1, -24, 0.5, 0), Vector2.new(0, 0.5))
                     drawGlossyIcon(delItemHolder, "Cross", 0.65)
 
+                    table.insert(renderedSongRows, {
+                        id = data.id,
+                        outer = rowOuter,
+                        rimStroke = rowRimStroke,
+                        innerGrad = rowInnerGrad,
+                        nameBox = nameBox
+                    })
+
                     songIconBtn.MouseButton1Click:Connect(function() clickAnimate(songIconBtn); setMusicIdBoxProgrammatically(data.id); playMusic(data.id) end)
                     playItemBtn.MouseButton1Click:Connect(function() clickAnimate(playItemBtn); setMusicIdBoxProgrammatically(data.id); playMusic(data.id) end)
                     delItemBtn.MouseButton1Click:Connect(function() clickAnimate(delItemBtn); table.remove(savedMusicList, i); saveMusicData(); renderSavedMusic() end)
                 end
             end
 
+            syncPlayingRowHighlights()
+
             if #savedMusicList == 0 then
                 emptyMusicState.Text = "🎶 Chưa có bài nhạc nào được lưu.\n<font color='#7E889E'>Nhập ID Nhạc ở trên rồi bấm nút Lưu đĩa mềm bên phải để thêm!</font>"
                 emptyMusicState.Visible = true
             elseif visibleCount == 0 then
-                local filterName = currentMusicFilter == "public" and "PUBLIC" or "PRIVATE"
-                emptyMusicState.Text = "🔎 Không có bài nhạc nào thuộc nhóm <font color='#F0C868'>" .. filterName .. "</font>.\n<font color='#7E889E'>Bấm sang mục 'Tất cả' để xem toàn bộ danh sách!</font>"
+                if q ~= "" then
+                    emptyMusicState.Text = "🔎 Không tìm thấy bài nhạc khớp từ khóa <font color='#F0C868'>" .. musicSearchQuery .. "</font>."
+                else
+                    local filterName = currentMusicFilter == "public" and "PUBLIC" or "PRIVATE"
+                    emptyMusicState.Text = "🔎 Không có bài nhạc nào thuộc nhóm <font color='#F0C868'>" .. filterName .. "</font>.\n<font color='#7E889E'>Bấm sang mục 'Tất cả' để xem toàn bộ danh sách!</font>"
+                end
                 emptyMusicState.Visible = true
             else
                 emptyMusicState.Visible = false
             end
         end
+
+        mSearchBox:GetPropertyChangedSignal("Text"):Connect(function()
+            musicSearchQuery = mSearchBox.Text or ""
+            mSearchClear.Visible = (musicSearchQuery ~= "")
+            renderSavedMusic()
+        end)
+        mSearchClear.MouseButton1Click:Connect(function()
+            clickAnimate(mSearchClear)
+            mSearchBox.Text = ""
+            if mSearchBox:IsFocused() then pcall(function() mSearchBox:ReleaseFocus(false) end) end
+        end)
 
         fBtnAll.MouseButton1Click:Connect(function() clickAnimate(fBtnAll); currentMusicFilter = "all"; renderSavedMusic() end)
         fBtnPub.MouseButton1Click:Connect(function() clickAnimate(fBtnPub); currentMusicFilter = "public"; renderSavedMusic() end)
@@ -7664,7 +7860,7 @@ do
         local s = execTime % 60
 
         sysBody.Text = string.format(
-            "<font color='#78B4DC'>• Executor:</font> <font color='#38CC88'>%s</font>   |   <font color='#78B4DC'>Phiên bản:</font> <font color='#E09F67'>V1.37.0</font>\n" ..
+            "<font color='#78B4DC'>• Executor:</font> <font color='#38CC88'>%s</font>   |   <font color='#78B4DC'>Phiên bản:</font> <font color='#E09F67'>V1.38.0</font>\n" ..
             "<font color='#78B4DC'>• Treo máy:</font> %02d:%02d:%02d   |   <font color='#78B4DC'>Giờ hệ thống:</font> %s",
             execName, h, m, s, os.date("%H:%M:%S")
         )
