@@ -1,5 +1,5 @@
 -- ============================================================================
--- MENU VIP PRO MAX V1.41.0 (LUXURY CYBER-GLASS & BENTO SIDEBAR EDITION)
+-- MENU VIP PRO MAX V1.42.0 (LUXURY CYBER-GLASS & BENTO SIDEBAR EDITION)
 -- ============================================================================
 -- MỤC LỤC CẤU TRÚC CODE:
 --   [PHẦN 01] Khởi tạo Services & Người chơi
@@ -17,7 +17,7 @@
 --   [PHẦN 13] Tab 9 - Cấu hình & Giảm Lag (3 Preset, FPS Cap, Đồ họa, Culling)
 --   [PHẦN 14] Tab 1 - Dashboard Bento & Quản lý Server
 --   [PHẦN 14B] Tab 10 - Tab Mới 1 (Trống - chờ thêm tính năng)
---   [PHẦN 14C] Tab 11 - Tab Mới 2 (Trống - chờ thêm tính năng)
+--   [PHẦN 14C] Tab 11 - Mini Game (Chế độ khóa game chính & Kho Mini Game)
 --   [PHẦN 15] Vòng lặp nền: Auto Click, Instant Prompt & Auto Collect
 --   [PHẦN 16] Vòng lặp ESP, Hitbox & Vật lý chuyển động (Stepped / Heartbeat)
 -- ============================================================================
@@ -119,7 +119,7 @@ local State = {
     LookAtTarget = false,
     SafeSpotRetreat = false, SafeSpotHpPct = 30,
     QuickShortcuts = false, IncludeMatchBots = true,
-    AutoReconnect = true
+    AutoReconnect = true, MiniGameLock = false
 }
 
 local Theme = {
@@ -648,10 +648,10 @@ do
     headerStatText.RichText = true; headerStatText.Text = "<font color='#38CC88'>60 FPS</font> • <font color='#58B6F2'>0ms</font>"
     headerStatText.TextColor3 = Theme.TextTitle; headerStatText.Font = Enum.Font.GothamBold; headerStatText.TextSize = 9; headerStatText.ZIndex = 13
 
-    -- Huy hiệu V1.41 nền tối sâu, chữ sáng rõ nét trên Mobile
+    -- Huy hiệu V1.42 nền tối sâu, chữ sáng rõ nét trên Mobile
     local verBadge = Instance.new("TextLabel", header)
     verBadge.Size = UDim2.new(0, 46, 0, 21); verBadge.Position = UDim2.new(1, -110, 0.5, -10.5)
-    verBadge.BackgroundColor3 = Color3.fromRGB(18, 22, 36); verBadge.Text = "V1.41"; verBadge.TextColor3 = getSoftBrandColor(Theme.Brand)
+    verBadge.BackgroundColor3 = Color3.fromRGB(18, 22, 36); verBadge.Text = "V1.42"; verBadge.TextColor3 = getSoftBrandColor(Theme.Brand)
     verBadge.Font = Enum.Font.GothamBold; verBadge.TextSize = 9.5; verBadge.ZIndex = 12
     Instance.new("UICorner", verBadge).CornerRadius = UDim.new(0, 7)
     local verStroke = Instance.new("UIStroke", verBadge); verStroke.Color = Theme.Brand; verStroke.Thickness = 1.0; verStroke.Transparency = 0.25
@@ -859,11 +859,15 @@ do
             part(0.5, 0.5, 0.24, 0.72, Color3.fromRGB(135, 250, 225), Color3.fromRGB(42, 185, 165), 0, 1, 2)
             part(0.5, 0.5, 0.72, 0.24, Color3.fromRGB(135, 250, 225), Color3.fromRGB(42, 185, 165), 0, 1, 2)
             part(0.5, 0.5, 0.22, 0.22, Color3.fromRGB(245, 255, 255), nil, 45, 0.4, 3)
-        elseif iconKey == "Extra2" then
-            -- 11. TAB MỚI 2: Khối tinh thể 3D tím-hồng nổi bật
-            ring(0.5, 0.54, 0.86, 0.48, Color3.fromRGB(215, 95, 255), 1.2, 18, 0)
-            part(0.5, 0.5, 0.54, 0.54, Color3.fromRGB(235, 145, 255), Color3.fromRGB(132, 58, 235), 45, 0.24, 2)
-            part(0.5, 0.5, 0.26, 0.26, Color3.fromRGB(255, 235, 255), Color3.fromRGB(195, 125, 255), 45, 0.35, 3)
+        elseif iconKey == "MiniGame" then
+            -- 11. MINI GAME: Tay cầm chơi game 3D Cyber-Neon tím-cyan nổi bật
+            ring(0.5, 0.54, 0.90, 0.48, Color3.fromRGB(195, 92, 255), 1.2, -16, 0)
+            local padBody = part(0.5, 0.50, 0.78, 0.44, Color3.fromRGB(58, 128, 235), Color3.fromRGB(138, 52, 225), 0, 0.45, 2)
+            local pSt = Instance.new("UIStroke", padBody); pSt.Color = Color3.fromRGB(115, 235, 255); pSt.Thickness = 0.9
+            part(0.30, 0.50, 0.16, 0.06, Color3.fromRGB(235, 248, 255), nil, 0, 0.4, 3)
+            part(0.30, 0.50, 0.06, 0.16, Color3.fromRGB(235, 248, 255), nil, 0, 0.4, 3)
+            part(0.65, 0.44, 0.10, 0.10, Color3.fromRGB(95, 245, 175), nil, 0, 1, 3)
+            part(0.74, 0.55, 0.10, 0.10, Color3.fromRGB(255, 215, 85), nil, 0, 1, 3)
         end
     end
 
@@ -911,7 +915,7 @@ do
     local tab4, ind4 = createTab("Utility", "TIỆN ÍCH")
     local tab9, ind9 = createTab("Config", "CẤU HÌNH")
     local tab10, ind10 = createTab("Extra1", "TAB MỚI 1")
-    local tab11, ind11 = createTab("Extra2", "TAB MỚI 2")
+    local tab11, ind11 = createTab("MiniGame", "MINI GAME")
 
     -- Tự động giãn đều chiều cao & khoảng cách toàn bộ Tab bên Sidebar khi mở hoặc phóng to/thu nhỏ Menu
     local function updateSidebarProportions()
@@ -1130,7 +1134,7 @@ do
             {pg = page8, tb = tab8, ind = ind8, name = "AUTO SKILL"},
             {pg = page9, tb = tab9, ind = ind9, name = "CẤU HÌNH"},
             {pg = page10, tb = tab10, ind = ind10, name = "TAB MỚI 1"},
-            {pg = page11, tb = tab11, ind = ind11, name = "TAB MỚI 2"}
+            {pg = page11, tb = tab11, ind = ind11, name = "MINI GAME"}
         }
         local count = 0
         for _, tm in ipairs(tabMap) do
@@ -7986,7 +7990,7 @@ do
         local s = execTime % 60
 
         sysBody.Text = string.format(
-            "<font color='#78B4DC'>• Executor:</font> <font color='#38CC88'>%s</font>   |   <font color='#78B4DC'>Phiên bản:</font> <font color='#E09F67'>V1.41.0</font>\n" ..
+            "<font color='#78B4DC'>• Executor:</font> <font color='#38CC88'>%s</font>   |   <font color='#78B4DC'>Phiên bản:</font> <font color='#E09F67'>V1.42.0</font>\n" ..
             "<font color='#78B4DC'>• Treo máy:</font> %02d:%02d:%02d   |   <font color='#78B4DC'>Giờ hệ thống:</font> %s",
             execName, h, m, s, os.date("%H:%M:%S")
         )
@@ -8008,10 +8012,318 @@ do
 end
 
 -- ============================================================================
--- [PHẦN 14C] TAB 11: TAB MỚI 2 (TRỐNG - CHỜ THÊM TÍNH NĂNG SAU)
+-- [PHẦN 14C] TAB 11: MINI GAME (CHẾ ĐỘ KHÓA GAME CHÍNH & KHO MINI GAME)
 -- ============================================================================
 do
-    -- Thêm các nút/tính năng của Tab Mới 2 vào `page11` tại đây
+    local ContextActionService = game:GetService("ContextActionService")
+    local miniGameLockGui = nil
+    local savedTouchGuiEnabled = nil
+    local lockActionName = "MenuVipProMax_MiniGameInputLock"
+
+    local function applyMiniGameLock(enabled)
+        if enabled then
+            -- 1. Tạo lớp khiên trong suốt chặn toàn bộ thao tác chạm vào game chính bên dưới
+            if not miniGameLockGui or not miniGameLockGui.Parent then
+                miniGameLockGui = Instance.new("ScreenGui")
+                miniGameLockGui.Name = "MenuVipMiniGameBlocker"
+                miniGameLockGui.ResetOnSpawn = false
+                miniGameLockGui.IgnoreGuiInset = true
+                miniGameLockGui.DisplayOrder = 5
+                miniGameLockGui.Parent = guiParent
+
+                local shield = Instance.new("TextButton", miniGameLockGui)
+                shield.Name = "TouchShield"
+                shield.Size = UDim2.new(1, 0, 1, 0)
+                shield.Position = UDim2.new(0, 0, 0, 0)
+                shield.BackgroundColor3 = Color3.fromRGB(6, 8, 14)
+                shield.BackgroundTransparency = 0.62
+                shield.BorderSizePixel = 0
+                shield.Text = ""
+                shield.AutoButtonColor = false
+                shield.Active = true
+                shield.Modal = true
+                shield.ZIndex = 1
+            end
+            miniGameLockGui.Enabled = true
+
+            -- 2. Ẩn nút di chuyển cảm ứng (TouchGui) của game chính trên Mobile để tránh bấm nhầm
+            pcall(function()
+                local pg = player:FindFirstChildOfClass("PlayerGui")
+                local tg = pg and pg:FindFirstChild("TouchGui")
+                if tg then
+                    if savedTouchGuiEnabled == nil then savedTouchGuiEnabled = tg.Enabled end
+                    tg.Enabled = false
+                end
+            end)
+
+            -- 3. Chặn phím di chuyển WASD / Space của game chính trên PC
+            pcall(function()
+                ContextActionService:BindActionAtPriority(
+                    lockActionName,
+                    function() return Enum.ContextActionResult.Sink end,
+                    false,
+                    Enum.ContextActionPriority.High.Value + 500,
+                    Enum.PlayerActions.CharacterForward,
+                    Enum.PlayerActions.CharacterBackward,
+                    Enum.PlayerActions.CharacterLeft,
+                    Enum.PlayerActions.CharacterRight,
+                    Enum.PlayerActions.CharacterJump
+                )
+            end)
+            MakeToast("🔒 Đã Khóa Game Chính", "Đã chặn chạm & di chuyển game chính để chơi Mini Game!", Theme.AccentOn)
+        else
+            if miniGameLockGui then
+                miniGameLockGui.Enabled = false
+            end
+            pcall(function()
+                local pg = player:FindFirstChildOfClass("PlayerGui")
+                local tg = pg and pg:FindFirstChild("TouchGui")
+                if tg then
+                    tg.Enabled = (savedTouchGuiEnabled ~= nil) and savedTouchGuiEnabled or true
+                end
+                savedTouchGuiEnabled = nil
+            end)
+            pcall(function() ContextActionService:UnbindAction(lockActionName) end)
+            MakeToast("🔓 Đã Mở Khóa Game", "Bạn có thể điều khiển lại game chính bình thường!", Theme.Brand)
+        end
+    end
+
+    -- Tự động mở khóa & hủy lớp khiên khi reload/dọn script
+    gui.Destroying:Connect(function()
+        pcall(function() ContextActionService:UnbindAction(lockActionName) end)
+        pcall(function()
+            local pg = player:FindFirstChildOfClass("PlayerGui")
+            local tg = pg and pg:FindFirstChild("TouchGui")
+            if tg and savedTouchGuiEnabled ~= nil then tg.Enabled = savedTouchGuiEnabled end
+        end)
+        if miniGameLockGui then pcall(function() miniGameLockGui:Destroy() end) end
+    end)
+
+    createDivider(page11, "CHẾ ĐỘ CHƠI MINI GAME")
+    createToggle(page11, "🔒 Chế độ chơi game (Khóa game chính)", "MiniGameLock", function(v)
+        applyMiniGameLock(v)
+    end)
+
+    if State.MiniGameLock then
+        task.defer(function() applyMiniGameLock(true) end)
+    end
+
+    -- Bộ giải mã Base64 nhẹ để hiển thị đúng ảnh logo Mini Game trên mọi Executor (Delta/Arceus/Fluxus)
+    local function decodeBase64Bytes(data)
+        local okCrypt, dec = pcall(function()
+            if crypt and crypt.base64decode then return crypt.base64decode(data) end
+            if base64_decode then return base64_decode(data) end
+            if syn and syn.crypt and syn.crypt.base64 and syn.crypt.base64.decode then return syn.crypt.base64.decode(data) end
+            return nil
+        end)
+        if okCrypt and type(dec) == "string" and #dec > 64 then return dec end
+        local b = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+        local cleaned = data:gsub("[^" .. b .. "=]", "")
+        return (cleaned:gsub(".", function(x)
+            if x == "=" then return "" end
+            local r, f = "", (b:find(x, 1, true) - 1)
+            for i = 6, 1, -1 do r = r .. (f % 2^i - f % 2^(i - 1) > 0 and "1" or "0") end
+            return r
+        end):gsub("%d%d%d?%d?%d?%d?%d?%d?", function(x)
+            if #x ~= 8 then return "" end
+            local c = 0
+            for i = 1, 8 do c = c + (x:sub(i, i) == "1" and 2^(8 - i) or 0) end
+            return string.char(c)
+        end))
+    end
+
+    local function loadCustomMiniGameAsset(fileName, b64Data)
+        local getAssetFn = getcustomasset or getsynasset
+        if not getAssetFn or not writefile then return nil end
+        local ok, uri = pcall(function()
+            if not (isfile and isfile(fileName)) then
+                writefile(fileName, decodeBase64Bytes(b64Data))
+            end
+            return getAssetFn(fileName)
+        end)
+        if ok and uri and tostring(uri) ~= "" then return uri end
+        return nil
+    end
+
+    createDivider(page11, "KHO MINI GAME")
+
+    local gameGridHolder = Instance.new("Frame", page11)
+    gameGridHolder.Size = UDim2.new(0.94, 0, 0, 114)
+    gameGridHolder.BackgroundTransparency = 1
+    gameGridHolder.ZIndex = 10
+
+    local gameGrid = Instance.new("UIGridLayout", gameGridHolder)
+    gameGrid.CellSize = UDim2.new(0, 92, 0, 108)
+    gameGrid.CellPadding = UDim2.new(0, 8, 0, 8)
+    gameGrid.SortOrder = Enum.SortOrder.LayoutOrder
+    gameGrid:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        gameGridHolder.Size = UDim2.new(0.94, 0, 0, math.max(114, gameGrid.AbsoluteContentSize.Y + 6))
+    end)
+
+    local function createMiniGameCard(order, titleTxt, assetUri, onLaunch)
+        local card = Instance.new("TextButton", gameGridHolder)
+        card.LayoutOrder = order
+        card.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        card.Text = ""
+        card.AutoButtonColor = false
+        card.ZIndex = 11
+        Instance.new("UICorner", card).CornerRadius = UDim.new(0, 10)
+        addSoftGradient(card, Color3.fromRGB(26, 32, 52), Color3.fromRGB(16, 20, 34), 135)
+        local cStroke = Instance.new("UIStroke", card)
+        cStroke.Color = Theme.Brand; cStroke.Thickness = 1.25; cStroke.Transparency = 0.2
+        table.insert(RGBElements, {Type = "Button", Stroke = cStroke, DefaultColor = Theme.Brand, UseBrand = true})
+
+        local imgBox = Instance.new("Frame", card)
+        imgBox.Size = UDim2.new(0, 80, 0, 80)
+        imgBox.Position = UDim2.new(0.5, -40, 0, 5)
+        imgBox.BackgroundColor3 = Color3.fromRGB(245, 248, 255)
+        imgBox.BorderSizePixel = 0
+        imgBox.ClipsDescendants = true
+        imgBox.ZIndex = 12
+        Instance.new("UICorner", imgBox).CornerRadius = UDim.new(0, 8)
+
+        if assetUri then
+            local img = Instance.new("ImageLabel", imgBox)
+            img.Size = UDim2.new(1, 0, 1, 0)
+            img.BackgroundTransparency = 1
+            img.Image = assetUri
+            img.ScaleType = Enum.ScaleType.Fit
+            img.ZIndex = 13
+        else
+            imgBox.BackgroundColor3 = Color3.fromRGB(24, 52, 42)
+            local fb = Instance.new("TextLabel", imgBox)
+            fb.Size = UDim2.new(1, -6, 1, -6); fb.Position = UDim2.new(0, 3, 0, 3)
+            fb.BackgroundTransparency = 1; fb.Text = "🐍\nRẮN SĂN\nMỒI PRO"
+            fb.TextColor3 = Color3.fromRGB(235, 205, 105); fb.Font = Enum.Font.GothamBold; fb.TextSize = 10
+            fb.TextWrapped = true; fb.ZIndex = 13
+        end
+
+        local lbl = Instance.new("TextLabel", card)
+        lbl.Size = UDim2.new(1, -6, 0, 16)
+        lbl.Position = UDim2.new(0, 3, 1, -19)
+        lbl.BackgroundTransparency = 1
+        lbl.Text = titleTxt
+        lbl.TextColor3 = Color3.fromRGB(202, 212, 228)
+        lbl.Font = Enum.Font.GothamSemibold
+        lbl.TextSize = 8.4
+        lbl.TextTruncate = Enum.TextTruncate.AtEnd
+        lbl.ZIndex = 13
+
+        card.MouseButton1Click:Connect(function()
+            clickAnimate(card)
+            onLaunch()
+        end)
+        return card
+    end
+
+    -- Ảnh logo Rắn Săn Mồi Pro nhúng trực tiếp
+    local ranSanMoiLogoB64 = table.concat({
+        "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",
+        "f//Z"
+    })
+    local ranSanMoiImgUri = loadCustomMiniGameAsset("MenuVipProMax_RanSanMoiPro.jpg", ranSanMoiLogoB64)
+
+    createMiniGameCard(1, "Rắn Săn Mồi Pro", ranSanMoiImgUri, function()
+        task.spawn(function()
+            MakeToast("🐍 Đang Mở Mini Game", "Đang tải Rắn Săn Mồi Pro...", Theme.Brand)
+            local okGet, srcCode = pcall(function()
+                return game:HttpGet("https://raw.githubusercontent.com/haudeptrai2k6/r-n-s-n-m-i-/refs/heads/main/ransanmoi.lua")
+            end)
+            if not okGet or type(srcCode) ~= "string" or #srcCode < 10 then
+                MakeToast("⚠️ Lỗi Tải Game", "Không thể tải Rắn Săn Mồi Pro (kiểm tra mạng)!", Theme.AccentOff)
+                return
+            end
+            local fn, err = loadstring(srcCode)
+            if not fn then
+                MakeToast("⚠️ Lỗi Script Game", tostring(err or "Lỗi cú pháp"), Theme.AccentOff)
+                return
+            end
+            local okRun, runErr = pcall(fn)
+            if not okRun then
+                MakeToast("⚠️ Lỗi Chạy Game", tostring(runErr or "Không thể khởi chạy"), Theme.AccentOff)
+            end
+        end)
+    end)
 end
 
 -- ============================================================================
