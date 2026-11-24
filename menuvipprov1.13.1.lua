@@ -1,5 +1,5 @@
 -- ============================================================================
--- MENU VIP PRO MAX V1.45.0 (LUXURY CYBER-GLASS & BENTO SIDEBAR EDITION)
+-- MENU VIP PRO MAX V1.46.0 (LUXURY CYBER-GLASS & BENTO SIDEBAR EDITION)
 -- ============================================================================
 -- MỤC LỤC CẤU TRÚC CODE:
 --   [PHẦN 01] Khởi tạo Services & Người chơi
@@ -260,6 +260,9 @@ pcall(function()
         for k, v in pairs(data) do if State[k] ~= nil then State[k] = v end end
     end
 end)
+-- Luôn tắt các chế độ khóa màn hình/camera khi vừa vào game để tránh bị kẹt do AutoSave
+State.Freecam = false
+State.MiniGameLock = false
 if not TpPositions[State.TpPositionIdx] then State.TpPositionIdx = 1 end
 if not TpMoveMethods[State.TpMoveMethodIdx] then State.TpMoveMethodIdx = 1 end
 local MusicSpeedPresets = {
@@ -556,14 +559,14 @@ do
             btnDragInput = input; btnDragStart = input.Position; btnStartPos = openBtn.Position
         end
     end)
-    UIS.InputChanged:Connect(function(input)
+    trackConn(UIS.InputChanged:Connect(function(input)
         if isDragUpdateInput(input, btnDragInput) then
             openBtn.Position = UDim2.new(btnStartPos.X.Scale, btnStartPos.X.Offset + (input.Position.X - btnDragStart.X), btnStartPos.Y.Scale, btnStartPos.Y.Offset + (input.Position.Y - btnDragStart.Y))
         end
-    end)
-    UIS.InputEnded:Connect(function(input)
+    end))
+    trackConn(UIS.InputEnded:Connect(function(input)
         if input == btnDragInput then btnDragInput = nil end
-    end)
+    end))
 end
 local OPEN_POS = UDim2.new(0.5, -220, 0.5, -166)
 local CLOSE_POS = UDim2.new(0.5, -220, 1.25, 0)
@@ -648,10 +651,10 @@ do
     headerStatText.RichText = true; headerStatText.Text = "<font color='#38CC88'>60 FPS</font> • <font color='#58B6F2'>0ms</font>"
     headerStatText.TextColor3 = Theme.TextTitle; headerStatText.Font = Enum.Font.GothamBold; headerStatText.TextSize = 9; headerStatText.ZIndex = 13
 
-    -- Huy hiệu V1.45 nền tối sâu, chữ sáng rõ nét trên Mobile
+    -- Huy hiệu V1.46 nền tối sâu, chữ sáng rõ nét trên Mobile
     local verBadge = Instance.new("TextLabel", header)
     verBadge.Size = UDim2.new(0, 46, 0, 21); verBadge.Position = UDim2.new(1, -110, 0.5, -10.5)
-    verBadge.BackgroundColor3 = Color3.fromRGB(18, 22, 36); verBadge.Text = "V1.45"; verBadge.TextColor3 = getSoftBrandColor(Theme.Brand)
+    verBadge.BackgroundColor3 = Color3.fromRGB(18, 22, 36); verBadge.Text = "V1.46"; verBadge.TextColor3 = getSoftBrandColor(Theme.Brand)
     verBadge.Font = Enum.Font.GothamBold; verBadge.TextSize = 9.5; verBadge.ZIndex = 12
     Instance.new("UICorner", verBadge).CornerRadius = UDim.new(0, 7)
     local verStroke = Instance.new("UIStroke", verBadge); verStroke.Color = Theme.Brand; verStroke.Thickness = 1.0; verStroke.Transparency = 0.25
@@ -677,15 +680,15 @@ do
                 dragInput = input; dragStart = input.Position; startPos = frame.Position
             end
         end)
-        UIS.InputChanged:Connect(function(input)
+        trackConn(UIS.InputChanged:Connect(function(input)
             if isDragUpdateInput(input, dragInput) then
                 frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + (input.Position.X - dragStart.X), startPos.Y.Scale, startPos.Y.Offset + (input.Position.Y - dragStart.Y))
                 OPEN_POS = frame.Position
             end
-        end)
-        UIS.InputEnded:Connect(function(input)
+        end))
+        trackConn(UIS.InputEnded:Connect(function(input)
             if input == dragInput then dragInput = nil end
-        end)
+        end))
     end
 
     -- SIDEBAR BENTO PILL HIỆN ĐẠI (TỐI ƯU KHOẢNG THỞ 9 TAB KHÔNG CHẠM ĐÁY)
@@ -1250,7 +1253,7 @@ do
             end
         end)
 
-        UIS.InputChanged:Connect(function(input)
+        trackConn(UIS.InputChanged:Connect(function(input)
             if isDragUpdateInput(input, resizingInput) then
                 local delta = input.Position - resizeStartPos
                 local targetVisualW = math.clamp((startWidth * startScale) + delta.X, 310, 680)
@@ -1276,14 +1279,14 @@ do
                     OPEN_POS = frame.Position
                 end
             end
-        end)
+        end))
 
-        UIS.InputEnded:Connect(function(input)
+        trackConn(UIS.InputEnded:Connect(function(input)
             if input == resizingInput then
                 resizingInput = nil
                 TweenService:Create(resizeHandle, TweenInfo.new(0.2), {TextTransparency = 0.25}):Play()
             end
-        end)
+        end))
     end
 
     local function toggleMenuWindow()
@@ -1899,16 +1902,16 @@ local function createSlider(parent, text, min, max, varName, callback)
             dragInput = input; updateSlider(input)
         end
     end)
-    UIS.InputChanged:Connect(function(input)
+    trackConn(UIS.InputChanged:Connect(function(input)
         if isDragUpdateInput(input, dragInput) then
             updateSlider(input)
         end
-    end)
-    UIS.InputEnded:Connect(function(input)
+    end))
+    trackConn(UIS.InputEnded:Connect(function(input)
         if input == dragInput then
             dragInput = nil
         end
-    end)
+    end))
     if callback then task.spawn(callback, State[varName]) end
     return sFrame
 end
@@ -2072,16 +2075,16 @@ local function createCombinedToggleSlider(parent, toggleText, toggleVar, sliderT
             dragInput = input; updateSlider(input)
         end
     end)
-    UIS.InputChanged:Connect(function(input)
+    trackConn(UIS.InputChanged:Connect(function(input)
         if isDragUpdateInput(input, dragInput) then
             updateSlider(input)
         end
-    end)
-    UIS.InputEnded:Connect(function(input)
+    end))
+    trackConn(UIS.InputEnded:Connect(function(input)
         if input == dragInput then
             dragInput = nil
         end
-    end)
+    end))
 
     if active and toggleCb then task.spawn(toggleCb, active) end
     if sliderCb then task.spawn(sliderCb, State[sliderVar]) end
@@ -2151,11 +2154,11 @@ createToggle(page2, "🔒 Khóa vị trí nhân vật (Anchor)", "LockPosition",
     end
 end)
 createToggle(page2, "🚀 Nhảy trên không (Inf Jump)", "InfJump")
-UIS.JumpRequest:Connect(function()
+trackConn(UIS.JumpRequest:Connect(function()
     if State.InfJump and player.Character and player.Character:FindFirstChildOfClass("Humanoid") then
         player.Character:FindFirstChildOfClass("Humanoid"):ChangeState(Enum.HumanoidStateType.Jumping)
     end
-end)
+end))
 
 local airWalkPart, airWalkConn, airWalkY = nil, nil, nil
 local function getFootOffset(char)
@@ -2187,7 +2190,7 @@ createToggle(page2, "☁️ Đi bộ trên không (Air Walk)", "AirWalk", functi
         end
 
         if airWalkConn then airWalkConn:Disconnect() end
-        airWalkConn = RunService.Heartbeat:Connect(function()
+        airWalkConn = trackConn(RunService.Heartbeat:Connect(function()
             local c = player.Character
             local r = getUniversalRoot(c)
             local h = c and c:FindFirstChildOfClass("Humanoid")
@@ -2199,7 +2202,7 @@ createToggle(page2, "☁️ Đi bộ trên không (Air Walk)", "AirWalk", functi
                 end
                 airWalkPart.CFrame = CFrame.new(r.Position.X, airWalkY, r.Position.Z)
             end
-        end)
+        end))
     else
         if airWalkConn then airWalkConn:Disconnect(); airWalkConn = nil end
         if airWalkPart then airWalkPart:Destroy(); airWalkPart = nil end
@@ -2718,7 +2721,7 @@ createToggle(page4, "💫 Mở khóa ShiftLock Mobile", "ShiftLock", function(v)
 
 createDivider(page4, "TREO MÁY AN TOÀN (AFK GUARD)")
 createToggle(page4, "🛡️ Chống AFK (Anti-AFK)", "AntiAfk")
-player.Idled:Connect(function()
+trackConn(player.Idled:Connect(function()
     if State.AntiAfk then
         pcall(function()
             VirtualUser:CaptureController()
@@ -2727,17 +2730,17 @@ player.Idled:Connect(function()
             VirtualUser:Button2Up(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
         end)
     end
-end)
+end))
 
 createToggle(page4, "🔌 Tự động vào lại khi văng game (Reconnect)", "AutoReconnect")
 pcall(function()
-    GuiService.ErrorMessageChanged:Connect(function(msg)
+    trackConn(GuiService.ErrorMessageChanged:Connect(function(msg)
         if msg and msg ~= "" and State.AutoReconnect then
             MakeToast("🔌 Auto Reconnect", "Phát hiện mất kết nối! Đang vào lại...", Theme.Brand)
             task.wait(2)
             pcall(function() TeleportService:Teleport(game.PlaceId, player) end)
         end
-    end)
+    end))
 end)
 
 createDivider(page4, "ĐIỀU KHIỂN SERVER & MÔI TRƯỜNG")
@@ -3679,12 +3682,12 @@ do
                 seekDragInput = input; scrubMusicToInput(input)
             end
         end)
-        UIS.InputChanged:Connect(function(input)
+        trackConn(UIS.InputChanged:Connect(function(input)
             if isDragUpdateInput(input, seekDragInput) then scrubMusicToInput(input) end
-        end)
-        UIS.InputEnded:Connect(function(input)
+        end))
+        trackConn(UIS.InputEnded:Connect(function(input)
             if input == seekDragInput then seekDragInput = nil end
-        end)
+        end))
     end
 
     local function showTopStatusBadge(mode, textMsg)
@@ -3742,7 +3745,7 @@ do
             probe.Volume = 0
             probe.Parent = SoundService
             local elapsed = 0
-            while elapsed < 2.8 do
+            while ScriptActive and elapsed < 2.8 do
                 if probe.IsLoaded and probe.TimeLength > 0 then
                     break
                 end
@@ -3780,7 +3783,7 @@ do
             probe.Parent = SoundService
 
             local elapsed = 0
-            while elapsed < 2.8 do
+            while ScriptActive and elapsed < 2.8 do
                 if probe.IsLoaded and probe.TimeLength > 0 then
                     break
                 end
@@ -4596,12 +4599,12 @@ do
                 end
             end
         end)
-        UIS.InputChanged:Connect(function(input)
+        trackConn(UIS.InputChanged:Connect(function(input)
             if isDragUpdateInput(input, volDragInput) then updateVolSlider(input) end
-        end)
-        UIS.InputEnded:Connect(function(input)
+        end))
+        trackConn(UIS.InputEnded:Connect(function(input)
             if input == volDragInput then volDragInput = nil end
-        end)
+        end))
     end
 
     -- 4. KHUNG DANH SÁCH NHẠC ĐÃ LƯU (LayoutOrder = 4, LOGO 3D LOADING / PUBLIC / PRIVATE)
@@ -5603,7 +5606,7 @@ do
 
             task.spawn(function()
                 local startTick = tick()
-                while manualApproachActive and manualApproachTicket == myTicket do
+                while ScriptActive and manualApproachActive and manualApproachTicket == myTicket do
                     if not resolveTargetCharacter(targetTpPlayer) then break end
                     local myChar = player.Character
                     local myHum = myChar and myChar:FindFirstChildOfClass("Humanoid")
@@ -5903,16 +5906,16 @@ do
             tpDistDragInput = input; updateTpDistSlider(input)
         end
     end)
-    UIS.InputChanged:Connect(function(input)
+    trackConn(UIS.InputChanged:Connect(function(input)
         if isDragUpdateInput(input, tpDistDragInput) then
             updateTpDistSlider(input)
         end
-    end)
-    UIS.InputEnded:Connect(function(input)
+    end))
+    trackConn(UIS.InputEnded:Connect(function(input)
         if input == tpDistDragInput then
             tpDistDragInput = nil
         end
-    end)
+    end))
 
     local function updateTargetLabel()
         if targetTpPlayer and isTargetStillValid(targetTpPlayer) then
@@ -8129,7 +8132,7 @@ do
         local s = execTime % 60
 
         sysBody.Text = string.format(
-            "<font color='#78B4DC'>• Executor:</font> <font color='#38CC88'>%s</font>   |   <font color='#78B4DC'>Phiên bản:</font> <font color='#E09F67'>V1.45.0</font>\n" ..
+            "<font color='#78B4DC'>• Executor:</font> <font color='#38CC88'>%s</font>   |   <font color='#78B4DC'>Phiên bản:</font> <font color='#E09F67'>V1.46.0</font>\n" ..
             "<font color='#78B4DC'>• Treo máy:</font> %02d:%02d:%02d   |   <font color='#78B4DC'>Giờ hệ thống:</font> %s",
             execName, h, m, s, os.date("%H:%M:%S")
         )
@@ -8773,9 +8776,9 @@ task.spawn(function()
         if obj:IsA("ProximityPrompt") then table.insert(cachedPrompts, obj) end
     end
 end)
-workspace.DescendantAdded:Connect(function(obj)
+trackConn(workspace.DescendantAdded:Connect(function(obj)
     if obj:IsA("ProximityPrompt") then table.insert(cachedPrompts, obj) end
-end)
+end))
 
 local originalPrompts = {}
 task.spawn(function()
