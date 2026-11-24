@@ -1,5 +1,5 @@
 -- ============================================================================
--- MENU VIP PRO MAX V1.46.0 (LUXURY CYBER-GLASS & BENTO SIDEBAR EDITION)
+-- MENU VIP PRO MAX V1.48.0 (LUXURY CYBER-GLASS & BENTO SIDEBAR EDITION)
 -- ============================================================================
 -- MỤC LỤC CẤU TRÚC CODE:
 --   [PHẦN 01] Khởi tạo Services & Người chơi
@@ -651,10 +651,10 @@ do
     headerStatText.RichText = true; headerStatText.Text = "<font color='#38CC88'>60 FPS</font> • <font color='#58B6F2'>0ms</font>"
     headerStatText.TextColor3 = Theme.TextTitle; headerStatText.Font = Enum.Font.GothamBold; headerStatText.TextSize = 9; headerStatText.ZIndex = 13
 
-    -- Huy hiệu V1.46 nền tối sâu, chữ sáng rõ nét trên Mobile
+    -- Huy hiệu V1.48 nền tối sâu, chữ sáng rõ nét trên Mobile
     local verBadge = Instance.new("TextLabel", header)
     verBadge.Size = UDim2.new(0, 46, 0, 21); verBadge.Position = UDim2.new(1, -110, 0.5, -10.5)
-    verBadge.BackgroundColor3 = Color3.fromRGB(18, 22, 36); verBadge.Text = "V1.46"; verBadge.TextColor3 = getSoftBrandColor(Theme.Brand)
+    verBadge.BackgroundColor3 = Color3.fromRGB(18, 22, 36); verBadge.Text = "V1.48"; verBadge.TextColor3 = getSoftBrandColor(Theme.Brand)
     verBadge.Font = Enum.Font.GothamBold; verBadge.TextSize = 9.5; verBadge.ZIndex = 12
     Instance.new("UICorner", verBadge).CornerRadius = UDim.new(0, 7)
     local verStroke = Instance.new("UIStroke", verBadge); verStroke.Color = Theme.Brand; verStroke.Thickness = 1.0; verStroke.Transparency = 0.25
@@ -2128,6 +2128,10 @@ end)
 -- [PHẦN 05] TAB 2: TÍNH NĂNG (CHỐNG CHOÁNG, FREECAM, SAFE SPOT, ESP, XRAY)
 -- ============================================================================
 local wasHorizontalTp = false
+local noclipOrigCollide = {}
+local airWalkY = nil
+local getFootOffset
+local savedTpList = {}
 do
 
 -- Sửa lỗi không bật lại trạng thái FallingDown/Ragdoll khi tắt AntiStun
@@ -2160,8 +2164,8 @@ trackConn(UIS.JumpRequest:Connect(function()
     end
 end))
 
-local airWalkPart, airWalkConn, airWalkY = nil, nil, nil
-local function getFootOffset(char)
+local airWalkPart, airWalkConn = nil, nil
+getFootOffset = function(char)
     local root = getUniversalRoot(char)
     local hum = char and char:FindFirstChildOfClass("Humanoid")
     if root and hum then
@@ -2210,11 +2214,22 @@ createToggle(page2, "☁️ Đi bộ trên không (Air Walk)", "AirWalk", functi
     end
 end)
 
-local noclipOrigCollide = {}
 createToggle(page2, "🚷 Đi xuyên tường (Noclip)", "Noclip", function(v)
-    if not v and player.Character then
+    local char = player.Character
+    if v and char then
         pcall(function()
-            local hrp = getUniversalRoot(player.Character)
+            for _, p in ipairs(char:GetDescendants()) do
+                if p:IsA("BasePart") and p.CanCollide then
+                    if noclipOrigCollide[p] == nil then
+                        noclipOrigCollide[p] = true
+                    end
+                    p.CanCollide = false
+                end
+            end
+        end)
+    elseif not v and char then
+        pcall(function()
+            local hrp = getUniversalRoot(char)
             if hrp then
                 hrp.AssemblyLinearVelocity = Vector3.zero
                 hrp.AssemblyAngularVelocity = Vector3.zero
@@ -5155,7 +5170,6 @@ end
 -- ============================================================================
 -- [PHẦN 09] TAB 6: TP SAVE (LƯU TỌA ĐỘ THEO PLACEID, ESP 3D & AUTO LOOP)
 -- ============================================================================
-local savedTpList = {}
 local clearSavedTpESPs
 do
     local tpFileName = "MenuVipProMax_SavedTPs_" .. tostring(game.PlaceId) .. ".json"
@@ -7773,7 +7787,7 @@ do
             if root and setclipboard then
                 local p = root.Position
                 local str = string.format("%.1f, %.1f, %.1f", p.X, p.Y, p.Z)
-                setclipboard(str)
+                if setclipboard then pcall(setclipboard, str) end
                 MakeToast("Đã Copy Tọa Độ", str, Theme.AccentOn)
             end
         end)
@@ -7798,7 +7812,7 @@ do
         clickAnimate(copyPlaceBtn)
         pcall(function()
             if setclipboard then
-                setclipboard(tostring(game.PlaceId))
+                if setclipboard then pcall(setclipboard, tostring(game.PlaceId)) end
                 MakeToast("Đã Copy PlaceId", tostring(game.PlaceId), Theme.Brand)
             end
         end)
@@ -7891,7 +7905,7 @@ do
         clickAnimate(btnCopyIdDown)
         pcall(function()
             if setclipboard then
-                setclipboard(tostring(game.JobId))
+                if setclipboard then pcall(setclipboard, tostring(game.JobId)) end
                 MakeToast("Đã Copy ID SV", "Đã lưu JobId hiện tại vào bộ nhớ tạm!", Theme.AccentOn)
             end
         end)
@@ -7902,7 +7916,7 @@ do
         pcall(function()
             if setclipboard and game.JobId ~= "" then
                 local joinScript = string.format('game:GetService("TeleportService"):TeleportToPlaceInstance(%d, "%s", game.Players.LocalPlayer)', game.PlaceId, game.JobId)
-                setclipboard(joinScript)
+                if setclipboard then pcall(setclipboard, joinScript) end
                 MakeToast("Đã Copy Lệnh Join", "Gửi lệnh này cho bạn bè để vào chung SV!", Theme.AccentOn)
             end
         end)
@@ -8132,7 +8146,7 @@ do
         local s = execTime % 60
 
         sysBody.Text = string.format(
-            "<font color='#78B4DC'>• Executor:</font> <font color='#38CC88'>%s</font>   |   <font color='#78B4DC'>Phiên bản:</font> <font color='#E09F67'>V1.46.0</font>\n" ..
+            "<font color='#78B4DC'>• Executor:</font> <font color='#38CC88'>%s</font>   |   <font color='#78B4DC'>Phiên bản:</font> <font color='#E09F67'>V1.48.0</font>\n" ..
             "<font color='#78B4DC'>• Treo máy:</font> %02d:%02d:%02d   |   <font color='#78B4DC'>Giờ hệ thống:</font> %s",
             execName, h, m, s, os.date("%H:%M:%S")
         )
@@ -9245,8 +9259,32 @@ pcall(function()
                             local f = root:FindFirstChild(n); if f then f:Destroy() end
                         end
                     end
+                    for part, orig in pairs(noclipOrigCollide) do
+                        if part and part.Parent and part:IsA("BasePart") then part.CanCollide = orig end
+                    end
+                    noclipOrigCollide = {}
                     local hum = char and char:FindFirstChildOfClass("Humanoid")
-                    if hum then hum.PlatformStand = false end
+                    if hum then hum.PlatformStand = false; hum.AutoRotate = true end
+                end)
+                pcall(function()
+                    for _, s in ipairs(SoundService:GetChildren()) do
+                        if s:IsA("Sound") and (s.Name == "MenuVipMusic" or string.sub(s.Name, 1, 7) == "MenuVip") then
+                            s:Stop(); s:Destroy()
+                        end
+                    end
+                end)
+                pcall(function()
+                    local aw = workspace:FindFirstChild("VipAirWalk")
+                    if aw then aw:Destroy() end
+                end)
+                pcall(function()
+                    for k, data in pairs(ActiveESPs) do
+                        if data.Billboard then data.Billboard:Destroy() end
+                        if data.Highlight then data.Highlight:Destroy() end
+                        if data.Anchor then data.Anchor:Destroy() end
+                        ActiveESPs[k] = nil
+                    end
+                    if clearSavedTpESPs then clearSavedTpESPs() end
                 end)
                 pcall(function() if gui and gui.Parent then gui:Destroy() end end)
                 pcall(function() if notifGui and notifGui.Parent then notifGui:Destroy() end end)
