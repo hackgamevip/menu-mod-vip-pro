@@ -1,13 +1,13 @@
 -- ============================================================================
--- MENU VIP PRO MAX V1.48.0 (LUXURY CYBER-GLASS & BENTO SIDEBAR EDITION)
+-- MENU VIP PRO MAX V1.49.0 (LUXURY CYBER-GLASS & BENTO SIDEBAR EDITION)
 -- ============================================================================
 -- MỤC LỤC CẤU TRÚC CODE:
 --   [PHẦN 01] Khởi tạo Services & Người chơi
 --   [PHẦN 02] Quản lý vòng đời, Drag Manager, State, Theme & Config
 --   [PHẦN 03] Giao diện chính (ScreenGui, Nút Rồng, Header, Sidebar & Tìm kiếm)
 --   [PHẦN 04] Bộ Component UI 3D Cyber-Glass Neon (Toggle, Slider, Sub-Tab...)
---   [PHẦN 05] Tab 2 - Tính năng (Chống choáng, Freecam, Safe Spot, ESP, XRay...)
---   [PHẦN 06] Tab 3 - Nhân vật (Bay, Tốc độ, Nhảy cao, Hitbox, FOV, Đèn...)
+--   [PHẦN 05] Tab 2 - Tính năng (Chống choáng, Noclip, Anti-Sit, ESP, XRay...)
+--   [PHẦN 06] Tab 3 - Nhân vật (Bay, Tốc độ, Freecam, Safe Spot, FOV, Đèn...)
 --   [PHẦN 07] Tab 4 - Tiện ích (Chủ đề & RGB, Anti-AFK, Server, Phím tắt nổi...)
 --   [PHẦN 08] Tab 5 - Nhạc ID (Thùng rác 3 chế độ, Đổi bài, Âm lượng 0-10, Tự lọc)
 --   [PHẦN 09] Tab 6 - TP Save (Lưu tọa độ theo PlaceId, ESP 3D & Auto Loop)
@@ -651,10 +651,10 @@ do
     headerStatText.RichText = true; headerStatText.Text = "<font color='#38CC88'>60 FPS</font> • <font color='#58B6F2'>0ms</font>"
     headerStatText.TextColor3 = Theme.TextTitle; headerStatText.Font = Enum.Font.GothamBold; headerStatText.TextSize = 9; headerStatText.ZIndex = 13
 
-    -- Huy hiệu V1.48 nền tối sâu, chữ sáng rõ nét trên Mobile
+    -- Huy hiệu V1.49 nền tối sâu, chữ sáng rõ nét trên Mobile
     local verBadge = Instance.new("TextLabel", header)
     verBadge.Size = UDim2.new(0, 46, 0, 21); verBadge.Position = UDim2.new(1, -110, 0.5, -10.5)
-    verBadge.BackgroundColor3 = Color3.fromRGB(18, 22, 36); verBadge.Text = "V1.48"; verBadge.TextColor3 = getSoftBrandColor(Theme.Brand)
+    verBadge.BackgroundColor3 = Color3.fromRGB(18, 22, 36); verBadge.Text = "V1.49"; verBadge.TextColor3 = getSoftBrandColor(Theme.Brand)
     verBadge.Font = Enum.Font.GothamBold; verBadge.TextSize = 9.5; verBadge.ZIndex = 12
     Instance.new("UICorner", verBadge).CornerRadius = UDim.new(0, 7)
     local verStroke = Instance.new("UIStroke", verBadge); verStroke.Color = Theme.Brand; verStroke.Thickness = 1.0; verStroke.Transparency = 0.25
@@ -2244,6 +2244,14 @@ createToggle(page2, "🚷 Đi xuyên tường (Noclip)", "Noclip", function(v)
     end
 end)
 
+createToggle(page2, "🪑 Chống ngồi ghế (Anti-Sit)", "AntiSit", function(v)
+    local hum = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
+    if hum then
+        pcall(function() hum:SetStateEnabled(Enum.HumanoidStateType.Seated, not v) end)
+        if v and hum.Sit then hum.Sit = false end
+    end
+end)
+
 createDivider(page2, "THU THẬP TỰ ĐỘNG & QUAN SÁT BẢN ĐỒ")
 createToggle(page2, "⚡ Lấy đồ nhanh (Instant Prompt)", "Instant")
 createToggle(page2, "🧲 Auto nhặt đồ & Tool xung quanh", "AutoCollect")
@@ -2273,265 +2281,6 @@ createToggle(page2, "👀 Nhìn xuyên bản đồ (Xray)", "XRay", function(v)
         end
     end)
 end)
-
-createDivider(page2, "KHÁM PHÁ & BẢO VỆ NHÂN VẬT")
-do
-    -- 1. Camera Tự Do (Freecam V1.45 - Xoay vuốt cảm ứng/chuột mượt + Joystick Mobile & PC WASD + Nút Lên/Xuống)
-    local freecamStepName = "MenuVipProMax_FreecamStep"
-    local freecamPos = nil
-    local freecamYaw = 0
-    local freecamPitch = 0
-    local freecamOrigAnchor = false
-    local freecamActive = false
-    local fcLookInput = nil
-    local fcLastTouchPos = nil
-    local fcHoldUp = false
-    local fcHoldDown = false
-    local fcConns = {}
-
-    -- Cụm 2 nút Lên / Xuống gọn nhẹ nổi bên phải màn hình khi bật Freecam (hỗ trợ Mobile bay cao/thấp)
-    local fcElevDock = Instance.new("Frame", gui)
-    fcElevDock.Name = "FreecamElevDock"
-    fcElevDock.Size = UDim2.new(0, 38, 0, 82)
-    fcElevDock.Position = UDim2.new(1, -50, 0.5, -41)
-    fcElevDock.BackgroundColor3 = Color3.fromRGB(16, 20, 32)
-    fcElevDock.BackgroundTransparency = 0.2
-    fcElevDock.Visible = false
-    fcElevDock.ZIndex = 20
-    Instance.new("UICorner", fcElevDock).CornerRadius = UDim.new(0, 12)
-    local fcDockStroke = Instance.new("UIStroke", fcElevDock)
-    fcDockStroke.Color = Color3.fromRGB(72, 168, 225); fcDockStroke.Thickness = 1.1; fcDockStroke.Transparency = 0.25
-
-    local function makeFcElevBtn(yPos, txt, onState)
-        local b = Instance.new("TextButton", fcElevDock)
-        b.Size = UDim2.new(0, 30, 0, 34)
-        b.Position = UDim2.new(0.5, -15, 0, yPos)
-        b.BackgroundColor3 = Color3.fromRGB(24, 30, 48)
-        b.Text = txt
-        b.TextColor3 = Color3.fromRGB(192, 214, 236)
-        b.Font = Enum.Font.GothamBold
-        b.TextSize = 13
-        b.AutoButtonColor = false
-        b.ZIndex = 21
-        Instance.new("UICorner", b).CornerRadius = UDim.new(0, 8)
-        local st = Instance.new("UIStroke", b)
-        st.Color = Color3.fromRGB(64, 132, 195); st.Thickness = 0.9; st.Transparency = 0.35
-        b.InputBegan:Connect(function(inp)
-            if inp.UserInputType == Enum.UserInputType.Touch or inp.UserInputType == Enum.UserInputType.MouseButton1 then
-                onState(true)
-                b.BackgroundColor3 = Color3.fromRGB(22, 58, 54)
-                st.Color = Color3.fromRGB(72, 215, 165)
-            end
-        end)
-        b.InputEnded:Connect(function(inp)
-            if inp.UserInputType == Enum.UserInputType.Touch or inp.UserInputType == Enum.UserInputType.MouseButton1 then
-                onState(false)
-                b.BackgroundColor3 = Color3.fromRGB(24, 30, 48)
-                st.Color = Color3.fromRGB(64, 132, 195)
-            end
-        end)
-        return b
-    end
-    makeFcElevBtn(5, "▲", function(on) fcHoldUp = on end)
-    makeFcElevBtn(43, "▼", function(on) fcHoldDown = on end)
-
-    local function stopFreecamClean()
-        freecamActive = false
-        fcLookInput = nil
-        fcLastTouchPos = nil
-        fcHoldUp = false
-        fcHoldDown = false
-        fcElevDock.Visible = false
-        pcall(function() RunService:UnbindFromRenderStep(freecamStepName) end)
-        for _, c in ipairs(fcConns) do pcall(function() c:Disconnect() end) end
-        fcConns = {}
-        local cam = workspace.CurrentCamera
-        local char = player.Character
-        if cam then
-            cam.CameraType = Enum.CameraType.Custom
-            local hum = char and char:FindFirstChildOfClass("Humanoid")
-            if hum then cam.CameraSubject = hum end
-        end
-        local root = char and getUniversalRoot(char)
-        if root and not State.LockPosition then
-            root.Anchored = freecamOrigAnchor
-        end
-        freecamPos = nil
-    end
-
-    gui.Destroying:Connect(function()
-        if freecamActive then stopFreecamClean() end
-    end)
-
-    createCombinedToggleSlider(page2, "🎥 Camera Tự Do (Freecam)", "Freecam", "Tốc độ bay Camera", 15, 250, "FreecamSpeed", function(v)
-        if v then
-            stopFreecamClean()
-            local cam = workspace.CurrentCamera
-            local char = player.Character
-            local root = char and getUniversalRoot(char)
-            if cam then
-                local initCF = cam.CFrame
-                freecamPos = initCF.Position
-                local rx, ry = initCF:ToEulerAnglesYXZ()
-                freecamPitch = math.clamp(rx, -1.48, 1.48)
-                freecamYaw = ry
-                cam.CameraType = Enum.CameraType.Scriptable
-            end
-            if root then
-                freecamOrigAnchor = root.Anchored
-                root.Anchored = true
-                pcall(function()
-                    root.AssemblyLinearVelocity = Vector3.zero
-                    root.AssemblyAngularVelocity = Vector3.zero
-                end)
-            end
-            freecamActive = true
-            fcElevDock.Visible = true
-
-            -- Vuốt màn hình (Mobile) hoặc giữ chuột phải (PC) để xoay góc nhìn tự do
-            table.insert(fcConns, UIS.InputBegan:Connect(function(inp, gp)
-                if not freecamActive or gp then return end
-                if inp.UserInputType == Enum.UserInputType.Touch and not fcLookInput then
-                    fcLookInput = inp
-                    fcLastTouchPos = inp.Position
-                elseif inp.UserInputType == Enum.UserInputType.MouseButton2 then
-                    fcLookInput = inp
-                end
-            end))
-
-            table.insert(fcConns, UIS.InputChanged:Connect(function(inp)
-                if not freecamActive then return end
-                if inp == fcLookInput and inp.UserInputType == Enum.UserInputType.Touch then
-                    if fcLastTouchPos then
-                        local delta = inp.Position - fcLastTouchPos
-                        freecamYaw = freecamYaw - delta.X * 0.0055
-                        freecamPitch = math.clamp(freecamPitch - delta.Y * 0.0055, -1.48, 1.48)
-                    end
-                    fcLastTouchPos = inp.Position
-                elseif inp.UserInputType == Enum.UserInputType.MouseMovement and UIS:IsMouseButtonPressed(Enum.UserInputType.MouseButton2) then
-                    local d = inp.Delta
-                    freecamYaw = freecamYaw - d.X * 0.0045
-                    freecamPitch = math.clamp(freecamPitch - d.Y * 0.0045, -1.48, 1.48)
-                end
-            end))
-
-            table.insert(fcConns, UIS.InputEnded:Connect(function(inp)
-                if inp == fcLookInput then
-                    fcLookInput = nil
-                    fcLastTouchPos = nil
-                end
-            end))
-
-            RunService:BindToRenderStep(freecamStepName, Enum.RenderPriority.Camera.Value + 5, function(dt)
-                if not ScriptActive or not State.Freecam or not freecamActive then
-                    stopFreecamClean()
-                    return
-                end
-                local c = workspace.CurrentCamera
-                if not c then return end
-                if c.CameraType ~= Enum.CameraType.Scriptable then
-                    c.CameraType = Enum.CameraType.Scriptable
-                end
-                if not freecamPos then freecamPos = c.CFrame.Position end
-
-                local rotCF = CFrame.fromEulerAnglesYXZ(freecamPitch, freecamYaw, 0)
-                local camLook = rotCF.LookVector
-                local camRight = rotCF.RightVector
-                local moveVec = Vector3.zero
-
-                -- Hỗ trợ Joystick Mobile (MoveDirection)
-                local hum = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
-                if hum and hum.MoveDirection.Magnitude > 0.05 then
-                    local flatLook = Vector3.new(camLook.X, 0, camLook.Z)
-                    local flatRight = Vector3.new(camRight.X, 0, camRight.Z)
-                    local fUnit = flatLook.Magnitude > 0.001 and flatLook.Unit or Vector3.zero
-                    local rUnit = flatRight.Magnitude > 0.001 and flatRight.Unit or Vector3.zero
-                    local fwdAmt = hum.MoveDirection:Dot(fUnit)
-                    local rightAmt = hum.MoveDirection:Dot(rUnit)
-                    moveVec = moveVec + (camLook * fwdAmt) + (camRight * rightAmt)
-                end
-
-                -- Hỗ trợ bàn phím PC (WASD + E/Q/Space/Ctrl) khi không gõ chat
-                if not UIS:GetFocusedTextBox() then
-                    if UIS:IsKeyDown(Enum.KeyCode.W) then moveVec = moveVec + camLook end
-                    if UIS:IsKeyDown(Enum.KeyCode.S) then moveVec = moveVec - camLook end
-                    if UIS:IsKeyDown(Enum.KeyCode.D) then moveVec = moveVec + camRight end
-                    if UIS:IsKeyDown(Enum.KeyCode.A) then moveVec = moveVec - camRight end
-                    if UIS:IsKeyDown(Enum.KeyCode.E) or UIS:IsKeyDown(Enum.KeyCode.Space) then
-                        moveVec = moveVec + Vector3.new(0, 1, 0)
-                    end
-                    if UIS:IsKeyDown(Enum.KeyCode.Q) or UIS:IsKeyDown(Enum.KeyCode.LeftControl) then
-                        moveVec = moveVec - Vector3.new(0, 1, 0)
-                    end
-                end
-
-                -- Hỗ trợ nút ▲ / ▼ trên Mobile
-                if fcHoldUp then moveVec = moveVec + Vector3.new(0, 1, 0) end
-                if fcHoldDown then moveVec = moveVec - Vector3.new(0, 1, 0) end
-
-                local spd = math.clamp(tonumber(State.FreecamSpeed) or 60, 15, 250)
-                if moveVec.Magnitude > 0.001 then
-                    freecamPos = freecamPos + (moveVec.Unit * spd * dt)
-                end
-
-                c.CFrame = CFrame.new(freecamPos) * rotCF
-            end)
-        else
-            stopFreecamClean()
-        end
-    end)
-
-    -- 3. Chống ngồi ghế (Anti-Sit)
-    createToggle(page2, "🪑 Chống ngồi ghế (Anti-Sit)", "AntiSit", function(v)
-        local hum = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
-        if hum then
-            pcall(function() hum:SetStateEnabled(Enum.HumanoidStateType.Seated, not v) end)
-            if v and hum.Sit then hum.Sit = false end
-        end
-    end)
-
-    -- 5. Chế độ An toàn tự rút lui khi yếu máu (Safe Spot / Auto Retreat)
-    local retreatActive = false
-    local retreatOrigCF = nil
-    createCombinedToggleSlider(page2, "🛟 Tự rút lui khi yếu máu (Safe Spot)", "SafeSpotRetreat", "Ngưỡng máu rút lui (%)", 10, 80, "SafeSpotHpPct", function(v)
-        if not v then
-            retreatActive = false
-            retreatOrigCF = nil
-        end
-    end)
-
-    task.spawn(function()
-        while ScriptActive and task.wait(0.3) do
-            if State.SafeSpotRetreat and player.Character then
-                local hum = player.Character:FindFirstChildOfClass("Humanoid")
-                local root = getUniversalRoot(player.Character)
-                if hum and root and hum.MaxHealth > 0 and hum.Health > 0 then
-                    local hpPct = (hum.Health / hum.MaxHealth) * 100
-                    local threshold = tonumber(State.SafeSpotHpPct) or 30
-                    if not retreatActive and hpPct <= threshold then
-                        retreatActive = true
-                        retreatOrigCF = root.CFrame
-                        root.AssemblyLinearVelocity = Vector3.zero
-                        if savedTpList and #savedTpList > 0 and savedTpList[1].cframe then
-                            root.CFrame = CFrame.new(table.unpack(savedTpList[1].cframe))
-                            MakeToast("🛟 Đã Rút Lui An Toàn", "Máu dưới " .. tostring(threshold) .. "%! Đã TP về " .. tostring(savedTpList[1].name), Theme.AccentOn)
-                        else
-                            root.CFrame = root.CFrame + Vector3.new(0, 120, 0)
-                            MakeToast("🛟 Đã Rút Lui An Toàn", "Máu dưới " .. tostring(threshold) .. "%! Đã bay lên cao tránh đòn", Theme.AccentOn)
-                        end
-                    elseif retreatActive and hpPct >= math.min(95, threshold + 40) then
-                        retreatActive = false
-                        if retreatOrigCF then
-                            root.CFrame = retreatOrigCF
-                            retreatOrigCF = nil
-                            MakeToast("💚 Đã Hồi Máu", "Máu đã hồi ổn định, quay lại vị trí cũ!", Theme.Brand)
-                        end
-                    end
-                end
-            end
-        end
-    end)
-end
 
 createDivider(page2, "CÔNG CỤ HỖ TRỢ ĐẶC BIỆT")
 createButton(page2, "⚡ NHẬN GẬY CLICK TP", Theme.Brand, function()
@@ -2663,7 +2412,7 @@ createCombinedToggleSlider(page3, "⚔️ Đánh xa (Reach Vũ Khí)", "Reach", 
 createCombinedToggleSlider(page3, "🎯 Mở rộng Hitbox", "Hitbox", "Kích thước Hitbox", 0, 100, "HitboxSize")
 createCombinedToggleSlider(page3, "🌪️ Xoay vòng tròn (SpinBot)", "SpinBot", "Tốc độ xoay", 0, 100, "SpinSpeed")
 
-createDivider(page3, "GÓC NHÌN CAMERA")
+createDivider(page3, "CAMERA & BẢO VỆ NHÂN VẬT")
 do
     createCombinedToggleSlider(page3, "👁️ Chỉnh Góc nhìn rộng (FOV)", "CustomFOV", "Độ rộng góc nhìn (FOV)", 50, 120, "FovValue", function(v)
         local cam = workspace.CurrentCamera
@@ -2676,6 +2425,255 @@ do
         end
     end)
 end
+do
+    -- 1. Camera Tự Do (Freecam V1.45 - Xoay vuốt cảm ứng/chuột mượt + Joystick Mobile & PC WASD + Nút Lên/Xuống)
+    local freecamStepName = "MenuVipProMax_FreecamStep"
+    local freecamPos = nil
+    local freecamYaw = 0
+    local freecamPitch = 0
+    local freecamOrigAnchor = false
+    local freecamActive = false
+    local fcLookInput = nil
+    local fcLastTouchPos = nil
+    local fcHoldUp = false
+    local fcHoldDown = false
+    local fcConns = {}
+
+    -- Cụm 2 nút Lên / Xuống gọn nhẹ nổi bên phải màn hình khi bật Freecam (hỗ trợ Mobile bay cao/thấp)
+    local fcElevDock = Instance.new("Frame", gui)
+    fcElevDock.Name = "FreecamElevDock"
+    fcElevDock.Size = UDim2.new(0, 38, 0, 82)
+    fcElevDock.Position = UDim2.new(1, -50, 0.5, -41)
+    fcElevDock.BackgroundColor3 = Color3.fromRGB(16, 20, 32)
+    fcElevDock.BackgroundTransparency = 0.2
+    fcElevDock.Visible = false
+    fcElevDock.ZIndex = 20
+    Instance.new("UICorner", fcElevDock).CornerRadius = UDim.new(0, 12)
+    local fcDockStroke = Instance.new("UIStroke", fcElevDock)
+    fcDockStroke.Color = Color3.fromRGB(72, 168, 225); fcDockStroke.Thickness = 1.1; fcDockStroke.Transparency = 0.25
+
+    local function makeFcElevBtn(yPos, txt, onState)
+        local b = Instance.new("TextButton", fcElevDock)
+        b.Size = UDim2.new(0, 30, 0, 34)
+        b.Position = UDim2.new(0.5, -15, 0, yPos)
+        b.BackgroundColor3 = Color3.fromRGB(24, 30, 48)
+        b.Text = txt
+        b.TextColor3 = Color3.fromRGB(192, 214, 236)
+        b.Font = Enum.Font.GothamBold
+        b.TextSize = 13
+        b.AutoButtonColor = false
+        b.ZIndex = 21
+        Instance.new("UICorner", b).CornerRadius = UDim.new(0, 8)
+        local st = Instance.new("UIStroke", b)
+        st.Color = Color3.fromRGB(64, 132, 195); st.Thickness = 0.9; st.Transparency = 0.35
+        b.InputBegan:Connect(function(inp)
+            if inp.UserInputType == Enum.UserInputType.Touch or inp.UserInputType == Enum.UserInputType.MouseButton1 then
+                onState(true)
+                b.BackgroundColor3 = Color3.fromRGB(22, 58, 54)
+                st.Color = Color3.fromRGB(72, 215, 165)
+            end
+        end)
+        b.InputEnded:Connect(function(inp)
+            if inp.UserInputType == Enum.UserInputType.Touch or inp.UserInputType == Enum.UserInputType.MouseButton1 then
+                onState(false)
+                b.BackgroundColor3 = Color3.fromRGB(24, 30, 48)
+                st.Color = Color3.fromRGB(64, 132, 195)
+            end
+        end)
+        return b
+    end
+    makeFcElevBtn(5, "▲", function(on) fcHoldUp = on end)
+    makeFcElevBtn(43, "▼", function(on) fcHoldDown = on end)
+
+    local function stopFreecamClean()
+        freecamActive = false
+        fcLookInput = nil
+        fcLastTouchPos = nil
+        fcHoldUp = false
+        fcHoldDown = false
+        fcElevDock.Visible = false
+        pcall(function() RunService:UnbindFromRenderStep(freecamStepName) end)
+        for _, c in ipairs(fcConns) do pcall(function() c:Disconnect() end) end
+        fcConns = {}
+        local cam = workspace.CurrentCamera
+        local char = player.Character
+        if cam then
+            cam.CameraType = Enum.CameraType.Custom
+            local hum = char and char:FindFirstChildOfClass("Humanoid")
+            if hum then cam.CameraSubject = hum end
+        end
+        local root = char and getUniversalRoot(char)
+        if root and not State.LockPosition then
+            root.Anchored = freecamOrigAnchor
+        end
+        freecamPos = nil
+    end
+
+    gui.Destroying:Connect(function()
+        if freecamActive then stopFreecamClean() end
+    end)
+
+    createCombinedToggleSlider(page3, "🎥 Camera Tự Do (Freecam)", "Freecam", "Tốc độ bay Camera", 15, 250, "FreecamSpeed", function(v)
+        if v then
+            stopFreecamClean()
+            local cam = workspace.CurrentCamera
+            local char = player.Character
+            local root = char and getUniversalRoot(char)
+            if cam then
+                local initCF = cam.CFrame
+                freecamPos = initCF.Position
+                local rx, ry = initCF:ToEulerAnglesYXZ()
+                freecamPitch = math.clamp(rx, -1.48, 1.48)
+                freecamYaw = ry
+                cam.CameraType = Enum.CameraType.Scriptable
+            end
+            if root then
+                freecamOrigAnchor = root.Anchored
+                root.Anchored = true
+                pcall(function()
+                    root.AssemblyLinearVelocity = Vector3.zero
+                    root.AssemblyAngularVelocity = Vector3.zero
+                end)
+            end
+            freecamActive = true
+            fcElevDock.Visible = true
+
+            -- Vuốt màn hình (Mobile) hoặc giữ chuột phải (PC) để xoay góc nhìn tự do
+            table.insert(fcConns, UIS.InputBegan:Connect(function(inp, gp)
+                if not freecamActive or gp then return end
+                if inp.UserInputType == Enum.UserInputType.Touch and not fcLookInput then
+                    fcLookInput = inp
+                    fcLastTouchPos = inp.Position
+                elseif inp.UserInputType == Enum.UserInputType.MouseButton2 then
+                    fcLookInput = inp
+                end
+            end))
+
+            table.insert(fcConns, UIS.InputChanged:Connect(function(inp)
+                if not freecamActive then return end
+                if inp == fcLookInput and inp.UserInputType == Enum.UserInputType.Touch then
+                    if fcLastTouchPos then
+                        local delta = inp.Position - fcLastTouchPos
+                        freecamYaw = freecamYaw - delta.X * 0.0055
+                        freecamPitch = math.clamp(freecamPitch - delta.Y * 0.0055, -1.48, 1.48)
+                    end
+                    fcLastTouchPos = inp.Position
+                elseif inp.UserInputType == Enum.UserInputType.MouseMovement and UIS:IsMouseButtonPressed(Enum.UserInputType.MouseButton2) then
+                    local d = inp.Delta
+                    freecamYaw = freecamYaw - d.X * 0.0045
+                    freecamPitch = math.clamp(freecamPitch - d.Y * 0.0045, -1.48, 1.48)
+                end
+            end))
+
+            table.insert(fcConns, UIS.InputEnded:Connect(function(inp)
+                if inp == fcLookInput then
+                    fcLookInput = nil
+                    fcLastTouchPos = nil
+                end
+            end))
+
+            RunService:BindToRenderStep(freecamStepName, Enum.RenderPriority.Camera.Value + 5, function(dt)
+                if not ScriptActive or not State.Freecam or not freecamActive then
+                    stopFreecamClean()
+                    return
+                end
+                local c = workspace.CurrentCamera
+                if not c then return end
+                if c.CameraType ~= Enum.CameraType.Scriptable then
+                    c.CameraType = Enum.CameraType.Scriptable
+                end
+                if not freecamPos then freecamPos = c.CFrame.Position end
+
+                local rotCF = CFrame.fromEulerAnglesYXZ(freecamPitch, freecamYaw, 0)
+                local camLook = rotCF.LookVector
+                local camRight = rotCF.RightVector
+                local moveVec = Vector3.zero
+
+                -- Hỗ trợ Joystick Mobile (MoveDirection)
+                local hum = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
+                if hum and hum.MoveDirection.Magnitude > 0.05 then
+                    local flatLook = Vector3.new(camLook.X, 0, camLook.Z)
+                    local flatRight = Vector3.new(camRight.X, 0, camRight.Z)
+                    local fUnit = flatLook.Magnitude > 0.001 and flatLook.Unit or Vector3.zero
+                    local rUnit = flatRight.Magnitude > 0.001 and flatRight.Unit or Vector3.zero
+                    local fwdAmt = hum.MoveDirection:Dot(fUnit)
+                    local rightAmt = hum.MoveDirection:Dot(rUnit)
+                    moveVec = moveVec + (camLook * fwdAmt) + (camRight * rightAmt)
+                end
+
+                -- Hỗ trợ bàn phím PC (WASD + E/Q/Space/Ctrl) khi không gõ chat
+                if not UIS:GetFocusedTextBox() then
+                    if UIS:IsKeyDown(Enum.KeyCode.W) then moveVec = moveVec + camLook end
+                    if UIS:IsKeyDown(Enum.KeyCode.S) then moveVec = moveVec - camLook end
+                    if UIS:IsKeyDown(Enum.KeyCode.D) then moveVec = moveVec + camRight end
+                    if UIS:IsKeyDown(Enum.KeyCode.A) then moveVec = moveVec - camRight end
+                    if UIS:IsKeyDown(Enum.KeyCode.E) or UIS:IsKeyDown(Enum.KeyCode.Space) then
+                        moveVec = moveVec + Vector3.new(0, 1, 0)
+                    end
+                    if UIS:IsKeyDown(Enum.KeyCode.Q) or UIS:IsKeyDown(Enum.KeyCode.LeftControl) then
+                        moveVec = moveVec - Vector3.new(0, 1, 0)
+                    end
+                end
+
+                -- Hỗ trợ nút ▲ / ▼ trên Mobile
+                if fcHoldUp then moveVec = moveVec + Vector3.new(0, 1, 0) end
+                if fcHoldDown then moveVec = moveVec - Vector3.new(0, 1, 0) end
+
+                local spd = math.clamp(tonumber(State.FreecamSpeed) or 60, 15, 250)
+                if moveVec.Magnitude > 0.001 then
+                    freecamPos = freecamPos + (moveVec.Unit * spd * dt)
+                end
+
+                c.CFrame = CFrame.new(freecamPos) * rotCF
+            end)
+        else
+            stopFreecamClean()
+        end
+    end)
+
+    -- 5. Chế độ An toàn tự rút lui khi yếu máu (Safe Spot / Auto Retreat)
+    local retreatActive = false
+    local retreatOrigCF = nil
+    createCombinedToggleSlider(page3, "🛟 Tự rút lui khi yếu máu (Safe Spot)", "SafeSpotRetreat", "Ngưỡng máu rút lui (%)", 10, 80, "SafeSpotHpPct", function(v)
+        if not v then
+            retreatActive = false
+            retreatOrigCF = nil
+        end
+    end)
+
+    task.spawn(function()
+        while ScriptActive and task.wait(0.3) do
+            if State.SafeSpotRetreat and player.Character then
+                local hum = player.Character:FindFirstChildOfClass("Humanoid")
+                local root = getUniversalRoot(player.Character)
+                if hum and root and hum.MaxHealth > 0 and hum.Health > 0 then
+                    local hpPct = (hum.Health / hum.MaxHealth) * 100
+                    local threshold = tonumber(State.SafeSpotHpPct) or 30
+                    if not retreatActive and hpPct <= threshold then
+                        retreatActive = true
+                        retreatOrigCF = root.CFrame
+                        root.AssemblyLinearVelocity = Vector3.zero
+                        if savedTpList and #savedTpList > 0 and savedTpList[1].cframe then
+                            root.CFrame = CFrame.new(table.unpack(savedTpList[1].cframe))
+                            MakeToast("🛟 Đã Rút Lui An Toàn", "Máu dưới " .. tostring(threshold) .. "%! Đã TP về " .. tostring(savedTpList[1].name), Theme.AccentOn)
+                        else
+                            root.CFrame = root.CFrame + Vector3.new(0, 120, 0)
+                            MakeToast("🛟 Đã Rút Lui An Toàn", "Máu dưới " .. tostring(threshold) .. "%! Đã bay lên cao tránh đòn", Theme.AccentOn)
+                        end
+                    elseif retreatActive and hpPct >= math.min(95, threshold + 40) then
+                        retreatActive = false
+                        if retreatOrigCF then
+                            root.CFrame = retreatOrigCF
+                            retreatOrigCF = nil
+                            MakeToast("💚 Đã Hồi Máu", "Máu đã hồi ổn định, quay lại vị trí cũ!", Theme.Brand)
+                        end
+                    end
+                end
+            end
+        end
+    end)
+end
+
 
 createDivider(page3, "HIỆU ỨNG ÁNH SÁNG NHÂN VẬT")
 createCombinedToggleSlider(page3, "💡 Ánh sáng quanh người", "PlayerLight", "Phạm vi sáng (Max 60)", 0, 60, "LightRange", function(v)
@@ -8146,7 +8144,7 @@ do
         local s = execTime % 60
 
         sysBody.Text = string.format(
-            "<font color='#78B4DC'>• Executor:</font> <font color='#38CC88'>%s</font>   |   <font color='#78B4DC'>Phiên bản:</font> <font color='#E09F67'>V1.48.0</font>\n" ..
+            "<font color='#78B4DC'>• Executor:</font> <font color='#38CC88'>%s</font>   |   <font color='#78B4DC'>Phiên bản:</font> <font color='#E09F67'>V1.49.0</font>\n" ..
             "<font color='#78B4DC'>• Treo máy:</font> %02d:%02d:%02d   |   <font color='#78B4DC'>Giờ hệ thống:</font> %s",
             execName, h, m, s, os.date("%H:%M:%S")
         )
